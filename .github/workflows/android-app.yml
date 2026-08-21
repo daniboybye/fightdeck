@@ -1,0 +1,32 @@
+# Build and weigh one Android host app. Pick the approach from the dropdown.
+# See the note in ios-app.yml about why the folder and module names are uniform.
+
+name: Android app
+
+on:
+  workflow_dispatch:
+    inputs:
+      approach:
+        description: Which approach to build
+        required: true
+        type: choice
+        options:
+          - 00-native
+          - 01-core-swift
+          - 02-core-rust
+          - 03-sdk-rn
+          - 04-sdk-skip
+      run-tests:
+        description: Run unit tests before assembling
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build:
+    uses: ./.github/workflows/_android-app.yml
+    with:
+      approach: ${{ inputs.approach }}
+      project-dir: ${{ inputs.approach }}/android
+      module: app
+      run-tests: ${{ inputs.run-tests }}

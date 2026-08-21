@@ -1,0 +1,109 @@
+# Build a UI-bearing SDK, checksum it, and publish it as a GitHub Release.
+#
+# This workflow is what makes "the host does not know what is inside" a fact rather than
+# a figure of speech. After it runs, the host apps resolve a .zip over HTTPS against a
+# pinned SHA-256 and have no access to the source at all.
+#
+# Chicken and egg: a freshly cloned repo cannot resolve a release that does not exist yet.
+# That is what FIGHTDECK_LOCAL_SDK=1 is for — build locally, run this once by hand, then
+# switch the hosts over to the pinned artifact.
+
+name: Release SDK
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk:
+        description: Which SDK to publish
+        required: true
+        type: choice
+        options:
+          - rn
+          - skip
+      version:
+        description: Version to tag, e.g. 0.1.0
+        required: true
+        type: string
+      draft:
+        description: Create the release as a draft
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-rn:
+    if: inputs.sdk == 'rn'
+    uses: ./.github/workflows/sdk-rn.yml
+
+  build-skip:
+    if: inputs.sdk == 'skip'
+    uses: ./.github/workflows/sdk-skip.yml
+
+  publish:
+    name: Checksum and publish
+    runs-on: macos-26
+    needs: [build-rn, build-skip]
+    # Exactly one of the two build jobs runs; the other is skipped. Without always()
+    # the skipped one would block this job forever.
+    if: always() && !cancelled() && !failure()
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Collect artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ inputs.sdk }}-*
+          path: release-staging
+          merge-multiple: true
+
+      - name: Inventory
+        run: |
+          echo "Artifacts staged for release:"
+          find release-staging -type f \( -name '*.zip' -o -name '*.aar' \) -exec ls -lh {} \;
+
+      - name: Compute checksums and draft the Package.swift snippet
+        id: checksums
+        run: |
+          set -euo pipefail
+          SNIPPET_FILE="$RUNNER_TEMP/snippet.md"
+          BASE="https://github.com/${GITHUB_REPOSITORY}/releases/download/sdk-v${{ inputs.version }}"
+
+          {
+            echo "## Checksums for \`sdk-v${{ inputs.version }}\`"
+            echo
+            echo "Paste straight into the SDK wrapper's \`Package.swift\`."
+            echo
+            echo '```swift'
+          } > "$SNIPPET_FILE"
+
+          while IFS= read -r zip; do
+            name="$(basename "$zip" .xcframework.zip)"
+            sum="$(swift package compute-checksum "$zip")"
+            {
+              echo ".binaryTarget(name: \"${name}\","
+              echo "              url: \"${BASE}/$(basename "$zip")\","
+              echo "              checksum: \"${sum}\"),"
+            } >> "$SNIPPET_FILE"
+            echo "${name}: ${sum}"
+          done < <(find release-staging -type f -name '*.xcframework.zip' | sort)
+
+          echo '```' >> "$SNIPPET_FILE"
+          cat "$SNIPPET_FILE" >> "$GITHUB_STEP_SUMMARY"
+          echo "snippet-file=$SNIPPET_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: sdk-v${{ inputs.version }}
+          name: SDK ${{ inputs.sdk }} v${{ inputs.version }}
+          body_path: ${{ steps.checksums.outputs.snippet-file }}
+          draft: ${{ inputs.draft }}
+          files: |
+            release-staging/**/*.xcframework.zip
+            release-staging/**/*.aar
+          fail_on_unmatched_files: false

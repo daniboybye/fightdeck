@@ -1,0 +1,115 @@
+# Build the Skip SDKs: one shared core plus two feature modules.
+#
+# Same split as the React Native SDKs, and deliberately the same packaging, because a
+# size comparison between two technologies packaged differently is worthless.
+#
+# The asymmetry this workflow exposes is the point: on Apple a Skip module is an ordinary
+# Swift package and costs essentially nothing extra, while on Android it carries a native
+# Swift runtime. One technology, two very different bills.
+
+name: SDK — Skip
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  apple:
+    name: XCFramework (${{ matrix.module }})
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [core, deposit, betslip]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 04-sdk-skip/sdks/${{ matrix.module }}/Package.swift ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skip ${{ matrix.module }} not written yet"
+          fi
+
+      - name: Pin Xcode
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          XCODE_VERSION="$(./tools/versions.py apple.xcode)"
+          sudo xcode-select -switch "/Applications/Xcode_${XCODE_VERSION}.app" 2>/dev/null \
+            || echo "::warning::Xcode ${XCODE_VERSION} not found; using runner default"
+
+      - name: Test
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 04-sdk-skip/sdks/${{ matrix.module }}
+        run: swift test
+
+      - name: Package XCFramework
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 04-sdk-skip/sdks/${{ matrix.module }}
+        run: ./build-xcframework.sh
+
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          name: skip-${{ matrix.module }}-xcframework
+          path: 04-sdk-skip/sdks/${{ matrix.module }}/out/*.xcframework.zip
+          if-no-files-found: warn
+
+  android:
+    name: AAR (${{ matrix.module }})
+    runs-on: macos-26
+    # macOS rather than Linux: skipstone drives the Swift toolchain plus Gradle, and the
+    # documented path runs on a Mac. Moving it to Linux is an optimisation for later, not
+    # something to discover is broken the week of the talk.
+    timeout-minutes: 75
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [core, deposit, betslip]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 04-sdk-skip/sdks/${{ matrix.module }}/Package.swift ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Read pinned versions
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          ./tools/versions.py android.jdk --github-env PINNED_JDK
+          ./tools/versions.py skip.skipstone --github-env PINNED_SKIPSTONE
+
+      - uses: actions/setup-java@v5
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          distribution: temurin
+          java-version: ${{ env.PINNED_JDK }}
+
+      - name: Install Skip
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          brew install skiptools/skip/skip
+          skip checkup --verbose || echo "::warning::skip checkup reported problems"
+          echo "Pinned skipstone in lock file: $PINNED_SKIPSTONE"
+
+      - name: Export AAR
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 04-sdk-skip/sdks/${{ matrix.module }}
+        run: ./build-aar.sh
+
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          name: skip-${{ matrix.module }}-aar
+          path: 04-sdk-skip/sdks/${{ matrix.module }}/out/*.aar
+          if-no-files-found: warn

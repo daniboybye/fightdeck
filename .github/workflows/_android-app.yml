@@ -1,0 +1,105 @@
+# Reusable: build, test and weigh one Android host app.
+#
+# Counterpart to _ios-app.yml. See the note there about why the logic lives in one file
+# and the five approaches get thin wrappers.
+
+name: _android-app
+
+on:
+  workflow_call:
+    inputs:
+      approach:
+        description: Approach folder, e.g. 00-native
+        required: true
+        type: string
+      project-dir:
+        description: Directory holding settings.gradle.kts
+        required: true
+        type: string
+      module:
+        description: Gradle module to assemble
+        required: false
+        default: app
+        type: string
+      run-tests:
+        description: Run unit tests before assembling
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build:
+    name: ${{ inputs.approach }} (Android)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read pinned versions
+        run: |
+          ./tools/versions.py android.jdk --github-env PINNED_JDK
+          ./tools/versions.py android.compile_sdk --github-env PINNED_COMPILE_SDK
+          ./tools/versions.py android.ndk --github-env PINNED_NDK
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.PINNED_JDK }}
+
+      - name: Guard — does this app exist yet?
+        id: guard
+        run: |
+          if [[ -f "${{ inputs.project-dir }}/gradlew" ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::${{ inputs.project-dir }} has no gradlew yet — nothing to do"
+          fi
+
+      - name: Install pinned NDK
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$PINNED_NDK" \
+            || echo "::warning::NDK $PINNED_NDK unavailable on this runner; falling back to preinstalled"
+
+      # 02-core-rust is the one host whose dependency is not a pinned release: its UniFFI
+      # bindings and jniLibs are build output, so the core has to be packaged here before
+      # the app will compile. The other four resolve artifacts over HTTPS.
+      - name: Read pinned Rust toolchain
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        run: |
+          ./tools/versions.py rust.toolchain --github-env PINNED_RUST
+          ./tools/versions.py rust.cargo_ndk --github-env PINNED_CARGO_NDK
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        with:
+          toolchain: ${{ env.PINNED_RUST }}
+          targets: aarch64-linux-android,x86_64-linux-android
+
+      - name: Install cargo-ndk
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        run: cargo install cargo-ndk --version "$PINNED_CARGO_NDK" --locked
+
+      - name: Package the Rust core
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        working-directory: 02-core-rust/sdks/core
+        run: ./build-aar.sh
+
+      - name: Test
+        if: steps.guard.outputs.exists == 'true' && inputs.run-tests
+        working-directory: ${{ inputs.project-dir }}
+        run: ./gradlew --no-daemon ":${{ inputs.module }}:testReleaseUnitTest"
+
+      - name: Assemble and measure
+        if: steps.guard.outputs.exists == 'true'
+        run: ./tools/measure-android.sh "${{ inputs.approach }}" "${{ inputs.project-dir }}" "${{ inputs.module }}"
+
+      - name: Upload size report
+        if: steps.guard.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-size-${{ inputs.approach }}
+          path: tools/out/android-${{ inputs.approach }}.json
+          if-no-files-found: warn

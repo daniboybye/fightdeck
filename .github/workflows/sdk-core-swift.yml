@@ -1,0 +1,125 @@
+# Build the Swift FightCore for Apple and, the interesting half, for Android.
+#
+# The Android job is the riskiest thing in this repository. Swift 6.3 shipped an official
+# Android SDK, but the toolchain is young: swift-java is pre-1.0, and NDK compatibility
+# past r27d is unconfirmed. The job is allowed to fail without taking the workflow down,
+# because "we tried it and here is exactly where it broke" is itself a result worth having
+# on a slide — a talk that only shows the paths that worked is a sales pitch.
+
+name: SDK — Swift core
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  apple:
+    name: Apple
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 01-core-swift/sdks/core/Package.swift ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Swift core not written yet"
+          fi
+
+      - name: Pin Xcode
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          XCODE_VERSION="$(./tools/versions.py apple.xcode)"
+          sudo xcode-select -switch "/Applications/Xcode_${XCODE_VERSION}.app" 2>/dev/null \
+            || echo "::warning::Xcode ${XCODE_VERSION} not found; using runner default"
+          swift --version
+
+      - name: Test
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 01-core-swift/sdks/core
+        run: swift test
+
+      - name: Package XCFramework
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 01-core-swift/sdks/core
+        run: ./build-xcframework.sh
+
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          name: swift-core-xcframework
+          path: 01-core-swift/sdks/core/out/*.xcframework.zip
+          if-no-files-found: warn
+
+  android:
+    name: Android (Swift SDK)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 01-core-swift/sdks/core/Package.swift ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Read pinned versions
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          ./tools/versions.py apple.swift --github-env PINNED_SWIFT
+          ./tools/versions.py apple.swift_sdks.android --github-env PINNED_SWIFT_ANDROID_SDK
+          ./tools/versions.py android.jdk --github-env PINNED_JDK
+          ./tools/versions.py android.ndk --github-env PINNED_NDK
+          ./tools/versions.py android.min_sdk --github-env PINNED_MIN_SDK
+
+      - uses: actions/setup-java@v5
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          distribution: temurin
+          java-version: ${{ env.PINNED_JDK }}
+
+      - uses: swift-actions/setup-swift@v2
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          swift-version: ${{ env.PINNED_SWIFT }}
+
+      - name: Install the Swift SDK for Android
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          # The bundle name is pinned so a silently newer nightly cannot change the numbers.
+          swift sdk install \
+            "https://download.swift.org/swift-${PINNED_SWIFT}-release/android/swift-${PINNED_SWIFT}-RELEASE/${PINNED_SWIFT_ANDROID_SDK}.artifactbundle.tar.gz" \
+            || echo "::warning::Swift SDK for Android install failed — this is the documented risk"
+          swift sdk list
+
+      - name: Cross-compile for aarch64-unknown-linux-android
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 01-core-swift/sdks/core
+        run: |
+          swift build \
+            --swift-sdk "aarch64-unknown-linux-android${PINNED_MIN_SDK}" \
+            -c release
+
+      - name: Package AAR (swift-java jextract --mode=jni)
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 01-core-swift/sdks/core
+        run: |
+          # --mode=ffm needs JDK 22+ and java.lang.foreign, neither of which exists on
+          # Android: ART is not a JVM and has no Panama. JNI mode is the only option here.
+          ./build-aar.sh
+
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          name: swift-core-aar
+          path: 01-core-swift/sdks/core/out/*.aar
+          if-no-files-found: warn

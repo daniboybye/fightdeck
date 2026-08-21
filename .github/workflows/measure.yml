@@ -1,0 +1,85 @@
+# The receipt.
+#
+# This is the most important workflow in the repository. It builds all ten host apps,
+# runs the contract suite, collects every number, and renders the comparison table that
+# goes on stage. The point is that no figure shown during the talk is typed by hand:
+# re-run this the morning of the talk and the slide is current.
+#
+# Dispatch only, like everything else here. It is expensive and there is no reason for
+# a commit to trigger it.
+
+name: Measure — the receipt
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip-tests:
+        description: Skip unit tests to get numbers faster
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  ios:
+    name: iOS
+    strategy:
+      fail-fast: false
+      matrix:
+        approach: [00-native, 01-core-swift, 02-core-rust, 03-sdk-rn, 04-sdk-skip]
+    uses: ./.github/workflows/_ios-app.yml
+    with:
+      approach: ${{ matrix.approach }}
+      scheme: FightDeck
+      project-dir: ${{ matrix.approach }}/ios
+      run-tests: ${{ !inputs.skip-tests }}
+
+  android:
+    name: Android
+    strategy:
+      fail-fast: false
+      matrix:
+        approach: [00-native, 01-core-swift, 02-core-rust, 03-sdk-rn, 04-sdk-skip]
+    uses: ./.github/workflows/_android-app.yml
+    with:
+      approach: ${{ matrix.approach }}
+      project-dir: ${{ matrix.approach }}/android
+      module: app
+      run-tests: ${{ !inputs.skip-tests }}
+
+  contract:
+    name: Contract
+    uses: ./.github/workflows/contract.yml
+
+  receipt:
+    name: Render receipt
+    runs-on: ubuntu-24.04
+    needs: [ios, android, contract]
+    if: always()
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Collect every measurement
+        uses: actions/download-artifact@v4
+        with:
+          path: tools/out
+          merge-multiple: true
+
+      - name: Show what we actually got
+        run: |
+          echo "Measurement files present:"
+          ls -la tools/out/ 2>/dev/null || echo "(none)"
+
+      - name: Render
+        run: |
+          python3 tools/render-receipt.py > tools/out/receipt.md
+          cat tools/out/receipt.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: receipt
+          path: |
+            tools/out/receipt.md
+            tools/out/*.json
+          if-no-files-found: warn

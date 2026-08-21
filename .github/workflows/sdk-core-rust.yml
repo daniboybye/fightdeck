@@ -1,0 +1,136 @@
+# Build the Rust FightCore into an XCFramework and an AAR.
+#
+# Rust is the most predictable of the three cores: one cargo workspace, UniFFI generates
+# the Swift and Kotlin bindings, and the artifacts drop out the other end. It is
+# deliberately the first core built, so that the contract fixtures get a passing
+# implementation early and the other cores have something to disagree with.
+
+name: SDK — Rust core
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  apple:
+    name: XCFramework
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Rust core not written yet"
+          fi
+
+      - name: Read pinned versions
+        if: steps.guard.outputs.exists == 'true'
+        run: ./tools/versions.py rust.toolchain --github-env PINNED_RUST
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          toolchain: ${{ env.PINNED_RUST }}
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - name: Build and package
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 02-core-rust/sdks/core
+        run: ./build-xcframework.sh
+
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          name: rust-core-xcframework
+          path: 02-core-rust/sdks/core/out/*.xcframework.zip
+          if-no-files-found: warn
+
+  android:
+    name: AAR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Rust core not written yet"
+          fi
+
+      - name: Read pinned versions
+        if: steps.guard.outputs.exists == 'true'
+        run: |
+          ./tools/versions.py rust.toolchain --github-env PINNED_RUST
+          ./tools/versions.py rust.cargo_ndk --github-env PINNED_CARGO_NDK
+          ./tools/versions.py android.jdk --github-env PINNED_JDK
+          ./tools/versions.py android.ndk --github-env PINNED_NDK
+
+      - uses: actions/setup-java@v5
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          distribution: temurin
+          java-version: ${{ env.PINNED_JDK }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          toolchain: ${{ env.PINNED_RUST }}
+          targets: aarch64-linux-android,x86_64-linux-android
+
+      - name: Install cargo-ndk
+        if: steps.guard.outputs.exists == 'true'
+        run: cargo install cargo-ndk --version "$PINNED_CARGO_NDK" --locked
+
+      - name: Build and package
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 02-core-rust/sdks/core
+        run: ./build-aar.sh
+
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          name: rust-core-aar
+          path: 02-core-rust/sdks/core/out/*.aar
+          if-no-files-found: warn
+
+  wasm:
+    # The bonus slide: the same core, compiled to WebAssembly. Element and Crux both do
+    # this in production, so it is worth one measured data point rather than a claim.
+    name: Wasm (bonus)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Build
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 02-core-rust/sdks/core
+        run: |
+          cargo build --release --target wasm32-unknown-unknown
+          ls -la target/wasm32-unknown-unknown/release/*.wasm

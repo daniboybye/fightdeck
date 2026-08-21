@@ -1,0 +1,117 @@
+# Run the frozen golden fixtures against every FightCore implementation.
+#
+# This is the guard rail for the whole repository. Five apps built by five separate
+# agents will drift; the contract suite is what catches the drift before an audience
+# does. If the Swift core and the Rust core disagree about what a four-leg accumulator
+# pays out, that shows up here as a red cell rather than as two phones displaying
+# different numbers on a projector.
+
+name: Contract tests
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  swift:
+    name: Swift core
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 01-core-swift/sdks/core/Package.swift ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Swift core not written yet"
+          fi
+      - name: Run fixtures
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 01-core-swift/sdks/core
+        run: swift test --parallel
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true' && always()
+        with:
+          name: contract-swift
+          path: 01-core-swift/sdks/core/out/contract-*.json
+          if-no-files-found: ignore
+
+  rust:
+    name: Rust core
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Rust core not written yet"
+          fi
+      - name: Read pinned versions
+        if: steps.guard.outputs.exists == 'true'
+        run: ./tools/versions.py rust.toolchain --github-env PINNED_RUST
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          toolchain: ${{ env.PINNED_RUST }}
+      - name: Run fixtures
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 02-core-rust/sdks/core
+        run: cargo test --release
+      - uses: actions/upload-artifact@v4
+        if: steps.guard.outputs.exists == 'true' && always()
+        with:
+          name: contract-rust
+          path: 02-core-rust/sdks/core/out/contract-*.json
+          if-no-files-found: ignore
+
+  native-baseline:
+    name: Native baseline (written twice)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Guard
+        id: guard
+        run: |
+          if [[ -n "$(find 00-native/ios -maxdepth 2 -name 'Package.swift' -o -maxdepth 2 -name '*.xcodeproj' 2>/dev/null)" ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Native baseline not written yet"
+          fi
+      - name: Run fixtures against the hand-written Swift implementation
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: 00-native/ios
+        run: xcodebuild test -scheme FightDeck -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
+
+  summarise:
+    name: Summary
+    runs-on: ubuntu-24.04
+    needs: [swift, rust, native-baseline]
+    if: always()
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: contract-*
+          path: tools/out
+          merge-multiple: true
+      - name: Which core failed where
+        run: |
+          {
+            echo "## Contract results"
+            echo
+            echo "| Core | Result |"
+            echo "| --- | --- |"
+            echo "| Swift | ${{ needs.swift.result }} |"
+            echo "| Rust | ${{ needs.rust.result }} |"
+            echo "| Native baseline | ${{ needs.native-baseline.result }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

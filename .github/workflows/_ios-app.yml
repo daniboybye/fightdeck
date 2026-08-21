@@ -1,0 +1,102 @@
+# Reusable: build, test and weigh one iOS host app.
+#
+# Not dispatchable on its own. Each approach has a thin wrapper (ios-00-native.yml and
+# friends) so every app stays individually runnable from the Actions tab, while the
+# logic that must stay identical across all five lives here exactly once. If the five
+# approaches were measured by five copies of this file they would drift, and a drifting
+# measurement is worse than no measurement.
+
+name: _ios-app
+
+on:
+  workflow_call:
+    inputs:
+      approach:
+        description: Approach folder, e.g. 00-native
+        required: true
+        type: string
+      scheme:
+        description: Xcode scheme to archive
+        required: true
+        type: string
+      project-dir:
+        description: Directory holding the Xcode project or SwiftPM package
+        required: true
+        type: string
+      run-tests:
+        description: Run the unit test suite before archiving
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  build:
+    name: ${{ inputs.approach }} (iOS)
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Pin Xcode from versions.lock.toml
+        run: |
+          XCODE_VERSION="$(./tools/versions.py apple.xcode)"
+          echo "Pinned Xcode: $XCODE_VERSION"
+          sudo xcode-select -switch "/Applications/Xcode_${XCODE_VERSION}.app" 2>/dev/null \
+            || echo "::warning::Xcode ${XCODE_VERSION} not found at the expected path; using runner default"
+          xcodebuild -version
+
+      - name: Guard — does this app exist yet?
+        id: guard
+        run: |
+          if [[ -d "${{ inputs.project-dir }}" ]] && \
+             [[ -n "$(find '${{ inputs.project-dir }}' -maxdepth 2 \( -name '*.xcodeproj' -o -name 'Package.swift' \) 2>/dev/null)" ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::${{ inputs.project-dir }} is not built yet — nothing to do"
+          fi
+
+      - name: Install xcbeautify
+        if: steps.guard.outputs.exists == 'true'
+        run: brew install xcbeautify
+
+      # 02-core-rust is the one host whose dependency is not a pinned release: its UniFFI
+      # bindings and xcframework are build output, so the core has to be packaged here
+      # before the app will compile. The other four resolve artifacts over HTTPS.
+      - name: Read pinned Rust toolchain
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        run: ./tools/versions.py rust.toolchain --github-env PINNED_RUST
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        with:
+          toolchain: ${{ env.PINNED_RUST }}
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - name: Package the Rust core
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        working-directory: 02-core-rust/sdks/core
+        run: ./build-xcframework.sh
+
+      - name: Test
+        if: steps.guard.outputs.exists == 'true' && inputs.run-tests
+        working-directory: ${{ inputs.project-dir }}
+        run: |
+          xcodebuild test \
+            -scheme "${{ inputs.scheme }}" \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify
+
+      - name: Archive and measure
+        if: steps.guard.outputs.exists == 'true'
+        run: ./tools/measure-ios.sh "${{ inputs.approach }}" "${{ inputs.project-dir }}" "${{ inputs.scheme }}"
+
+      - name: Upload size report
+        if: steps.guard.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-size-${{ inputs.approach }}
+          path: tools/out/ios-${{ inputs.approach }}.json
+          if-no-files-found: warn

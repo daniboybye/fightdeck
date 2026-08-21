@@ -1,0 +1,141 @@
+# fightdeck — pinned toolchain
+#
+# Rule: latest stable everywhere. Nothing here is a beta or a release candidate.
+# Verified 20 August 2026. Every workflow in .github/workflows reads from this file
+# so that a version bump happens in exactly one place.
+#
+# When a value changes, note WHY in the comment on the line. A version with no
+# reason attached is a version nobody can audit later.
+
+[meta]
+verified = "2026-08-20"
+rule = "latest stable everywhere"
+
+# ---------------------------------------------------------------------------
+# Apple
+# ---------------------------------------------------------------------------
+[apple]
+swift = "6.3.3"                        # 30 June 2026. 6.4 is NOT stable: Xcode 27 betas only.
+xcode = "26.6"
+xcode_build = "17F113"
+ios_sdk = "26.5"
+ios_device = "26.6.1"                  # what the demo devices actually run
+macos_deployment = "26.0"
+
+[apple.swift_sdks]
+# Cross-compilation bundles installed with `swift sdk install`
+android = "swift-6.3.3-RELEASE_android"
+wasm = "swift-6.3.3-RELEASE_wasm"
+
+[apple.packages]
+swift_java = "0.4.2"                   # pre-1.0: no API stability guarantee, expect churn
+
+# ---------------------------------------------------------------------------
+# Android
+# ---------------------------------------------------------------------------
+[android]
+platform_version = "17"
+compile_sdk = 37                       # Android 17, released 16 June 2026
+target_sdk = 37
+min_sdk = 28                           # Swift SDK for Android targets ...-android28
+android_studio = "Quail 3 (2026.1.3 Patch 1)"
+agp = "9.3.1"
+gradle = "9.7.1"
+jdk = "17"
+kotlin = "2.4.10"                      # 2.5 is planned for December 2026
+compose_bom = "2026.08.00"             # resolves to Compose 1.12.0
+compose = "1.12.0"
+compose_multiplatform = "1.11.1"       # bonus measurement only, not a demo target
+ndk = "27.3.13750724"                  # r27d LTS. r29 compatibility with the Swift SDK is UNCONFIRMED.
+
+# ---------------------------------------------------------------------------
+# React Native — bare, deliberately not Expo
+# ---------------------------------------------------------------------------
+# Expo SDK 57 (stable) still ships RN 0.86.2, which would put us a version behind.
+# For a brownfield SDK scenario bare RN is the correct choice anyway. expo-glass-effect
+# appears in the talk as EVIDENCE of day-one API lag, never as a dependency.
+[react_native]
+version = "0.87.0"                     # 11 August 2026
+react = "19.2.3"
+hermes = "v1"                          # default since RN 0.84
+node = "24.19.0"                       # LTS. Local dev machines may run newer; CI pins this.
+typescript = "7.0.2"
+bridgeless = true                      # 0.87 has no other mode
+
+[react_native.packages]
+screens = "4.27.0"
+safe_area_context = "5.9.1"
+keyboard_controller = "1.22.4"         # literally the exhibit from the hiring-argument section
+
+# ---------------------------------------------------------------------------
+# Rust
+# ---------------------------------------------------------------------------
+[rust]
+toolchain = "1.97.1"
+uniffi = "0.32.0"
+cargo_ndk = "4.1.2"
+jni = "0.22.4"
+rust_decimal = "1.42.1"                # money never touches f64
+
+[rust.optional]
+# Only if Crux enters as a variant
+crux_core = "0.20.0"                   # 7 August 2026
+boltffi = "0.29.3"                     # crux migrated off UniFFI onto BoltFFI in 0.19
+
+[rust.targets]
+android = [
+  "aarch64-linux-android",
+  "x86_64-linux-android",
+]
+apple = [
+  "aarch64-apple-ios",
+  "aarch64-apple-ios-sim",
+  "x86_64-apple-ios",
+]
+wasm = ["wasm32-unknown-unknown"]
+
+# ---------------------------------------------------------------------------
+# Skip
+# ---------------------------------------------------------------------------
+# Free and open source since 21 January 2026 (v1.7). Frameworks are MPL-2.0,
+# but the skipstone build engine is AGPL-3.0 — that distinction matters and is a slide.
+[skip]
+skipstone = "1.9.6"
+skip_ui = "1.59.2"
+skip_foundation = "1.4.3"
+skip_model = "1.7.7"
+skip_fuse = "1.0.3"
+skip_fuse_ui = "1.18.1"
+license_frameworks = "MPL-2.0"
+license_skipstone = "AGPL-3.0"
+
+# ---------------------------------------------------------------------------
+# CI
+# ---------------------------------------------------------------------------
+[ci]
+# macos-15 is being retired; macos-26 ships Xcode 26.6 by default.
+# ubuntu-24.04 preinstalls Gradle, Kotlin, Rust, Swift, Android API 37 and NDK 27.3/28.2/29.0.
+macos_runner = "macos-26"
+linux_runner = "ubuntu-24.04"
+
+[ci.actions]
+checkout = "actions/checkout@v7"
+setup_java = "actions/setup-java@v5"
+setup_node = "actions/setup-node@v7"
+setup_swift = "swift-actions/setup-swift@v2"
+setup_rust = "dtolnay/rust-toolchain@stable"
+upload_artifact = "actions/upload-artifact@v4"
+download_artifact = "actions/download-artifact@v4"
+gh_release = "softprops/action-gh-release@v2"
+
+# ---------------------------------------------------------------------------
+# Binary SDK distribution
+# ---------------------------------------------------------------------------
+# The host apps consume SDKs as checksum-pinned binaries, never as source.
+# "The host does not know what is inside" is only true if it literally cannot look.
+# FIGHTDECK_LOCAL_SDK=1 switches to a locally built artifact so the repo can be
+# bootstrapped before any GitHub Release exists.
+[distribution]
+sdk_version = "0.1.0"
+release_tag_prefix = "sdk-v"
+local_switch_env = "FIGHTDECK_LOCAL_SDK"

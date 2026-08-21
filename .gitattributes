@@ -1,0 +1,30 @@
+* text=auto eol=lf
+
+*.swift    text diff=swift
+*.kt       text diff=kotlin
+*.kts      text diff=kotlin
+*.rs       text diff=rust
+*.ts       text
+*.tsx      text
+*.toml     text
+*.json     text
+*.md       text
+*.yml      text
+*.yaml     text
+
+*.pbxproj  text merge=union
+Package.resolved  text -diff
+
+# The Gradle wrapper ships as generated: a batch file needs CRLF to run on Windows,
+# and the wrapper jar must not be touched at all.
+gradlew           text eol=lf
+gradlew.bat       text eol=crlf
+*.jar             binary
+
+*.png      binary
+*.jpg      binary
+*.webp     binary
+*.mp4      binary
+*.zip      binary
+*.aar      binary
+*.jar      binary

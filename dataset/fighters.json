@@ -1,0 +1,684 @@
+{
+  "fighters": [
+    {
+      "id": "justin-gaethje",
+      "name": "Justin Gaethje",
+      "nickname": "The Highlight",
+      "country": "United States",
+      "heightCm": 180,
+      "reachIn": 70,
+      "stance": "orthodox",
+      "record": {
+        "wins": 27,
+        "losses": 5,
+        "draws": 0,
+        "noContests": 0,
+        "display": "27-5-0"
+      },
+      "portrait": "assets/fighters/justin-gaethje.jpg"
+    },
+    {
+      "id": "ilia-topuria",
+      "name": "Ilia Topuria",
+      "nickname": "El Matador",
+      "country": "Spain",
+      "heightCm": 170,
+      "reachIn": 69,
+      "stance": "orthodox",
+      "record": {
+        "wins": 17,
+        "losses": 0,
+        "draws": 0,
+        "noContests": 0,
+        "display": "17-0-0"
+      },
+      "portrait": "assets/fighters/ilia-topuria.jpg"
+    },
+    {
+      "id": "ciryl-gane",
+      "name": "Ciryl Gane",
+      "nickname": "Bon Gamin",
+      "country": "France",
+      "heightCm": 193,
+      "reachIn": 81,
+      "stance": "orthodox",
+      "record": {
+        "wins": 13,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 1,
+        "display": "13-2-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/ciryl-gane.jpg"
+    },
+    {
+      "id": "alex-pereira",
+      "name": "Alex Pereira",
+      "nickname": "Poatan",
+      "country": "Brazil",
+      "heightCm": 193,
+      "reachIn": 79,
+      "stance": "orthodox",
+      "record": {
+        "wins": 13,
+        "losses": 3,
+        "draws": 0,
+        "noContests": 0,
+        "display": "13-3-0"
+      },
+      "portrait": "assets/fighters/alex-pereira.jpg"
+    },
+    {
+      "id": "sean-omalley",
+      "name": "Sean O'Malley",
+      "nickname": "Suga",
+      "country": "United States",
+      "heightCm": 180,
+      "reachIn": 72,
+      "stance": "switch",
+      "record": {
+        "wins": 19,
+        "losses": 3,
+        "draws": 0,
+        "noContests": 1,
+        "display": "19-3-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/sean-omalley.jpg"
+    },
+    {
+      "id": "aiemann-zahabi",
+      "name": "Aiemann Zahabi",
+      "nickname": null,
+      "country": "Canada",
+      "heightCm": 173,
+      "reachIn": 68,
+      "stance": "orthodox",
+      "record": {
+        "wins": 14,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "14-2-0"
+      },
+      "portrait": "assets/fighters/aiemann-zahabi.jpg"
+    },
+    {
+      "id": "josh-hokit",
+      "name": "Josh Hokit",
+      "nickname": null,
+      "country": "United States",
+      "heightCm": 185,
+      "reachIn": null,
+      "stance": null,
+      "record": {
+        "wins": 9,
+        "losses": 0,
+        "draws": 0,
+        "noContests": 0,
+        "display": "9-0-0"
+      },
+      "portrait": "assets/fighters/josh-hokit.jpg"
+    },
+    {
+      "id": "derrick-lewis",
+      "name": "Derrick Lewis",
+      "nickname": "The Black Beast",
+      "country": "United States",
+      "heightCm": 191,
+      "reachIn": 79,
+      "stance": "orthodox",
+      "record": {
+        "wins": 29,
+        "losses": 13,
+        "draws": 0,
+        "noContests": 1,
+        "display": "29-13-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/derrick-lewis.jpg"
+    },
+    {
+      "id": "mauricio-ruffy",
+      "name": "Maurício Ruffy",
+      "nickname": null,
+      "country": "Brazil",
+      "heightCm": 185,
+      "reachIn": 76,
+      "stance": "orthodox",
+      "record": {
+        "wins": 13,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "13-2-0"
+      },
+      "portrait": "assets/fighters/mauricio-ruffy.jpg"
+    },
+    {
+      "id": "michael-chandler",
+      "name": "Michael Chandler",
+      "nickname": "Iron",
+      "country": "United States",
+      "heightCm": 173,
+      "reachIn": 71,
+      "stance": "orthodox",
+      "record": {
+        "wins": 23,
+        "losses": 10,
+        "draws": 0,
+        "noContests": 0,
+        "display": "23-10-0"
+      },
+      "portrait": "assets/fighters/michael-chandler.jpg"
+    },
+    {
+      "id": "bo-nickal",
+      "name": "Bo Nickal",
+      "nickname": null,
+      "country": "United States",
+      "heightCm": 185,
+      "reachIn": 77,
+      "stance": "switch",
+      "record": {
+        "wins": 8,
+        "losses": 1,
+        "draws": 0,
+        "noContests": 0,
+        "display": "8-1-0"
+      },
+      "portrait": "assets/fighters/bo-nickal.jpg"
+    },
+    {
+      "id": "kyle-daukaus",
+      "name": "Kyle Daukaus",
+      "nickname": "The D'Arce Knight",
+      "country": "United States",
+      "heightCm": 191,
+      "reachIn": 76,
+      "stance": "orthodox",
+      "record": {
+        "wins": 17,
+        "losses": 4,
+        "draws": 0,
+        "noContests": 1,
+        "display": "17-4-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/kyle-daukaus.jpg"
+    },
+    {
+      "id": "diego-lopes",
+      "name": "Diego Lopes",
+      "nickname": null,
+      "country": "Brazil",
+      "heightCm": 180,
+      "reachIn": 72,
+      "stance": "orthodox",
+      "record": {
+        "wins": 27,
+        "losses": 8,
+        "draws": 0,
+        "noContests": 0,
+        "display": "27-8-0"
+      },
+      "portrait": "assets/fighters/diego-lopes.jpg"
+    },
+    {
+      "id": "steve-garcia",
+      "name": "Steve Garcia",
+      "nickname": "Mean Machine",
+      "country": "United States",
+      "heightCm": 183,
+      "reachIn": 75,
+      "stance": "orthodox",
+      "record": {
+        "wins": 19,
+        "losses": 5,
+        "draws": 0,
+        "noContests": 0,
+        "display": "19-5-0"
+      },
+      "portrait": "assets/fighters/steve-garcia.jpg"
+    },
+    {
+      "id": "sean-strickland",
+      "name": "Sean Strickland",
+      "nickname": "Tarzan",
+      "country": "United States",
+      "heightCm": 185,
+      "reachIn": 76,
+      "stance": "orthodox",
+      "record": {
+        "wins": 30,
+        "losses": 7,
+        "draws": 0,
+        "noContests": 0,
+        "display": "30-7-0"
+      },
+      "portrait": "assets/fighters/sean-strickland.jpg"
+    },
+    {
+      "id": "khamzat-chimaev",
+      "name": "Khamzat Chimaev",
+      "nickname": "Borz",
+      "country": "United Arab Emirates",
+      "heightCm": 188,
+      "reachIn": 75,
+      "stance": "orthodox",
+      "record": {
+        "wins": 15,
+        "losses": 0,
+        "draws": 0,
+        "noContests": 0,
+        "display": "15-0-0"
+      },
+      "portrait": "assets/fighters/khamzat-chimaev.jpg"
+    },
+    {
+      "id": "joshua-van",
+      "name": "Joshua Van",
+      "nickname": null,
+      "country": "Myanmar",
+      "heightCm": 165,
+      "reachIn": 65,
+      "stance": "orthodox",
+      "record": {
+        "wins": 16,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "16-2-0"
+      },
+      "portrait": "assets/fighters/joshua-van.jpg"
+    },
+    {
+      "id": "tatsuro-taira",
+      "name": "Tatsuro Taira",
+      "nickname": null,
+      "country": "Japan",
+      "heightCm": 170,
+      "reachIn": 70,
+      "stance": "orthodox",
+      "record": {
+        "wins": 18,
+        "losses": 1,
+        "draws": 0,
+        "noContests": 0,
+        "display": "18-1-0"
+      },
+      "portrait": "assets/fighters/tatsuro-taira.jpg"
+    },
+    {
+      "id": "alexander-volkov",
+      "name": "Alexander Volkov",
+      "nickname": "Drago",
+      "country": "Russia",
+      "heightCm": 201,
+      "reachIn": 80,
+      "stance": "orthodox",
+      "record": {
+        "wins": 39,
+        "losses": 11,
+        "draws": 0,
+        "noContests": 0,
+        "display": "39-11-0"
+      },
+      "portrait": "assets/fighters/alexander-volkov.jpg"
+    },
+    {
+      "id": "waldo-cortes-acosta",
+      "name": "Waldo Cortes-Acosta",
+      "nickname": "Salsa Boy",
+      "country": "Dominican Republic",
+      "heightCm": 193,
+      "reachIn": 78,
+      "stance": "orthodox",
+      "record": {
+        "wins": 17,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "17-2-0"
+      },
+      "portrait": "assets/fighters/waldo-cortes-acosta.jpg"
+    },
+    {
+      "id": "sean-brady",
+      "name": "Sean Brady",
+      "nickname": null,
+      "country": "United States",
+      "heightCm": 178,
+      "reachIn": 72,
+      "stance": "orthodox",
+      "record": {
+        "wins": 18,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "18-2-0"
+      },
+      "portrait": "assets/fighters/sean-brady.jpg"
+    },
+    {
+      "id": "joaquin-buckley",
+      "name": "Joaquin Buckley",
+      "nickname": "New Mansa",
+      "country": "United States",
+      "heightCm": 178,
+      "reachIn": 76,
+      "stance": "switch",
+      "record": {
+        "wins": 21,
+        "losses": 7,
+        "draws": 0,
+        "noContests": 0,
+        "display": "21-7-0"
+      },
+      "portrait": "assets/fighters/joaquin-buckley.jpg"
+    },
+    {
+      "id": "king-green",
+      "name": "King Green",
+      "nickname": null,
+      "country": "United States",
+      "heightCm": 178,
+      "reachIn": 71,
+      "stance": "orthodox",
+      "record": {
+        "wins": 34,
+        "losses": 17,
+        "draws": 1,
+        "noContests": 1,
+        "display": "34-17-1 (1 NC)"
+      },
+      "portrait": "assets/fighters/king-green.jpg"
+    },
+    {
+      "id": "jeremy-stephens",
+      "name": "Jeremy Stephens",
+      "nickname": "Lil' Heathen",
+      "country": "United States",
+      "heightCm": 175,
+      "reachIn": 71,
+      "stance": "orthodox",
+      "record": {
+        "wins": 29,
+        "losses": 22,
+        "draws": 0,
+        "noContests": 1,
+        "display": "29-22-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/jeremy-stephens.jpg"
+    },
+    {
+      "id": "ateba-gautier",
+      "name": "Ateba Gautier",
+      "nickname": null,
+      "country": "Cameroon",
+      "heightCm": 193,
+      "reachIn": 79,
+      "stance": "orthodox",
+      "record": {
+        "wins": 10,
+        "losses": 1,
+        "draws": 0,
+        "noContests": 0,
+        "display": "10-1-0"
+      },
+      "portrait": "assets/fighters/ateba-gautier.jpg"
+    },
+    {
+      "id": "osman-diaz",
+      "name": "Osman Diaz",
+      "nickname": "Ozzy",
+      "country": "United States",
+      "heightCm": 188,
+      "reachIn": null,
+      "stance": null,
+      "record": {
+        "wins": 10,
+        "losses": 3,
+        "draws": 0,
+        "noContests": 0,
+        "display": "10-3-0"
+      },
+      "portrait": "assets/fighters/osman-diaz.jpg"
+    },
+    {
+      "id": "yaroslav-amosov",
+      "name": "Yaroslav Amosov",
+      "nickname": null,
+      "country": "Ukraine",
+      "heightCm": 180,
+      "reachIn": 75,
+      "stance": "orthodox",
+      "record": {
+        "wins": 29,
+        "losses": 1,
+        "draws": 0,
+        "noContests": 0,
+        "display": "29-1-0"
+      },
+      "portrait": "assets/fighters/yaroslav-amosov.jpg"
+    },
+    {
+      "id": "joel-alvarez",
+      "name": "Joel Álvarez",
+      "nickname": "El Terror",
+      "country": "Spain",
+      "heightCm": 191,
+      "reachIn": 77,
+      "stance": "orthodox",
+      "record": {
+        "wins": 23,
+        "losses": 3,
+        "draws": 0,
+        "noContests": 0,
+        "display": "23-3-0"
+      },
+      "portrait": "assets/fighters/joel-alvarez.jpg"
+    },
+    {
+      "id": "grant-dawson",
+      "name": "Grant Dawson",
+      "nickname": "KGD",
+      "country": "United States",
+      "heightCm": 178,
+      "reachIn": 72,
+      "stance": "orthodox",
+      "record": {
+        "wins": 23,
+        "losses": 3,
+        "draws": 1,
+        "noContests": 0,
+        "display": "23-3-1"
+      },
+      "portrait": "assets/fighters/grant-dawson.jpg"
+    },
+    {
+      "id": "mateusz-rebecki",
+      "name": "Mateusz Rębecki",
+      "nickname": null,
+      "country": "Poland",
+      "heightCm": 170,
+      "reachIn": 66,
+      "stance": "southpaw",
+      "record": {
+        "wins": 20,
+        "losses": 4,
+        "draws": 0,
+        "noContests": 0,
+        "display": "20-4-0"
+      },
+      "portrait": "assets/fighters/mateusz-rebecki.jpg"
+    },
+    {
+      "id": "jim-miller",
+      "name": "Jim Miller",
+      "nickname": null,
+      "country": "United States",
+      "heightCm": 173,
+      "reachIn": 71,
+      "stance": "orthodox",
+      "record": {
+        "wins": 38,
+        "losses": 19,
+        "draws": 0,
+        "noContests": 1,
+        "display": "38-19-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/jim-miller.jpg"
+    },
+    {
+      "id": "jared-gordon",
+      "name": "Jared Gordon",
+      "nickname": "Flash",
+      "country": "United States",
+      "heightCm": 175,
+      "reachIn": 68,
+      "stance": "orthodox",
+      "record": {
+        "wins": 21,
+        "losses": 8,
+        "draws": 0,
+        "noContests": 1,
+        "display": "21-8-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/jared-gordon.jpg"
+    },
+    {
+      "id": "roman-kopylov",
+      "name": "Roman Kopylov",
+      "nickname": null,
+      "country": "Russia",
+      "heightCm": 183,
+      "reachIn": 75,
+      "stance": "southpaw",
+      "record": {
+        "wins": 14,
+        "losses": 5,
+        "draws": 0,
+        "noContests": 0,
+        "display": "14-5-0"
+      },
+      "portrait": "assets/fighters/roman-kopylov.jpg"
+    },
+    {
+      "id": "marco-tulio",
+      "name": "Marco Tulio",
+      "nickname": null,
+      "country": "Brazil",
+      "heightCm": 183,
+      "reachIn": 74,
+      "stance": "orthodox",
+      "record": {
+        "wins": 14,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "14-2-0"
+      },
+      "portrait": "assets/fighters/marco-tulio.jpg"
+    },
+    {
+      "id": "pat-sabatini",
+      "name": "Pat Sabatini",
+      "nickname": null,
+      "country": "United States",
+      "heightCm": 173,
+      "reachIn": 70,
+      "stance": "orthodox",
+      "record": {
+        "wins": 21,
+        "losses": 5,
+        "draws": 0,
+        "noContests": 0,
+        "display": "21-5-0"
+      },
+      "portrait": "assets/fighters/pat-sabatini.jpg"
+    },
+    {
+      "id": "william-gomis",
+      "name": "William Gomis",
+      "nickname": null,
+      "country": "France",
+      "heightCm": 183,
+      "reachIn": 73,
+      "stance": "orthodox",
+      "record": {
+        "wins": 15,
+        "losses": 3,
+        "draws": 0,
+        "noContests": 0,
+        "display": "15-3-0"
+      },
+      "portrait": "assets/fighters/william-gomis.jpg"
+    },
+    {
+      "id": "baisangur-susurkaev",
+      "name": "Baisangur Susurkaev",
+      "nickname": null,
+      "country": "Russia",
+      "heightCm": 183,
+      "reachIn": 73,
+      "stance": "orthodox",
+      "record": {
+        "wins": 11,
+        "losses": 0,
+        "draws": 0,
+        "noContests": 0,
+        "display": "11-0-0"
+      },
+      "portrait": "assets/fighters/baisangur-susurkaev.jpg"
+    },
+    {
+      "id": "djorden-santos",
+      "name": "Djorden Santos",
+      "nickname": null,
+      "country": "Brazil",
+      "heightCm": 185,
+      "reachIn": 74,
+      "stance": "orthodox",
+      "record": {
+        "wins": 11,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "11-2-0"
+      },
+      "portrait": "assets/fighters/djorden-santos.jpg"
+    },
+    {
+      "id": "jose-ochoa",
+      "name": "Jose Ochoa",
+      "nickname": null,
+      "country": "Peru",
+      "heightCm": 165,
+      "reachIn": 65,
+      "stance": "orthodox",
+      "record": {
+        "wins": 8,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 1,
+        "display": "8-2-0 (1 NC)"
+      },
+      "portrait": "assets/fighters/jose-ochoa.jpg"
+    },
+    {
+      "id": "clayton-carpenter",
+      "name": "Clayton Carpenter",
+      "nickname": null,
+      "country": "United States",
+      "heightCm": 168,
+      "reachIn": 66,
+      "stance": "orthodox",
+      "record": {
+        "wins": 8,
+        "losses": 2,
+        "draws": 0,
+        "noContests": 0,
+        "display": "8-2-0"
+      },
+      "portrait": "assets/fighters/clayton-carpenter.jpg"
+    }
+  ]
+}

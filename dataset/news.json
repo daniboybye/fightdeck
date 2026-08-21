@@ -1,0 +1,84 @@
+{
+  "news": [
+    {
+      "id": "gaethje-unifies",
+      "eventId": "ufc-freedom-250",
+      "headline": "Gaethje unifies at the White House as Topuria's corner calls it",
+      "body": "Justin Gaethje entered as interim champion and left as the undisputed one. Ilia Topuria's corner stopped the fight between the fourth and fifth rounds, ending the first unbeaten run at lightweight in years.",
+      "publishedAt": "2026-06-14T23:40:00Z",
+      "readMinutes": 4,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-freedom-250.jpg"
+    },
+    {
+      "id": "all-seven-finish",
+      "eventId": "ufc-freedom-250",
+      "headline": "Seven fights, seven knockouts, no judges required",
+      "body": "Every bout on the South Lawn card ended by knockout or technical knockout. No UFC event had previously gone an entire card without a single fight reaching the scorecards by way of KO or TKO alone.",
+      "publishedAt": "2026-06-15T08:15:00Z",
+      "readMinutes": 3,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-freedom-250.jpg"
+    },
+    {
+      "id": "gane-interim",
+      "eventId": "ufc-freedom-250",
+      "headline": "Gane stops Pereira in the second to take the interim heavyweight belt",
+      "body": "In a bout the books could not separate, Ciryl Gane needed less than seven minutes. Alex Pereira's move up to heavyweight ends with his first stoppage loss in the division.",
+      "publishedAt": "2026-06-14T22:05:00Z",
+      "readMinutes": 3,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-freedom-250.jpg"
+    },
+    {
+      "id": "ruffy-wheel-kick",
+      "eventId": "ufc-freedom-250",
+      "headline": "Ruffy ends Chandler with a spinning wheel kick",
+      "body": "Maurício Ruffy was a heavy favourite and still found the most spectacular way available, landing a spinning wheel kick late in the opening round.",
+      "publishedAt": "2026-06-14T21:20:00Z",
+      "readMinutes": 2,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-freedom-250.jpg"
+    },
+    {
+      "id": "strickland-upset",
+      "eventId": "ufc-328",
+      "headline": "Strickland outpoints Chimaev to take the middleweight title",
+      "body": "Two judges saw it 48-47 for Sean Strickland and one saw it the other way. Khamzat Chimaev's undefeated record ends in Newark at the hands of a fighter the books priced at better than 4/1.",
+      "publishedAt": "2026-05-10T04:30:00Z",
+      "readMinutes": 5,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-328.jpg"
+    },
+    {
+      "id": "miller-milestone",
+      "eventId": "ufc-328",
+      "headline": "Jim Miller submits Gordon in the first, extends a record that may never fall",
+      "body": "A guillotine at 3:29 of the opening round adds another line to the longest tenure in UFC history. Miller was the underdog on the night.",
+      "publishedAt": "2026-05-10T03:10:00Z",
+      "readMinutes": 3,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-328.jpg"
+    },
+    {
+      "id": "van-defends",
+      "eventId": "ufc-328",
+      "headline": "Joshua Van defends the flyweight title with a fifth-round stoppage",
+      "body": "Tatsuro Taira was ahead on the cards for long stretches before a front kick to the body changed the fight ninety seconds into the final round.",
+      "publishedAt": "2026-05-10T02:45:00Z",
+      "readMinutes": 4,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-328.jpg"
+    },
+    {
+      "id": "brady-shutout",
+      "eventId": "ufc-328",
+      "headline": "Brady hands Buckley a pair of 30-25 cards",
+      "body": "Sean Brady controlled all three rounds against a favoured Joaquin Buckley, taking two 10-8 rounds on two of the three scorecards.",
+      "publishedAt": "2026-05-10T01:55:00Z",
+      "readMinutes": 2,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/events/ufc-328.jpg"
+    }
+  ]
+}

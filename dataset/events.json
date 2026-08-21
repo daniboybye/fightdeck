@@ -1,0 +1,773 @@
+{
+  "events": [
+    {
+      "id": "ufc-freedom-250",
+      "name": "UFC Freedom 250",
+      "alsoKnownAs": [
+        "UFC White House",
+        "UFC at the White House"
+      ],
+      "date": "2026-06-14",
+      "venue": "South Lawn of the White House",
+      "city": "Washington, D.C.",
+      "country": "United States",
+      "attendance": null,
+      "attendanceNote": "Not officially announced; approximately 4,300 invite-only guests reported",
+      "bouts": [
+        {
+          "id": "ufc-freedom-250-bout-01",
+          "order": 1,
+          "segment": "main",
+          "weightClass": "lightweight",
+          "titleFight": true,
+          "title": "UFC Lightweight Championship",
+          "scheduledRounds": 5,
+          "redCorner": {
+            "fighterId": "ilia-topuria",
+            "name": "Ilia Topuria",
+            "closingOdds": {
+              "american": -500,
+              "decimal": "1.20",
+              "fractional": "1/5"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "justin-gaethje",
+            "name": "Justin Gaethje",
+            "closingOdds": {
+              "american": 360,
+              "decimal": "4.60",
+              "fractional": "18/5"
+            }
+          },
+          "result": {
+            "winnerId": "justin-gaethje",
+            "winnerName": "Justin Gaethje",
+            "method": "tko",
+            "detail": "Corner stoppage",
+            "endRound": 4,
+            "endTime": "5:00",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-freedom-250-bout-02",
+          "order": 2,
+          "segment": "main_card",
+          "weightClass": "heavyweight",
+          "titleFight": true,
+          "title": "Interim UFC Heavyweight Championship",
+          "scheduledRounds": 5,
+          "redCorner": {
+            "fighterId": "alex-pereira",
+            "name": "Alex Pereira",
+            "closingOdds": {
+              "american": -115,
+              "decimal": "1.87",
+              "fractional": "87/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "ciryl-gane",
+            "name": "Ciryl Gane",
+            "closingOdds": {
+              "american": 105,
+              "decimal": "2.05",
+              "fractional": "21/20"
+            }
+          },
+          "result": {
+            "winnerId": "ciryl-gane",
+            "winnerName": "Ciryl Gane",
+            "method": "tko",
+            "detail": "Punches",
+            "endRound": 2,
+            "endTime": "1:27",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-freedom-250-bout-03",
+          "order": 3,
+          "segment": "main_card",
+          "weightClass": "bantamweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "sean-omalley",
+            "name": "Sean O'Malley",
+            "closingOdds": {
+              "american": -440,
+              "decimal": "1.23",
+              "fractional": "23/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "aiemann-zahabi",
+            "name": "Aiemann Zahabi",
+            "closingOdds": {
+              "american": 330,
+              "decimal": "4.30",
+              "fractional": "33/10"
+            }
+          },
+          "result": {
+            "winnerId": "sean-omalley",
+            "winnerName": "Sean O'Malley",
+            "method": "ko",
+            "detail": "Right hand",
+            "endRound": 2,
+            "endTime": "4:02",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-freedom-250-bout-04",
+          "order": 4,
+          "segment": "main_card",
+          "weightClass": "heavyweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "josh-hokit",
+            "name": "Josh Hokit",
+            "closingOdds": {
+              "american": -400,
+              "decimal": "1.25",
+              "fractional": "1/4"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "derrick-lewis",
+            "name": "Derrick Lewis",
+            "closingOdds": {
+              "american": 310,
+              "decimal": "4.10",
+              "fractional": "31/10"
+            }
+          },
+          "result": {
+            "winnerId": "josh-hokit",
+            "winnerName": "Josh Hokit",
+            "method": "tko",
+            "detail": "Punches",
+            "endRound": 2,
+            "endTime": "4:09",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-freedom-250-bout-05",
+          "order": 5,
+          "segment": "main_card",
+          "weightClass": "lightweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "mauricio-ruffy",
+            "name": "Maurício Ruffy",
+            "closingOdds": {
+              "american": -540,
+              "decimal": "1.19",
+              "fractional": "19/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "michael-chandler",
+            "name": "Michael Chandler",
+            "closingOdds": {
+              "american": 395,
+              "decimal": "4.95",
+              "fractional": "79/20"
+            }
+          },
+          "result": {
+            "winnerId": "mauricio-ruffy",
+            "winnerName": "Maurício Ruffy",
+            "method": "tko",
+            "detail": "Spinning wheel kick and punches",
+            "endRound": 1,
+            "endTime": "4:29",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-freedom-250-bout-06",
+          "order": 6,
+          "segment": "main_card",
+          "weightClass": "middleweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "bo-nickal",
+            "name": "Bo Nickal",
+            "closingOdds": {
+              "american": -335,
+              "decimal": "1.30",
+              "fractional": "3/10"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "kyle-daukaus",
+            "name": "Kyle Daukaus",
+            "closingOdds": {
+              "american": 250,
+              "decimal": "3.50",
+              "fractional": "5/2"
+            }
+          },
+          "result": {
+            "winnerId": "bo-nickal",
+            "winnerName": "Bo Nickal",
+            "method": "tko",
+            "detail": "Punches and elbows",
+            "endRound": 1,
+            "endTime": "4:34",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-freedom-250-bout-07",
+          "order": 7,
+          "segment": "main_card",
+          "weightClass": "featherweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "diego-lopes",
+            "name": "Diego Lopes",
+            "closingOdds": {
+              "american": -165,
+              "decimal": "1.61",
+              "fractional": "61/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "steve-garcia",
+            "name": "Steve Garcia",
+            "closingOdds": {
+              "american": 135,
+              "decimal": "2.35",
+              "fractional": "27/20"
+            }
+          },
+          "result": {
+            "winnerId": "diego-lopes",
+            "winnerName": "Diego Lopes",
+            "method": "ko",
+            "detail": "Punches",
+            "endRound": 2,
+            "endTime": "2:42",
+            "wentToDecision": false,
+            "finish": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "ufc-328",
+      "name": "UFC 328: Chimaev vs. Strickland",
+      "alsoKnownAs": [],
+      "date": "2026-05-09",
+      "venue": "Prudential Center",
+      "city": "Newark, New Jersey",
+      "country": "United States",
+      "attendance": 17783,
+      "gateUsd": 7518918,
+      "bouts": [
+        {
+          "id": "ufc-328-bout-01",
+          "order": 1,
+          "segment": "main",
+          "weightClass": "middleweight",
+          "titleFight": true,
+          "title": "UFC Middleweight Championship",
+          "scheduledRounds": 5,
+          "redCorner": {
+            "fighterId": "khamzat-chimaev",
+            "name": "Khamzat Chimaev",
+            "closingOdds": {
+              "american": -500,
+              "decimal": "1.20",
+              "fractional": "1/5"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "sean-strickland",
+            "name": "Sean Strickland",
+            "closingOdds": {
+              "american": 375,
+              "decimal": "4.75",
+              "fractional": "15/4"
+            }
+          },
+          "result": {
+            "winnerId": "sean-strickland",
+            "winnerName": "Sean Strickland",
+            "method": "split_decision",
+            "detail": "48-47, 48-47, 47-48",
+            "endRound": 5,
+            "endTime": "5:00",
+            "wentToDecision": true,
+            "finish": false
+          }
+        },
+        {
+          "id": "ufc-328-bout-02",
+          "order": 2,
+          "segment": "main_card",
+          "weightClass": "flyweight",
+          "titleFight": true,
+          "title": "UFC Flyweight Championship",
+          "scheduledRounds": 5,
+          "redCorner": {
+            "fighterId": "tatsuro-taira",
+            "name": "Tatsuro Taira",
+            "closingOdds": {
+              "american": -152,
+              "decimal": "1.66",
+              "fractional": "33/50"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "joshua-van",
+            "name": "Joshua Van",
+            "closingOdds": {
+              "american": 123,
+              "decimal": "2.23",
+              "fractional": "123/100"
+            }
+          },
+          "result": {
+            "winnerId": "joshua-van",
+            "winnerName": "Joshua Van",
+            "method": "tko",
+            "detail": "Front kick to the body and punches",
+            "endRound": 5,
+            "endTime": "1:32",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-328-bout-03",
+          "order": 3,
+          "segment": "main_card",
+          "weightClass": "heavyweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "alexander-volkov",
+            "name": "Alexander Volkov",
+            "closingOdds": {
+              "american": -141,
+              "decimal": "1.71",
+              "fractional": "71/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "waldo-cortes-acosta",
+            "name": "Waldo Cortes-Acosta",
+            "closingOdds": {
+              "american": 114,
+              "decimal": "2.14",
+              "fractional": "57/50"
+            }
+          },
+          "result": {
+            "winnerId": "alexander-volkov",
+            "winnerName": "Alexander Volkov",
+            "method": "unanimous_decision",
+            "detail": "30-27, 29-28, 29-28",
+            "endRound": 3,
+            "endTime": "5:00",
+            "wentToDecision": true,
+            "finish": false
+          }
+        },
+        {
+          "id": "ufc-328-bout-04",
+          "order": 4,
+          "segment": "main_card",
+          "weightClass": "welterweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "joaquin-buckley",
+            "name": "Joaquin Buckley",
+            "closingOdds": {
+              "american": -167,
+              "decimal": "1.60",
+              "fractional": "3/5"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "sean-brady",
+            "name": "Sean Brady",
+            "closingOdds": {
+              "american": 135,
+              "decimal": "2.35",
+              "fractional": "27/20"
+            }
+          },
+          "result": {
+            "winnerId": "sean-brady",
+            "winnerName": "Sean Brady",
+            "method": "unanimous_decision",
+            "detail": "30-25, 30-25, 30-27",
+            "endRound": 3,
+            "endTime": "5:00",
+            "wentToDecision": true,
+            "finish": false
+          }
+        },
+        {
+          "id": "ufc-328-bout-05",
+          "order": 5,
+          "segment": "main_card",
+          "weightClass": "catchweight_160",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "king-green",
+            "name": "King Green",
+            "closingOdds": {
+              "american": -420,
+              "decimal": "1.24",
+              "fractional": "6/25"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "jeremy-stephens",
+            "name": "Jeremy Stephens",
+            "closingOdds": {
+              "american": 310,
+              "decimal": "4.10",
+              "fractional": "31/10"
+            }
+          },
+          "result": {
+            "winnerId": "king-green",
+            "winnerName": "King Green",
+            "method": "submission",
+            "detail": "Rear-naked choke",
+            "endRound": 1,
+            "endTime": "4:20",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-328-bout-06",
+          "order": 6,
+          "segment": "prelim",
+          "weightClass": "middleweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "ateba-gautier",
+            "name": "Ateba Gautier",
+            "closingOdds": {
+              "american": -1430,
+              "decimal": "1.07",
+              "fractional": "7/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "osman-diaz",
+            "name": "Osman Diaz",
+            "closingOdds": {
+              "american": 850,
+              "decimal": "9.50",
+              "fractional": "17/2"
+            }
+          },
+          "result": {
+            "winnerId": "ateba-gautier",
+            "winnerName": "Ateba Gautier",
+            "method": "ko",
+            "detail": "Right hand",
+            "endRound": 2,
+            "endTime": "1:10",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-328-bout-07",
+          "order": 7,
+          "segment": "prelim",
+          "weightClass": "welterweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "yaroslav-amosov",
+            "name": "Yaroslav Amosov",
+            "closingOdds": {
+              "american": -190,
+              "decimal": "1.53",
+              "fractional": "53/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "joel-alvarez",
+            "name": "Joel Álvarez",
+            "closingOdds": {
+              "american": 150,
+              "decimal": "2.50",
+              "fractional": "3/2"
+            }
+          },
+          "result": {
+            "winnerId": "yaroslav-amosov",
+            "winnerName": "Yaroslav Amosov",
+            "method": "submission",
+            "detail": "Arm-triangle choke",
+            "endRound": 2,
+            "endTime": "1:13",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-328-bout-08",
+          "order": 8,
+          "segment": "prelim",
+          "weightClass": "lightweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "grant-dawson",
+            "name": "Grant Dawson",
+            "closingOdds": {
+              "american": -143,
+              "decimal": "1.70",
+              "fractional": "7/10"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "mateusz-rebecki",
+            "name": "Mateusz Rębecki",
+            "closingOdds": {
+              "american": 115,
+              "decimal": "2.15",
+              "fractional": "23/20"
+            }
+          },
+          "result": {
+            "winnerId": "grant-dawson",
+            "winnerName": "Grant Dawson",
+            "method": "submission",
+            "detail": "Rear-naked choke",
+            "endRound": 3,
+            "endTime": "4:42",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-328-bout-09",
+          "order": 9,
+          "segment": "prelim",
+          "weightClass": "lightweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "jared-gordon",
+            "name": "Jared Gordon",
+            "closingOdds": {
+              "american": -278,
+              "decimal": "1.36",
+              "fractional": "9/25"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "jim-miller",
+            "name": "Jim Miller",
+            "closingOdds": {
+              "american": 215,
+              "decimal": "3.15",
+              "fractional": "43/20"
+            }
+          },
+          "result": {
+            "winnerId": "jim-miller",
+            "winnerName": "Jim Miller",
+            "method": "submission",
+            "detail": "Guillotine choke",
+            "endRound": 1,
+            "endTime": "3:29",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-328-bout-10",
+          "order": 10,
+          "segment": "early_prelim",
+          "weightClass": "middleweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "marco-tulio",
+            "name": "Marco Tulio",
+            "closingOdds": {
+              "american": -186,
+              "decimal": "1.54",
+              "fractional": "27/50"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "roman-kopylov",
+            "name": "Roman Kopylov",
+            "closingOdds": {
+              "american": 150,
+              "decimal": "2.50",
+              "fractional": "3/2"
+            }
+          },
+          "result": {
+            "winnerId": "roman-kopylov",
+            "winnerName": "Roman Kopylov",
+            "method": "unanimous_decision",
+            "detail": "29-28, 29-28, 29-28",
+            "endRound": 3,
+            "endTime": "5:00",
+            "wentToDecision": true,
+            "finish": false
+          }
+        },
+        {
+          "id": "ufc-328-bout-11",
+          "order": 11,
+          "segment": "early_prelim",
+          "weightClass": "featherweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "pat-sabatini",
+            "name": "Pat Sabatini",
+            "closingOdds": {
+              "american": -177,
+              "decimal": "1.56",
+              "fractional": "14/25"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "william-gomis",
+            "name": "William Gomis",
+            "closingOdds": {
+              "american": 140,
+              "decimal": "2.40",
+              "fractional": "7/5"
+            }
+          },
+          "result": {
+            "winnerId": "pat-sabatini",
+            "winnerName": "Pat Sabatini",
+            "method": "unanimous_decision",
+            "detail": "30-27, 30-27, 29-28",
+            "endRound": 3,
+            "endTime": "5:00",
+            "wentToDecision": true,
+            "finish": false
+          }
+        },
+        {
+          "id": "ufc-328-bout-12",
+          "order": 12,
+          "segment": "early_prelim",
+          "weightClass": "middleweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "baisangur-susurkaev",
+            "name": "Baisangur Susurkaev",
+            "closingOdds": {
+              "american": -770,
+              "decimal": "1.13",
+              "fractional": "13/100"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "djorden-santos",
+            "name": "Djorden Santos",
+            "closingOdds": {
+              "american": 525,
+              "decimal": "6.25",
+              "fractional": "21/4"
+            }
+          },
+          "result": {
+            "winnerId": "baisangur-susurkaev",
+            "winnerName": "Baisangur Susurkaev",
+            "method": "technical_submission",
+            "detail": "Rear-naked choke",
+            "endRound": 3,
+            "endTime": "4:12",
+            "wentToDecision": false,
+            "finish": true
+          }
+        },
+        {
+          "id": "ufc-328-bout-13",
+          "order": 13,
+          "segment": "early_prelim",
+          "weightClass": "flyweight",
+          "titleFight": false,
+          "title": null,
+          "scheduledRounds": 3,
+          "redCorner": {
+            "fighterId": "jose-ochoa",
+            "name": "Jose Ochoa",
+            "closingOdds": {
+              "american": -182,
+              "decimal": "1.55",
+              "fractional": "11/20"
+            }
+          },
+          "blueCorner": {
+            "fighterId": "clayton-carpenter",
+            "name": "Clayton Carpenter",
+            "closingOdds": {
+              "american": 145,
+              "decimal": "2.45",
+              "fractional": "29/20"
+            }
+          },
+          "result": {
+            "winnerId": "jose-ochoa",
+            "winnerName": "Jose Ochoa",
+            "method": "unanimous_decision",
+            "detail": "30-27, 30-27, 30-27",
+            "endRound": 3,
+            "endTime": "5:00",
+            "wentToDecision": true,
+            "finish": false
+          }
+        }
+      ]
+    }
+  ]
+}

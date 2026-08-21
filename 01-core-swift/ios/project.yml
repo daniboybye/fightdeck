@@ -1,0 +1,49 @@
+name: FightDeck
+options:
+  bundleIdPrefix: com.fightdeck
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  FightCore:
+    path: ../sdks/core
+  Kingfisher:
+    url: https://github.com/onevcat/Kingfisher.git
+    revision: cf8be20d07654570554c8a8a4952bc8a5766a8b0 # 8.9.0
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_IDENTITY: ""
+    CODE_SIGNING_ALLOWED: NO
+
+targets:
+  FightDeck:
+    type: application
+    platform: iOS
+    sources:
+      - path: FightDeck
+    dependencies:
+      - package: FightCore
+      - package: Kingfisher
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.coreswift
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+      INFOPLIST_KEY_NSLocalNetworkUsageDescription: Serves dataset images over localhost for demo image loading.
+      GENERATE_INFOPLIST_FILE: YES
+    scheme:
+      testTargets: []
+
+schemes:
+  FightDeck:
+    build:
+      targets:
+        FightDeck: all
+    run:
+      environmentVariables:
+        FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset

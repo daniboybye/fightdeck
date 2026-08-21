@@ -1,0 +1,201 @@
+{
+  "description": "Combined odds, stake handling and the double-rounding trap.",
+  "cases": [
+    {
+      "id": "single-gaethje",
+      "note": "One outsider at 4.60.",
+      "mode": "single",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "expect": {
+        "totalStake": "10.00",
+        "potentialReturn": "46.00",
+        "potentialProfit": "36.00"
+      }
+    },
+    {
+      "id": "single-three-legs",
+      "note": "Single mode places the stake on each leg separately, so the outlay is 3x and each return is rounded on its own.",
+      "mode": "single",
+      "stake": "5.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        }
+      ],
+      "expect": {
+        "totalStake": "15.00",
+        "potentialReturn": "39.40",
+        "potentialProfit": "24.40"
+      }
+    },
+    {
+      "id": "acca-two-legs",
+      "note": "The smallest legal accumulator.",
+      "mode": "accumulator",
+      "stake": "20.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        }
+      ],
+      "expect": {
+        "combinedOddsExact": "9.43",
+        "combinedOddsDisplay": "9.43",
+        "totalStake": "20.00",
+        "potentialReturn": "188.60",
+        "potentialProfit": "168.60"
+      }
+    },
+    {
+      "id": "acca-seven-fold-double-rounding",
+      "note": "THE trap. Combined odds are 36.11129032875 exactly. Multiply the stake by that and round once and you get 361.11. Round the odds to 36.11 first and you get 361.10. An implementation that rounds intermediates fails here and nowhere else.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-04",
+          "fighterId": "josh-hokit",
+          "odds": "1.25"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-05",
+          "fighterId": "mauricio-ruffy",
+          "odds": "1.19"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-06",
+          "fighterId": "bo-nickal",
+          "odds": "1.30"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-07",
+          "fighterId": "diego-lopes",
+          "odds": "1.61"
+        }
+      ],
+      "expect": {
+        "combinedOddsExact": "36.11129032875",
+        "combinedOddsDisplay": "36.11",
+        "totalStake": "10.00",
+        "potentialReturn": "361.11",
+        "potentialProfit": "351.11"
+      }
+    },
+    {
+      "id": "acca-heavy-favourites",
+      "note": "Five short prices compounding. Exercises precision on repeated multiplication of values close to 1.",
+      "mode": "accumulator",
+      "stake": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-328-bout-06",
+          "fighterId": "ateba-gautier",
+          "odds": "1.07"
+        },
+        {
+          "boutId": "ufc-328-bout-12",
+          "fighterId": "baisangur-susurkaev",
+          "odds": "1.13"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-05",
+          "fighterId": "mauricio-ruffy",
+          "odds": "1.19"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-328-bout-05",
+          "fighterId": "king-green",
+          "odds": "1.24"
+        }
+      ],
+      "expect": {
+        "combinedOddsExact": "2.1945019908",
+        "combinedOddsDisplay": "2.19",
+        "totalStake": "100.00",
+        "potentialReturn": "219.45",
+        "potentialProfit": "119.45"
+      }
+    },
+    {
+      "id": "acca-longshots",
+      "note": "Four outsiders. The return is large, which puts it near the payout ceiling checked in slip-validation.",
+      "mode": "accumulator",
+      "stake": "2.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-328-bout-01",
+          "fighterId": "sean-strickland",
+          "odds": "4.75"
+        },
+        {
+          "boutId": "ufc-328-bout-09",
+          "fighterId": "jim-miller",
+          "odds": "3.15"
+        },
+        {
+          "boutId": "ufc-328-bout-10",
+          "fighterId": "roman-kopylov",
+          "odds": "2.50"
+        }
+      ],
+      "expect": {
+        "combinedOddsExact": "172.06875",
+        "combinedOddsDisplay": "172.07",
+        "totalStake": "2.00",
+        "potentialReturn": "344.14",
+        "potentialProfit": "342.14"
+      }
+    }
+  ]
+}

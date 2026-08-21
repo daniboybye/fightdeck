@@ -1,0 +1,159 @@
+{
+  "description": "Deterministic cash-out model with a 5% margin, as defined in section 6 of the contract.",
+  "cases": [
+    {
+      "id": "nothing-settled",
+      "note": "No leg resolved yet, so the offer is simply the stake less the margin.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-04",
+          "fighterId": "josh-hokit",
+          "odds": "1.25"
+        }
+      ],
+      "settledBouts": [],
+      "expect": {
+        "available": true,
+        "amount": "9.50",
+        "reason": null
+      }
+    },
+    {
+      "id": "two-legs-won",
+      "note": "Gaethje and Gane are in, two legs still to run. The offer tracks the value already banked.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-04",
+          "fighterId": "josh-hokit",
+          "odds": "1.25"
+        }
+      ],
+      "settledBouts": [
+        "ufc-freedom-250-bout-01",
+        "ufc-freedom-250-bout-02"
+      ],
+      "expect": {
+        "available": true,
+        "amount": "89.59",
+        "reason": null
+      }
+    },
+    {
+      "id": "one-leg-lost",
+      "note": "A losing leg means there is nothing left to sell.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "ilia-topuria",
+          "odds": "1.20"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        }
+      ],
+      "settledBouts": [
+        "ufc-freedom-250-bout-01"
+      ],
+      "expect": {
+        "available": false,
+        "amount": "0.00",
+        "reason": "bet_already_lost"
+      }
+    },
+    {
+      "id": "fully-settled",
+      "note": "Every leg resolved: settle it, do not price it.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        }
+      ],
+      "settledBouts": [
+        "ufc-freedom-250-bout-01",
+        "ufc-freedom-250-bout-02",
+        "ufc-freedom-250-bout-03"
+      ],
+      "expect": {
+        "available": false,
+        "amount": "0.00",
+        "reason": "bet_already_settled"
+      }
+    },
+    {
+      "id": "single-mode",
+      "note": "Cash-out is an accumulator feature.",
+      "mode": "single",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "settledBouts": [],
+      "expect": {
+        "available": false,
+        "amount": "0.00",
+        "reason": "not_an_accumulator"
+      }
+    }
+  ]
+}

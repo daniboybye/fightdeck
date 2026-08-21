@@ -1,0 +1,245 @@
+{
+  "description": "Every published price in the dataset, in all supported notations. Fractional values must be fully reduced: 36/10 is a failure, not a variant.",
+  "cases": [
+    {
+      "id": "ufc-freedom-250-bout-01-redCorner",
+      "decimal": "1.20",
+      "fractional": "1/5",
+      "impliedProbability": "0.8333"
+    },
+    {
+      "id": "ufc-freedom-250-bout-01-blueCorner",
+      "decimal": "4.60",
+      "fractional": "18/5",
+      "impliedProbability": "0.2174"
+    },
+    {
+      "id": "ufc-freedom-250-bout-02-redCorner",
+      "decimal": "1.87",
+      "fractional": "87/100",
+      "impliedProbability": "0.5348"
+    },
+    {
+      "id": "ufc-freedom-250-bout-02-blueCorner",
+      "decimal": "2.05",
+      "fractional": "21/20",
+      "impliedProbability": "0.4878"
+    },
+    {
+      "id": "ufc-freedom-250-bout-03-redCorner",
+      "decimal": "1.23",
+      "fractional": "23/100",
+      "impliedProbability": "0.8130"
+    },
+    {
+      "id": "ufc-freedom-250-bout-03-blueCorner",
+      "decimal": "4.30",
+      "fractional": "33/10",
+      "impliedProbability": "0.2326"
+    },
+    {
+      "id": "ufc-freedom-250-bout-04-redCorner",
+      "decimal": "1.25",
+      "fractional": "1/4",
+      "impliedProbability": "0.8000"
+    },
+    {
+      "id": "ufc-freedom-250-bout-04-blueCorner",
+      "decimal": "4.10",
+      "fractional": "31/10",
+      "impliedProbability": "0.2439"
+    },
+    {
+      "id": "ufc-freedom-250-bout-05-redCorner",
+      "decimal": "1.19",
+      "fractional": "19/100",
+      "impliedProbability": "0.8403"
+    },
+    {
+      "id": "ufc-freedom-250-bout-05-blueCorner",
+      "decimal": "4.95",
+      "fractional": "79/20",
+      "impliedProbability": "0.2020"
+    },
+    {
+      "id": "ufc-freedom-250-bout-06-redCorner",
+      "decimal": "1.30",
+      "fractional": "3/10",
+      "impliedProbability": "0.7692"
+    },
+    {
+      "id": "ufc-freedom-250-bout-06-blueCorner",
+      "decimal": "3.50",
+      "fractional": "5/2",
+      "impliedProbability": "0.2857"
+    },
+    {
+      "id": "ufc-freedom-250-bout-07-redCorner",
+      "decimal": "1.61",
+      "fractional": "61/100",
+      "impliedProbability": "0.6211"
+    },
+    {
+      "id": "ufc-freedom-250-bout-07-blueCorner",
+      "decimal": "2.35",
+      "fractional": "27/20",
+      "impliedProbability": "0.4255"
+    },
+    {
+      "id": "ufc-328-bout-01-redCorner",
+      "decimal": "1.20",
+      "fractional": "1/5",
+      "impliedProbability": "0.8333"
+    },
+    {
+      "id": "ufc-328-bout-01-blueCorner",
+      "decimal": "4.75",
+      "fractional": "15/4",
+      "impliedProbability": "0.2105"
+    },
+    {
+      "id": "ufc-328-bout-02-redCorner",
+      "decimal": "1.66",
+      "fractional": "33/50",
+      "impliedProbability": "0.6024"
+    },
+    {
+      "id": "ufc-328-bout-02-blueCorner",
+      "decimal": "2.23",
+      "fractional": "123/100",
+      "impliedProbability": "0.4484"
+    },
+    {
+      "id": "ufc-328-bout-03-redCorner",
+      "decimal": "1.71",
+      "fractional": "71/100",
+      "impliedProbability": "0.5848"
+    },
+    {
+      "id": "ufc-328-bout-03-blueCorner",
+      "decimal": "2.14",
+      "fractional": "57/50",
+      "impliedProbability": "0.4673"
+    },
+    {
+      "id": "ufc-328-bout-04-redCorner",
+      "decimal": "1.60",
+      "fractional": "3/5",
+      "impliedProbability": "0.6250"
+    },
+    {
+      "id": "ufc-328-bout-04-blueCorner",
+      "decimal": "2.35",
+      "fractional": "27/20",
+      "impliedProbability": "0.4255"
+    },
+    {
+      "id": "ufc-328-bout-05-redCorner",
+      "decimal": "1.24",
+      "fractional": "6/25",
+      "impliedProbability": "0.8065"
+    },
+    {
+      "id": "ufc-328-bout-05-blueCorner",
+      "decimal": "4.10",
+      "fractional": "31/10",
+      "impliedProbability": "0.2439"
+    },
+    {
+      "id": "ufc-328-bout-06-redCorner",
+      "decimal": "1.07",
+      "fractional": "7/100",
+      "impliedProbability": "0.9346"
+    },
+    {
+      "id": "ufc-328-bout-06-blueCorner",
+      "decimal": "9.50",
+      "fractional": "17/2",
+      "impliedProbability": "0.1053"
+    },
+    {
+      "id": "ufc-328-bout-07-redCorner",
+      "decimal": "1.53",
+      "fractional": "53/100",
+      "impliedProbability": "0.6536"
+    },
+    {
+      "id": "ufc-328-bout-07-blueCorner",
+      "decimal": "2.50",
+      "fractional": "3/2",
+      "impliedProbability": "0.4000"
+    },
+    {
+      "id": "ufc-328-bout-08-redCorner",
+      "decimal": "1.70",
+      "fractional": "7/10",
+      "impliedProbability": "0.5882"
+    },
+    {
+      "id": "ufc-328-bout-08-blueCorner",
+      "decimal": "2.15",
+      "fractional": "23/20",
+      "impliedProbability": "0.4651"
+    },
+    {
+      "id": "ufc-328-bout-09-redCorner",
+      "decimal": "1.36",
+      "fractional": "9/25",
+      "impliedProbability": "0.7353"
+    },
+    {
+      "id": "ufc-328-bout-09-blueCorner",
+      "decimal": "3.15",
+      "fractional": "43/20",
+      "impliedProbability": "0.3175"
+    },
+    {
+      "id": "ufc-328-bout-10-redCorner",
+      "decimal": "1.54",
+      "fractional": "27/50",
+      "impliedProbability": "0.6494"
+    },
+    {
+      "id": "ufc-328-bout-10-blueCorner",
+      "decimal": "2.50",
+      "fractional": "3/2",
+      "impliedProbability": "0.4000"
+    },
+    {
+      "id": "ufc-328-bout-11-redCorner",
+      "decimal": "1.56",
+      "fractional": "14/25",
+      "impliedProbability": "0.6410"
+    },
+    {
+      "id": "ufc-328-bout-11-blueCorner",
+      "decimal": "2.40",
+      "fractional": "7/5",
+      "impliedProbability": "0.4167"
+    },
+    {
+      "id": "ufc-328-bout-12-redCorner",
+      "decimal": "1.13",
+      "fractional": "13/100",
+      "impliedProbability": "0.8850"
+    },
+    {
+      "id": "ufc-328-bout-12-blueCorner",
+      "decimal": "6.25",
+      "fractional": "21/4",
+      "impliedProbability": "0.1600"
+    },
+    {
+      "id": "ufc-328-bout-13-redCorner",
+      "decimal": "1.55",
+      "fractional": "11/20",
+      "impliedProbability": "0.6452"
+    },
+    {
+      "id": "ufc-328-bout-13-blueCorner",
+      "decimal": "2.45",
+      "fractional": "29/20",
+      "impliedProbability": "0.4082"
+    }
+  ]
+}

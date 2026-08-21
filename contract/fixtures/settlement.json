@@ -1,0 +1,363 @@
+{
+  "description": "Settlement against the real results. One synthetic case covers the void rule, which no real bout on these cards reaches.",
+  "cases": [
+    {
+      "id": "single-winner",
+      "note": "Gaethje at 4.60 came in.",
+      "mode": "single",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "expect": {
+        "legs": [
+          {
+            "boutId": "ufc-freedom-250-bout-01",
+            "fighterId": "justin-gaethje",
+            "outcome": "won"
+          }
+        ],
+        "returned": "46.00",
+        "profit": "36.00",
+        "status": "won"
+      }
+    },
+    {
+      "id": "single-loser",
+      "note": "Topuria at 1.20 did not.",
+      "mode": "single",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "ilia-topuria",
+          "odds": "1.20"
+        }
+      ],
+      "expect": {
+        "legs": [
+          {
+            "boutId": "ufc-freedom-250-bout-01",
+            "fighterId": "ilia-topuria",
+            "outcome": "lost"
+          }
+        ],
+        "returned": "0.00",
+        "profit": "-10.00",
+        "status": "lost"
+      }
+    },
+    {
+      "id": "acca-seven-fold-won",
+      "note": "Every winner on the Freedom 250 card. The headline settlement of the demo.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-04",
+          "fighterId": "josh-hokit",
+          "odds": "1.25"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-05",
+          "fighterId": "mauricio-ruffy",
+          "odds": "1.19"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-06",
+          "fighterId": "bo-nickal",
+          "odds": "1.30"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-07",
+          "fighterId": "diego-lopes",
+          "odds": "1.61"
+        }
+      ],
+      "expect": {
+        "legs": [
+          {
+            "boutId": "ufc-freedom-250-bout-01",
+            "fighterId": "justin-gaethje",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-02",
+            "fighterId": "ciryl-gane",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-03",
+            "fighterId": "sean-omalley",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-04",
+            "fighterId": "josh-hokit",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-05",
+            "fighterId": "mauricio-ruffy",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-06",
+            "fighterId": "bo-nickal",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-07",
+            "fighterId": "diego-lopes",
+            "outcome": "won"
+          }
+        ],
+        "returned": "361.11",
+        "profit": "351.11",
+        "status": "won"
+      }
+    },
+    {
+      "id": "acca-one-leg-lost",
+      "note": "Four correct legs and Chimaev. One wrong leg zeroes the whole thing, which is the entire emotional content of an accumulator.",
+      "mode": "accumulator",
+      "stake": "25.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-328-bout-01",
+          "fighterId": "khamzat-chimaev",
+          "odds": "1.20"
+        },
+        {
+          "boutId": "ufc-328-bout-09",
+          "fighterId": "jim-miller",
+          "odds": "3.15"
+        }
+      ],
+      "expect": {
+        "legs": [
+          {
+            "boutId": "ufc-freedom-250-bout-01",
+            "fighterId": "justin-gaethje",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-02",
+            "fighterId": "ciryl-gane",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-328-bout-01",
+            "fighterId": "khamzat-chimaev",
+            "outcome": "lost"
+          },
+          {
+            "boutId": "ufc-328-bout-09",
+            "fighterId": "jim-miller",
+            "outcome": "won"
+          }
+        ],
+        "returned": "0.00",
+        "profit": "-25.00",
+        "status": "lost"
+      }
+    },
+    {
+      "id": "singles-mixed",
+      "note": "Three singles: two winners and a loser. Partially won, and the profit is negative even though two legs came in.",
+      "mode": "single",
+      "stake": "20.00",
+      "selections": [
+        {
+          "boutId": "ufc-328-bout-01",
+          "fighterId": "sean-strickland",
+          "odds": "4.75"
+        },
+        {
+          "boutId": "ufc-328-bout-02",
+          "fighterId": "tatsuro-taira",
+          "odds": "1.66"
+        },
+        {
+          "boutId": "ufc-328-bout-03",
+          "fighterId": "alexander-volkov",
+          "odds": "1.71"
+        }
+      ],
+      "expect": {
+        "legs": [
+          {
+            "boutId": "ufc-328-bout-01",
+            "fighterId": "sean-strickland",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-328-bout-02",
+            "fighterId": "tatsuro-taira",
+            "outcome": "lost"
+          },
+          {
+            "boutId": "ufc-328-bout-03",
+            "fighterId": "alexander-volkov",
+            "outcome": "won"
+          }
+        ],
+        "returned": "129.20",
+        "profit": "69.20",
+        "status": "partially_won"
+      }
+    },
+    {
+      "id": "acca-favourites-won",
+      "note": "Five short prices, all correct.",
+      "mode": "accumulator",
+      "stake": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-328-bout-06",
+          "fighterId": "ateba-gautier",
+          "odds": "1.07"
+        },
+        {
+          "boutId": "ufc-328-bout-12",
+          "fighterId": "baisangur-susurkaev",
+          "odds": "1.13"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-05",
+          "fighterId": "mauricio-ruffy",
+          "odds": "1.19"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-328-bout-05",
+          "fighterId": "king-green",
+          "odds": "1.24"
+        }
+      ],
+      "expect": {
+        "legs": [
+          {
+            "boutId": "ufc-328-bout-06",
+            "fighterId": "ateba-gautier",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-328-bout-12",
+            "fighterId": "baisangur-susurkaev",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-05",
+            "fighterId": "mauricio-ruffy",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-03",
+            "fighterId": "sean-omalley",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-328-bout-05",
+            "fighterId": "king-green",
+            "outcome": "won"
+          }
+        ],
+        "returned": "219.45",
+        "profit": "119.45",
+        "status": "won"
+      }
+    },
+    {
+      "id": "acca-with-void-leg",
+      "note": "SYNTHETIC. No real bout on either card was a draw or a no contest, so the void rule is exercised here with an invented void on bout 02. The leg's odds become 1.00 and the accumulator survives.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-04",
+          "fighterId": "josh-hokit",
+          "odds": "1.25"
+        }
+      ],
+      "expect": {
+        "legs": [
+          {
+            "boutId": "ufc-freedom-250-bout-01",
+            "fighterId": "justin-gaethje",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-02",
+            "fighterId": "ciryl-gane",
+            "outcome": "void"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-03",
+            "fighterId": "sean-omalley",
+            "outcome": "won"
+          },
+          {
+            "boutId": "ufc-freedom-250-bout-04",
+            "fighterId": "josh-hokit",
+            "outcome": "won"
+          }
+        ],
+        "returned": "70.73",
+        "profit": "60.73",
+        "status": "won"
+      },
+      "voidedBouts": [
+        "ufc-freedom-250-bout-02"
+      ]
+    }
+  ]
+}

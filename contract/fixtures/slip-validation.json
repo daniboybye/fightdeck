@@ -1,0 +1,383 @@
+{
+  "description": "Every error code, plus a slip that trips three at once.",
+  "cases": [
+    {
+      "id": "valid-single",
+      "note": "Baseline: no errors.",
+      "mode": "single",
+      "stake": "10.00",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "expect": {
+        "errors": []
+      }
+    },
+    {
+      "id": "valid-acca",
+      "note": "Baseline accumulator: no errors.",
+      "mode": "accumulator",
+      "stake": "25.00",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        }
+      ],
+      "expect": {
+        "errors": []
+      }
+    },
+    {
+      "id": "empty",
+      "note": "Nothing selected.",
+      "mode": "single",
+      "stake": "10.00",
+      "balance": "100.00",
+      "selections": [],
+      "expect": {
+        "errors": [
+          "empty_slip"
+        ]
+      }
+    },
+    {
+      "id": "stake-below-minimum",
+      "note": "Stake under 1.00.",
+      "mode": "single",
+      "stake": "0.50",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "stake_below_minimum"
+        ]
+      }
+    },
+    {
+      "id": "stake-above-maximum",
+      "note": "Stake over 5000.00.",
+      "mode": "single",
+      "stake": "5000.01",
+      "balance": "10000.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "stake_above_maximum"
+        ]
+      }
+    },
+    {
+      "id": "insufficient-balance",
+      "note": "Stake exceeds the balance.",
+      "mode": "single",
+      "stake": "50.00",
+      "balance": "20.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "insufficient_balance"
+        ]
+      }
+    },
+    {
+      "id": "insufficient-balance-singles",
+      "note": "Balance covers one leg but not three, because single mode multiplies the outlay.",
+      "mode": "single",
+      "stake": "20.00",
+      "balance": "50.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "insufficient_balance"
+        ]
+      }
+    },
+    {
+      "id": "acca-one-leg",
+      "note": "Accumulator with a single leg.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "accumulator_needs_two_legs"
+        ]
+      }
+    },
+    {
+      "id": "duplicate-bout",
+      "note": "Both corners of the same bout.",
+      "mode": "accumulator",
+      "stake": "10.00",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "ilia-topuria",
+          "odds": "1.20"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "duplicate_bout"
+        ]
+      }
+    },
+    {
+      "id": "too-many-selections",
+      "note": "Thirteen legs, one over the limit.",
+      "mode": "accumulator",
+      "stake": "1.00",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-04",
+          "fighterId": "josh-hokit",
+          "odds": "1.25"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-05",
+          "fighterId": "mauricio-ruffy",
+          "odds": "1.19"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-06",
+          "fighterId": "bo-nickal",
+          "odds": "1.30"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-07",
+          "fighterId": "diego-lopes",
+          "odds": "1.61"
+        },
+        {
+          "boutId": "ufc-328-bout-01",
+          "fighterId": "sean-strickland",
+          "odds": "4.75"
+        },
+        {
+          "boutId": "ufc-328-bout-02",
+          "fighterId": "joshua-van",
+          "odds": "2.23"
+        },
+        {
+          "boutId": "ufc-328-bout-03",
+          "fighterId": "alexander-volkov",
+          "odds": "1.71"
+        },
+        {
+          "boutId": "ufc-328-bout-04",
+          "fighterId": "sean-brady",
+          "odds": "2.35"
+        },
+        {
+          "boutId": "ufc-328-bout-05",
+          "fighterId": "king-green",
+          "odds": "1.24"
+        },
+        {
+          "boutId": "ufc-328-bout-06",
+          "fighterId": "ateba-gautier",
+          "odds": "1.07"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "too_many_selections"
+        ]
+      }
+    },
+    {
+      "id": "payout-exceeds-limit",
+      "note": "A seven-fold at the maximum stake pays far more than the 100,000.00 ceiling.",
+      "mode": "accumulator",
+      "stake": "5000.00",
+      "balance": "10000.00",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-02",
+          "fighterId": "ciryl-gane",
+          "odds": "2.05"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-03",
+          "fighterId": "sean-omalley",
+          "odds": "1.23"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-04",
+          "fighterId": "josh-hokit",
+          "odds": "1.25"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-05",
+          "fighterId": "mauricio-ruffy",
+          "odds": "1.19"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-06",
+          "fighterId": "bo-nickal",
+          "odds": "1.30"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-07",
+          "fighterId": "diego-lopes",
+          "odds": "1.61"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "payout_exceeds_limit"
+        ]
+      }
+    },
+    {
+      "id": "multiple-errors",
+      "note": "Below minimum stake AND over the balance AND a duplicate bout. All three come back, in the documented order — not just the first one found.",
+      "mode": "accumulator",
+      "stake": "0.10",
+      "balance": "0.05",
+      "selections": [
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "4.60"
+        },
+        {
+          "boutId": "ufc-freedom-250-bout-01",
+          "fighterId": "ilia-topuria",
+          "odds": "1.20"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "stake_below_minimum",
+          "insufficient_balance",
+          "duplicate_bout"
+        ]
+      }
+    },
+    {
+      "id": "unknown-bout",
+      "note": "A bout id that is not in the dataset.",
+      "mode": "single",
+      "stake": "10.00",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-999-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "2.00"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "unknown_bout"
+        ]
+      }
+    },
+    {
+      "id": "fighter-not-in-bout",
+      "note": "A real bout, but the pick fought on a different card.",
+      "mode": "single",
+      "stake": "10.00",
+      "balance": "100.00",
+      "selections": [
+        {
+          "boutId": "ufc-328-bout-01",
+          "fighterId": "justin-gaethje",
+          "odds": "2.00"
+        }
+      ],
+      "expect": {
+        "errors": [
+          "fighter_not_in_bout"
+        ]
+      }
+    }
+  ]
+}

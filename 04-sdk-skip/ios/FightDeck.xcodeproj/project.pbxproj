@@ -1,0 +1,829 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0EBEBF907AD46D2BC5993418 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
+		0F82C85A4A7A6A9B8A383AC8 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
+		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
+		14EB17C51440F0F9634AE9B5 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EE60407923B663F5A69C2711 /* Kingfisher */; };
+		156F3685B4E45D81DC7350ED /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
+		1A56D205D41878671155643B /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
+		1C6A48EA211E425DEC0F6876 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
+		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
+		1CCDDADBDB08B9E44E0C7300 /* FightDeckDeposit in Frameworks */ = {isa = PBXBuildFile; productRef = 80DDCEE68E6B6C83330E36F2 /* FightDeckDeposit */; };
+		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
+		2A2A173AD0147551A47BEAFC /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
+		2C45F9BE3166BF1044390BD9 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
+		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
+		3285F1CC597CFCD611E2ECFB /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
+		33156B6B2111D52D7974CD4A /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
+		4304C0F7AD0033F22C3C1059 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
+		43C3E68935F04E8E94E57502 /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
+		43D539CE00895BAC6B5BD647 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
+		45C9A4CE5CEA75B07D2F1E75 /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
+		48484B511A09954AB8615D30 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
+		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
+		51A89D23A8FBA4A83692B529 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
+		57073F7CB0AC432A4E8BAB90 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
+		5835FDC175FDCAF9419F3B54 /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
+		5EE42BAEC7185C6D2732F723 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
+		619AC76F8B6A1336709C48C0 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
+		624AE69E754C4E5DFA6AEB4F /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
+		63F1A2DC2D51172B7D4F563B /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
+		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
+		718F49669A8CA80D25CFE59E /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
+		71B3C5BA88080519F16F6585 /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
+		72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
+		7E763AD49DFD92F33AFF198D /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
+		856FFB2FA5EC4DCC35AD489E /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = 57C4D0D6A1CB4A9CE417ED2D /* FightDeckCore */; };
+		8B4D598C9A3D17926F18AA4B /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = A8DFFCECD51ADEFD4C6D8006 /* Kingfisher */; };
+		8BAB9AE48644F5CA92398984 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
+		8CC540AE2FD450B9960879BA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
+		8D9378D4BECBE1811D0D97EF /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
+		8D9D6F3D5C283BE96968F992 /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFE3F0A2ABFBDB3D70586AB4 /* FightDeckCore */; };
+		97D8BED61A61C1DEB1D1973F /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
+		9FAE979935271512DD91DA3D /* FightDeckDeposit in Frameworks */ = {isa = PBXBuildFile; productRef = 19678514C928A35DB4F989E8 /* FightDeckDeposit */; };
+		A517FBFDEBCAE44BDAD4DAC9 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
+		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
+		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
+		B46DA165B69DDFC0F3D14C3A /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
+		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
+		C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
+		C7B96C3DA94D87430A321617 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
+		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
+		CFB6F8469782E5B01F176AC9 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
+		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
+		DDCE0B61AC9CA0120D615559 /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = AF02442BC862F30A3C80F003 /* FightDeckCore */; };
+		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
+		DE46458585DABE06AAAE0E9C /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
+		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
+		E177F39E3B54BAF6D50F8033 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
+		EB3C292B157452A71EB9AE68 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
+		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
+		F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
+		F502F17CC36E3303471CFBD6 /* FightDeckBetslip in Frameworks */ = {isa = PBXBuildFile; productRef = EB8D6D7EABFFCE9FD6725FB8 /* FightDeckBetslip */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1263D571D324D8C7E4BEB673 /* FightDeckSkipDeposit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckSkipDeposit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
+		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
+		3C15AC4F04B3055B51F23702 /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../sdks/core; sourceTree = SOURCE_ROOT; };
+		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
+		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
+		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
+		5CB34A2F61DC158028871445 /* DatasetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetModels.swift; sourceTree = "<group>"; };
+		61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONFileRepository.swift; sourceTree = "<group>"; };
+		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		671EA38BCD5536798738A94F /* betslip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = betslip; path = ../sdks/betslip; sourceTree = SOURCE_ROOT; };
+		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
+		75B01DA66DC915B97C8A39DD /* FightDeckRuntime.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckRuntime.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		813BD28F72479374E713963B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		992440A70F2E2DCD051FFF1F /* FightDeck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScreenView.swift; sourceTree = "<group>"; };
+		AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoutDetailView.swift; sourceTree = "<group>"; };
+		ADDF1CDA0A11FAECC2BEA97E /* deposit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = deposit; path = ../sdks/deposit; sourceTree = SOURCE_ROOT; };
+		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
+		D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKBootstrap.swift; sourceTree = "<group>"; };
+		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
+		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4F74D80C3F38E86B74D25C6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8B4D598C9A3D17926F18AA4B /* Kingfisher in Frameworks */,
+				856FFB2FA5EC4DCC35AD489E /* FightDeckCore in Frameworks */,
+				1CCDDADBDB08B9E44E0C7300 /* FightDeckDeposit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8FB1D06474B2D730B4A262FC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */,
+				8D9D6F3D5C283BE96968F992 /* FightDeckCore in Frameworks */,
+				9FAE979935271512DD91DA3D /* FightDeckDeposit in Frameworks */,
+				F502F17CC36E3303471CFBD6 /* FightDeckBetslip in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F60386423F8BC517AE64A1FC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				14EB17C51440F0F9634AE9B5 /* Kingfisher in Frameworks */,
+				DDCE0B61AC9CA0120D615559 /* FightDeckCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0FEDBDDAC1739C981E1110C6 /* Fighter */ = {
+			isa = PBXGroup;
+			children = (
+				12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */,
+			);
+			path = Fighter;
+			sourceTree = "<group>";
+		};
+		1A992D0B696BC9CBBD148621 /* FightDeck */ = {
+			isa = PBXGroup;
+			children = (
+				FC9A8117960E37A37439C968 /* App */,
+				DD501D722148505373B76B7C /* Data */,
+				AC106BAA8D8C9E35E88A5DB7 /* Design */,
+				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
+				F8E622B7794169669381AB5A /* SDK */,
+				FE9EE388C310ED4AB6AE0712 /* Services */,
+			);
+			path = FightDeck;
+			sourceTree = "<group>";
+		};
+		291FDAC4F8BE766B9255E642 /* Slip */ = {
+			isa = PBXGroup;
+			children = (
+				BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */,
+			);
+			path = Slip;
+			sourceTree = "<group>";
+		};
+		60BFBC836841FB27DECDD988 /* News */ = {
+			isa = PBXGroup;
+			children = (
+				4A5C66B1CE93502EF9451749 /* NewsViews.swift */,
+			);
+			path = News;
+			sourceTree = "<group>";
+		};
+		9F8C945A0C8FB47D84AF102F = {
+			isa = PBXGroup;
+			children = (
+				1A992D0B696BC9CBBD148621 /* FightDeck */,
+				C9BD2751AFE81497FA442198 /* Packages */,
+				A1088A6E4DD381B5E286242F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1088A6E4DD381B5E286242F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				992440A70F2E2DCD051FFF1F /* FightDeck.app */,
+				75B01DA66DC915B97C8A39DD /* FightDeckRuntime.app */,
+				1263D571D324D8C7E4BEB673 /* FightDeckSkipDeposit.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AC106BAA8D8C9E35E88A5DB7 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */,
+				F35181339B0E2720AE567AEE /* SharedViews.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		B3841DF99C502708B47473FF /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */,
+			);
+			path = Video;
+			sourceTree = "<group>";
+		};
+		BB2ACDBD1A29E5EB7A4575B7 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				D683F966B6BF1040B731A301 /* Events */,
+				0FEDBDDAC1739C981E1110C6 /* Fighter */,
+				60BFBC836841FB27DECDD988 /* News */,
+				291FDAC4F8BE766B9255E642 /* Slip */,
+				B3841DF99C502708B47473FF /* Video */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		C9BD2751AFE81497FA442198 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				671EA38BCD5536798738A94F /* betslip */,
+				3C15AC4F04B3055B51F23702 /* core */,
+				ADDF1CDA0A11FAECC2BEA97E /* deposit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		D683F966B6BF1040B731A301 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */,
+				DAF3347F556E995F73653E0C /* EventsViews.swift */,
+			);
+			path = Events;
+			sourceTree = "<group>";
+		};
+		DD501D722148505373B76B7C /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				5CB34A2F61DC158028871445 /* DatasetModels.swift */,
+				15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */,
+				61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		F8E622B7794169669381AB5A /* SDK */ = {
+			isa = PBXGroup;
+			children = (
+				D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */,
+			);
+			path = SDK;
+			sourceTree = "<group>";
+		};
+		FC9A8117960E37A37439C968 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				667CCDA71CC013177D5B28C2 /* AppState.swift */,
+				4C795D634FBE423DA73379AD /* FightDeckApp.swift */,
+				3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */,
+				813BD28F72479374E713963B /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		FE9EE388C310ED4AB6AE0712 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		40FAA2A63413AB8F1D3B1161 /* FightDeckSkipDeposit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D415B34FFC1D6BB85C96213 /* Build configuration list for PBXNativeTarget "FightDeckSkipDeposit" */;
+			buildPhases = (
+				FC3813595ECDA33A018457F6 /* Sources */,
+				4F74D80C3F38E86B74D25C6C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FightDeckSkipDeposit;
+			packageProductDependencies = (
+				A8DFFCECD51ADEFD4C6D8006 /* Kingfisher */,
+				57C4D0D6A1CB4A9CE417ED2D /* FightDeckCore */,
+				80DDCEE68E6B6C83330E36F2 /* FightDeckDeposit */,
+			);
+			productName = FightDeckSkipDeposit;
+			productReference = 1263D571D324D8C7E4BEB673 /* FightDeckSkipDeposit.app */;
+			productType = "com.apple.product-type.application";
+		};
+		675B247C2039F2847AD686AB /* FightDeckRuntime */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 43C152A50E062055EC795A43 /* Build configuration list for PBXNativeTarget "FightDeckRuntime" */;
+			buildPhases = (
+				92B76B245DF42DBE3272B234 /* Sources */,
+				F60386423F8BC517AE64A1FC /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FightDeckRuntime;
+			packageProductDependencies = (
+				EE60407923B663F5A69C2711 /* Kingfisher */,
+				AF02442BC862F30A3C80F003 /* FightDeckCore */,
+			);
+			productName = FightDeckRuntime;
+			productReference = 75B01DA66DC915B97C8A39DD /* FightDeckRuntime.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE21C478BC5DC370EF8E33A0 /* Build configuration list for PBXNativeTarget "FightDeck" */;
+			buildPhases = (
+				3AD307C6196DE9DC1C5BD5E4 /* Sources */,
+				8FB1D06474B2D730B4A262FC /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FightDeck;
+			packageProductDependencies = (
+				EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */,
+				DFE3F0A2ABFBDB3D70586AB4 /* FightDeckCore */,
+				19678514C928A35DB4F989E8 /* FightDeckDeposit */,
+				EB8D6D7EABFFCE9FD6725FB8 /* FightDeckBetslip */,
+			);
+			productName = FightDeck;
+			productReference = 992440A70F2E2DCD051FFF1F /* FightDeck.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9F0D4232E4AEFDB2469578BB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					40FAA2A63413AB8F1D3B1161 = {
+						DevelopmentTeam = "";
+					};
+					675B247C2039F2847AD686AB = {
+						DevelopmentTeam = "";
+					};
+					A14FF0BBB1A87FBC2C0E6EB7 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 5F353E26F03D0AC9A44F47B2 /* Build configuration list for PBXProject "FightDeck" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9F8C945A0C8FB47D84AF102F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				3F1C1BFAA7F7A10456AD899B /* XCLocalSwiftPackageReference "../sdks/betslip" */,
+				826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */,
+				90DC4F9CD0D6B0D273EAADF1 /* XCLocalSwiftPackageReference "../sdks/deposit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A1088A6E4DD381B5E286242F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */,
+				675B247C2039F2847AD686AB /* FightDeckRuntime */,
+				40FAA2A63413AB8F1D3B1161 /* FightDeckSkipDeposit */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3AD307C6196DE9DC1C5BD5E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8CC540AE2FD450B9960879BA /* AppState.swift in Sources */,
+				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
+				6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */,
+				72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */,
+				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
+				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
+				EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */,
+				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
+				3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */,
+				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
+				1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */,
+				B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */,
+				DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */,
+				C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */,
+				4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */,
+				CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */,
+				D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		92B76B245DF42DBE3272B234 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C45F9BE3166BF1044390BD9 /* AppState.swift in Sources */,
+				33156B6B2111D52D7974CD4A /* BoutDetailView.swift in Sources */,
+				97D8BED61A61C1DEB1D1973F /* DatasetModels.swift in Sources */,
+				57073F7CB0AC432A4E8BAB90 /* DesignTokens.swift in Sources */,
+				718F49669A8CA80D25CFE59E /* EventsViews.swift in Sources */,
+				E177F39E3B54BAF6D50F8033 /* FightDeckApp.swift in Sources */,
+				43C3E68935F04E8E94E57502 /* FightRepository.swift in Sources */,
+				EB3C292B157452A71EB9AE68 /* FighterProfileView.swift in Sources */,
+				43D539CE00895BAC6B5BD647 /* JSONFileRepository.swift in Sources */,
+				8BAB9AE48644F5CA92398984 /* LocalAssetServer.swift in Sources */,
+				4304C0F7AD0033F22C3C1059 /* NavigationTypes.swift in Sources */,
+				B46DA165B69DDFC0F3D14C3A /* NewsViews.swift in Sources */,
+				7E763AD49DFD92F33AFF198D /* RootView.swift in Sources */,
+				45C9A4CE5CEA75B07D2F1E75 /* SDKBootstrap.swift in Sources */,
+				DE46458585DABE06AAAE0E9C /* SharedViews.swift in Sources */,
+				51A89D23A8FBA4A83692B529 /* SlipViews.swift in Sources */,
+				619AC76F8B6A1336709C48C0 /* VideoScreenView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FC3813595ECDA33A018457F6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A517FBFDEBCAE44BDAD4DAC9 /* AppState.swift in Sources */,
+				48484B511A09954AB8615D30 /* BoutDetailView.swift in Sources */,
+				1A56D205D41878671155643B /* DatasetModels.swift in Sources */,
+				156F3685B4E45D81DC7350ED /* DesignTokens.swift in Sources */,
+				8D9378D4BECBE1811D0D97EF /* EventsViews.swift in Sources */,
+				C7B96C3DA94D87430A321617 /* FightDeckApp.swift in Sources */,
+				5835FDC175FDCAF9419F3B54 /* FightRepository.swift in Sources */,
+				0EBEBF907AD46D2BC5993418 /* FighterProfileView.swift in Sources */,
+				1C6A48EA211E425DEC0F6876 /* JSONFileRepository.swift in Sources */,
+				0F82C85A4A7A6A9B8A383AC8 /* LocalAssetServer.swift in Sources */,
+				3285F1CC597CFCD611E2ECFB /* NavigationTypes.swift in Sources */,
+				71B3C5BA88080519F16F6585 /* NewsViews.swift in Sources */,
+				CFB6F8469782E5B01F176AC9 /* RootView.swift in Sources */,
+				2A2A173AD0147551A47BEAFC /* SDKBootstrap.swift in Sources */,
+				624AE69E754C4E5DFA6AEB4F /* SharedViews.swift in Sources */,
+				5EE42BAEC7185C6D2732F723 /* SlipViews.swift in Sources */,
+				63F1A2DC2D51172B7D4F563B /* VideoScreenView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2F178065AA8DE8889944FEA8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5564E6125AEF64BFA977DA9C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeck;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7263C747539B67B5423DB18A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeckSkipDeposit;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8E65B4961F1B0D685CD32F7D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeckSkipDeposit;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A51EFA01273B92885CB2B6B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeck;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C554E35A779588579F44B8AC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C7CE7EF17D836BD017C40C28 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeckRuntime;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C92FA25DE08C282AB688194D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeckRuntime;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D415B34FFC1D6BB85C96213 /* Build configuration list for PBXNativeTarget "FightDeckSkipDeposit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7263C747539B67B5423DB18A /* Debug */,
+				8E65B4961F1B0D685CD32F7D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		43C152A50E062055EC795A43 /* Build configuration list for PBXNativeTarget "FightDeckRuntime" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C92FA25DE08C282AB688194D /* Debug */,
+				C7CE7EF17D836BD017C40C28 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5F353E26F03D0AC9A44F47B2 /* Build configuration list for PBXProject "FightDeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C554E35A779588579F44B8AC /* Debug */,
+				2F178065AA8DE8889944FEA8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AE21C478BC5DC370EF8E33A0 /* Build configuration list for PBXNativeTarget "FightDeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5564E6125AEF64BFA977DA9C /* Debug */,
+				A51EFA01273B92885CB2B6B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		3F1C1BFAA7F7A10456AD899B /* XCLocalSwiftPackageReference "../sdks/betslip" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/betslip;
+		};
+		826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/core;
+		};
+		90DC4F9CD0D6B0D273EAADF1 /* XCLocalSwiftPackageReference "../sdks/deposit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/deposit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = revision;
+				revision = cf8be20d07654570554c8a8a4952bc8a5766a8b0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		19678514C928A35DB4F989E8 /* FightDeckDeposit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckDeposit;
+		};
+		57C4D0D6A1CB4A9CE417ED2D /* FightDeckCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckCore;
+		};
+		80DDCEE68E6B6C83330E36F2 /* FightDeckDeposit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckDeposit;
+		};
+		A8DFFCECD51ADEFD4C6D8006 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		AF02442BC862F30A3C80F003 /* FightDeckCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckCore;
+		};
+		DFE3F0A2ABFBDB3D70586AB4 /* FightDeckCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckCore;
+		};
+		EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		EB8D6D7EABFFCE9FD6725FB8 /* FightDeckBetslip */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckBetslip;
+		};
+		EE60407923B663F5A69C2711 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 9F0D4232E4AEFDB2469578BB /* Project object */;
+}

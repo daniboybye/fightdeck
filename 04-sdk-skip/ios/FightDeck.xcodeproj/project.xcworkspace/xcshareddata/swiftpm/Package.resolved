@@ -1,0 +1,68 @@
+{
+  "originHash" : "7a4565efd18ac1535da46aee941bc23bbe09fc17fbedaf8fe211c03bda84c85c",
+  "pins" : [
+    {
+      "identity" : "kingfisher",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/onevcat/Kingfisher.git",
+      "state" : {
+        "revision" : "cf8be20d07654570554c8a8a4952bc8a5766a8b0"
+      }
+    },
+    {
+      "identity" : "skip",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skiptools/skip.git",
+      "state" : {
+        "revision" : "d4e789522f5f7aea20ff1327624861a3886aa79f",
+        "version" : "1.9.6"
+      }
+    },
+    {
+      "identity" : "skip-foundation",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skiptools/skip-foundation.git",
+      "state" : {
+        "revision" : "a8936f41d08f862710a1c7b85dc3d37b86e70fb9",
+        "version" : "1.4.3"
+      }
+    },
+    {
+      "identity" : "skip-lib",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skiptools/skip-lib.git",
+      "state" : {
+        "revision" : "320f72a7f7af2f2355a59da29362f68e53341b09",
+        "version" : "1.4.1"
+      }
+    },
+    {
+      "identity" : "skip-model",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skiptools/skip-model.git",
+      "state" : {
+        "revision" : "9879f0b2b618ccbeeedeef34311e4024c4a9692a",
+        "version" : "1.7.9"
+      }
+    },
+    {
+      "identity" : "skip-ui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skiptools/skip-ui.git",
+      "state" : {
+        "revision" : "ff81a283a8d761fb355d50eb0d37136bbc0b5af1",
+        "version" : "1.59.2"
+      }
+    },
+    {
+      "identity" : "skip-unit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/skiptools/skip-unit.git",
+      "state" : {
+        "revision" : "314b1278f4965c8518b7833c8d15f18a5bc0301d",
+        "version" : "1.7.1"
+      }
+    }
+  ],
+  "version" : 3
+}

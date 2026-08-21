@@ -1,0 +1,112 @@
+name: FightDeck
+options:
+  bundleIdPrefix: com.fightdeck
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  Kingfisher:
+    url: https://github.com/onevcat/Kingfisher.git
+    revision: cf8be20d07654570554c8a8a4952bc8a5766a8b0 # 8.9.0
+  FightDeckCore:
+    path: ../sdks/core
+  FightDeckDeposit:
+    path: ../sdks/deposit
+  FightDeckBetslip:
+    path: ../sdks/betslip
+
+settingGroups:
+  fightdeck_app:
+    base:
+      SWIFT_VERSION: "6.0"
+      SWIFT_STRICT_CONCURRENCY: complete
+      DEVELOPMENT_TEAM: ""
+      CODE_SIGN_IDENTITY: ""
+      CODE_SIGNING_ALLOWED: NO
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+      INFOPLIST_KEY_NSLocalNetworkUsageDescription: Serves dataset images over localhost for demo image loading.
+      GENERATE_INFOPLIST_FILE: YES
+
+targetTemplates:
+  FightDeckHost:
+    type: application
+    platform: iOS
+    settings:
+      groups:
+        - fightdeck_app
+    sources:
+      - path: FightDeck
+        excludes:
+          - Deposit/**
+          - Core/**
+      - path: FightDeck/Features/Fighter
+      - path: FightDeck/Features/News
+      - path: FightDeck/Features/Video
+
+targets:
+  FightDeck:
+    templates: [FightDeckHost]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: FIGHTDECK_BOTH
+    dependencies:
+      - package: Kingfisher
+      - package: FightDeckCore
+        product: FightDeckCore
+      - package: FightDeckDeposit
+        product: FightDeckDeposit
+      - package: FightDeckBetslip
+        product: FightDeckBetslip
+
+  FightDeckRuntime:
+    templates: [FightDeckHost]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.runtime
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: FIGHTDECK_RUNTIME
+    dependencies:
+      - package: Kingfisher
+      - package: FightDeckCore
+        product: FightDeckCore
+
+  FightDeckSkipDeposit:
+    templates: [FightDeckHost]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.deposit
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: FIGHTDECK_DEPOSIT
+    dependencies:
+      - package: Kingfisher
+      - package: FightDeckCore
+        product: FightDeckCore
+      - package: FightDeckDeposit
+        product: FightDeckDeposit
+
+schemes:
+  FightDeck:
+    build:
+      targets:
+        FightDeck: all
+    run:
+      environmentVariables:
+        FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckRuntime:
+    build:
+      targets:
+        FightDeckRuntime: all
+    run:
+      environmentVariables:
+        FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckSkipDeposit:
+    build:
+      targets:
+        FightDeckSkipDeposit: all
+    run:
+      environmentVariables:
+        FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
+        FIGHTDECK_LOCAL_SDK: "1"

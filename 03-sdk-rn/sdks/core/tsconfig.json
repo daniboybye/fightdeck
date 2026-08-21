@@ -1,0 +1,10 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "rootDir": "src",
+    "baseUrl": "."
+  },
+  "include": ["src/**/*", "__tests__/**/*"]
+}

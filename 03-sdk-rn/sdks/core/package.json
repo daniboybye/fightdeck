@@ -1,0 +1,36 @@
+{
+  "name": "@fightdeck/rn-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "jest",
+    "bundle:runtime": "react-native bundle --platform ios --dev false --entry-file src/runtime/index.js --bundle-output ios/build/main.jsbundle --assets-dest ios/build && react-native bundle --platform android --dev false --entry-file src/runtime/index.js --bundle-output android/build/main.jsbundle --assets-dest android/build",
+    "bundle:deposit": "react-native bundle --platform ios --dev false --entry-file ../deposit/src/index.js --bundle-output ../deposit/ios/build/deposit.jsbundle",
+    "bundle:betslip": "react-native bundle --platform ios --dev false --entry-file ../betslip/src/index.js --bundle-output ../betslip/ios/build/betslip.jsbundle",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@babel/preset-typescript": "^7.26.0",
+    "@babel/runtime": "^8.0.0",
+    "decimal.js": "10.6.0",
+    "react": "19.2.3",
+    "react-native": "0.87.0",
+    "react-native-safe-area-context": "5.9.1",
+    "react-native-screens": "4.27.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.9",
+    "@babel/preset-env": "^7.26.9",
+    "@react-native-community/cli": "20.0.0",
+    "@react-native/babel-preset": "0.87.0",
+    "@react-native/metro-config": "0.87.0",
+    "@react-native/typescript-config": "0.87.0",
+    "@types/jest": "29.5.14",
+    "@types/react": "19.2.3",
+    "babel-jest": "^29.7.0",
+    "jest": "29.7.0",
+    "react-test-renderer": "19.2.3",
+    "typescript": "7.0.2"
+  }
+}

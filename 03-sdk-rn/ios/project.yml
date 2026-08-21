@@ -1,0 +1,66 @@
+name: FightDeck
+options:
+  bundleIdPrefix: com.fightdeck
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  Kingfisher:
+    url: https://github.com/onevcat/Kingfisher.git
+    revision: cf8be20d07654570554c8a8a4952bc8a5766a8b0 # 8.9.0
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_IDENTITY: ""
+    CODE_SIGNING_ALLOWED: NO
+
+targets:
+  FightDeck:
+    type: application
+    platform: iOS
+    sources:
+      - path: FightDeck
+        excludes:
+          - Features/Fighter/**
+          - Features/News/**
+          - Features/Video/**
+    dependencies:
+      - package: Kingfisher
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+      INFOPLIST_KEY_NSLocalNetworkUsageDescription: Serves dataset images over localhost for demo image loading.
+      INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
+      GENERATE_INFOPLIST_FILE: YES
+      ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+  FightDeckUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - FightDeckUITests
+    dependencies:
+      - target: FightDeck
+    settings:
+      GENERATE_INFOPLIST_FILE: YES
+      TEST_TARGET_NAME: FightDeck
+
+schemes:
+  FightDeck:
+    build:
+      targets:
+        FightDeck: all
+        FightDeckUITests: [test]
+    test:
+      targets:
+        - FightDeckUITests
+    run:
+      environmentVariables:
+        FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
+        FIGHTDECK_LOCAL_SDK: "1"

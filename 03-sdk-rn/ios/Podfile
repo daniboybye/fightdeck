@@ -1,0 +1,73 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, '26.0'
+prepare_react_native_project!
+
+$RN_APP_ROOT = File.expand_path('..', __dir__)
+$FIGHTDECK_USE_LOCAL_SDK = ENV['FIGHTDECK_LOCAL_SDK'] == '1'
+$FIGHTDECK_RELEASE_VENDOR = File.expand_path('../../tools/out/release/rn/ios-vendor', __dir__)
+$FIGHTDECK_FEATURES = ENV.fetch('FIGHTDECK_FEATURES', 'both')
+
+def fightdeck_include_deposit?
+  %w[deposit both].include?($FIGHTDECK_FEATURES)
+end
+
+def fightdeck_include_betslip?
+  $FIGHTDECK_FEATURES == 'both'
+end
+
+target 'FightDeck' do
+  if $FIGHTDECK_USE_LOCAL_SDK
+    config = use_native_modules!
+
+    use_react_native!(
+      :path => config[:reactNativePath],
+      :app_path => $RN_APP_ROOT
+    )
+
+    pod 'FightDeckRNRuntime', :path => '../sdks/core/ios'
+    pod 'DepositSDK', :path => '../sdks/deposit/ios' if fightdeck_include_deposit?
+    pod 'BetslipSDK', :path => '../sdks/betslip/ios' if fightdeck_include_betslip?
+  else
+    unless File.directory?($FIGHTDECK_RELEASE_VENDOR)
+      raise "Pinned RN iOS vendor missing at #{$FIGHTDECK_RELEASE_VENDOR}. Run tools/release-sdk-local.sh rn"
+    end
+
+    pod 'FightDeckRNVendor', :path => $FIGHTDECK_RELEASE_VENDOR
+    pod 'DepositSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if fightdeck_include_deposit?
+    pod 'BetslipSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if fightdeck_include_betslip?
+  end
+
+  post_install do |installer|
+    if $FIGHTDECK_USE_LOCAL_SDK
+      react_native_post_install(
+        installer,
+        config[:reactNativePath],
+        :mac_catalyst_enabled => false
+      )
+    end
+
+    feature_flag = case $FIGHTDECK_FEATURES
+                   when 'runtime' then 'FIGHTDECK_RUNTIME'
+                   when 'deposit' then 'FIGHTDECK_DEPOSIT'
+                   else 'FIGHTDECK_BOTH'
+                   end
+    fightdeck_project_path = File.join(__dir__, 'FightDeck.xcodeproj')
+    fightdeck_project = Xcodeproj::Project.open(fightdeck_project_path)
+    fightdeck_project.targets.each do |target|
+      next unless target.name == 'FightDeck'
+
+      target.build_configurations.each do |config|
+        existing = config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] || '$(inherited)'
+        cleaned = existing.split.reject { |c| c.start_with?('FIGHTDECK_') }.join(' ')
+        config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = "#{cleaned} #{feature_flag}".strip
+      end
+    end
+    fightdeck_project.save
+  end
+end

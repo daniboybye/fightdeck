@@ -1,0 +1,748 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
+		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
+		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
+		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
+		4CC6BC81B1CCBB396C69B945 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B2A378FCA2220EBEB4F0132A /* PrivacyInfo.xcprivacy */; };
+		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
+		4ECABE7D0B4968F1D2D9D3C6 /* RNIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872B1166B1D25E7E5D989756 /* RNIntegrationTests.swift */; };
+		54A6F6976569EF82BB16CD8F /* Money.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13620DECF8F3F4F8315E5EE /* Money.swift */; };
+		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
+		72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
+		8124699FEEDD6B02A56ABA0D /* FightCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8831274D01290C44D15A32E7 /* FightCore.swift */; };
+		8CC540AE2FD450B9960879BA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
+		8D6CF781BD2AB632A1F65C11 /* FightCoreTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B472255B466D66FBEFC149DD /* FightCoreTypes.swift */; };
+		9C4FE6062E1470B7C31FB2BA /* OddsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53C181750E494A6F381C9FD6 /* OddsEngine.swift */; };
+		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
+		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
+		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
+		C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
+		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
+		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
+		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
+		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
+		E9C4F079293B3B86093E18F1 /* FightCoreDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656180D875946D196F0E3DDD /* FightCoreDisplay.swift */; };
+		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
+		F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
+		FE20D1CF991C3F8C2D87D714 /* libPods-FightDeck.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13C89A827854FAC18C13E515 /* libPods-FightDeck.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F38554DA20F31E855AEE5D7A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9F0D4232E4AEFDB2469578BB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A14FF0BBB1A87FBC2C0E6EB7;
+			remoteInfo = FightDeck;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		010C8B6A16D347CF74EB8283 /* Pods-FightDeck.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeck.release.xcconfig"; path = "Target Support Files/Pods-FightDeck/Pods-FightDeck.release.xcconfig"; sourceTree = "<group>"; };
+		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
+		13C89A827854FAC18C13E515 /* libPods-FightDeck.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeck.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
+		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
+		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
+		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
+		53C181750E494A6F381C9FD6 /* OddsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OddsEngine.swift; sourceTree = "<group>"; };
+		5CB34A2F61DC158028871445 /* DatasetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetModels.swift; sourceTree = "<group>"; };
+		61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONFileRepository.swift; sourceTree = "<group>"; };
+		656180D875946D196F0E3DDD /* FightCoreDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreDisplay.swift; sourceTree = "<group>"; };
+		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
+		813BD28F72479374E713963B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		872B1166B1D25E7E5D989756 /* RNIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNIntegrationTests.swift; sourceTree = "<group>"; };
+		8831274D01290C44D15A32E7 /* FightCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCore.swift; sourceTree = "<group>"; };
+		992440A70F2E2DCD051FFF1F /* FightDeck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScreenView.swift; sourceTree = "<group>"; };
+		AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoutDetailView.swift; sourceTree = "<group>"; };
+		B2A378FCA2220EBEB4F0132A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B472255B466D66FBEFC149DD /* FightCoreTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreTypes.swift; sourceTree = "<group>"; };
+		B8EC3D857D022EE3AA669186 /* Pods-FightDeck.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeck.debug.xcconfig"; path = "Target Support Files/Pods-FightDeck/Pods-FightDeck.debug.xcconfig"; sourceTree = "<group>"; };
+		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
+		D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKBootstrap.swift; sourceTree = "<group>"; };
+		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
+		F13620DECF8F3F4F8315E5EE /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
+		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8FB1D06474B2D730B4A262FC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */,
+				FE20D1CF991C3F8C2D87D714 /* libPods-FightDeck.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0FEDBDDAC1739C981E1110C6 /* Fighter */ = {
+			isa = PBXGroup;
+			children = (
+				12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */,
+			);
+			path = Fighter;
+			sourceTree = "<group>";
+		};
+		19BF9CE4D715EB0BF35D72DE /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				8831274D01290C44D15A32E7 /* FightCore.swift */,
+				656180D875946D196F0E3DDD /* FightCoreDisplay.swift */,
+				B472255B466D66FBEFC149DD /* FightCoreTypes.swift */,
+				F13620DECF8F3F4F8315E5EE /* Money.swift */,
+				53C181750E494A6F381C9FD6 /* OddsEngine.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		1A992D0B696BC9CBBD148621 /* FightDeck */ = {
+			isa = PBXGroup;
+			children = (
+				FC9A8117960E37A37439C968 /* App */,
+				19BF9CE4D715EB0BF35D72DE /* Core */,
+				DD501D722148505373B76B7C /* Data */,
+				AC106BAA8D8C9E35E88A5DB7 /* Design */,
+				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
+				F8E622B7794169669381AB5A /* SDK */,
+				FE9EE388C310ED4AB6AE0712 /* Services */,
+				B2A378FCA2220EBEB4F0132A /* PrivacyInfo.xcprivacy */,
+			);
+			path = FightDeck;
+			sourceTree = "<group>";
+		};
+		291FDAC4F8BE766B9255E642 /* Slip */ = {
+			isa = PBXGroup;
+			children = (
+				BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */,
+			);
+			path = Slip;
+			sourceTree = "<group>";
+		};
+		58E5F556BF0B3A0D9FC06D1F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				13C89A827854FAC18C13E515 /* libPods-FightDeck.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		60BFBC836841FB27DECDD988 /* News */ = {
+			isa = PBXGroup;
+			children = (
+				4A5C66B1CE93502EF9451749 /* NewsViews.swift */,
+			);
+			path = News;
+			sourceTree = "<group>";
+		};
+		6329D7232513F9E98E67B39C /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				B8EC3D857D022EE3AA669186 /* Pods-FightDeck.debug.xcconfig */,
+				010C8B6A16D347CF74EB8283 /* Pods-FightDeck.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		9F8C945A0C8FB47D84AF102F = {
+			isa = PBXGroup;
+			children = (
+				1A992D0B696BC9CBBD148621 /* FightDeck */,
+				E3612764317CDA593DFB745F /* FightDeckUITests */,
+				A1088A6E4DD381B5E286242F /* Products */,
+				6329D7232513F9E98E67B39C /* Pods */,
+				58E5F556BF0B3A0D9FC06D1F /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A1088A6E4DD381B5E286242F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				992440A70F2E2DCD051FFF1F /* FightDeck.app */,
+				19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AC106BAA8D8C9E35E88A5DB7 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */,
+				F35181339B0E2720AE567AEE /* SharedViews.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		B3841DF99C502708B47473FF /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */,
+			);
+			path = Video;
+			sourceTree = "<group>";
+		};
+		BB2ACDBD1A29E5EB7A4575B7 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				D683F966B6BF1040B731A301 /* Events */,
+				0FEDBDDAC1739C981E1110C6 /* Fighter */,
+				60BFBC836841FB27DECDD988 /* News */,
+				291FDAC4F8BE766B9255E642 /* Slip */,
+				B3841DF99C502708B47473FF /* Video */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		D683F966B6BF1040B731A301 /* Events */ = {
+			isa = PBXGroup;
+			children = (
+				AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */,
+				DAF3347F556E995F73653E0C /* EventsViews.swift */,
+			);
+			path = Events;
+			sourceTree = "<group>";
+		};
+		DD501D722148505373B76B7C /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				5CB34A2F61DC158028871445 /* DatasetModels.swift */,
+				15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */,
+				61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		E3612764317CDA593DFB745F /* FightDeckUITests */ = {
+			isa = PBXGroup;
+			children = (
+				872B1166B1D25E7E5D989756 /* RNIntegrationTests.swift */,
+			);
+			path = FightDeckUITests;
+			sourceTree = "<group>";
+		};
+		F8E622B7794169669381AB5A /* SDK */ = {
+			isa = PBXGroup;
+			children = (
+				D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */,
+			);
+			path = SDK;
+			sourceTree = "<group>";
+		};
+		FC9A8117960E37A37439C968 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				667CCDA71CC013177D5B28C2 /* AppState.swift */,
+				4C795D634FBE423DA73379AD /* FightDeckApp.swift */,
+				3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */,
+				813BD28F72479374E713963B /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		FE9EE388C310ED4AB6AE0712 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4E593AC1BB4F8BA756C61049 /* FightDeckUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7B15D16CC95842B0276D311 /* Build configuration list for PBXNativeTarget "FightDeckUITests" */;
+			buildPhases = (
+				E8F74D1D220DC49B5AFC32CE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				800E654811EE2322AF35036B /* PBXTargetDependency */,
+			);
+			name = FightDeckUITests;
+			productName = FightDeckUITests;
+			productReference = 19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE21C478BC5DC370EF8E33A0 /* Build configuration list for PBXNativeTarget "FightDeck" */;
+			buildPhases = (
+				30958633BC8A6BDE8322632A /* [CP] Check Pods Manifest.lock */,
+				3AD307C6196DE9DC1C5BD5E4 /* Sources */,
+				8FB1D06474B2D730B4A262FC /* Frameworks */,
+				FD708C2CE09B61C4763EA8D7 /* Resources */,
+				BF08E771331D324C2AC65230 /* [CP] Embed Pods Frameworks */,
+				41AE6305CAB5E9F954249D47 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FightDeck;
+			packageProductDependencies = (
+				EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */,
+			);
+			productName = FightDeck;
+			productReference = 992440A70F2E2DCD051FFF1F /* FightDeck.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9F0D4232E4AEFDB2469578BB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					4E593AC1BB4F8BA756C61049 = {
+						DevelopmentTeam = "";
+						TestTargetID = A14FF0BBB1A87FBC2C0E6EB7;
+					};
+					A14FF0BBB1A87FBC2C0E6EB7 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 5F353E26F03D0AC9A44F47B2 /* Build configuration list for PBXProject "FightDeck" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 9F8C945A0C8FB47D84AF102F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A1088A6E4DD381B5E286242F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */,
+				4E593AC1BB4F8BA756C61049 /* FightDeckUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FD708C2CE09B61C4763EA8D7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4CC6BC81B1CCBB396C69B945 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		30958633BC8A6BDE8322632A /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-FightDeck-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		41AE6305CAB5E9F954249D47 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BF08E771331D324C2AC65230 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3AD307C6196DE9DC1C5BD5E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8CC540AE2FD450B9960879BA /* AppState.swift in Sources */,
+				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
+				6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */,
+				72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */,
+				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
+				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
+				8124699FEEDD6B02A56ABA0D /* FightCore.swift in Sources */,
+				E9C4F079293B3B86093E18F1 /* FightCoreDisplay.swift in Sources */,
+				8D6CF781BD2AB632A1F65C11 /* FightCoreTypes.swift in Sources */,
+				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
+				EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */,
+				3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */,
+				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
+				54A6F6976569EF82BB16CD8F /* Money.swift in Sources */,
+				1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */,
+				B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */,
+				9C4FE6062E1470B7C31FB2BA /* OddsEngine.swift in Sources */,
+				DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */,
+				C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */,
+				4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */,
+				CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */,
+				D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E8F74D1D220DC49B5AFC32CE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4ECABE7D0B4968F1D2D9D3C6 /* RNIntegrationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		800E654811EE2322AF35036B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */;
+			targetProxy = F38554DA20F31E855AEE5D7A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2F178065AA8DE8889944FEA8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				PODFILE_DIR = "$(SRCROOT)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../sdks/core/node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				USE_HERMES = true;
+			};
+			name = Release;
+		};
+		5564E6125AEF64BFA977DA9C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B8EC3D857D022EE3AA669186 /* Pods-FightDeck.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.rn;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) FIGHTDECK_BOTH";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		67FE8D83695E986DBD3919D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeckUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = FightDeck;
+			};
+			name = Release;
+		};
+		A51EFA01273B92885CB2B6B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 010C8B6A16D347CF74EB8283 /* Pods-FightDeck.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.rn;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) FIGHTDECK_BOTH";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C554E35A779588579F44B8AC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(inherited)",
+					"-DRCT_REMOVE_LEGACY_ARCH=1",
+				);
+				PODFILE_DIR = "$(SRCROOT)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../sdks/core/node_modules/react-native";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				USE_HERMES = true;
+			};
+			name = Debug;
+		};
+		CA0FFB70C20594FC1AC2FFAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.FightDeckUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = FightDeck;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5F353E26F03D0AC9A44F47B2 /* Build configuration list for PBXProject "FightDeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C554E35A779588579F44B8AC /* Debug */,
+				2F178065AA8DE8889944FEA8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AE21C478BC5DC370EF8E33A0 /* Build configuration list for PBXNativeTarget "FightDeck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5564E6125AEF64BFA977DA9C /* Debug */,
+				A51EFA01273B92885CB2B6B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B7B15D16CC95842B0276D311 /* Build configuration list for PBXNativeTarget "FightDeckUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA0FFB70C20594FC1AC2FFAF /* Debug */,
+				67FE8D83695E986DBD3919D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = revision;
+				revision = cf8be20d07654570554c8a8a4952bc8a5766a8b0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 9F0D4232E4AEFDB2469578BB /* Project object */;
+}

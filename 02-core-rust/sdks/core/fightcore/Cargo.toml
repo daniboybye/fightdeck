@@ -1,0 +1,40 @@
+[package]
+name = "fightcore"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FightCore — headless betting logic exposed via UniFFI"
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+name = "fightcore"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+required-features = ["uniffi-bindgen"]
+
+[features]
+uniffi-bindgen = []
+
+[dependencies]
+rust_decimal = { version = "1.42.1", features = ["maths"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+thiserror = "2"
+async-trait = "0.1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+uniffi = { version = "0.32.0", features = ["tokio", "cli"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+
+[build-dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.build-dependencies]
+uniffi = { version = "0.32.0", features = ["build"] }
+
+[dev-dependencies]
+serde_json = "1"
+

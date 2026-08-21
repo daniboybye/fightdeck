@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FightCore Wasm — seven-fold trap</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0b0e14; color: #f5f7fa; padding: 2rem; }
+    .card { background: #141922; border-radius: 12px; padding: 1.5rem; max-width: 420px; }
+    .accent { color: #e8b33c; font-size: 2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Wasm slip math</h1>
+    <p>€10 on the Freedom 250 seven-fold (correct rounding):</p>
+    <p class="accent" id="return">…</p>
+    <p id="fractional"></p>
+  </div>
+  <script type="module">
+    import init, { acca_seven_fold_return, decimal_to_fractional_wasm } from './pkg/fightcore.js';
+    await init();
+    document.getElementById('return').textContent = '€' + acca_seven_fold_return('10.00');
+    document.getElementById('fractional').textContent = 'Gaethje 4.60 → ' + decimal_to_fractional_wasm('4.60');
+  </script>
+</body>
+</html>

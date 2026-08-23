@@ -2,7 +2,7 @@ name: FightDeck
 options:
   bundleIdPrefix: com.fightdeck
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "26.1"
   createIntermediateGroups: true
   groupSortPosition: top
 
@@ -25,14 +25,12 @@ targets:
     platform: iOS
     sources:
       - path: FightDeck
-        excludes:
-          - Features/Fighter/**
-          - Features/News/**
-          - Features/Video/**
     dependencies:
       - package: Kingfisher
     settings:
+      INFOPLIST_KEY_CFBundleDisplayName: FD 3 RN
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_BOTH
       INFOPLIST_KEY_UILaunchScreen_Generation: YES
       INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
       INFOPLIST_KEY_NSLocalNetworkUsageDescription: Serves dataset images over localhost for demo image loading.

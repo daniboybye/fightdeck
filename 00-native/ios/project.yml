@@ -2,7 +2,7 @@ name: FightDeck
 options:
   bundleIdPrefix: com.fightdeck
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "26.1"
   createIntermediateGroups: true
   groupSortPosition: top
 
@@ -28,6 +28,7 @@ targets:
     dependencies:
       - package: Kingfisher
     settings:
+      INFOPLIST_KEY_CFBundleDisplayName: FD 0 Native
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.native
       INFOPLIST_KEY_UILaunchScreen_Generation: YES
       INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait

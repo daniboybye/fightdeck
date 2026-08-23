@@ -11,15 +11,17 @@
 		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
 		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
-		4CC6BC81B1CCBB396C69B945 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B2A378FCA2220EBEB4F0132A /* PrivacyInfo.xcprivacy */; };
 		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
 		4ECABE7D0B4968F1D2D9D3C6 /* RNIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872B1166B1D25E7E5D989756 /* RNIntegrationTests.swift */; };
 		54A6F6976569EF82BB16CD8F /* Money.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13620DECF8F3F4F8315E5EE /* Money.swift */; };
+		5AC16DDC8278439AC39636B4 /* DisplayFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCE11576590506A00252D6D /* DisplayFormatting.swift */; };
 		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
 		72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
 		8124699FEEDD6B02A56ABA0D /* FightCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8831274D01290C44D15A32E7 /* FightCore.swift */; };
+		885971FF47019A8661FF3586 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D258852AD407944E27906FEA /* PrivacyInfo.xcprivacy */; };
 		8CC540AE2FD450B9960879BA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
 		8D6CF781BD2AB632A1F65C11 /* FightCoreTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B472255B466D66FBEFC149DD /* FightCoreTypes.swift */; };
+		9332696DFA2D4242602D3040 /* libPods-FightDeck.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F20E572C518D04EC72FF6B8 /* libPods-FightDeck.a */; };
 		9C4FE6062E1470B7C31FB2BA /* OddsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53C181750E494A6F381C9FD6 /* OddsEngine.swift */; };
 		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
 		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
@@ -32,7 +34,6 @@
 		E9C4F079293B3B86093E18F1 /* FightCoreDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656180D875946D196F0E3DDD /* FightCoreDisplay.swift */; };
 		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
-		FE20D1CF991C3F8C2D87D714 /* libPods-FightDeck.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13C89A827854FAC18C13E515 /* libPods-FightDeck.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,16 +47,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		010C8B6A16D347CF74EB8283 /* Pods-FightDeck.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeck.release.xcconfig"; path = "Target Support Files/Pods-FightDeck/Pods-FightDeck.release.xcconfig"; sourceTree = "<group>"; };
 		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
-		13C89A827854FAC18C13E515 /* libPods-FightDeck.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeck.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
 		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		21142B586B2CAD4D769AD020 /* Pods-FightDeck.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeck.debug.xcconfig"; path = "Target Support Files/Pods-FightDeck/Pods-FightDeck.debug.xcconfig"; sourceTree = "<group>"; };
 		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
 		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
 		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
 		53C181750E494A6F381C9FD6 /* OddsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OddsEngine.swift; sourceTree = "<group>"; };
 		5CB34A2F61DC158028871445 /* DatasetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetModels.swift; sourceTree = "<group>"; };
+		5CCE11576590506A00252D6D /* DisplayFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatting.swift; sourceTree = "<group>"; };
 		61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONFileRepository.swift; sourceTree = "<group>"; };
 		656180D875946D196F0E3DDD /* FightCoreDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreDisplay.swift; sourceTree = "<group>"; };
 		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -65,14 +66,15 @@
 		872B1166B1D25E7E5D989756 /* RNIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNIntegrationTests.swift; sourceTree = "<group>"; };
 		8831274D01290C44D15A32E7 /* FightCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCore.swift; sourceTree = "<group>"; };
 		992440A70F2E2DCD051FFF1F /* FightDeck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F20E572C518D04EC72FF6B8 /* libPods-FightDeck.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeck.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScreenView.swift; sourceTree = "<group>"; };
 		AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoutDetailView.swift; sourceTree = "<group>"; };
-		B2A378FCA2220EBEB4F0132A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B472255B466D66FBEFC149DD /* FightCoreTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreTypes.swift; sourceTree = "<group>"; };
-		B8EC3D857D022EE3AA669186 /* Pods-FightDeck.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeck.debug.xcconfig"; path = "Target Support Files/Pods-FightDeck/Pods-FightDeck.debug.xcconfig"; sourceTree = "<group>"; };
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
 		D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKBootstrap.swift; sourceTree = "<group>"; };
+		D258852AD407944E27906FEA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
+		EE6FC43F3A2CF19A2592088F /* Pods-FightDeck.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeck.release.xcconfig"; path = "Target Support Files/Pods-FightDeck/Pods-FightDeck.release.xcconfig"; sourceTree = "<group>"; };
 		F13620DECF8F3F4F8315E5EE /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -83,7 +85,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */,
-				FE20D1CF991C3F8C2D87D714 /* libPods-FightDeck.a in Frameworks */,
+				9332696DFA2D4242602D3040 /* libPods-FightDeck.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -101,6 +103,7 @@
 		19BF9CE4D715EB0BF35D72DE /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				5CCE11576590506A00252D6D /* DisplayFormatting.swift */,
 				8831274D01290C44D15A32E7 /* FightCore.swift */,
 				656180D875946D196F0E3DDD /* FightCoreDisplay.swift */,
 				B472255B466D66FBEFC149DD /* FightCoreTypes.swift */,
@@ -120,7 +123,7 @@
 				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
 				F8E622B7794169669381AB5A /* SDK */,
 				FE9EE388C310ED4AB6AE0712 /* Services */,
-				B2A378FCA2220EBEB4F0132A /* PrivacyInfo.xcprivacy */,
+				D258852AD407944E27906FEA /* PrivacyInfo.xcprivacy */,
 			);
 			path = FightDeck;
 			sourceTree = "<group>";
@@ -133,10 +136,10 @@
 			path = Slip;
 			sourceTree = "<group>";
 		};
-		58E5F556BF0B3A0D9FC06D1F /* Frameworks */ = {
+		2D140636ACB70D0FAD570307 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				13C89A827854FAC18C13E515 /* libPods-FightDeck.a */,
+				9F20E572C518D04EC72FF6B8 /* libPods-FightDeck.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -149,24 +152,14 @@
 			path = News;
 			sourceTree = "<group>";
 		};
-		6329D7232513F9E98E67B39C /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				B8EC3D857D022EE3AA669186 /* Pods-FightDeck.debug.xcconfig */,
-				010C8B6A16D347CF74EB8283 /* Pods-FightDeck.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		9F8C945A0C8FB47D84AF102F = {
 			isa = PBXGroup;
 			children = (
 				1A992D0B696BC9CBBD148621 /* FightDeck */,
 				E3612764317CDA593DFB745F /* FightDeckUITests */,
 				A1088A6E4DD381B5E286242F /* Products */,
-				6329D7232513F9E98E67B39C /* Pods */,
-				58E5F556BF0B3A0D9FC06D1F /* Frameworks */,
+				BBD4383C9D18A9CD4852015A /* Pods */,
+				2D140636ACB70D0FAD570307 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -206,6 +199,16 @@
 				B3841DF99C502708B47473FF /* Video */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		BBD4383C9D18A9CD4852015A /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				21142B586B2CAD4D769AD020 /* Pods-FightDeck.debug.xcconfig */,
+				EE6FC43F3A2CF19A2592088F /* Pods-FightDeck.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		D683F966B6BF1040B731A301 /* Events */ = {
@@ -285,12 +288,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AE21C478BC5DC370EF8E33A0 /* Build configuration list for PBXNativeTarget "FightDeck" */;
 			buildPhases = (
-				30958633BC8A6BDE8322632A /* [CP] Check Pods Manifest.lock */,
+				730629DE13A26EE314B06B47 /* [CP] Check Pods Manifest.lock */,
 				3AD307C6196DE9DC1C5BD5E4 /* Sources */,
 				8FB1D06474B2D730B4A262FC /* Frameworks */,
-				FD708C2CE09B61C4763EA8D7 /* Resources */,
-				BF08E771331D324C2AC65230 /* [CP] Embed Pods Frameworks */,
-				41AE6305CAB5E9F954249D47 /* [CP] Copy Pods Resources */,
+				EBFBAE8564D224F76EAB86AF /* Resources */,
+				2C879715FB3CFC2B5127485B /* [CP] Embed Pods Frameworks */,
+				A65AA685606D94EAB7884B84 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -346,18 +349,35 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		FD708C2CE09B61C4763EA8D7 /* Resources */ = {
+		EBFBAE8564D224F76EAB86AF /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4CC6BC81B1CCBB396C69B945 /* PrivacyInfo.xcprivacy in Resources */,
+				885971FF47019A8661FF3586 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		30958633BC8A6BDE8322632A /* [CP] Check Pods Manifest.lock */ = {
+		2C879715FB3CFC2B5127485B /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		730629DE13A26EE314B06B47 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -379,7 +399,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		41AE6305CAB5E9F954249D47 /* [CP] Copy Pods Resources */ = {
+		A65AA685606D94EAB7884B84 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -396,23 +416,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BF08E771331D324C2AC65230 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeck/Pods-FightDeck-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -424,13 +427,14 @@
 				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
 				6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */,
 				72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */,
+				5AC16DDC8278439AC39636B4 /* DisplayFormatting.swift in Sources */,
 				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
-				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
 				8124699FEEDD6B02A56ABA0D /* FightCore.swift in Sources */,
 				E9C4F079293B3B86093E18F1 /* FightCoreDisplay.swift in Sources */,
 				8D6CF781BD2AB632A1F65C11 /* FightCoreTypes.swift in Sources */,
 				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
 				EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */,
+				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
 				3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */,
 				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
 				54A6F6976569EF82BB16CD8F /* Money.swift in Sources */,
@@ -512,7 +516,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				OTHER_CFLAGS = (
@@ -537,12 +541,13 @@
 		};
 		5564E6125AEF64BFA977DA9C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B8EC3D857D022EE3AA669186 /* Pods-FightDeck.debug.xcconfig */;
+			baseConfigurationReference = 21142B586B2CAD4D769AD020 /* Pods-FightDeck.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FD 3 RN";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -577,12 +582,13 @@
 		};
 		A51EFA01273B92885CB2B6B4 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 010C8B6A16D347CF74EB8283 /* Pods-FightDeck.release.xcconfig */;
+			baseConfigurationReference = EE6FC43F3A2CF19A2592088F /* Pods-FightDeck.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FD 3 RN";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -652,7 +658,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

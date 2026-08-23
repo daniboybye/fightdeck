@@ -20,6 +20,7 @@ xcode = "26.6"
 xcode_build = "17F113"
 ios_sdk = "26.5"
 ios_device = "26.6.1"                  # what the demo devices actually run
+ios_deployment = "26.1"                # tabViewBottomAccessory(isEnabled:) lands in 26.1
 macos_deployment = "26.0"
 
 [apple.swift_sdks]

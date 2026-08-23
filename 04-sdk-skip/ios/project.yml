@@ -2,7 +2,7 @@ name: FightDeck
 options:
   bundleIdPrefix: com.fightdeck
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "26.1"
   createIntermediateGroups: true
   groupSortPosition: top
 
@@ -49,9 +49,14 @@ targetTemplates:
 targets:
   FightDeck:
     templates: [FightDeckHost]
+    # Must be nested under `base`. A flat mapping here is silently dropped when the
+    # target also inherits structured settings from a template, which is how this
+    # host shipped without its compilation conditions.
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip
-      SWIFT_ACTIVE_COMPILATION_CONDITIONS: FIGHTDECK_BOTH
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: FD 4 Skip
+        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_BOTH
     dependencies:
       - package: Kingfisher
       - package: FightDeckCore
@@ -64,8 +69,10 @@ targets:
   FightDeckRuntime:
     templates: [FightDeckHost]
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.runtime
-      SWIFT_ACTIVE_COMPILATION_CONDITIONS: FIGHTDECK_RUNTIME
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: FD4 Runtime
+        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.runtime
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_RUNTIME
     dependencies:
       - package: Kingfisher
       - package: FightDeckCore
@@ -74,8 +81,10 @@ targets:
   FightDeckSkipDeposit:
     templates: [FightDeckHost]
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.deposit
-      SWIFT_ACTIVE_COMPILATION_CONDITIONS: FIGHTDECK_DEPOSIT
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: FD4 Deposit
+        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.deposit
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_DEPOSIT
     dependencies:
       - package: Kingfisher
       - package: FightDeckCore

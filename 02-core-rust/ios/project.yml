@@ -2,7 +2,7 @@ name: FightDeck
 options:
   bundleIdPrefix: com.fightdeck
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "26.1"
   createIntermediateGroups: true
   groupSortPosition: top
 
@@ -30,6 +30,7 @@ targets:
         embed: false
       - package: Kingfisher
     settings:
+      INFOPLIST_KEY_CFBundleDisplayName: FD 2 Rust
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.rust
       INFOPLIST_KEY_UILaunchScreen_Generation: YES
       INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait

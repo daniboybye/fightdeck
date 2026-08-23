@@ -1,10 +1,14 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
+  "extends": "./node_modules/@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
     "strict": true,
     "noEmit": true,
-    "rootDir": "src",
-    "baseUrl": "."
+    "types": ["jest", "node"]
   },
-  "include": ["src/**/*", "__tests__/**/*"]
+  "include": [
+    "src/**/*",
+    "__tests__/**/*",
+    "../deposit/src/**/*",
+    "../betslip/src/**/*"
+  ]
 }

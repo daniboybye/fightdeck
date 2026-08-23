@@ -5,8 +5,8 @@ import { BetslipScreen } from '../../../betslip/src/BetslipScreen';
 /** Shared runtime entry — registers all SDK feature surfaces in one bundle. */
 import './RuntimeRegistry';
 
-function withMountLog(name: string, Component: React.ComponentType<any>) {
-  return function FeatureWrapper(props: Record<string, unknown>) {
+function withMountLog(name, Component) {
+  return function FeatureWrapper(props) {
     if (__DEV__) {
       // Verification hook: visible in Metro / Xcode console when RN genuinely mounts.
       console.log(`[FightDeckRN] surface mounted: ${name}`);

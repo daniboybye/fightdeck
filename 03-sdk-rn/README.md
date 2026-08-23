@@ -155,7 +155,8 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 3. **SPM URL scheme** — Production checksum pins require HTTPS (GitHub Releases). Local bootstrap uses `FIGHTDECK_RELEASE_PATH=1` (path binary) plus manifest checksum verification.
 4. **Fabric badge + Turbo `PreferencesStore`** — TypeScript specs and native stub files exist; codegen + ObjC++ Fabric wrapper not linked.
 5. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
-6. **iOS ships both `.hbc` and `.jsbundle`** in local Pods path — Release should prefer `.hbc` only to save ~914 KB.
+6. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
+7. **iOS ships both `.hbc` and `.jsbundle`** in local Pods path — Release should prefer `.hbc` only to save ~914 KB.
 
 ## Architecture sketch
 

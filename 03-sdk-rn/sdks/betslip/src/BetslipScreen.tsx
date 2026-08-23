@@ -1,10 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import {
+  InputAccessoryView,
+  Keyboard,
+  Platform,
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import {
@@ -16,7 +21,8 @@ import { formatCurrency, formatMoney, parseMoney } from '../../core/src/fightcor
 import { formatOdds, parseOdds } from '../../core/src/fightcore/odds';
 import { notifyNative } from '../../core/src/runtime/RuntimeRegistry';
 import { parseThemeJSON, slipSummaryRows } from '../../core/src/ui/theme';
-import type { Selection } from '../../core/src/fightcore/types';
+import { TestIds } from '../../core/src/ui/testIds';
+import type { BetMode, Selection } from '../../core/src/fightcore/types';
 
 interface SlipProps extends Record<string, unknown> {
   themeJSON: string;
@@ -29,6 +35,12 @@ interface SelectionLabels {
   fighterName: string;
   opponentName: string;
   eventName: string;
+}
+
+const STAKE_INPUT_ID = 'betslipStakeInput';
+
+function modeFor(count: number): BetMode {
+  return count >= MIN_ACCA_LEGS ? 'accumulator' : 'single';
 }
 
 function selectionLabels(eventsJSON: string, selection: Selection): SelectionLabels {
@@ -58,7 +70,7 @@ function selectionLabels(eventsJSON: string, selection: Selection): SelectionLab
 
 function slipPayload(selections: Selection[], stakeText: string): string {
   return JSON.stringify({
-    mode: 'accumulator',
+    mode: modeFor(selections.length),
     stake: stakeText,
     selections: selections.map((s) => ({
       boutId: s.boutId,
@@ -93,7 +105,8 @@ export function BetslipScreen(props: SlipProps) {
   const [placedMessage, setPlacedMessage] = useState<string | null>(null);
 
   const balance = parseMoney(String(props.balance ?? '0'));
-  const slip = { mode: 'accumulator' as const, selections, stake: parseMoney(stakeText || '0') };
+  const slipMode = modeFor(selections.length);
+  const slip = { mode: slipMode, selections, stake: parseMoney(stakeText || '0') };
   const state = core.slipState(slip, balance);
 
   const summary = slipSummaryRows({
@@ -110,125 +123,156 @@ export function BetslipScreen(props: SlipProps) {
     });
   };
 
+  const dismissKeyboard = () => Keyboard.dismiss();
+
   if (selections.length === 0) {
     return (
-      <View style={styles.root}>
+      <SafeAreaView style={[styles.root, styles.emptyRoot]} testID={TestIds.betslipEmpty}>
         <Text style={styles.secondary}>No selections yet</Text>
         <Pressable
           style={styles.primaryButton}
+          accessibilityRole="button"
+          accessibilityLabel="Browse Events"
           onPress={() => notifyNative('betslip', { type: 'browse' })}
         >
           <Text style={styles.primaryLabel}>Browse Events</Text>
         </Pressable>
-      </View>
+      </SafeAreaView>
     );
   }
 
+  const betTypeTitle = slipMode === 'accumulator' ? 'Accumulator' : 'Single';
+
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      {selections.length < MIN_ACCA_LEGS ? (
-        <Text style={styles.secondary}>Add at least two selections to place an accumulator</Text>
-      ) : null}
-      {selections.map((selection) => {
-        const labels = selectionLabels(eventsJSON, selection);
-        return (
-          <View key={`${selection.boutId}-${selection.fighterId}`} style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.body}>{labels.fighterName}</Text>
-              <Text style={styles.secondary}>
-                vs {labels.opponentName} · {labels.eventName}
-              </Text>
+    <SafeAreaView style={styles.root}>
+      <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.sectionTitle}>{betTypeTitle}</Text>
+          {selections.map((selection) => {
+            const labels = selectionLabels(eventsJSON, selection);
+            return (
+              <View key={`${selection.boutId}-${selection.fighterId}`} style={styles.row}>
+                <View style={styles.flex}>
+                  <Text style={styles.body}>{labels.fighterName}</Text>
+                  <Text style={styles.secondary}>
+                    vs {labels.opponentName} · {labels.eventName}
+                  </Text>
+                </View>
+                <Text style={styles.accent}>{formatOdds(selection.odds)}</Text>
+                <Pressable
+                  onPress={() => {
+                    const next = selections.filter(
+                      (s) => !(s.boutId === selection.boutId && s.fighterId === selection.fighterId),
+                    );
+                    setSelections(next);
+                    setPlacedMessage(null);
+                    notifyUpdated(next, stakeText);
+                  }}
+                >
+                  <Text style={styles.secondary}> ✕ </Text>
+                </Pressable>
+              </View>
+            );
+          })}
+
+          <Text style={styles.sectionTitle}>Stake</Text>
+          <TextInput
+            nativeID={STAKE_INPUT_ID}
+            inputAccessoryViewID={Platform.OS === 'ios' ? STAKE_INPUT_ID : undefined}
+            style={styles.stakeInput}
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+            blurOnSubmit
+            onSubmitEditing={dismissKeyboard}
+            value={stakeText}
+            onChangeText={(text) => {
+              setStakeText(text);
+              notifyUpdated(selections, text);
+            }}
+          />
+          <View style={styles.chipRow}>
+            {[5, 10, 25, 50].map((chip) => (
+              <Pressable
+                key={chip}
+                style={styles.chip}
+                onPress={() => {
+                  const next = String(chip);
+                  setStakeText(next);
+                  notifyUpdated(selections, next);
+                }}
+              >
+                <Text style={styles.chipLabel}>€{chip}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <View style={styles.summary}>
+            {summary.map((row) => (
+              <View key={row.label} style={styles.summaryRow}>
+                <Text style={styles.secondary}>{row.label}</Text>
+                <Text style={styles.body}>{row.value}</Text>
+              </View>
+            ))}
+          </View>
+          {state.errors.map((error) => (
+            <Text key={error} style={styles.error}>{error.replaceAll('_', ' ')}</Text>
+          ))}
+          <View style={styles.depositCard}>
+            <Text style={styles.depositTitle}>Deposit</Text>
+            <View style={styles.summaryRow}>
+              <Text style={styles.secondary}>Balance</Text>
+              <Text style={styles.body}>{formatCurrency(balance)}</Text>
             </View>
-            <Text style={styles.accent}>{formatOdds(selection.odds)}</Text>
             <Pressable
-              onPress={() => {
-                const next = selections.filter(
-                  (s) => !(s.boutId === selection.boutId && s.fighterId === selection.fighterId),
-                );
-                setSelections(next);
-                setPlacedMessage(null);
-                notifyUpdated(next, stakeText);
-              }}
+              testID={TestIds.betslipAddFunds}
+              accessibilityRole="button"
+              accessibilityLabel="Add funds"
+              style={styles.primaryButton}
+              onPress={() => notifyNative('betslip', { type: 'deposit' })}
             >
-              <Text style={styles.secondary}> ✕ </Text>
+              <Text style={styles.primaryLabel}>Add funds</Text>
             </Pressable>
           </View>
-        );
-      })}
-      <TextInput
-        style={styles.stakeInput}
-        keyboardType="decimal-pad"
-        value={stakeText}
-        onChangeText={(text) => {
-          setStakeText(text);
-          notifyUpdated(selections, text);
-        }}
-      />
-      <View style={styles.chipRow}>
-        {[5, 10, 25, 50].map((chip) => (
+          {placedMessage ? (
+            <Text style={styles.positive}>{placedMessage}</Text>
+          ) : null}
           <Pressable
-            key={chip}
-            style={styles.chip}
+            style={[styles.primaryButton, state.errors.length > 0 && styles.disabled]}
+            disabled={state.errors.length > 0}
             onPress={() => {
-              const next = String(chip);
-              setStakeText(next);
-              notifyUpdated(selections, next);
+              if (state.errors.length > 0) {
+                return;
+              }
+              const message = `Bet placed · ${formatCurrency(state.potentialReturn)} to return`;
+              const nextBalance = formatMoney(balance.minus(state.totalStake));
+              const clearedStake = stakeText;
+              setPlacedMessage(message);
+              setSelections([]);
+              notifyNative('betslip', {
+                type: 'placed',
+                message,
+                slipJSON: slipPayload([], clearedStake),
+                balance: nextBalance,
+              });
             }}
           >
-            <Text style={styles.chipLabel}>€{chip}</Text>
+            <Text style={styles.primaryLabel}>Place bet</Text>
           </Pressable>
-        ))}
-      </View>
-      <View style={styles.summary}>
-        {summary.map((row) => (
-          <View key={row.label} style={styles.summaryRow}>
-            <Text style={styles.secondary}>{row.label}</Text>
-            <Text style={styles.body}>{row.value}</Text>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+      {Platform.OS === 'ios' ? (
+        <InputAccessoryView nativeID={STAKE_INPUT_ID}>
+          <View style={styles.accessoryBar}>
+            <Pressable onPress={dismissKeyboard} hitSlop={8}>
+              <Text style={styles.accessoryDone}>Done</Text>
+            </Pressable>
           </View>
-        ))}
-      </View>
-      {state.errors.map((error) => (
-        <Text key={error} style={styles.error}>{error.replaceAll('_', ' ')}</Text>
-      ))}
-      <View style={styles.depositCard}>
-        <Text style={styles.depositTitle}>Deposit</Text>
-        <View style={styles.summaryRow}>
-          <Text style={styles.secondary}>Balance</Text>
-          <Text style={styles.body}>{formatCurrency(balance)}</Text>
-        </View>
-        <Pressable
-          style={styles.primaryButton}
-          onPress={() => notifyNative('betslip', { type: 'deposit' })}
-        >
-          <Text style={styles.primaryLabel}>Add funds</Text>
-        </Pressable>
-      </View>
-      {placedMessage ? (
-        <Text style={styles.positive}>{placedMessage}</Text>
+        </InputAccessoryView>
       ) : null}
-      <Pressable
-        style={[styles.primaryButton, state.errors.length > 0 && styles.disabled]}
-        disabled={state.errors.length > 0}
-        onPress={() => {
-          if (state.errors.length > 0) {
-            return;
-          }
-          const message = `Bet placed · ${formatCurrency(state.potentialReturn)} to return`;
-          const nextBalance = formatMoney(balance.minus(state.totalStake));
-          const clearedStake = stakeText;
-          setPlacedMessage(message);
-          setSelections([]);
-          notifyNative('betslip', {
-            type: 'placed',
-            message,
-            slipJSON: slipPayload([], clearedStake),
-            balance: nextBalance,
-          });
-        }}
-      >
-        <Text style={styles.primaryLabel}>Place bet</Text>
-      </Pressable>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -238,7 +282,20 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>) {
   const r = theme.radius;
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: c.background ?? '#0B0E14' },
-    content: { padding: s.lg ?? 16, gap: s.md ?? 12, paddingBottom: 96 },
+    flex: { flex: 1 },
+    emptyRoot: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: s.lg ?? 16,
+      padding: s.xl ?? 24,
+    },
+    content: { padding: s.lg ?? 16, gap: s.md ?? 12, paddingBottom: s.xl ?? 24 },
+    sectionTitle: {
+      color: c.textSecondary ?? '#9AA5B8',
+      fontSize: theme.fontSize.caption ?? 12,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+    },
     body: { color: c.textPrimary ?? '#F5F7FA', fontSize: theme.fontSize.body ?? 15 },
     secondary: { color: c.textSecondary ?? '#9AA5B8', fontSize: theme.fontSize.caption ?? 12 },
     accent: { color: c.accent ?? '#E8B33C', fontWeight: '600' },
@@ -293,5 +350,19 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>) {
     },
     primaryLabel: { color: c.onAccent ?? '#0B0E14', fontWeight: '700' },
     disabled: { opacity: 0.4 },
+    accessoryBar: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingHorizontal: s.lg ?? 16,
+      paddingVertical: s.sm ?? 8,
+      backgroundColor: c.surfaceElevated ?? '#1C2230',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border ?? '#232A38',
+    },
+    accessoryDone: {
+      color: c.accent ?? '#E8B33C',
+      fontWeight: '600',
+      fontSize: theme.fontSize.callout ?? 17,
+    },
   });
 }

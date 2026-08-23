@@ -3,9 +3,9 @@ import PackageDescription
 let package = Package(
     name: "FightDeckRNRuntime",
     platforms: [.iOS("26.0")],
-    products: [.library(name: "FightDeckRNRuntime", targets: ["FightDeckRNRuntime"])],
+    products: [.library(name: "FightDeckRNRuntimeBinary", targets: ["FightDeckRNRuntimeBinary"])],
     targets: [.target(
-        name: "FightDeckRNRuntime",
+        name: "FightDeckRNRuntimeBinary",
         swiftSettings: [
             .swiftLanguageMode(.v6),
             .unsafeFlags(["-strict-concurrency=minimal"]),

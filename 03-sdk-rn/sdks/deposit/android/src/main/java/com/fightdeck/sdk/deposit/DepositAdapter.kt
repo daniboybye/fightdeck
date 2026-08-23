@@ -17,6 +17,7 @@ data class DepositParams(
 )
 
 sealed class DepositResult {
+    data object Confirmed : DepositResult()
     data class Completed(val amount: BigDecimal) : DepositResult()
     data object Cancelled : DepositResult()
     data class Failed(val reason: String) : DepositResult()
@@ -65,6 +66,7 @@ class DepositAdapter : DepositHosting {
 
     private fun mapResult(payload: Map<String, Any?>): DepositResult =
         when (payload["type"]) {
+            "confirmed" -> DepositResult.Confirmed
             "completed" -> {
                 val raw = (payload["amount"] as? String)?.replace("€", "")?.trim() ?: "0"
                 DepositResult.Completed(BigDecimal(raw.ifBlank { "0" }))

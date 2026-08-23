@@ -3,6 +3,13 @@ import XCTest
 final class RNIntegrationTests: XCTestCase {
     private var app: XCUIApplication!
 
+    private enum TestId {
+        static let betslipAddFunds = "betslip-add-funds"
+        static let betslipEmpty = "betslip-empty"
+        static let depositReady = "deposit-ready"
+        static let depositBalance = "deposit-balance"
+    }
+
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
@@ -17,6 +24,11 @@ final class RNIntegrationTests: XCTestCase {
         app.tabBars.buttons["Slip"].tap()
     }
 
+    /// Matches React Native `testID` values exposed as accessibility identifiers.
+    private func element(identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", identifier)).firstMatch
+    }
+
     /// Odds buttons only appear on the Upcoming tab. Pick one leg so the slip RN surface
     /// shows the deposit card with an Add funds action.
     private func addSelectionFromUpcoming() {
@@ -29,17 +41,23 @@ final class RNIntegrationTests: XCTestCase {
         odds.tap()
     }
 
+    private func waitForBetslipAddFunds(timeout: TimeInterval = 30) -> Bool {
+        element(identifier: TestId.betslipAddFunds).waitForExistence(timeout: timeout)
+    }
+
+    private func waitForDepositReady(timeout: TimeInterval = 30) -> Bool {
+        element(identifier: TestId.depositReady).waitForExistence(timeout: timeout)
+            || element(identifier: TestId.depositBalance).waitForExistence(timeout: timeout)
+    }
+
     private func launchToDeposit(skipPrewarm: Bool) -> Int {
         let start = Date()
         launch(skipPrewarm: skipPrewarm)
         addSelectionFromUpcoming()
         goToSlipTab()
-        let addFunds = app.buttons["Add funds"]
-        XCTAssertTrue(addFunds.waitForExistence(timeout: 30))
-        addFunds.tap()
-        let ready = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS 'Balance'")
-        ).firstMatch.waitForExistence(timeout: 30)
+        XCTAssertTrue(waitForBetslipAddFunds())
+        element(identifier: TestId.betslipAddFunds).tap()
+        let ready = waitForDepositReady()
         let elapsed = Int(Date().timeIntervalSince(start) * 1000)
         NSLog(
             "[FightDeckBenchmark] mode=%@ firstSurfaceMs=%d ready=%@",
@@ -63,12 +81,9 @@ final class RNIntegrationTests: XCTestCase {
         launch()
         addSelectionFromUpcoming()
         goToSlipTab()
-        app.buttons["Add funds"].tap()
-
-        XCTAssertTrue(
-            app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Balance'")).firstMatch
-                .waitForExistence(timeout: 30)
-        )
+        XCTAssertTrue(waitForBetslipAddFunds())
+        element(identifier: TestId.betslipAddFunds).tap()
+        XCTAssertTrue(waitForDepositReady())
     }
 
     func testBetslipScreenIsReactNative() throws {
@@ -76,7 +91,8 @@ final class RNIntegrationTests: XCTestCase {
         goToSlipTab()
 
         XCTAssertTrue(
-            app.staticTexts["No selections yet"].waitForExistence(timeout: 30)
+            element(identifier: TestId.betslipEmpty).waitForExistence(timeout: 30)
+                || app.staticTexts["No selections yet"].waitForExistence(timeout: 1)
                 || app.buttons["Browse Events"].waitForExistence(timeout: 1)
         )
     }

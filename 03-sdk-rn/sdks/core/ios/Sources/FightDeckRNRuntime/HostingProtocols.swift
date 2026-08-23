@@ -25,6 +25,7 @@ public struct DepositParams: Sendable {
 }
 
 public enum DepositResult: Sendable {
+    case confirmed
     case completed(amount: Decimal)
     case cancelled
     case failed(reason: String)

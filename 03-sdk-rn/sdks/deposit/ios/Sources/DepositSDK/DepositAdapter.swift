@@ -37,6 +37,8 @@ public final class DepositAdapter: DepositHosting {
 
     nonisolated private static func mapResult(_ payload: [String: Any]) -> DepositResult {
         switch payload["type"] as? String {
+        case "confirmed":
+            return .confirmed
         case "completed":
             let amountString = (payload["amount"] as? String)?.replacingOccurrences(of: "€", with: "") ?? "0"
             let amount = Decimal(string: amountString) ?? 0

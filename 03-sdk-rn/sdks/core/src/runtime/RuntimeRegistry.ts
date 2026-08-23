@@ -9,11 +9,12 @@ export const runtimeEvents = new NativeEventEmitter(
   NativeModules.FightDeckRuntimeBridge ?? undefined,
 );
 
-runtimeEvents.addListener('fightdeckFeatureResult', (event: {
-  feature: string;
-  payload: Record<string, unknown>;
-}) => {
-  registry.get(event.feature)?.(event.payload);
+runtimeEvents.addListener('fightdeckFeatureResult', (event: object) => {
+  const { feature, payload } = event as {
+    feature: string;
+    payload: Record<string, unknown>;
+  };
+  registry.get(feature)?.(payload);
 });
 
 export function registerFeature(

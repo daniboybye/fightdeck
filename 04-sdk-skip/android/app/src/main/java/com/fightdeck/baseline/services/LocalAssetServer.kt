@@ -12,7 +12,8 @@ object LocalAssetServer {
 
     fun start(context: Context) {
         if (running) return
-        val assetsRoot = DatasetLocator.assetsRoot(context)
+        // Requested paths already carry the "assets/" prefix, so the root is the dataset itself.
+        val serverRoot = DatasetLocator.datasetRoot(context)
         running = true
         executor.execute {
             ServerSocket(PORT).use { server ->
@@ -21,9 +22,9 @@ object LocalAssetServer {
                     executor.execute {
                         socket.getInputStream().bufferedReader().readLine()?.let { line ->
                             val path = line.split(" ").getOrNull(1)?.trimStart('/') ?: ""
-                            val file = File(assetsRoot, path)
+                            val file = File(serverRoot, path)
                             val output = socket.getOutputStream()
-                            if (file.exists() && file.canonicalPath.startsWith(assetsRoot.canonicalPath)) {
+                            if (file.exists() && file.canonicalPath.startsWith(serverRoot.canonicalPath)) {
                                 val bytes = file.readBytes()
                                 val header = """
                                     HTTP/1.1 200 OK
@@ -62,6 +63,4 @@ object DatasetLocator {
         }
         return File("/Users/daniel.urumov/DevelopmentTools/fightdeck/dataset")
     }
-
-    fun assetsRoot(context: Context): File = datasetRoot(context).resolve("assets")
 }

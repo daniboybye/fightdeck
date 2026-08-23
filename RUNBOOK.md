@@ -248,13 +248,23 @@ All five pairs use **distinct** bundle IDs / application IDs so they co-install.
 | `03-sdk-rn` | `com.fightdeck.sdk.rn` | `SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT="$REPO/dataset" xcrun simctl launch booted com.fightdeck.sdk.rn` |
 | `04-sdk-skip` | `com.fightdeck.sdk.skip` | `SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT="$REPO/dataset" xcrun simctl launch booted com.fightdeck.sdk.skip` |
 
-| Approach | Android `applicationId` | Launch Android |
+| Approach | Android `applicationId` | Launcher activity |
 | --- | --- | --- |
-| `00-native` | `com.fightdeck.baseline` | `adb shell am start -n com.fightdeck.baseline/.MainActivity` |
-| `01-core-swift` | `com.fightdeck.coreswift` | `adb shell am start -n com.fightdeck.coreswift/.MainActivity` |
-| `02-core-rust` | `com.fightdeck.rust` | `adb shell am start -n com.fightdeck.rust/.MainActivity` |
-| `03-sdk-rn` | `com.fightdeck.sdk.rn` | `adb shell am start -n com.fightdeck.sdk.rn/.MainActivity` |
-| `04-sdk-skip` | `com.fightdeck.sdk.skip` | `adb shell am start -n com.fightdeck.sdk.skip/.MainActivity` |
+| `00-native` | `com.fightdeck.baseline` | `com.fightdeck.baseline/.MainActivity` |
+| `01-core-swift` | `com.fightdeck.coreswift` | `com.fightdeck.coreswift/com.fightdeck.swiftcore.MainActivity` |
+| `02-core-rust` | `com.fightdeck.rust` | `com.fightdeck.rust/.MainActivity` |
+| `03-sdk-rn` | `com.fightdeck.sdk.rn` | `com.fightdeck.sdk.rn/com.fightdeck.baseline.MainActivity` |
+| `04-sdk-skip` | `com.fightdeck.sdk.skip` | `com.fightdeck.sdk.skip/com.fightdeck.baseline.MainActivity` |
+
+**`applicationId` is not the Kotlin package.** Three hosts kept their original package after
+the ids were made distinct, so the `<applicationId>/.MainActivity` shorthand resolves to a
+class that does not exist and `am start` fails with `Error type 3`. Use the full component
+above, or let the package manager resolve it:
+
+```bash
+adb shell monkey -p <applicationId> -c android.intent.category.LAUNCHER 1
+adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER <applicationId>
+```
 
 **iOS dataset env:** Xcode **Run** schemes set `FIGHTDECK_DATASET_ROOT=$(SRCROOT)/../../dataset`. When launching via `simctl`, pass `SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT` as shown above.
 
@@ -267,8 +277,13 @@ for bid in com.fightdeck.native com.fightdeck.coreswift com.fightdeck.rust com.f
   SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT="$REPO/dataset" xcrun simctl launch booted "$bid"
 done
 
-for pkg in com.fightdeck.baseline com.fightdeck.coreswift com.fightdeck.rust com.fightdeck.sdk.rn com.fightdeck.sdk.skip; do
-  adb shell am start -n "$pkg/.MainActivity"
+for component in \
+  com.fightdeck.baseline/.MainActivity \
+  com.fightdeck.coreswift/com.fightdeck.swiftcore.MainActivity \
+  com.fightdeck.rust/.MainActivity \
+  com.fightdeck.sdk.rn/com.fightdeck.baseline.MainActivity \
+  com.fightdeck.sdk.skip/com.fightdeck.baseline.MainActivity; do
+  adb shell am start -n "$component"
 done
 ```
 
@@ -343,6 +358,8 @@ cd "$REPO/03-sdk-rn/android"
 | CocoaPods: pinned RN vendor missing | `FIGHTDECK_LOCAL_SDK` unset and no local release tree | `tools/release-sdk-local.sh rn` or build with `FIGHTDECK_LOCAL_SDK=1` |
 | `01-core-swift` Android: Kotlin stub, not Swift | Swift-on-Android cross-compile fails by design on Apple Xcode Swift | Expected — see `01-core-swift/README.md` |
 | Gradle / AGP JDK errors | Wrong Java version | `export JAVA_HOME="$(/usr/libexec/java_home -v 17)"` |
+| `am start` → `Error type 3 … does not exist` | `applicationId` differs from the Kotlin package | Use the full component from the table above, or `adb shell monkey -p <applicationId> -c android.intent.category.LAUNCHER 1` |
+| `04-sdk-skip` iOS shows "Bet slip not included" | Target settings not applied, so `FIGHTDECK_BOTH` is undefined | Settings must be nested under `settings.base` in `project.yml` when the target also uses a template; then `xcodegen generate` |
 
 ---
 

@@ -4,7 +4,7 @@
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
-        android:label="FightDeck"
+        android:label="FD 3 RN"
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
         android:theme="@style/Theme.FightDeck">

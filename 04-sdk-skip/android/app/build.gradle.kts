@@ -52,7 +52,8 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.fightdeck.baseline"
+        // Distinct from the other hosts so all five approaches can be installed side by side.
+        applicationId = "com.fightdeck.sdk.skip"
         minSdk = 28
         targetSdk = 37
         versionCode = 1

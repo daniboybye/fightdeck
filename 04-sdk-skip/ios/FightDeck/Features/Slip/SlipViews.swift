@@ -53,10 +53,7 @@ private struct FeatureUnavailableView: View {
     let label: String
 
     var body: some View {
-        Text("\(label) not included in this build")
-            .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DesignTokens.ColorToken.background)
+        ContentUnavailableView("\(label) not included", systemImage: "puzzlepiece.extension")
     }
 }
 
@@ -83,7 +80,6 @@ struct BetslipBridgeView: View {
                 )
             }
         }
-        .background(DesignTokens.ColorToken.background)
         .onAppear { ensureStore() }
         .onChange(of: state.slip) { _, newSlip in
             store?.slip = newSlip
@@ -147,36 +143,26 @@ struct DepositBridgeView: View {
     @Binding var path: [SlipRoute]
 
     var body: some View {
-        DepositSDKView(state: state) {
-            path.removeAll()
-        }
-        .ignoresSafeArea()
+        DepositFlowView(
+            params: depositParams,
+            theme: ThemeTokens.parse(ThemeLoader.tokensJSON()),
+            onResult: { result in
+                if case .completed(let amount) = result {
+                    state.deposit(amount: amount)
+                    path.removeAll()
+                }
+            }
+        )
     }
-}
 
-struct DepositSDKView: UIViewControllerRepresentable {
-    @Bindable var state: AppState
-    let onDone: () -> Void
-
-    func makeUIViewController(context: Context) -> UIViewController {
-        SDKBootstrap.shared.configureOnce()
-        let params = DepositParams(
+    private var depositParams: DepositParams {
+        DepositParams(
             accessToken: "demo-token",
             environment: "demo",
             locale: Locale.current.identifier,
             themeJSON: ThemeLoader.tokensJSON(),
             currentBalance: state.balance
         )
-        return SDKBootstrap.shared.depositHosting.makeViewController(params: params) { result in
-            Task { @MainActor in
-                if case .completed(let amount) = result {
-                    state.deposit(amount: amount)
-                    onDone()
-                }
-            }
-        }
     }
-
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 #endif

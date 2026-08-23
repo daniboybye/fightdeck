@@ -17,6 +17,7 @@ final class ObservableBetSlipStore {
 
     init(store: BetSlipStore) {
         self.store = store
+        store.setMode(mode: .single)
         self.slipState = store.currentState()
         let bridge = SlipStateListenerBridge()
         self.listener = bridge
@@ -29,13 +30,14 @@ final class ObservableBetSlipStore {
     var slip: BetSlipRecord { store.currentSlip() }
     var balance: String { store.balance() }
 
-    func setMode(_ mode: BetModeRecord) { store.setMode(mode: mode) }
     func setStake(_ stake: String) { store.setStake(stake: stake) }
     func toggleSelection(boutId: String, fighterId: String, odds: String) {
         store.toggleSelection(boutId: boutId, fighterId: fighterId, odds: odds)
+        syncMode()
     }
     func removeSelection(boutId: String, fighterId: String) {
         store.removeSelection(boutId: boutId, fighterId: fighterId)
+        syncMode()
     }
     func isSelected(boutId: String, fighterId: String) -> Bool {
         store.isSelected(boutId: boutId, fighterId: fighterId)
@@ -55,7 +57,17 @@ final class ObservableBetSlipStore {
         for selection in selections {
             store.removeSelection(boutId: selection.boutId, fighterId: selection.fighterId)
         }
+        syncMode()
         return state
+    }
+
+    /// The mode follows the number of legs instead of a picker: one selection is a single,
+    /// two or more is an accumulator. Both modes stay covered by the golden fixtures.
+    private func syncMode() {
+        let mode: BetModeRecord = slip.selections.count >= FightCoreDisplay.minAccaLegs
+            ? .accumulator
+            : .single
+        store.setMode(mode: mode)
     }
 }
 

@@ -18,31 +18,30 @@ struct VideoScreenView: View {
     @State private var controller: AVPlayerViewController?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
+        List {
+            Section {
                 VideoPlayerContainer(item: item, posterURL: posterURL)
                     .aspectRatio(16 / 9, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-                Text(item.title)
-                    .font(.system(size: DesignTokens.FontSize.title, weight: .bold))
-                Text("Event: \(item.eventId)")
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                Text("Duration: \(formattedDuration(item.durationSeconds))")
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                Text("Transcript placeholder — demo copy only.")
-                    .font(.system(size: DesignTokens.FontSize.body))
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
-            .padding(DesignTokens.Spacing.lg)
+            Section {
+                Text(item.title)
+                    .font(.title3.bold())
+                LabeledContent("Duration", value: item.durationSeconds.formattedDuration)
+                LabeledContent("Format", value: item.kind.uppercased())
+            }
+            if let note = item.note {
+                Section("About this clip") {
+                    Label(note, systemImage: "info.circle")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle("Video")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func formattedDuration(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let remainder = seconds % 60
-        return String(format: "%d:%02d", minutes, remainder)
     }
 }
 

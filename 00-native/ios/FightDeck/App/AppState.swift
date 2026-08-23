@@ -24,9 +24,9 @@ final class AppState {
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
-    /// Always an accumulator. Singles are still part of the FightCore contract and stay
-    /// covered by the golden fixtures; the demo just does not expose the choice.
-    var slip = BetSlip(mode: .accumulator, selections: [], stake: Decimal(string: "10.00")!)
+    /// The mode follows the number of legs instead of a picker: one selection is a single,
+    /// two or more is an accumulator. Both modes stay covered by the golden fixtures.
+    var slip = BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
     var balance = Decimal(string: "500.00")!
     var betPlacedMessage: String?
     var simulateNetworkFailure = false
@@ -115,6 +115,7 @@ final class AppState {
                 Selection(boutID: bout.id, fighterID: fighterID, odds: Money.parse(odds))
             )
         }
+        syncMode()
         betPlacedMessage = nil
     }
 
@@ -124,6 +125,7 @@ final class AppState {
 
     func removeSelection(id: String) {
         slip.selections.removeAll { $0.id == id }
+        syncMode()
         betPlacedMessage = nil
     }
 
@@ -132,7 +134,12 @@ final class AppState {
         guard state.errors.isEmpty else { return }
         balance -= state.totalStake
         slip.selections.removeAll()
+        syncMode()
         betPlacedMessage = "Bet placed · \(Money.formatCurrency(state.potentialReturn)) to return"
+    }
+
+    private func syncMode() {
+        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
     }
 
     func deposit(amount: Decimal) {
@@ -141,6 +148,15 @@ final class AppState {
 
     func imageURL(_ path: String) -> URL {
         repository.imageURL(for: path)
+    }
+
+    func fighter(_ id: String) -> FighterItem? {
+        guard case .loaded(let fighters) = fightersState else { return nil }
+        return fighters.first { $0.id == id }
+    }
+
+    func record(for id: String) -> String {
+        fighter(id)?.recordDisplay ?? "—"
     }
 
     private static func makeFightCore() -> FightCore {

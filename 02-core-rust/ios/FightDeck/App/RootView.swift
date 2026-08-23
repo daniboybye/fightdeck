@@ -14,54 +14,73 @@ struct RootView: View {
     @State private var pastPath: [EventsRoute] = []
     @State private var slipPath: [SlipRoute] = []
 
-    @State private var selectedTab = Tab.upcoming
+    @State private var selectedTab = AppTab.upcoming
     private let depositHosting: DepositHosting = NativeDepositHosting()
 
-    private enum Tab: Hashable {
+    private enum AppTab: Hashable {
         case upcoming
         case past
         case slip
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
+        TabView(selection: $selectedTab) {
+            Tab("Upcoming", systemImage: "calendar", value: AppTab.upcoming) {
                 EventsTabView(state: state, path: $upcomingPath, mode: .upcoming)
-                    .tabItem { Label("Upcoming", systemImage: "calendar") }
-                    .tag(Tab.upcoming)
+            }
+            Tab("Past", systemImage: "trophy", value: AppTab.past) {
                 EventsTabView(state: state, path: $pastPath, mode: .past)
-                    .tabItem { Label("Past", systemImage: "trophy") }
-                    .tag(Tab.past)
+            }
+            Tab("Slip", systemImage: "list.bullet.rectangle", value: AppTab.slip) {
                 SlipTabView(state: state, path: $slipPath, depositHosting: depositHosting) {
                     selectedTab = .upcoming
                 }
-                .tabItem { Label("Slip", systemImage: "list.bullet.rectangle") }
-                .tag(Tab.slip)
-            }
-            .tint(DesignTokens.ColorToken.accent)
-
-            // The bar exists to get you to the slip, so it is pure noise while the slip is
-            // already on screen — and it would cover the Place bet button.
-            if !state.slipStore.slip.selections.isEmpty, selectedTab != .slip {
-                BetSlipBar(
-                    legCount: state.slipStore.slip.selections.count,
-                    potentialReturn: FightCoreDisplay.formatCurrencyAmount(state.slipState.potentialReturn)
-                ) {
-                    selectedTab = .slip
-                    slipPath = []
-                }
-                .padding(.bottom, 56)
             }
         }
-        .background(DesignTokens.ColorToken.background)
+        .tint(DesignTokens.ColorToken.accent)
+        .tabBarMinimizeBehavior(.onScrollDown)
+        // The bar is a shortcut into the slip while you are picking odds, so it belongs to
+        // the tab you pick odds on. As a tab view accessory it also inflates the safe area,
+        // which is what keeps it off the last row of every scroll view.
+        .tabViewBottomAccessory(isEnabled: showsSlipAccessory) {
+            BetSlipAccessory(
+                legCount: state.slipStore.slip.selections.count,
+                potentialReturn: FightCoreDisplay.formatCurrencyAmount(state.slipState.potentialReturn)
+            ) {
+                selectedTab = .slip
+                slipPath = []
+            }
+        }
         .task { await state.bootstrap() }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Toggle(isOn: $state.simulateNetworkFailure) {
-                    Image(systemName: "wifi.slash")
+    }
+
+    private var showsSlipAccessory: Bool {
+        selectedTab == .upcoming && !state.slipStore.slip.selections.isEmpty
+    }
+}
+
+private struct BetSlipAccessory: View {
+    let legCount: Int
+    let potentialReturn: String
+    let action: () -> Void
+
+    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Label("\(legCount) selection\(legCount == 1 ? "" : "s")", systemImage: "ticket")
+                    .labelStyle(.titleAndIcon)
+                if placement != .inline {
+                    Spacer()
+                    Text("Return \(potentialReturn)")
+                        .fontWeight(.semibold)
                 }
-                .labelsHidden()
             }
+            .font(.subheadline)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            .frame(maxWidth: .infinity)
         }
+        .buttonStyle(.plain)
     }
 }

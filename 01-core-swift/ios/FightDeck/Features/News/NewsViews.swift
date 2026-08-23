@@ -10,40 +10,32 @@ import SwiftUI
 
 struct NewsRow: View {
     let item: NewsItem
+    let eventName: String
     let imageURL: URL
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            RemoteImage(url: imageURL)
-                .frame(height: 140)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-            Text(item.headline)
-                .font(.system(size: DesignTokens.FontSize.title, weight: .bold))
-                .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-                .lineLimit(2)
-            Text(item.body)
-                .font(.system(size: DesignTokens.FontSize.body))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                .lineLimit(2)
-            HStack {
-                Text(relativeDate(item.publishedAt))
-                Text("·")
-                Text("\(item.readMinutes) min read")
-                Spacer()
-                Text(item.source)
-                    .foregroundStyle(DesignTokens.ColorToken.accent)
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            RemoteImageTile(url: imageURL, height: 140)
+                .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                if !eventName.isEmpty {
+                    Text(eventName.uppercased())
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(DesignTokens.ColorToken.accent)
+                }
+                Text(item.headline)
+                    .font(.headline)
+                    .lineLimit(3)
+                Text(item.body)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                Text("\(item.publishedAt.formattedRelativeDate) · \(item.readMinutes) min read")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .font(.system(size: DesignTokens.FontSize.caption))
-            .foregroundStyle(DesignTokens.ColorToken.textSecondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
-    }
-
-    private func relativeDate(_ iso: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: iso) else { return iso }
-        return date.formatted(.relative(presentation: .named))
+        .padding(.vertical, DesignTokens.Spacing.sm)
     }
 }
 
@@ -51,34 +43,48 @@ struct NewsArticleView: View {
     @Bindable var state: AppState
     let item: NewsItem
     let imageURL: URL
-    @Binding var path: [EventsRoute]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
                 RemoteImage(url: imageURL)
-                    .frame(height: 200)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-                Text(item.headline)
-                    .font(.system(size: DesignTokens.FontSize.title, weight: .bold))
-                Text(item.body)
-                    .font(.system(size: DesignTokens.FontSize.body))
-                    .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-                Text("Source: \(item.source)")
-                    .font(.system(size: DesignTokens.FontSize.caption))
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                if case .loaded(let media) = state.mediaState {
-                    ForEach(media.filter { $0.eventId == item.eventId }) { video in
-                        Button("Watch: \(video.title)") {
-                            path.append(.video(video.id))
-                        }
-                        .foregroundStyle(DesignTokens.ColorToken.accent)
-                    }
+                    .frame(height: 240)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+                    Text(item.headline)
+                        .font(.title.bold())
+                    Text("\(item.publishedAt.formattedRelativeDate) · \(item.readMinutes) min read · \(item.source)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(item.body)
+                        .font(.body)
+                    relatedVideo
                 }
+                .padding(.horizontal, DesignTokens.Spacing.lg)
             }
-            .padding(DesignTokens.Spacing.lg)
+            .padding(.bottom, DesignTokens.Spacing.xl)
         }
         .navigationTitle("Article")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    @ViewBuilder
+    private var relatedVideo: some View {
+        if case .loaded(let media) = state.mediaState {
+            let clips = media.filter { $0.eventId == item.eventId }
+            if !clips.isEmpty {
+                Divider()
+                Text("Watch")
+                    .font(.headline)
+                ForEach(clips) { clip in
+                    NavigationLink(value: EventsRoute.video(clip.id)) {
+                        Label(clip.title, systemImage: "play.circle.fill")
+                    }
+                    .buttonStyle(.glass)
+                }
+            }
+        }
     }
 }

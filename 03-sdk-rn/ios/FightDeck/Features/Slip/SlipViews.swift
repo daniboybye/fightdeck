@@ -28,6 +28,8 @@ struct SlipTabView: View {
                     if route == .deposit {
                         #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
                         DepositBridgeView(state: state, path: $path)
+                            // The deposit flow is a single self-contained task; the tab bar would
+                            // invite the user to abandon it half-way.
                             .toolbar(.hidden, for: .tabBar)
                         #else
                         FeatureUnavailableView(label: "Deposit")
@@ -52,14 +54,14 @@ private struct SlipPlaceholderView: View {
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Text("No selections yet")
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+        ContentUnavailableView {
+            Label("No selections yet", systemImage: "ticket")
+        } description: {
+            Text("Pick a winner on any upcoming bout and it lands here.")
+        } actions: {
             Button("Browse Events", action: onBrowseEvents)
-                .buttonStyle(PrimaryCapsuleButtonStyle())
+                .buttonStyle(.glassProminent)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DesignTokens.ColorToken.background)
     }
 }
 
@@ -67,10 +69,11 @@ private struct FeatureUnavailableView: View {
     let label: String
 
     var body: some View {
-        Text("\(label) not included in this build")
-            .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DesignTokens.ColorToken.background)
+        ContentUnavailableView {
+            Label("\(label) not included", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text("This build variant does not ship the \(label.lowercased()) SDK.")
+        }
     }
 }
 
@@ -82,7 +85,17 @@ struct BetslipBridgeView: View {
 
     var body: some View {
         BetslipSDKView(state: state, path: $path, onBrowseEvents: onBrowseEvents)
+            // TabView can instantiate every tab at launch; recreating the surface when the
+            // host slip changes keeps the RN module in sync with native odds taps.
+            .id(slipIdentity)
             .ignoresSafeArea()
+    }
+
+    private var slipIdentity: String {
+        state.slip.selections
+            .map { "\($0.boutID):\($0.fighterID)" }
+            .joined(separator: ",")
+            + "|\(Money.format(state.slip.stake))"
     }
 }
 
@@ -132,16 +145,21 @@ struct BetslipSDKView: UIViewControllerRepresentable {
 struct DepositBridgeView: View {
     @Bindable var state: AppState
     @Binding var path: [SlipRoute]
+    @State private var depositConfirmed = false
 
     var body: some View {
-        DepositSDKView(state: state, path: $path)
+        DepositSDKView(state: state, path: $path, onConfirmed: { depositConfirmed = true })
             .ignoresSafeArea()
+            // The money has already moved by the time this screen appears, so going back to
+            // the amount field would offer to spend it a second time.
+            .navigationBarBackButtonHidden(depositConfirmed)
     }
 }
 
 struct DepositSDKView: UIViewControllerRepresentable {
     @Bindable var state: AppState
     @Binding var path: [SlipRoute]
+    var onConfirmed: () -> Void
 
     func makeUIViewController(context: Context) -> UIViewController {
         SDKBootstrap.shared.configureOnce()
@@ -155,6 +173,8 @@ struct DepositSDKView: UIViewControllerRepresentable {
         return SDKBootstrap.shared.depositHosting.makeViewController(params: params) { result in
             Task { @MainActor in
                 switch result {
+                case .confirmed:
+                    onConfirmed()
                 case .completed(let amount):
                     state.deposit(amount: amount)
                     path.removeAll()

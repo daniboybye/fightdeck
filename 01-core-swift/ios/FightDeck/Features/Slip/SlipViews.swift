@@ -42,6 +42,8 @@ struct BetSlipView: View {
     @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
 
+    @FocusState private var stakeFocused: Bool
+
     var body: some View {
         Group {
             if state.slip.selections.isEmpty {
@@ -50,154 +52,127 @@ struct BetSlipView: View {
                 slipContent
             }
         }
-        .background(DesignTokens.ColorToken.background)
     }
 
     private var emptyState: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Text("No selections yet")
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+        ContentUnavailableView {
+            Label("No selections yet", systemImage: "ticket")
+        } description: {
+            Text("Pick a winner on any upcoming bout and it lands here.")
+        } actions: {
             Button("Browse Events", action: onBrowseEvents)
-                .buttonStyle(PrimaryCapsuleButtonStyle())
+                .buttonStyle(.glassProminent)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var slipContent: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                accumulatorNote
+        List {
+            Section(betTypeTitle) {
                 ForEach(state.slip.selections) { selection in
                     selectionRow(selection)
                 }
-                stakeField
-                summaryBlock
-                validationErrors
-                depositSection
-                actions
+                .onDelete { offsets in
+                    offsets.map { state.slip.selections[$0].id }.forEach(state.removeSelection)
+                }
             }
-            .padding(DesignTokens.Spacing.lg)
-            .padding(.bottom, DesignTokens.Layout.tabBarClearance)
+            Section("Stake") {
+                stakeField
+                stakeChips
+            }
+            Section {
+                ForEach(Array(FightCoreDisplay.slipSummary(state: state.slipState).enumerated()), id: \.offset) { _, row in
+                    LabeledContent(row.label, value: row.value)
+                }
+            }
+            if !state.slipState.errors.isEmpty {
+                Section {
+                    ForEach(state.slipState.errors, id: \.self) { error in
+                        Label(error.rawValue.displayMethod, systemImage: "exclamationmark.triangle.fill")
+                            .font(.callout)
+                            .foregroundStyle(DesignTokens.ColorToken.negative)
+                    }
+                }
+            }
+            Section("Deposit") {
+                LabeledContent("Balance") {
+                    Text(Money.formatCurrency(state.balance))
+                        .contentTransition(.numericText())
+                }
+                Button("Add funds") { path.append(.deposit) }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .safeAreaInset(edge: .bottom) { placeBetBar }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { stakeFocused = false }
+            }
         }
     }
 
-    @ViewBuilder
-    private var accumulatorNote: some View {
-        if state.slip.selections.count < FightCore.minAccaLegs {
-            Text("Add at least two selections to place an accumulator")
-                .font(.system(size: DesignTokens.FontSize.caption))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-        }
+    /// One leg is a single, two or more is an accumulator. The user never picks — the slip
+    /// just says which one it currently is.
+    private var betTypeTitle: String {
+        state.slip.mode == .accumulator ? "Accumulator" : "Single"
     }
 
     private func selectionRow(_ selection: Selection) -> some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(fighterName(selection.fighterID))
-                    .font(.system(size: DesignTokens.FontSize.callout))
-                Text("vs \(opponentName(for: selection)) · \(eventName(for: selection))")
-                    .font(.system(size: DesignTokens.FontSize.caption))
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            }
-            Spacer()
+        LabeledContent {
             Text(FightCoreDisplay.formatOdds(selection.odds))
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
                 .foregroundStyle(DesignTokens.ColorToken.accent)
-            Button {
-                state.removeSelection(id: selection.id)
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+        } label: {
+            VStack(alignment: .leading) {
+                Text(state.fighter(selection.fighterID)?.name ?? selection.fighterID)
+                Text("vs \(opponentName(for: selection)) · \(eventName(for: selection))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .frame(width: 44, height: 44)
         }
-        .cardStyle()
     }
 
     private var stakeField: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            TextField("Stake", value: $state.slip.stake, format: .number)
+        LabeledContent("Amount") {
+            TextField("Stake", value: $state.slip.stake, format: .currency(code: "EUR"))
                 .keyboardType(.decimalPad)
-                .padding(DesignTokens.Spacing.lg)
-                .background(DesignTokens.ColorToken.surface)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-            HStack {
-                ForEach([5, 10, 25, 50], id: \.self) { chip in
-                    Button("€\(chip)") {
-                        state.slip.stake = Decimal(chip)
-                    }
-                    .buttonStyle(ChipButtonStyle())
-                }
-            }
+                .multilineTextAlignment(.trailing)
+                .focused($stakeFocused)
         }
     }
 
-    private var summaryBlock: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            ForEach(Array(FightCoreDisplay.slipSummary(state: state.slipState).enumerated()), id: \.offset) { _, row in
-                HStack {
-                    Text(row.label)
-                        .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                    Spacer()
-                    Text(row.value)
-                }
+    private var stakeChips: some View {
+        HStack {
+            ForEach([5, 10, 25, 50], id: \.self) { chip in
+                Button("€\(chip)") { state.slip.stake = Decimal(chip) }
+                    .buttonStyle(.bordered)
+                    .buttonBorderShape(.capsule)
+                    .frame(maxWidth: .infinity)
             }
         }
-        .font(.system(size: DesignTokens.FontSize.body))
-        .padding(DesignTokens.Spacing.lg)
-        .background(DesignTokens.ColorToken.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+        .tint(DesignTokens.ColorToken.accent)
     }
 
-    private var validationErrors: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-            ForEach(state.slipState.errors, id: \.self) { error in
-                Text(error.rawValue.replacingOccurrences(of: "_", with: " "))
-                    .foregroundStyle(DesignTokens.ColorToken.negative)
-                    .font(.system(size: DesignTokens.FontSize.caption))
-            }
-        }
-    }
-
-    private var depositSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("Deposit")
-                .font(.system(size: DesignTokens.FontSize.callout, weight: .semibold))
-                .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-            HStack {
-                Text("Balance")
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                Spacer()
-                Text(Money.formatCurrency(state.balance))
-                    .contentTransition(.numericText())
-            }
-            .font(.system(size: DesignTokens.FontSize.body))
-            Button("Add funds") { path.append(.deposit) }
-                .buttonStyle(PrimaryCapsuleButtonStyle())
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
-    }
-
-    @ViewBuilder
-    private var actions: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
+    private var placeBetBar: some View {
+        VStack(spacing: DesignTokens.Spacing.sm) {
             if let message = state.betPlacedMessage {
-                Text(message)
-                    .font(.system(size: DesignTokens.FontSize.callout, weight: .medium))
+                Label(message, systemImage: "checkmark.circle.fill")
+                    .font(.callout)
                     .foregroundStyle(DesignTokens.ColorToken.positive)
             }
-            Button("Place bet") { state.placeBet() }
-                .buttonStyle(PrimaryCapsuleButtonStyle())
-                .disabled(!state.slipState.errors.isEmpty)
+            Button {
+                state.placeBet()
+            } label: {
+                Text("Place bet")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(DesignTokens.ColorToken.accent)
+            .disabled(!state.slipState.errors.isEmpty)
         }
-    }
-
-    private func fighterName(_ id: String) -> String {
-        if case .loaded(let fighters) = state.fightersState,
-           let fighter = fighters.first(where: { $0.id == id }) {
-            return fighter.name
-        }
-        return id
+        .padding(DesignTokens.Spacing.lg)
+        .background(.bar)
     }
 
     private func opponentName(for selection: Selection) -> String {
@@ -206,7 +181,7 @@ struct BetSlipView: View {
             if let bout = event.bouts.first(where: { $0.id == selection.boutID }) {
                 let opponentID = bout.redCorner.fighterId == selection.fighterID
                     ? bout.blueCorner.fighterId : bout.redCorner.fighterId
-                return fighterName(opponentID)
+                return state.fighter(opponentID)?.name ?? opponentID
             }
         }
         return "—"
@@ -218,18 +193,6 @@ struct BetSlipView: View {
             return "—"
         }
         return event.name
-    }
-}
-
-private struct ChipButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: DesignTokens.FontSize.caption, weight: .medium))
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(DesignTokens.ColorToken.surfaceElevated)
-            .foregroundStyle(DesignTokens.ColorToken.accent)
-            .clipShape(Capsule())
     }
 }
 

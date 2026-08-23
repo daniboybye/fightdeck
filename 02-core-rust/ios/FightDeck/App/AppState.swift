@@ -126,6 +126,15 @@ final class AppState {
         repository.imageURL(for: path)
     }
 
+    func fighter(_ id: String) -> FighterItem? {
+        guard case .loaded(let fighters) = fightersState else { return nil }
+        return fighters.first { $0.id == id }
+    }
+
+    func record(for id: String) -> String {
+        fighter(id)?.recordDisplay ?? "—"
+    }
+
     private static func makeCore() -> FightCoreHandle {
         let url = DatasetLocator.datasetRoot().appendingPathComponent("events.json")
         guard let data = try? Data(contentsOf: url),

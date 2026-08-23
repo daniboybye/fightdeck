@@ -16,75 +16,121 @@ struct BoutDetailView: View {
     let mode: EventMode
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: DesignTokens.Spacing.xl) {
-                hero
+        List {
+            Section {
+                matchup
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+            Section("Tale of the tape") {
                 taleOfTheTape
-                if mode.showsOdds {
-                    market
-                }
-                if mode.showsResults {
-                    resultPanel
+            }
+            if mode.showsOdds {
+                Section("Outright winner") {
+                    marketRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
+                    marketRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
                 }
             }
-            .padding(DesignTokens.Spacing.lg)
+            if mode.showsResults {
+                Section("Result") {
+                    LabeledContent("Winner") {
+                        Text(bout.result.winnerName)
+                            .foregroundStyle(DesignTokens.ColorToken.positive)
+                    }
+                    LabeledContent("Method", value: bout.result.method.displayMethod)
+                    LabeledContent("Detail", value: bout.result.detail)
+                    LabeledContent("Ended", value: "Round \(bout.result.endRound) · \(bout.result.endTime)")
+                }
+            }
         }
-        .navigationTitle("Bout")
+        .listStyle(.insetGrouped)
+        .navigationTitle(bout.weightClass.displayMethod)
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var hero: some View {
-        ZStack {
-            HStack(spacing: DesignTokens.Spacing.xl) {
-                fighterHero(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
+    private var matchup: some View {
+        HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
+            cornerColumn(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
+            VStack(spacing: DesignTokens.Spacing.xs) {
                 Text("VS")
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                fighterHero(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                if bout.titleFight {
+                    Image(systemName: "medal.fill")
+                        .foregroundStyle(DesignTokens.ColorToken.accent)
+                }
             }
-            .padding(DesignTokens.Spacing.xl)
+            .padding(.top, DesignTokens.Spacing.xl)
+            cornerColumn(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
+        }
+        .padding(.vertical, DesignTokens.Spacing.lg)
+    }
+
+    // A Button rather than a NavigationLink: two links inside one list row make the list draw
+    // two disclosure chevrons across the middle of the matchup.
+    private func cornerColumn(_ corner: CornerItem, ring: Color) -> some View {
+        Button {
+            path.append(.fighter(corner.fighterId))
+        } label: {
+            VStack(spacing: DesignTokens.Spacing.sm) {
+                FighterAvatar(
+                    url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"),
+                    ring: ring,
+                    size: 88
+                )
+                Text(corner.name)
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                Text(state.record(for: corner.fighterId))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// A `Grid` rather than three `.frame(maxWidth: .infinity)` texts: the frames centred each
+    /// value inside its own third, so the columns never lined up with each other.
+    private var taleOfTheTape: some View {
+        Grid(horizontalSpacing: DesignTokens.Spacing.md, verticalSpacing: DesignTokens.Spacing.md) {
+            ForEach(tapeRows, id: \.label) { row in
+                GridRow {
+                    Text(row.red)
+                        .gridColumnAlignment(.leading)
+                    Text(row.label)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .gridColumnAlignment(.center)
+                    Text(row.blue)
+                        .gridColumnAlignment(.trailing)
+                }
+                .font(.callout)
+            }
         }
         .frame(maxWidth: .infinity)
-        .glassEffect()
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+        .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
-    private func fighterHero(_ corner: CornerItem, ring: Color) -> some View {
-        VStack {
-            Circle()
-                .stroke(ring, lineWidth: 3)
-                .frame(width: 88, height: 88)
-                .overlay {
-                    RemoteImage(url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"))
-                        .clipShape(Circle())
-                }
-            Button(corner.name) {
-                path.append(.fighter(corner.fighterId))
-            }
-            .font(.system(size: DesignTokens.FontSize.headline, weight: .bold))
-            .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-        }
+    private var tapeRows: [(label: String, red: String, blue: String)] {
+        let red = state.fighter(bout.redCorner.fighterId)
+        let blue = state.fighter(bout.blueCorner.fighterId)
+        return [
+            ("RECORD", red?.recordDisplay ?? "—", blue?.recordDisplay ?? "—"),
+            ("HEIGHT", format(red?.heightCm, unit: "cm"), format(blue?.heightCm, unit: "cm")),
+            ("REACH", format(red?.reachIn, unit: "in"), format(blue?.reachIn, unit: "in")),
+            ("STANCE", red?.stance?.localizedCapitalized ?? "—", blue?.stance?.localizedCapitalized ?? "—"),
+            ("COUNTRY", red?.country ?? "—", blue?.country ?? "—"),
+        ]
     }
 
-    private var taleOfTheTape: some View {
-        VStack(spacing: DesignTokens.Spacing.sm) {
-            tapeRow(left: record(bout.redCorner.fighterId), label: "RECORD", right: record(bout.blueCorner.fighterId))
-            tapeRow(left: height(bout.redCorner.fighterId), label: "HEIGHT", right: height(bout.blueCorner.fighterId))
-            tapeRow(left: reach(bout.redCorner.fighterId), label: "REACH", right: reach(bout.blueCorner.fighterId))
-            tapeRow(left: stance(bout.redCorner.fighterId), label: "STANCE", right: stance(bout.blueCorner.fighterId))
-            tapeRow(left: country(bout.redCorner.fighterId), label: "COUNTRY", right: country(bout.blueCorner.fighterId))
-        }
-        .cardStyle()
+    private func format(_ value: Int?, unit: String) -> String {
+        guard let value else { return "—" }
+        return "\(value) \(unit)"
     }
 
-    private var market: some View {
-        VStack(spacing: DesignTokens.Spacing.md) {
-            marketButton(bout.redCorner)
-            marketButton(bout.blueCorner)
-        }
-    }
-
-    private func marketButton(_ corner: CornerItem) -> some View {
-        VStack(spacing: DesignTokens.Spacing.xs) {
+    private func marketRow(_ corner: CornerItem, ring: Color) -> some View {
+        LabeledContent {
             OddsButton(
                 label: FightCoreDisplay.formatOdds(corner.closingOdds.decimal),
                 fractional: corner.closingOdds.fractional,
@@ -92,60 +138,20 @@ struct BoutDetailView: View {
             ) {
                 state.toggleSelection(bout: bout, fighterID: corner.fighterId, odds: corner.closingOdds.decimal)
             }
-            .frame(maxWidth: .infinity)
-            Text("Implied \(FightCoreDisplay.formatImpliedProbability(corner.closingOdds.decimal))")
-                .font(.system(size: DesignTokens.FontSize.caption))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+        } label: {
+            HStack(spacing: DesignTokens.Spacing.md) {
+                FighterAvatar(
+                    url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"),
+                    ring: ring,
+                    size: 32
+                )
+                VStack(alignment: .leading) {
+                    Text(corner.name)
+                    Text("Implied \(FightCoreDisplay.formatImpliedProbability(corner.closingOdds.decimal))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
-
-    private var resultPanel: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("Result")
-                .font(.system(size: DesignTokens.FontSize.callout, weight: .semibold))
-            Text(bout.result.winnerName)
-                .foregroundStyle(DesignTokens.ColorToken.positive)
-            Text("\(bout.result.method.uppercased()) · \(bout.result.detail)")
-            Text("Round \(bout.result.endRound) · \(bout.result.endTime)")
-        }
-        .font(.system(size: DesignTokens.FontSize.body))
-        .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
-    }
-
-    private func tapeRow(left: String, label: String, right: String) -> some View {
-        HStack {
-            Text(left)
-                .frame(maxWidth: .infinity)
-            Text(label)
-                .font(.system(size: DesignTokens.FontSize.caption, weight: .semibold))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                .frame(maxWidth: .infinity)
-            Text(right)
-                .frame(maxWidth: .infinity)
-        }
-        .font(.system(size: DesignTokens.FontSize.callout))
-    }
-
-    private func fighter(_ id: String) -> FighterItem? {
-        if case .loaded(let fighters) = state.fightersState {
-            return fighters.first { $0.id == id }
-        }
-        return nil
-    }
-
-    private func record(_ id: String) -> String { fighter(id)?.recordDisplay ?? "—" }
-    private func height(_ id: String) -> String {
-        guard let cm = fighter(id)?.heightCm else { return "—" }
-        return "\(cm) cm"
-    }
-    private func reach(_ id: String) -> String {
-        guard let inches = fighter(id)?.reachIn else { return "—" }
-        return "\(inches) in"
-    }
-    private func stance(_ id: String) -> String {
-        fighter(id)?.stance?.capitalized ?? "—"
-    }
-    private func country(_ id: String) -> String { fighter(id)?.country ?? "—" }
 }

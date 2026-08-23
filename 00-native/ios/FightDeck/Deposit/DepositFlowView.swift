@@ -15,6 +15,7 @@ struct DepositFlowView: View {
     @State private var amountText = ""
     @State private var method = DepositMethod.card
     @State private var didSucceed = false
+    @FocusState private var amountFocused: Bool
 
     private enum DepositMethod: String, CaseIterable, Identifiable {
         case card
@@ -39,6 +40,14 @@ struct DepositFlowView: View {
             }
         }
 
+        var symbol: String {
+            switch self {
+            case .card: "creditcard"
+            case .bank: "building.columns"
+            case .wallet: "wallet.bifold"
+            }
+        }
+
         var feeRate: Decimal {
             switch self {
             case .card, .bank: 0
@@ -48,114 +57,106 @@ struct DepositFlowView: View {
     }
 
     var body: some View {
-        ZStack {
-            DesignTokens.ColorToken.background.ignoresSafeArea()
+        Group {
             if didSucceed {
                 successContent
             } else {
                 formContent
             }
         }
-        .navigationTitle("Deposit")
+        .navigationTitle(didSucceed ? "Confirmed" : "Deposit")
         .navigationBarTitleDisplayMode(.inline)
+        // The money has already moved by the time this screen appears, so going back to the
+        // amount field would offer to spend it a second time.
+        .navigationBarBackButtonHidden(didSucceed)
     }
 
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
     // and stepping through them only hides the total from the person approving it.
     private var formContent: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                Text("Balance: \(Money.formatCurrency(params.currentBalance))")
-                    .font(.system(size: DesignTokens.FontSize.body))
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-
-                amountSection
-                methodSection
-                summarySection
-
-                Button("Confirm deposit") { didSucceed = true }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(amountValidationMessage != nil || amountText.isEmpty)
-            }
-            .padding(DesignTokens.Spacing.lg)
-        }
-    }
-
-    private var amountSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            TextField("€0.00", text: $amountText)
-                .keyboardType(.decimalPad)
-                .font(.system(size: DesignTokens.FontSize.display, weight: .bold))
-                .padding(DesignTokens.Spacing.lg)
-                .background(DesignTokens.ColorToken.surface)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-
-            if let message = amountValidationMessage {
-                Text(message)
-                    .foregroundStyle(DesignTokens.ColorToken.negative)
-                    .font(.system(size: DesignTokens.FontSize.caption))
-            }
-
-            HStack {
-                ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                    Button("€\(chip)") { amountText = chip }
-                        .buttonStyle(ChipButtonStyle())
+        Form {
+            Section("Amount") {
+                TextField("€0.00", text: $amountText)
+                    .keyboardType(.decimalPad)
+                    .font(.largeTitle.bold())
+                    .focused($amountFocused)
+                if let message = amountValidationMessage {
+                    Label(message, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(DesignTokens.ColorToken.negative)
                 }
-            }
-        }
-    }
-
-    private var methodSection: some View {
-        VStack(spacing: DesignTokens.Spacing.sm) {
-            ForEach(DepositMethod.allCases) { item in
-                Button {
-                    method = item
-                } label: {
-                    HStack {
-                        Image(systemName: method == item ? "largecircle.fill.circle" : "circle")
-                            .foregroundStyle(DesignTokens.ColorToken.accent)
-                        VStack(alignment: .leading) {
-                            Text(item.title)
-                                .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-                            Text(item.feeNote)
-                                .font(.system(size: DesignTokens.FontSize.caption))
-                                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                        }
-                        Spacer()
+                HStack {
+                    ForEach(["10", "25", "50", "100"], id: \.self) { chip in
+                        Button("€\(chip)") { amountText = chip }
+                            .buttonStyle(.bordered)
+                            .buttonBorderShape(.capsule)
+                            .frame(maxWidth: .infinity)
                     }
-                    .padding(DesignTokens.Spacing.lg)
-                    .background(DesignTokens.ColorToken.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
                 }
+                .tint(DesignTokens.ColorToken.accent)
+            }
+
+            Section("Method") {
+                Picker("Method", selection: $method) {
+                    ForEach(DepositMethod.allCases) { item in
+                        Label {
+                            VStack(alignment: .leading) {
+                                Text(item.title)
+                                Text(item.feeNote)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: item.symbol)
+                        }
+                        .tag(item)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            }
+
+            Section("Summary") {
+                LabeledContent("Amount", value: Money.formatCurrency(parsedAmount))
+                LabeledContent("Fee", value: Money.formatCurrency(feeAmount))
+                LabeledContent("Total") {
+                    Text(Money.formatCurrency(parsedAmount + feeAmount))
+                        .fontWeight(.semibold)
+                }
+                LabeledContent("New balance", value: Money.formatCurrency(params.currentBalance + parsedAmount))
             }
         }
-    }
-
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            summaryRow("Amount", Money.formatCurrency(parsedAmount))
-            summaryRow("Method", method.title)
-            summaryRow("Fee", Money.formatCurrency(feeAmount))
-            summaryRow("Total", Money.formatCurrency(parsedAmount + feeAmount))
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                didSucceed = true
+            } label: {
+                Text("Confirm deposit")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(DesignTokens.ColorToken.accent)
+            .disabled(amountValidationMessage != nil || amountText.isEmpty)
+            .padding(DesignTokens.Spacing.lg)
+            .background(.bar)
         }
-        .padding(DesignTokens.Spacing.lg)
-        .background(DesignTokens.ColorToken.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { amountFocused = false }
+            }
+        }
     }
 
     private var successContent: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 64))
-                .foregroundStyle(DesignTokens.ColorToken.positive)
-            Text("Deposit successful")
-                .font(.system(size: DesignTokens.FontSize.title, weight: .bold))
+        ContentUnavailableView {
+            Label("Deposit successful", systemImage: "checkmark.circle.fill")
+        } description: {
             Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+        } actions: {
             Button("Done") { onResult(.completed(amount: parsedAmount)) }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(.glassProminent)
+                .tint(DesignTokens.ColorToken.accent)
         }
-        .padding(DesignTokens.Spacing.xl)
     }
 
     private var parsedAmount: Decimal {
@@ -172,38 +173,5 @@ struct DepositFlowView: View {
         if amount < 10 { return "Minimum deposit is €10" }
         if amount > 2_000 { return "Maximum deposit is €2,000" }
         return nil
-    }
-
-    private func summaryRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label)
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            Spacer()
-            Text(value)
-                .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-        }
-    }
-}
-
-private struct PrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: DesignTokens.FontSize.callout, weight: .semibold))
-            .foregroundStyle(DesignTokens.ColorToken.onAccent)
-            .frame(maxWidth: .infinity, minHeight: 52)
-            .background(DesignTokens.ColorToken.accent.opacity(configuration.isPressed ? 0.85 : 1))
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    }
-}
-
-private struct ChipButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: DesignTokens.FontSize.caption, weight: .medium))
-            .padding(.horizontal, DesignTokens.Spacing.md)
-            .padding(.vertical, DesignTokens.Spacing.sm)
-            .background(DesignTokens.ColorToken.surfaceElevated)
-            .foregroundStyle(DesignTokens.ColorToken.accent)
-            .clipShape(Capsule())
     }
 }

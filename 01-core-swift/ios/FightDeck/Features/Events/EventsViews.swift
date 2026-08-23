@@ -14,45 +14,59 @@ struct EventsTabView: View {
     @Binding var path: [EventsRoute]
     let mode: EventMode
 
+    @Namespace private var posterNamespace
+
     var body: some View {
         NavigationStack(path: $path) {
             LoadStateView(state: state.eventsState, retry: { Task { await state.loadEvents() } }) { events in
-                ScrollView {
-                    LazyVStack(spacing: DesignTokens.Spacing.md) {
+                List {
+                    Section {
                         ForEach(events) { event in
-                            EventCardRow(event: event, posterURL: posterURL(for: event), mode: mode)
-                                .onTapGesture { path.append(.event(event.id)) }
-                        }
-                        if mode.showsResults {
-                            newsSection
+                            NavigationLink(value: EventsRoute.event(event.id)) {
+                                EventRow(event: event, posterURL: posterURL(for: event), mode: mode)
+                            }
                         }
                     }
-                    .padding(DesignTokens.Spacing.lg)
-                    .padding(.bottom, DesignTokens.Layout.tabBarClearance)
+                    if mode.showsResults {
+                        newsSection(events: events)
+                    }
                 }
-                .refreshable { await state.loadEvents() }
+                .listStyle(.insetGrouped)
+                .refreshable { await state.refreshAll() }
             } empty: {
-                Text("No events")
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+                ContentUnavailableView("No events", systemImage: "calendar")
             }
             .navigationTitle(mode.title)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Toggle(isOn: $state.simulateNetworkFailure) {
+                        Label("Simulate offline", systemImage: "wifi.slash")
+                    }
+                    .toggleStyle(.button)
+                    .labelStyle(.iconOnly)
+                }
+            }
             .navigationDestination(for: EventsRoute.self) { route in
                 destination(for: route, events: eventsOrEmpty)
             }
         }
     }
 
+    /// Every article carries its event, and the feed mixes both cards, so the row has to say
+    /// which event it belongs to — otherwise the list reads as unrelated stories.
     @ViewBuilder
-    private var newsSection: some View {
+    private func newsSection(events: [EventItem]) -> some View {
         if case .loaded(let items) = state.newsState, !items.isEmpty {
-            Text("News")
-                .font(.system(size: DesignTokens.FontSize.title, weight: .bold))
-                .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, DesignTokens.Spacing.lg)
-            ForEach(items) { item in
-                NewsRow(item: item, imageURL: state.imageURL(item.heroImage))
-                    .onTapGesture { path.append(.article(item.id)) }
+            Section("News") {
+                ForEach(items) { item in
+                    NavigationLink(value: EventsRoute.article(item.id)) {
+                        NewsRow(
+                            item: item,
+                            eventName: events.first { $0.id == item.eventId }?.name ?? "",
+                            imageURL: state.imageURL(item.heroImage)
+                        )
+                    }
+                }
             }
         }
     }
@@ -67,7 +81,7 @@ struct EventsTabView: View {
         switch route {
         case .event(let id):
             if let event = events.first(where: { $0.id == id }) {
-                EventDetailView(state: state, event: event, path: $path, mode: mode)
+                EventDetailView(state: state, event: event, mode: mode)
             }
         case .bout(let eventID, let boutID):
             if let event = events.first(where: { $0.id == eventID }),
@@ -76,10 +90,11 @@ struct EventsTabView: View {
             }
         case .fighter(let id):
             FighterProfileView(state: state, fighterID: id)
+                .navigationTransition(.zoom(sourceID: id, in: posterNamespace))
         case .article(let id):
             if case .loaded(let items) = state.newsState,
                let item = items.first(where: { $0.id == id }) {
-                NewsArticleView(state: state, item: item, imageURL: state.imageURL(item.heroImage), path: $path)
+                NewsArticleView(state: state, item: item, imageURL: state.imageURL(item.heroImage))
             }
         case .video(let id):
             if case .loaded(let media) = state.mediaState,
@@ -94,90 +109,70 @@ struct EventsTabView: View {
     }
 }
 
-private struct EventCardRow: View {
+private struct EventRow: View {
     let event: EventItem
     let posterURL: URL
     let mode: EventMode
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            RemoteImage(url: posterURL)
-                .frame(height: 160)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-            Text(event.name)
-                .font(.system(size: DesignTokens.FontSize.title, weight: .bold))
-                .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-            Text("\(event.venue) · \(event.city)")
-                .font(.system(size: DesignTokens.FontSize.body))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            HStack {
-                Text(formattedDate(event.date))
-                    .font(.system(size: DesignTokens.FontSize.caption))
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                Spacer()
-                Text("\(event.bouts.count) fights")
-                    .font(.system(size: DesignTokens.FontSize.caption, weight: .medium))
-                    .padding(.horizontal, DesignTokens.Spacing.md)
-                    .padding(.vertical, DesignTokens.Spacing.xs)
-                    .background(DesignTokens.ColorToken.surfaceElevated)
-                    .clipShape(Capsule())
-                statusBadge
+            RemoteImageTile(url: posterURL, height: 150)
+                .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                Text(event.name)
+                    .font(.headline)
+                Text("\(event.venue) · \(event.city)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: DesignTokens.Spacing.sm) {
+                    Text(event.date.formattedEventDate)
+                    Text("·")
+                    Text("^[\(event.bouts.count) fight](inflect: true)")
+                    Spacer()
+                    statusBadge
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
         }
-        .cardStyle()
+        .padding(.vertical, DesignTokens.Spacing.sm)
     }
 
     private var statusBadge: some View {
         let title = mode.showsResults ? "FINISHED" : "OPEN"
         let tint = mode.showsResults ? DesignTokens.ColorToken.positive : DesignTokens.ColorToken.accent
         return Text(title)
-            .font(.system(size: DesignTokens.FontSize.caption, weight: .bold))
+            .font(.caption2.weight(.bold))
             .foregroundStyle(tint)
             .padding(.horizontal, DesignTokens.Spacing.sm)
-            .background(tint.opacity(0.15))
-            .clipShape(Capsule())
-    }
-
-    private func formattedDate(_ iso: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
-        guard let date = formatter.date(from: iso + "T12:00:00Z") else { return iso }
-        return date.formatted(date: .abbreviated, time: .omitted)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(tint.opacity(0.15), in: .capsule)
     }
 }
 
 struct EventDetailView: View {
     @Bindable var state: AppState
     let event: EventItem
-    @Binding var path: [EventsRoute]
     let mode: EventMode
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: DesignTokens.Spacing.md) {
-                ForEach(segmentOrder, id: \.self) { segment in
-                    if let bouts = grouped[segment], !bouts.isEmpty {
-                        Section {
-                            ForEach(bouts) { bout in
-                                BoutRowView(state: state, event: event, bout: bout, mode: mode) {
-                                    path.append(.bout(eventID: event.id, boutID: bout.id))
-                                }
+        List {
+            ForEach(segmentOrder, id: \.self) { segment in
+                if let bouts = grouped[segment], !bouts.isEmpty {
+                    Section(segmentTitle(segment)) {
+                        ForEach(bouts) { bout in
+                            NavigationLink(value: EventsRoute.bout(eventID: event.id, boutID: bout.id)) {
+                                BoutRowView(state: state, bout: bout, mode: mode)
                             }
-                        } header: {
-                            Text(segmentTitle(segment))
-                                .font(.system(size: DesignTokens.FontSize.caption, weight: .semibold))
-                                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, DesignTokens.Spacing.md)
                         }
                     }
                 }
-                if mode.showsResults {
-                    mediaSection
-                }
             }
-            .padding(DesignTokens.Spacing.lg)
+            if mode.showsResults {
+                mediaSection
+            }
         }
+        .listStyle(.insetGrouped)
         .navigationTitle(event.name)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -187,19 +182,23 @@ struct EventDetailView: View {
         if case .loaded(let media) = state.mediaState {
             let clips = media.filter { $0.eventId == event.id }
             if !clips.isEmpty {
-                VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-                    Text("Video")
-                        .font(.system(size: DesignTokens.FontSize.callout, weight: .semibold))
-                        .foregroundStyle(DesignTokens.ColorToken.textPrimary)
+                Section("Video") {
                     ForEach(clips) { clip in
-                        Button("Watch: \(clip.title)") {
-                            path.append(.video(clip.id))
+                        NavigationLink(value: EventsRoute.video(clip.id)) {
+                            Label {
+                                VStack(alignment: .leading) {
+                                    Text(clip.title)
+                                    Text(clip.durationSeconds.formattedDuration)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            } icon: {
+                                Image(systemName: "play.circle.fill")
+                                    .foregroundStyle(DesignTokens.ColorToken.accent)
+                            }
                         }
-                        .foregroundStyle(DesignTokens.ColorToken.accent)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .cardStyle()
             }
         }
     }
@@ -209,14 +208,14 @@ struct EventDetailView: View {
     }
 
     private var segmentOrder: [String] {
-        ["main", "main_card", "prelims", "early_prelims"]
+        ["main", "main_card", "prelim", "prelims", "early_prelim", "early_prelims"]
     }
 
     private func segmentTitle(_ segment: String) -> String {
         switch segment {
         case "main": "Main Event"
         case "main_card": "Main Card"
-        case "prelims": "Prelims"
+        case "prelim", "prelims": "Prelims"
         default: "Early Prelims"
         }
     }
@@ -224,51 +223,37 @@ struct EventDetailView: View {
 
 struct BoutRowView: View {
     @Bindable var state: AppState
-    let event: EventItem
     let bout: BoutItem
     let mode: EventMode
-    let onTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            header
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+            Text("\(bout.weightClass.replacingOccurrences(of: "_", with: " ").uppercased())\(bout.titleFight ? " · TITLE" : "") · \(bout.scheduledRounds) RNDS")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             cornerRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
             cornerRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
             if mode.showsResults {
-                resultStrip
+                Label(
+                    "\(bout.result.winnerName) · \(bout.result.method.displayMethod) · R\(bout.result.endRound) \(bout.result.endTime)",
+                    systemImage: "checkmark.seal.fill"
+                )
+                .font(.caption)
+                .foregroundStyle(DesignTokens.ColorToken.positive)
             }
         }
-        .cardStyle()
-        .onTapGesture(perform: onTap)
-    }
-
-    private var header: some View {
-        HStack {
-            Text("\(bout.weightClass.uppercased())\(bout.titleFight ? " · TITLE" : "")")
-                .font(.system(size: DesignTokens.FontSize.caption))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            Spacer()
-            Text("\(bout.scheduledRounds) RNDS")
-                .font(.system(size: DesignTokens.FontSize.caption))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-        }
+        .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
     private func cornerRow(_ corner: CornerItem, ring: Color) -> some View {
-        HStack {
-            Circle()
-                .stroke(ring, lineWidth: 2)
-                .frame(width: 40, height: 40)
-                .overlay {
-                    RemoteImage(url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"))
-                        .clipShape(Circle())
-                }
+        HStack(spacing: DesignTokens.Spacing.md) {
+            FighterAvatar(url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"), ring: ring, size: 40)
             VStack(alignment: .leading) {
                 Text(corner.name)
-                    .font(.system(size: DesignTokens.FontSize.callout, weight: .medium))
-                Text(fighterRecord(corner.fighterId))
-                    .font(.system(size: DesignTokens.FontSize.caption))
-                    .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+                    .font(.callout)
+                Text(state.record(for: corner.fighterId))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             if mode.showsOdds {
@@ -282,19 +267,18 @@ struct BoutRowView: View {
             }
         }
     }
+}
 
-    private var resultStrip: some View {
-        Text("✓ \(bout.result.winnerName) · \(bout.result.method.uppercased()) · R\(bout.result.endRound) \(bout.result.endTime)")
-            .font(.system(size: DesignTokens.FontSize.caption))
-            .foregroundStyle(DesignTokens.ColorToken.positive)
-    }
+struct FighterAvatar: View {
+    let url: URL
+    let ring: Color
+    var size: CGFloat
 
-    private func fighterRecord(_ id: String) -> String {
-        if case .loaded(let fighters) = state.fightersState,
-           let fighter = fighters.first(where: { $0.id == id }) {
-            return fighter.recordDisplay
-        }
-        return "—"
+    var body: some View {
+        RemoteImage(url: url)
+            .frame(width: size, height: size)
+            .clipShape(.circle)
+            .overlay(Circle().stroke(ring, lineWidth: 2))
     }
 }
 
@@ -306,18 +290,29 @@ struct OddsButton: View {
 
     @State private var showFractional = false
 
+    // A selected leg is the one piece of state on this row worth shouting about, so it gets
+    // the filled treatment and everything else stays quiet.
+    @ViewBuilder
     var body: some View {
+        if isSelected {
+            button.buttonStyle(.borderedProminent)
+        } else {
+            button.buttonStyle(.bordered)
+        }
+    }
+
+    private var button: some View {
         Button {
             action()
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         } label: {
             Text(showFractional ? fractional : label)
-                .font(.system(size: DesignTokens.FontSize.callout, weight: .semibold))
-                .foregroundStyle(isSelected ? DesignTokens.ColorToken.onAccent : DesignTokens.ColorToken.accent)
-                .frame(minWidth: 72, minHeight: 44)
-                .background(isSelected ? DesignTokens.ColorToken.accent : DesignTokens.ColorToken.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.sm))
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
+                .frame(minWidth: 56)
         }
+        .tint(DesignTokens.ColorToken.accent)
+        .buttonBorderShape(.roundedRectangle(radius: DesignTokens.Radius.sm))
         .animation(.spring(response: 0.35, dampingFraction: 0.72), value: isSelected)
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 0.4).onEnded { _ in

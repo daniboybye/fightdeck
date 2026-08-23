@@ -33,32 +33,32 @@ struct ErrorStateView: View {
     let retry: () -> Void
 
     var body: some View {
-        VStack(spacing: DesignTokens.Spacing.lg) {
-            Image(systemName: "wifi.exclamationmark")
-                .font(.system(size: 40))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            Text("Something went wrong")
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
+        ContentUnavailableView {
+            Label("Something went wrong", systemImage: "wifi.exclamationmark")
+        } description: {
+            Text("Check your connection and try again.")
+        } actions: {
             Button("Retry", action: retry)
-                .buttonStyle(PrimaryCapsuleButtonStyle())
+                .buttonStyle(.glassProminent)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
 struct SkeletonListView: View {
     var body: some View {
-        ScrollView {
-            VStack(spacing: DesignTokens.Spacing.md) {
-                ForEach(0..<4, id: \.self) { _ in
-                    RoundedRectangle(cornerRadius: DesignTokens.Radius.lg)
-                        .fill(DesignTokens.ColorToken.surface)
-                        .frame(height: 180)
-                        .redacted(reason: .placeholder)
-                }
+        List(0..<4, id: \.self) { _ in
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
+                RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
+                    .frame(height: 140)
+                Text("Placeholder event name")
+                    .font(.headline)
+                Text("Placeholder venue and city")
+                    .font(.subheadline)
             }
-            .padding(DesignTokens.Spacing.lg)
+            .listRowInsets(EdgeInsets())
         }
+        .listStyle(.insetGrouped)
+        .redacted(reason: .placeholder)
     }
 }
 
@@ -72,58 +72,16 @@ struct RemoteImage: View {
     }
 }
 
-struct PrimaryCapsuleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: DesignTokens.FontSize.callout, weight: .semibold))
-            .foregroundStyle(DesignTokens.ColorToken.onAccent)
-            .padding(.horizontal, DesignTokens.Spacing.xl)
-            .padding(.vertical, DesignTokens.Spacing.md)
-            .background(DesignTokens.ColorToken.accent)
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.md))
-    }
-}
-
-struct CardBackground: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .padding(DesignTokens.Spacing.lg)
-            .background(DesignTokens.ColorToken.surface)
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.Radius.lg)
-                    .stroke(DesignTokens.ColorToken.border)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: DesignTokens.Radius.lg))
-    }
-}
-
-extension View {
-    func cardStyle() -> some View {
-        modifier(CardBackground())
-    }
-}
-
-struct BetSlipBar: View {
-    let legCount: Int
-    let potentialReturn: String
-    let action: () -> Void
+/// A poster or portrait that fills its slot without letting the image push the row wider
+/// than the list. `scaledToFill` alone would do exactly that.
+struct RemoteImageTile: View {
+    let url: URL
+    var height: CGFloat
 
     var body: some View {
-        Button(action: action) {
-            HStack {
-                Text("\(legCount) selection\(legCount == 1 ? "" : "s")")
-                    .font(.system(size: DesignTokens.FontSize.callout, weight: .medium))
-                Spacer()
-                Text("Return \(potentialReturn)")
-                    .font(.system(size: DesignTokens.FontSize.callout, weight: .bold))
-            }
-            // Glass over the dark background, not the accent fill, so onAccent would render
-            // near-black text on a near-black bar.
-            .foregroundStyle(DesignTokens.ColorToken.textPrimary)
-            .padding(DesignTokens.Spacing.lg)
+        RemoteImage(url: url)
+            .frame(height: height)
             .frame(maxWidth: .infinity)
-            .glassEffect()
-        }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
+            .clipped()
     }
 }

@@ -14,100 +14,80 @@ struct FighterProfileView: View {
 
     var body: some View {
         Group {
-            if let fighter = fighter {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                        hero(fighter)
-                        statsGrid(fighter)
-                        boutsSection(fighter)
-                    }
-                }
+            if let fighter = state.fighter(fighterID) {
+                profile(fighter)
             } else {
                 ProgressView()
             }
         }
-        .navigationTitle(fighter?.name ?? "Fighter")
+        .navigationTitle(state.fighter(fighterID)?.name ?? "Fighter")
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var fighter: FighterItem? {
-        if case .loaded(let fighters) = state.fightersState {
-            return fighters.first { $0.id == fighterID }
+    private func profile(_ fighter: FighterItem) -> some View {
+        List {
+            Section {
+                hero(fighter)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+            Section("Profile") {
+                LabeledContent("Record", value: fighter.recordDisplay)
+                LabeledContent("Wins", value: "\(fighter.record.wins)")
+                LabeledContent("Losses", value: "\(fighter.record.losses)")
+                if fighter.record.noContests > 0 {
+                    LabeledContent("No contests", value: "\(fighter.record.noContests)")
+                }
+            }
+            Section("Physicals") {
+                if let height = fighter.heightCm {
+                    LabeledContent("Height", value: "\(height) cm")
+                }
+                if let reach = fighter.reachIn {
+                    LabeledContent("Reach", value: "\(reach) in")
+                }
+                if let stance = fighter.stance {
+                    LabeledContent("Stance", value: stance.localizedCapitalized)
+                }
+                if let country = fighter.country {
+                    LabeledContent("Country", value: country)
+                }
+            }
         }
-        return nil
+        .listStyle(.insetGrouped)
     }
 
+    /// The portrait carries the screen the way it does in Photos: full bleed, with the name
+    /// sitting on a scrim over the image instead of in a caption below it.
     private func hero(_ fighter: FighterItem) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            RemoteImage(url: state.imageURL(fighter.portrait))
-                .frame(height: 220)
-                .clipped()
-            LinearGradient(colors: [.clear, DesignTokens.ColorToken.background], startPoint: .top, endPoint: .bottom)
-            VStack(alignment: .leading) {
-                Text(fighter.name)
-                    .font(.system(size: DesignTokens.FontSize.headline, weight: .bold))
-                if let nickname = fighter.nickname {
-                    Text("\"\(nickname)\"")
-                        .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                }
-            }
-            .padding(DesignTokens.Spacing.lg)
-        }
-    }
-
-    private func statsGrid(_ fighter: FighterItem) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DesignTokens.Spacing.md) {
-            stat("Record", fighter.recordDisplay)
-            stat("Height", fighter.heightCm.map { "\($0) cm" } ?? "—")
-            stat("Reach", fighter.reachIn.map { "\($0) in" } ?? "—")
-            stat("Stance", fighter.stance?.capitalized ?? "—")
-            stat("Country", fighter.country ?? "—")
-        }
-        .padding(.horizontal, DesignTokens.Spacing.lg)
-    }
-
-    private func stat(_ label: String, _ value: String) -> some View {
-        VStack(alignment: .leading) {
-            Text(label)
-                .font(.system(size: DesignTokens.FontSize.caption))
-                .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-            Text(value)
-                .font(.system(size: DesignTokens.FontSize.callout, weight: .medium))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle()
-    }
-
-    private func boutsSection(_ fighter: FighterItem) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("Bouts on these cards")
-                .font(.system(size: DesignTokens.FontSize.callout, weight: .semibold))
-                .padding(.horizontal, DesignTokens.Spacing.lg)
-            if case .loaded(let events) = state.eventsState {
-                ForEach(relevantBouts(events: events, fighterID: fighter.id), id: \.bout.id) { pair in
-                    HStack {
-                        Text(pair.event.name)
-                            .font(.system(size: DesignTokens.FontSize.caption))
-                            .foregroundStyle(DesignTokens.ColorToken.textSecondary)
-                        Spacer()
-                        Text(pair.bout.result.winnerId == fighter.id ? "Win" : "Loss")
-                            .foregroundStyle(
-                                pair.bout.result.winnerId == fighter.id
-                                    ? DesignTokens.ColorToken.positive
-                                    : DesignTokens.ColorToken.negative
-                            )
+        RemoteImage(url: state.imageURL(fighter.portrait))
+            .frame(height: 320)
+            .frame(maxWidth: .infinity)
+            .clipped()
+            .overlay(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                    Text(fighter.name)
+                        .font(.largeTitle.bold())
+                    if let nickname = fighter.nickname {
+                        Text("“\(nickname)”")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, DesignTokens.Spacing.lg)
+                    Text(fighter.recordDisplay)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(DesignTokens.ColorToken.accent)
+                }
+                .padding(DesignTokens.Spacing.lg)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(alignment: .bottom) {
+                    LinearGradient(
+                        colors: [.clear, .black.opacity(0.75)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 200)
+                    .allowsHitTesting(false)
                 }
             }
-        }
-    }
-
-    private func relevantBouts(events: [EventItem], fighterID: String) -> [(event: EventItem, bout: BoutItem)] {
-        events.flatMap { event in
-            event.bouts
-                .filter { $0.redCorner.fighterId == fighterID || $0.blueCorner.fighterId == fighterID }
-                .map { (event, $0) }
-        }
     }
 }

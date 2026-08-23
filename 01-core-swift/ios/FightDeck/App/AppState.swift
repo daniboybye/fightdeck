@@ -33,7 +33,10 @@ final class AppState {
     init(repository: JSONFileRepository = JSONFileRepository()) {
         self.repository = repository
         let core = AppState.makeFightCore()
-        self.slipStore = BetSlipStore(fightCore: core)
+        self.slipStore = BetSlipStore(
+            fightCore: core,
+            slip: BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
+        )
     }
 
     var slip: BetSlip {
@@ -109,6 +112,7 @@ final class AppState {
             fighterID: fighterID,
             odds: Money.parse(odds)
         )
+        syncMode()
         betPlacedMessage = nil
     }
 
@@ -118,6 +122,7 @@ final class AppState {
 
     func removeSelection(id: String) {
         slipStore.removeSelection(id: id)
+        syncMode()
         betPlacedMessage = nil
     }
 
@@ -126,7 +131,21 @@ final class AppState {
         guard state.errors.isEmpty else { return }
         slipStore.balance -= state.totalStake
         slipStore.slip.selections.removeAll()
+        syncMode()
         betPlacedMessage = "Bet placed · \(Money.formatCurrency(state.potentialReturn)) to return"
+    }
+
+    func fighter(_ id: String) -> FighterItem? {
+        guard case .loaded(let fighters) = fightersState else { return nil }
+        return fighters.first { $0.id == id }
+    }
+
+    func record(for id: String) -> String {
+        fighter(id)?.recordDisplay ?? "—"
+    }
+
+    private func syncMode() {
+        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
     }
 
     func deposit(amount: Decimal) {

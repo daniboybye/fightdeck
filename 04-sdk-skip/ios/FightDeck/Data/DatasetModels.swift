@@ -90,4 +90,7 @@ struct MediaItem: Codable, Identifiable, Sendable {
     let url: String
     let poster: String
     let durationSeconds: Int
+    /// Says which public test stream stands in for the licensed footage, so the demo never
+    /// passes a cartoon trailer off as a press conference.
+    let note: String?
 }

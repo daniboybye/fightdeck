@@ -75,6 +75,8 @@ fixture suites.
 
 ## Getting started
 
+**Full bootstrap (all ten apps on one simulator + one emulator):** follow [`RUNBOOK.md`](RUNBOOK.md).
+
 Clone and open. The two UI-bearing SDKs need nothing built first: Swift Package Manager and
 Gradle resolve pinned release artifacts over HTTPS.
 

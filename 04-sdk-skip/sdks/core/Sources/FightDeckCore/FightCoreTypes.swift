@@ -47,7 +47,7 @@ public struct Selection: Codable, Sendable, Hashable, Identifiable {
     }
 }
 
-public struct BetSlip: Sendable {
+public struct BetSlip: Sendable, Equatable {
     public var mode: BetMode
     public var selections: [Selection]
     public var stake: Decimal

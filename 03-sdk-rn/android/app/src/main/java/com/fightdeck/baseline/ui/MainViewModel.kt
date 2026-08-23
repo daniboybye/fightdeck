@@ -43,8 +43,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _fighters = MutableStateFlow<LoadState<List<FighterItem>>>(LoadState.Loading)
     val fighters: StateFlow<LoadState<List<FighterItem>>> = _fighters.asStateFlow()
 
+    /**
+     * The mode follows the number of legs instead of a picker: one selection is a single, two
+     * or more is an accumulator. Both modes stay covered by the golden fixtures.
+     */
     private val _slip = MutableStateFlow(
-        BetSlip(BetMode.accumulator, emptyList(), BigDecimal("10.00")),
+        BetSlip(BetMode.single, emptyList(), BigDecimal("10.00")),
     )
     val slip: StateFlow<BetSlip> = _slip.asStateFlow()
 
@@ -135,28 +139,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 selections += Selection(bout.id, fighterId, parsedOdds)
             }
-            slip.copy(selections = selections)
+            slip.copy(selections = selections, mode = modeFor(selections.size))
         }
         _betPlacedMessage.value = null
     }
 
-    fun isSelected(boutId: String, fighterId: String): Boolean =
-        _slip.value.selections.any { it.boutId == boutId && it.fighterId == fighterId }
+    private fun modeFor(legCount: Int): BetMode =
+        if (legCount >= FightCore.MIN_ACCA_LEGS) BetMode.accumulator else BetMode.single
 
     fun removeSelection(boutId: String, fighterId: String) {
         _slip.update {
-            it.copy(selections = it.selections.filterNot { sel -> sel.boutId == boutId && sel.fighterId == fighterId })
+            val selections =
+                it.selections.filterNot { sel -> sel.boutId == boutId && sel.fighterId == fighterId }
+            it.copy(selections = selections, mode = modeFor(selections.size))
         }
         _betPlacedMessage.value = null
     }
 
     fun applySlipJSON(slipJSON: String) {
         val slip = parseSlipJSON(slipJSON) ?: return
-        _slip.value = slip
+        _slip.value = slip.copy(mode = modeFor(slip.selections.size))
     }
 
     fun placeBetFromSDK(message: String, slipJSON: String, balanceString: String) {
-        parseSlipJSON(slipJSON)?.let { _slip.value = it }
+        parseSlipJSON(slipJSON)?.let { parsed ->
+            _slip.value = parsed.copy(mode = modeFor(parsed.selections.size))
+        }
         _balance.value = Money.parse(balanceString)
         _betPlacedMessage.value = message
     }

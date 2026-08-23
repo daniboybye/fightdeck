@@ -3,6 +3,7 @@ package com.fightdeck.baseline.ui
 import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -10,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import com.fightdeck.baseline.design.Tokens
 import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.sdk.deposit.DepositAdapter
 import com.fightdeck.sdk.deposit.DepositParams
@@ -67,7 +67,7 @@ fun RNBetslipScreen(
 @Composable
 private fun UnavailableFeature(label: String, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(label, color = Tokens.textSecondary)
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

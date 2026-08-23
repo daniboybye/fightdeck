@@ -43,8 +43,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _fighters = MutableStateFlow<LoadState<List<FighterItem>>>(LoadState.Loading)
     val fighters: StateFlow<LoadState<List<FighterItem>>> = _fighters.asStateFlow()
 
+    /**
+     * The mode follows the number of legs instead of a picker: one selection is a single, two
+     * or more is an accumulator. Both modes stay covered by the golden fixtures.
+     */
     private val _slip = MutableStateFlow(
-        BetSlip(BetMode.accumulator, emptyList(), BigDecimal("10.00")),
+        BetSlip(BetMode.single, emptyList(), BigDecimal("10.00")),
     )
     val slip: StateFlow<BetSlip> = _slip.asStateFlow()
 
@@ -135,13 +139,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 selections += Selection(bout.id, fighterId, parsedOdds)
             }
-            slip.copy(selections = selections)
+            slip.copy(selections = selections, mode = modeFor(selections.size))
         }
         _betPlacedMessage.value = null
     }
 
-    fun isSelected(boutId: String, fighterId: String): Boolean =
-        _slip.value.selections.any { it.boutId == boutId && it.fighterId == fighterId }
+    private fun modeFor(legCount: Int): BetMode =
+        if (legCount >= FightCore.MIN_ACCA_LEGS) BetMode.accumulator else BetMode.single
 
     fun updateStake(stake: BigDecimal) {
         _slip.update { it.copy(stake = stake) }
@@ -149,7 +153,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun removeSelection(boutId: String, fighterId: String) {
         _slip.update {
-            it.copy(selections = it.selections.filterNot { sel -> sel.boutId == boutId && sel.fighterId == fighterId })
+            val selections =
+                it.selections.filterNot { sel -> sel.boutId == boutId && sel.fighterId == fighterId }
+            it.copy(selections = selections, mode = modeFor(selections.size))
         }
         _betPlacedMessage.value = null
     }
@@ -160,7 +166,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         _balance.update { it.subtract(state.totalStake) }
-        _slip.update { it.copy(selections = emptyList()) }
+        _slip.update { it.copy(selections = emptyList(), mode = modeFor(0)) }
         _betPlacedMessage.value =
             "Bet placed · ${Money.formatCurrency(state.potentialReturn)} to return"
     }

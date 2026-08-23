@@ -67,7 +67,10 @@ object SkipSDKBridge {
     @Composable
     private fun UnavailableFeature(label: String, modifier: Modifier = Modifier) {
         androidx.compose.foundation.layout.Box(modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-            androidx.compose.material3.Text(label, color = com.fightdeck.baseline.design.Tokens.textSecondary)
+            androidx.compose.material3.Text(
+                label,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

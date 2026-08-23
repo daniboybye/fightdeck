@@ -52,8 +52,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val media: StateFlow<LoadState<List<MediaItem>>> = _media.asStateFlow()
 
     val slipState: StateFlow<SlipStateRecord> = slipStore.slipState
-    val slip: BetSlipRecord get() = slipStore.slip
-    val balance: String get() = slipStore.balance
+    val slip: StateFlow<BetSlipRecord> = slipStore.slip
+    val balance: StateFlow<String> = slipStore.balance
 
     private val _betPlacedMessage = MutableStateFlow<String?>(null)
     val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()

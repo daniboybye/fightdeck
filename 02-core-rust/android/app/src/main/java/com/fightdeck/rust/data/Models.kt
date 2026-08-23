@@ -101,7 +101,13 @@ data class FighterItem(
 )
 
 @Serializable
-data class FighterRecord(val display: String)
+data class FighterRecord(
+    val display: String,
+    val wins: Int = 0,
+    val losses: Int = 0,
+    val draws: Int = 0,
+    val noContests: Int = 0,
+)
 
 @Serializable
 data class NewsItem(
@@ -124,4 +130,9 @@ data class MediaItem(
     val url: String,
     val poster: String,
     val durationSeconds: Int,
+    /**
+     * Says which public test stream stands in for the licensed footage, so the demo never
+     * passes a cartoon trailer off as a press conference.
+     */
+    val note: String? = null,
 )

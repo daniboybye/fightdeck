@@ -22,21 +22,32 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
     private val _slipState = MutableStateFlow(store.currentState())
     val slipState: StateFlow<SlipStateRecord> = _slipState.asStateFlow()
 
+    private val _slip = MutableStateFlow(store.currentSlip())
+    val slip: StateFlow<BetSlipRecord> = _slip.asStateFlow()
+
+    private val _balance = MutableStateFlow(store.balance())
+    val balance: StateFlow<String> = _balance.asStateFlow()
+
     init {
-        listener.onUpdate = { state -> _slipState.value = state }
+        store.setMode(BetModeRecord.SINGLE)
+        listener.onUpdate = { state ->
+            _slipState.value = state
+            _slip.value = store.currentSlip()
+            _balance.value = store.balance()
+        }
         store.addListener(listener)
     }
 
-    val slip: BetSlipRecord get() = store.currentSlip()
-    val balance: String get() = store.balance()
-
-    fun setMode(mode: BetModeRecord) = store.setMode(mode)
     fun setStake(stake: String) = store.setStake(stake)
-    fun toggleSelection(boutId: String, fighterId: String, odds: String) =
+    fun toggleSelection(boutId: String, fighterId: String, odds: String) {
         store.toggleSelection(boutId, fighterId, odds)
+        syncMode()
+    }
 
-    fun removeSelection(boutId: String, fighterId: String) =
+    fun removeSelection(boutId: String, fighterId: String) {
         store.removeSelection(boutId, fighterId)
+        syncMode()
+    }
 
     fun isSelected(boutId: String, fighterId: String): Boolean =
         store.isSelected(boutId, fighterId)
@@ -55,7 +66,20 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
         selections.forEach { selection ->
             store.removeSelection(selection.boutId, selection.fighterId)
         }
+        syncMode()
         return state
+    }
+
+    // The mode follows the number of legs instead of a picker: one selection is a single,
+    // two or more is an accumulator. Both modes stay covered by the golden fixtures.
+    private fun syncMode() {
+        val count = store.currentSlip().selections.size
+        val mode = if (count >= FightCoreDisplay.MIN_ACCA_LEGS) {
+            BetModeRecord.ACCUMULATOR
+        } else {
+            BetModeRecord.SINGLE
+        }
+        store.setMode(mode)
     }
 
     override fun close() {

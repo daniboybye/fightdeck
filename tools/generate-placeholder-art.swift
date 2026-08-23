@@ -24,9 +24,13 @@ import UniformTypeIdentifiers
 private enum Layout {
     static let portraitSize = CGSize(width: 512, height: 512)
     static let posterSize = CGSize(width: 1024, height: 576)
+    static let newsSize = CGSize(width: 1024, height: 576)
     static let portraitFontRatio: CGFloat = 0.34
     static let posterTitleRatio: CGFloat = 0.085
     static let posterSubtitleRatio: CGFloat = 0.045
+    static let newsHeadlineRatio: CGFloat = 0.072
+    static let newsKickerRatio: CGFloat = 0.038
+    static let newsInset: CGFloat = 56
 }
 
 // MARK: - Palette
@@ -124,6 +128,46 @@ private func draw(
     CTLineDraw(line, context)
 }
 
+/// Wraps `text` inside a box anchored at the bottom-left, growing upwards, and returns the
+/// height it consumed so the caller can stack the next line above it.
+@discardableResult
+private func drawWrapped(
+    _ text: String,
+    in context: CGContext,
+    box: CGRect,
+    fontSize: CGFloat,
+    weight: CGFloat,
+    alpha: CGFloat = 1
+) -> CGFloat {
+    let descriptor = CTFontDescriptorCreateWithAttributes([
+        kCTFontFamilyNameAttribute: "Helvetica Neue",
+        kCTFontTraitsAttribute: [kCTFontWeightTrait: weight],
+    ] as CFDictionary)
+    let font = CTFontCreateWithFontDescriptor(descriptor, fontSize, nil)
+
+    let attributed = NSAttributedString(string: text, attributes: [
+        NSAttributedString.Key(kCTFontAttributeName as String): font,
+        NSAttributedString.Key(kCTForegroundColorAttributeName as String):
+            CGColor(red: 1, green: 1, blue: 1, alpha: alpha),
+    ])
+
+    let framesetter = CTFramesetterCreateWithAttributedString(attributed)
+    let constraint = CGSize(width: box.width, height: .greatestFiniteMagnitude)
+    let fitted = CTFramesetterSuggestFrameSizeWithConstraints(
+        framesetter, CFRange(location: 0, length: 0), nil, constraint, nil
+    )
+
+    // CoreText lays out from the top of its path, so the path has to be positioned at the
+    // measured height for the block to sit on `box.minY`.
+    let path = CGPath(
+        rect: CGRect(x: box.minX, y: box.minY, width: box.width, height: fitted.height),
+        transform: nil
+    )
+    let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: 0), path, nil)
+    CTFrameDraw(frame, context)
+    return fitted.height
+}
+
 /// JPEG rather than PNG, for two reasons. Gradients compress badly as PNG — the same
 /// forty portraits weigh about ten megabytes lossless and well under one as JPEG. And
 /// photographs on a real sports app are JPEG, so the decode path the apps exercise
@@ -209,11 +253,64 @@ private func renderPoster(title: String, subtitle: String, id: String, to url: U
     try write(image, to: url)
 }
 
+/// Every article used to reuse its event poster, so a news feed of eight stories showed the
+/// same two images. Seeding on the article id gives each one its own composition.
+///
+/// Deliberately text-free: this image stands in for a press photo, and the row already renders
+/// the kicker and headline as real text. Baking them into the bitmap too printed everything
+/// twice and made the feed look like a slide deck.
+private func renderNewsCard(id: String, to url: URL) throws {
+    let size = Layout.newsSize
+    guard let context = makeContext(size) else { throw Failure("no context for \(id)") }
+
+    let seed = stableHash(id)
+    fillGradient(context, size: size, seed: seed)
+
+    context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0.22))
+    context.move(to: .zero)
+    context.addLine(to: CGPoint(x: size.width, y: 0))
+    context.addLine(to: CGPoint(x: size.width, y: size.height * 0.55))
+    context.addLine(to: CGPoint(x: 0, y: size.height * 0.78))
+    context.closePath()
+    context.fillPath()
+
+    // Two overlapping discs, placed from the seed, give each story a recognisable silhouette
+    // without any two articles colliding on the same composition.
+    let radius = size.height * 0.34
+    let centers = [
+        CGPoint(
+            x: size.width * (0.22 + CGFloat(seed % 17) / 60),
+            y: size.height * (0.34 + CGFloat((seed >> 8) % 13) / 55)
+        ),
+        CGPoint(
+            x: size.width * (0.58 + CGFloat((seed >> 16) % 19) / 70),
+            y: size.height * (0.52 + CGFloat((seed >> 24) % 11) / 50)
+        ),
+    ]
+    for (index, center) in centers.enumerated() {
+        context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: index == 0 ? 0.07 : 0.05))
+        context.fillEllipse(in: CGRect(
+            x: center.x - radius,
+            y: center.y - radius,
+            width: radius * 2,
+            height: radius * 2
+        ))
+    }
+
+    guard let image = context.makeImage() else { throw Failure("no image for \(id)") }
+    try write(image, to: url)
+}
+
 // MARK: - Entry point
 
 private struct Fighters: Decodable {
     struct Fighter: Decodable { let id: String; let name: String }
     let fighters: [Fighter]
+}
+
+private struct News: Decodable {
+    struct Article: Decodable { let id: String; let eventId: String; let headline: String }
+    let news: [Article]
 }
 
 private struct Events: Decodable {
@@ -251,3 +348,13 @@ for event in events.events {
     )
 }
 print("  \(events.events.count) posters")
+
+private let news = try JSONDecoder().decode(
+    News.self,
+    from: Data(contentsOf: datasetDir.appendingPathComponent("news.json"))
+)
+for article in news.news {
+    let url = datasetDir.appendingPathComponent("assets/news/\(article.id).jpg")
+    try renderNewsCard(id: article.id, to: url)
+}
+print("  \(news.news.count) news cards")

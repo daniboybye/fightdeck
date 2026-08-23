@@ -1,16 +1,6 @@
 {
   "news": [
     {
-      "id": "gaethje-unifies",
-      "eventId": "ufc-freedom-250",
-      "headline": "Gaethje unifies at the White House as Topuria's corner calls it",
-      "body": "Justin Gaethje entered as interim champion and left as the undisputed one. Ilia Topuria's corner stopped the fight between the fourth and fifth rounds, ending the first unbeaten run at lightweight in years.",
-      "publishedAt": "2026-06-14T23:40:00Z",
-      "readMinutes": 4,
-      "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-freedom-250.jpg"
-    },
-    {
       "id": "all-seven-finish",
       "eventId": "ufc-freedom-250",
       "headline": "Seven fights, seven knockouts, no judges required",
@@ -18,7 +8,27 @@
       "publishedAt": "2026-06-15T08:15:00Z",
       "readMinutes": 3,
       "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-freedom-250.jpg"
+      "heroImage": "assets/news/all-seven-finish.jpg"
+    },
+    {
+      "id": "gaethje-unifies",
+      "eventId": "ufc-freedom-250",
+      "headline": "Gaethje unifies at the White House as Topuria's corner calls it",
+      "body": "Justin Gaethje entered as interim champion and left as the undisputed one. Ilia Topuria's corner stopped the fight between the fourth and fifth rounds, ending the first unbeaten run at lightweight in years.",
+      "publishedAt": "2026-06-14T23:40:00Z",
+      "readMinutes": 4,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/news/gaethje-unifies.jpg"
+    },
+    {
+      "id": "omalley-second-act",
+      "eventId": "ufc-freedom-250",
+      "headline": "O'Malley's second act starts with a knockout on the South Lawn",
+      "body": "Aiemann Zahabi took the first round on movement and jabs. Sean O'Malley adjusted in the corner, started digging to the body, and ended it with a right hand at 4:02 of the second. It is his first finish since losing the belt.",
+      "publishedAt": "2026-06-14T22:10:00Z",
+      "readMinutes": 3,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/news/omalley-second-act.jpg"
     },
     {
       "id": "gane-interim",
@@ -28,7 +38,7 @@
       "publishedAt": "2026-06-14T22:05:00Z",
       "readMinutes": 3,
       "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-freedom-250.jpg"
+      "heroImage": "assets/news/gane-interim.jpg"
     },
     {
       "id": "ruffy-wheel-kick",
@@ -38,7 +48,17 @@
       "publishedAt": "2026-06-14T21:20:00Z",
       "readMinutes": 2,
       "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-freedom-250.jpg"
+      "heroImage": "assets/news/ruffy-wheel-kick.jpg"
+    },
+    {
+      "id": "nickal-arrives",
+      "eventId": "ufc-freedom-250",
+      "headline": "Nickal needed one round to answer the only question left about him",
+      "body": "Bo Nickal had been accused of avoiding a striker with a pulse. He walked Kyle Daukaus down for four and a half minutes and finished him on the feet, without a single takedown attempt. The wrestling label is going to be harder to make stick after this one.",
+      "publishedAt": "2026-06-14T21:05:00Z",
+      "readMinutes": 3,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/news/nickal-arrives.jpg"
     },
     {
       "id": "strickland-upset",
@@ -48,7 +68,7 @@
       "publishedAt": "2026-05-10T04:30:00Z",
       "readMinutes": 5,
       "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-328.jpg"
+      "heroImage": "assets/news/strickland-upset.jpg"
     },
     {
       "id": "miller-milestone",
@@ -58,7 +78,7 @@
       "publishedAt": "2026-05-10T03:10:00Z",
       "readMinutes": 3,
       "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-328.jpg"
+      "heroImage": "assets/news/miller-milestone.jpg"
     },
     {
       "id": "van-defends",
@@ -68,7 +88,7 @@
       "publishedAt": "2026-05-10T02:45:00Z",
       "readMinutes": 4,
       "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-328.jpg"
+      "heroImage": "assets/news/van-defends.jpg"
     },
     {
       "id": "brady-shutout",
@@ -78,7 +98,27 @@
       "publishedAt": "2026-05-10T01:55:00Z",
       "readMinutes": 2,
       "source": "fightdeck-demo",
-      "heroImage": "assets/events/ufc-328.jpg"
+      "heroImage": "assets/news/brady-shutout.jpg"
+    },
+    {
+      "id": "green-submits-stephens",
+      "eventId": "ufc-328",
+      "headline": "King Green submits Jeremy Stephens in a fight nobody expected to hit the mat",
+      "body": "Two strikers with forty-one knockdowns between them met at a catchweight of 160, and it lasted four minutes on the ground. Green took the back off a missed overhand and finished it with a rear-naked choke at 4:20 of the first.",
+      "publishedAt": "2026-05-09T23:55:00Z",
+      "readMinutes": 2,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/news/green-submits-stephens.jpg"
+    },
+    {
+      "id": "prelims-five-finishes",
+      "eventId": "ufc-328",
+      "headline": "The prelims produced four submissions before the main card began",
+      "body": "Amosov, Dawson, Miller and Susurkaev all finished on the ground, and Ateba Gautier added a second-round knockout. By the time the pay-per-view opened, the Prudential Center crowd had already seen five fights end early.",
+      "publishedAt": "2026-05-09T21:30:00Z",
+      "readMinutes": 3,
+      "source": "fightdeck-demo",
+      "heroImage": "assets/news/prelims-five-finishes.jpg"
     }
   ]
 }

@@ -9,10 +9,6 @@
 import FightDeckCore
 import SwiftUI
 
-private enum BetslipLayout {
-    static let tabBarClearance: CGFloat = 96
-}
-
 public struct BetSlipRootView: View {
     @Bindable var store: BetSlipStore
     let display: SlipDisplayContext
@@ -20,6 +16,8 @@ public struct BetSlipRootView: View {
     let onDeposit: @Sendable () -> Void
     let onBrowseEvents: @Sendable () -> Void
     let onHostSync: @Sendable (BetSlip, Decimal, String?) -> Void
+
+    @FocusState private var stakeFocused: Bool
 
     public init(
         store: BetSlipStore,
@@ -66,7 +64,9 @@ public struct BetSlipRootView: View {
     private var slipContent: some View {
         ScrollView {
             VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
-                accumulatorNote
+                Text(betTypeTitle)
+                    .font(Typography.semibold(theme.fontCallout))
+                    .foregroundStyle(theme.textPrimary)
                 ForEach(store.slip.selections) { selection in
                     selectionRow(selection)
                 }
@@ -77,17 +77,19 @@ public struct BetSlipRootView: View {
                 actions
             }
             .padding(theme.spacingLG)
-            .padding(Edge.Set.bottom, BetslipLayout.tabBarClearance)
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: ToolbarItemPlacement.keyboard) {
+                Spacer()
+                Button("Done") { stakeFocused = false }
+            }
         }
     }
 
-    @ViewBuilder
-    private var accumulatorNote: some View {
-        if store.slip.selections.count < FightCore.minAccaLegs {
-            Text("Add at least two selections to place an accumulator")
-                .font(Typography.body(theme.fontCaption))
-                .foregroundStyle(theme.textSecondary)
-        }
+    /// One leg is a single, two or more is an accumulator. The user never picks — the slip
+    /// just says which one it currently is.
+    private var betTypeTitle: String {
+        store.slip.mode == BetMode.accumulator ? "Accumulator" : "Single"
     }
 
     private func selectionRow(_ selection: Selection) -> some View {
@@ -118,8 +120,12 @@ public struct BetSlipRootView: View {
 
     private var stakeField: some View {
         VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingSM) {
+            Text("Amount")
+                .font(Typography.semibold(theme.fontCallout))
+                .foregroundStyle(theme.textPrimary)
             TextField("Stake", text: stakeBinding)
                 .keyboardType(UIKeyboardType.decimalPad)
+                .focused($stakeFocused)
                 .padding(theme.spacingLG)
                 .background(theme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
@@ -229,10 +235,4 @@ public struct BetSlipRootView: View {
             .disabled(!store.slipState.errors.isEmpty)
         }
     }
-}
-
-private extension BetslipTheme {
-    var onAccent: Color { ThemeColor.fromHex("#0B0E14") }
-    var radiusMD: CGFloat { 12 }
-    var spacingXL: CGFloat { 24 }
 }

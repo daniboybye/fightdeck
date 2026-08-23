@@ -21,7 +21,7 @@ public final class BetSlipStore {
 
     public init(
         fightCore: FightCore,
-        slip: BetSlip = BetSlip(mode: BetMode.accumulator, selections: [], stake: Money.parse("10.00")),
+        slip: BetSlip = BetSlip(mode: BetMode.single, selections: [], stake: Money.parse("10.00")),
         balance: Decimal = Money.parse("500.00")
     ) {
         self.fightCore = fightCore
@@ -35,6 +35,7 @@ public final class BetSlipStore {
 
     public func removeSelection(id: String) {
         slip.selections.removeAll { $0.id == id }
+        syncMode()
         betPlacedMessage = nil
     }
 
@@ -43,6 +44,11 @@ public final class BetSlipStore {
         guard state.errors.isEmpty else { return }
         balance -= state.totalStake
         slip.selections.removeAll()
+        syncMode()
         betPlacedMessage = "Bet placed · \(Money.formatCurrency(state.potentialReturn)) to return"
+    }
+
+    private func syncMode() {
+        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? BetMode.accumulator : BetMode.single
     }
 }

@@ -22,6 +22,7 @@ public struct DepositFlowView: View {
     @State private var amountText = ""
     @State private var method = DepositMethod.card
     @State private var didSucceed = false
+    @FocusState private var amountFocused: Bool
 
     public init(params: DepositParams, theme: ThemeTokens, onResult: @escaping @Sendable (DepositResult) -> Void) {
         self.params = params
@@ -55,22 +56,24 @@ public struct DepositFlowView: View {
         var feeRate: Decimal {
             switch self {
             case DepositMethod.card, DepositMethod.bank: Money.zero
-            case DepositMethod.wallet: Decimal(string: "0.01") ?? Money.zero
+            case DepositMethod.wallet: Money.parse("0.01")
             }
         }
     }
 
     public var body: some View {
-        ZStack {
-            theme.background.ignoresSafeArea()
+        Group {
             if didSucceed {
                 successContent
             } else {
                 formContent
             }
         }
-        .navigationTitle("Deposit")
+        .navigationTitle(didSucceed ? "Confirmed" : "Deposit")
         .navigationBarTitleDisplayMode(NavigationBarItem.TitleDisplayMode.inline)
+        // The money has already moved by the time this screen appears, so going back to the
+        // amount field would offer to spend it a second time.
+        .navigationBarBackButtonHidden(didSucceed)
     }
 
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
@@ -78,10 +81,6 @@ public struct DepositFlowView: View {
     private var formContent: some View {
         ScrollView {
             VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
-                Text("Balance: \(Money.formatCurrency(params.currentBalance))")
-                    .font(Typography.body(theme.fontBody))
-                    .foregroundStyle(theme.textSecondary)
-
                 amountSection
                 methodSection
                 summarySection
@@ -96,13 +95,23 @@ public struct DepositFlowView: View {
             }
             .padding(theme.spacingLG)
         }
+        .toolbar {
+            ToolbarItemGroup(placement: ToolbarItemPlacement.keyboard) {
+                Spacer()
+                Button("Done") { amountFocused = false }
+            }
+        }
     }
 
     private var amountSection: some View {
         VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingMD) {
+            Text("Amount")
+                .font(Typography.semibold(theme.fontCallout))
+                .foregroundStyle(theme.textPrimary)
             TextField("€0.00", text: $amountText)
                 .keyboardType(UIKeyboardType.decimalPad)
                 .font(Typography.bold(theme.fontDisplay))
+                .focused($amountFocused)
                 .padding(theme.spacingLG)
                 .background(theme.surface)
                 .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
@@ -128,7 +137,10 @@ public struct DepositFlowView: View {
     }
 
     private var methodSection: some View {
-        VStack(spacing: theme.spacingSM) {
+        VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingSM) {
+            Text("Method")
+                .font(Typography.semibold(theme.fontCallout))
+                .foregroundStyle(theme.textPrimary)
             ForEach(DepositMethod.allCases) { item in
                 Button {
                     method = item
@@ -155,10 +167,14 @@ public struct DepositFlowView: View {
 
     private var summarySection: some View {
         VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingMD) {
+            Text("Summary")
+                .font(Typography.semibold(theme.fontCallout))
+                .foregroundStyle(theme.textPrimary)
             summaryRow("Amount", Money.formatCurrency(parsedAmount))
             summaryRow("Method", method.title)
             summaryRow("Fee", Money.formatCurrency(feeAmount))
             summaryRow("Total", Money.formatCurrency(parsedAmount + feeAmount))
+            summaryRow("New balance", Money.formatCurrency(params.currentBalance + parsedAmount))
         }
         .padding(theme.spacingLG)
         .background(theme.surfaceElevated)

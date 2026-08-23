@@ -16,13 +16,16 @@ public struct BetslipTheme: Sendable {
     public let textPrimary: Color
     public let textSecondary: Color
     public let accent: Color
+    public let onAccent: Color
     public let positive: Color
     public let negative: Color
     public let spacingLG: CGFloat
     public let spacingMD: CGFloat
     public let spacingSM: CGFloat
     public let spacingXS: CGFloat
+    public let spacingXL: CGFloat
     public let radiusLG: CGFloat
+    public let radiusMD: CGFloat
     public let fontBody: CGFloat
     public let fontCaption: CGFloat
     public let fontCallout: CGFloat
@@ -34,13 +37,16 @@ public struct BetslipTheme: Sendable {
         textPrimary: ThemeColor.fromHex("#F5F7FA"),
         textSecondary: ThemeColor.fromHex("#9AA5B8"),
         accent: ThemeColor.fromHex("#E8B33C"),
+        onAccent: ThemeColor.fromHex("#0B0E14"),
         positive: ThemeColor.fromHex("#3DD68C"),
         negative: ThemeColor.fromHex("#F2545B"),
         spacingLG: 16,
         spacingMD: 12,
         spacingSM: 8,
         spacingXS: 4,
+        spacingXL: 24,
         radiusLG: 16,
+        radiusMD: 12,
         fontBody: 15,
         fontCaption: 12,
         fontCallout: 17
@@ -67,13 +73,16 @@ public struct BetslipTheme: Sendable {
             textPrimary: hex("textPrimary", fallback: "#F5F7FA"),
             textSecondary: hex("textSecondary", fallback: "#9AA5B8"),
             accent: hex("accent", fallback: "#E8B33C"),
+            onAccent: hex("onAccent", fallback: "#0B0E14"),
             positive: hex("positive", fallback: "#3DD68C"),
             negative: hex("negative", fallback: "#F2545B"),
             spacingLG: 16,
             spacingMD: 12,
             spacingSM: 8,
             spacingXS: 4,
+            spacingXL: 24,
             radiusLG: 16,
+            radiusMD: 12,
             fontBody: 15,
             fontCaption: 12,
             fontCallout: 17

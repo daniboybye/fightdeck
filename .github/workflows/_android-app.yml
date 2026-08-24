@@ -92,10 +92,19 @@ jobs:
         run: npm ci
 
       # Skip's AARs are transpiler output rather than a checked-in dependency, so the host
-      # has nothing to link until skipstone has run over the three modules.
+      # has nothing to link until skipstone has run over the three modules. Pinned to the
+      # lock file: a CLI newer than the packages' skipstone emits Gradle projects the AAR
+      # scripts no longer recognise, and the failure surfaces as unresolved Kotlin symbols.
       - name: Install Skip
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
-        run: brew install skiptools/skip/skip
+        run: |
+          ./tools/versions.py skip.skipstone --github-env PINNED_SKIPSTONE
+          SKIP_VERSION="$(./tools/versions.py skip.skipstone)"
+          curl -fsSL -o "$RUNNER_TEMP/skip.zip" \
+            "https://github.com/skiptools/skip/releases/download/${SKIP_VERSION}/skip-macos.zip"
+          unzip -q "$RUNNER_TEMP/skip.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
+          echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
 
       - name: Export the Skip AARs
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'

@@ -103,12 +103,21 @@ jobs:
           distribution: temurin
           java-version: ${{ env.PINNED_JDK }}
 
-      - name: Install Skip
+      # The release archive rather than the tap: brew installs whatever is newest, and a
+      # CLI newer than the skipstone the packages pin generates Gradle projects this
+      # build's patches no longer recognise. The lock file is only a pin if it is used.
+      - name: Install Skip ${{ env.PINNED_SKIPSTONE }}
         if: steps.guard.outputs.exists == 'true'
         run: |
-          brew install skiptools/skip/skip
-          skip checkup --verbose || echo "::warning::skip checkup reported problems"
-          echo "Pinned skipstone in lock file: $PINNED_SKIPSTONE"
+          curl -fsSL -o "$RUNNER_TEMP/skip.zip" \
+            "https://github.com/skiptools/skip/releases/download/${PINNED_SKIPSTONE}/skip-macos.zip"
+          unzip -q "$RUNNER_TEMP/skip.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
+          echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
+
+      - name: Skip checkup
+        if: steps.guard.outputs.exists == 'true'
+        run: skip checkup --verbose || echo "::warning::skip checkup reported problems"
 
       - name: Export the AARs
         if: steps.guard.outputs.exists == 'true'

@@ -29,26 +29,32 @@ fi
 ARCHIVE_PATH="$OUT_DIR/$APPROACH.xcarchive"
 rm -rf "$ARCHIVE_PATH"
 
-echo "==> Archiving $SCHEME from $PROJECT_DIR"
-(
-    cd "$REPO_ROOT/$PROJECT_DIR"
-    xcodebuild archive \
-        -scheme "$SCHEME" \
-        -destination 'generic/platform=iOS' \
-        -archivePath "$ARCHIVE_PATH" \
-        -configuration Release \
-        CODE_SIGNING_ALLOWED=NO \
-        CODE_SIGNING_REQUIRED=NO \
-        ONLY_ACTIVE_ARCH=NO \
-        | xcbeautify --quiet || xcodebuild archive \
-            -scheme "$SCHEME" \
-            -destination 'generic/platform=iOS' \
-            -archivePath "$ARCHIVE_PATH" \
-            -configuration Release \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            ONLY_ACTIVE_ARCH=NO
+# CocoaPods links React Native through a workspace, so the RN host cannot be archived from
+# its bare project. Skip's SwiftPM plugin is unsigned and Xcode 26 refuses it interactively;
+# both validation opt-outs are inert for the approaches that do not use plugins.
+cd "$REPO_ROOT/$PROJECT_DIR"
+CONTAINER=(-project "$SCHEME.xcodeproj")
+if [[ -d "$SCHEME.xcworkspace" ]]; then
+    CONTAINER=(-workspace "$SCHEME.xcworkspace")
+fi
+
+ARCHIVE_ARGS=(
+    "${CONTAINER[@]}"
+    -scheme "$SCHEME"
+    -destination 'generic/platform=iOS'
+    -archivePath "$ARCHIVE_PATH"
+    -configuration Release
+    -skipPackagePluginValidation
+    -skipMacroValidation
+    CODE_SIGNING_ALLOWED=NO
+    CODE_SIGNING_REQUIRED=NO
+    ONLY_ACTIVE_ARCH=NO
 )
+
+echo "==> Archiving $SCHEME from $PROJECT_DIR"
+xcodebuild archive "${ARCHIVE_ARGS[@]}" | xcbeautify --quiet \
+    || xcodebuild archive "${ARCHIVE_ARGS[@]}"
+cd "$REPO_ROOT"
 
 APP_PATH="$(find "$ARCHIVE_PATH/Products/Applications" -maxdepth 1 -name '*.app' | head -1)"
 if [[ -z "$APP_PATH" ]]; then

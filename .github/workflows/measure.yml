@@ -44,6 +44,8 @@ jobs:
       approach: ${{ matrix.approach }}
       project-dir: ${{ matrix.approach }}/android
       module: app
+      variant: ${{ (matrix.approach == '03-sdk-rn' || matrix.approach == '04-sdk-skip') && 'bothRelease' || 'release' }}
+      runner: ${{ matrix.approach == '04-sdk-skip' && 'macos-26' || 'ubuntu-24.04' }}
       run-tests: ${{ !inputs.skip-tests }}
 
   contract:

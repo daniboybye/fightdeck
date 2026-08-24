@@ -29,4 +29,7 @@ jobs:
       approach: ${{ inputs.approach }}
       project-dir: ${{ inputs.approach }}/android
       module: app
+      # The two SDK hosts carry flavours; `both` is the configuration the demo ships.
+      variant: ${{ (inputs.approach == '03-sdk-rn' || inputs.approach == '04-sdk-skip') && 'bothRelease' || 'release' }}
+      runner: ${{ inputs.approach == '04-sdk-skip' && 'macos-26' || 'ubuntu-24.04' }}
       run-tests: ${{ inputs.run-tests }}

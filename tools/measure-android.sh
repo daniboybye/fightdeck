@@ -2,7 +2,11 @@
 #
 # Build an Android app release and emit a size breakdown as JSON.
 #
-#   ./tools/measure-android.sh <approach> <project-dir> [module]
+#   ./tools/measure-android.sh <approach> <project-dir> [module] [variant]
+#
+# The React Native and Skip hosts carry product flavours, so the variant to weigh is
+# named rather than assumed: `bothRelease` is the demo configuration, the other flavours
+# exist to price a single feature.
 #
 # The universal APK is the number people quote and the least honest one, because
 # nobody downloads it: Play delivers a per-ABI split. Both are recorded, and the
@@ -12,9 +16,11 @@
 
 set -euo pipefail
 
-APPROACH="${1:?usage: measure-android.sh <approach> <project-dir> [module]}"
+APPROACH="${1:?usage: measure-android.sh <approach> <project-dir> [module] [variant]}"
 PROJECT_DIR="${2:?missing project dir}"
 MODULE="${3:-app}"
+VARIANT="${4:-release}"
+VARIANT_TASK="$(printf '%s' "${VARIANT:0:1}" | tr '[:lower:]' '[:upper:]')${VARIANT:1}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="$REPO_ROOT/tools/out"
@@ -27,11 +33,12 @@ fi
 
 cd "$REPO_ROOT/$PROJECT_DIR"
 
-echo "==> Building $MODULE release"
-./gradlew --no-daemon ":$MODULE:assembleRelease" ":$MODULE:bundleRelease"
+echo "==> Building $MODULE $VARIANT"
+./gradlew --no-daemon ":$MODULE:assemble$VARIANT_TASK" ":$MODULE:bundle$VARIANT_TASK"
 
-APK_PATH="$(find "$MODULE/build/outputs/apk/release" -name '*.apk' | head -1)"
-AAB_PATH="$(find "$MODULE/build/outputs/bundle/release" -name '*.aab' | head -1)"
+# A flavoured build nests the output one directory deeper, so search rather than assume.
+APK_PATH="$(find "$MODULE/build/outputs/apk" -name '*.apk' -path '*release*' | sort | head -1)"
+AAB_PATH="$(find "$MODULE/build/outputs/bundle" -name '*.aab' | sort | head -1)"
 
 APK_BYTES=0
 [[ -n "$APK_PATH" ]] && APK_BYTES="$(stat -f%z "$APK_PATH" 2>/dev/null || stat -c%s "$APK_PATH")"
@@ -69,6 +76,7 @@ cat > "$OUT_DIR/android-$APPROACH.json" <<JSON
   "platform": "android",
   "approach": "$APPROACH",
   "module": "$MODULE",
+  "variant": "$VARIANT",
   "apk_universal_bytes": $APK_BYTES,
   "aab_bytes": $AAB_BYTES,
   "arm64_download_bytes": $ARM64_BYTES,

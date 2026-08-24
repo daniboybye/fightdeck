@@ -21,6 +21,16 @@ on:
         required: false
         default: app
         type: string
+      variant:
+        description: Variant to weigh, e.g. release or bothRelease for a flavoured host
+        required: false
+        default: release
+        type: string
+      runner:
+        description: Runner label — the Skip host needs a Mac to produce its AARs
+        required: false
+        default: ubuntu-24.04
+        type: string
       run-tests:
         description: Run unit tests before assembling
         required: false
@@ -30,8 +40,13 @@ on:
 jobs:
   build:
     name: ${{ inputs.approach }} (Android)
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 75
+
+    # No release has been published from this repository yet, so the UI-bearing SDKs are
+    # resolved from source. The pinned-artifact path is exercised by release-sdk.yml.
+    env:
+      FIGHTDECK_LOCAL_SDK: "1"
 
     steps:
       - uses: actions/checkout@v7
@@ -41,6 +56,7 @@ jobs:
           ./tools/versions.py android.jdk --github-env PINNED_JDK
           ./tools/versions.py android.compile_sdk --github-env PINNED_COMPILE_SDK
           ./tools/versions.py android.ndk --github-env PINNED_NDK
+          ./tools/versions.py react_native.node --github-env PINNED_NODE
 
       - uses: actions/setup-java@v5
         with:
@@ -62,6 +78,31 @@ jobs:
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$PINNED_NDK" \
             || echo "::warning::NDK $PINNED_NDK unavailable on this runner; falling back to preinstalled"
+
+      # The React Native host reads its Gradle plugin and its autolinked modules out of
+      # node_modules, so Gradle cannot even configure the build without an install.
+      - uses: actions/setup-node@v7
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
+        with:
+          node-version: ${{ env.PINNED_NODE }}
+
+      - name: Install JS dependencies
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
+        working-directory: 03-sdk-rn/sdks/core
+        run: npm ci
+
+      # Skip's AARs are transpiler output rather than a checked-in dependency, so the host
+      # has nothing to link until skipstone has run over the three modules.
+      - name: Install Skip
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
+        run: brew install skiptools/skip/skip
+
+      - name: Export the Skip AARs
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
+        run: |
+          for module in core deposit betslip; do
+            (cd "04-sdk-skip/sdks/$module" && ./build-aar.sh)
+          done
 
       # 02-core-rust is the one host whose dependency is not a pinned release: its UniFFI
       # bindings and jniLibs are build output, so the core has to be packaged here before
@@ -87,14 +128,21 @@ jobs:
         working-directory: 02-core-rust/sdks/core
         run: ./build-aar.sh
 
+      # `test` rather than a named variant: AGP only wires unit tests to the test build
+      # type, and the flavoured hosts would need a different task name than the rest.
       - name: Test
         if: steps.guard.outputs.exists == 'true' && inputs.run-tests
         working-directory: ${{ inputs.project-dir }}
-        run: ./gradlew --no-daemon ":${{ inputs.module }}:testReleaseUnitTest"
+        run: ./gradlew --no-daemon ":${{ inputs.module }}:test"
 
       - name: Assemble and measure
         if: steps.guard.outputs.exists == 'true'
-        run: ./tools/measure-android.sh "${{ inputs.approach }}" "${{ inputs.project-dir }}" "${{ inputs.module }}"
+        run: |
+          ./tools/measure-android.sh \
+            "${{ inputs.approach }}" \
+            "${{ inputs.project-dir }}" \
+            "${{ inputs.module }}" \
+            "${{ inputs.variant }}"
 
       - name: Upload size report
         if: steps.guard.outputs.exists == 'true'

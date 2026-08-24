@@ -1,10 +1,9 @@
 # Reusable: build, test and weigh one iOS host app.
 #
-# Not dispatchable on its own. Each approach has a thin wrapper (ios-00-native.yml and
-# friends) so every app stays individually runnable from the Actions tab, while the
-# logic that must stay identical across all five lives here exactly once. If the five
-# approaches were measured by five copies of this file they would drift, and a drifting
-# measurement is worse than no measurement.
+# Not dispatchable on its own. ios-app.yml offers the five approaches as a dropdown and
+# measure.yml runs all of them, so the logic that must stay identical across the five
+# lives here exactly once. If the five approaches were measured by five copies of this
+# file they would drift, and a drifting measurement is worse than no measurement.
 
 name: _ios-app
 
@@ -35,6 +34,11 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
 
+    # No release has been published from this repository yet, so the UI-bearing SDKs are
+    # resolved from source. The pinned-artifact path is exercised by release-sdk.yml.
+    env:
+      FIGHTDECK_LOCAL_SDK: "1"
+
     steps:
       - uses: actions/checkout@v7
 
@@ -61,6 +65,29 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         run: brew install xcbeautify
 
+      # The React Native host links its SDKs through CocoaPods, and the Podfile resolves
+      # react-native out of node_modules before it can generate anything.
+      - name: Read pinned Node
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
+        run: ./tools/versions.py react_native.node --github-env PINNED_NODE
+
+      - uses: actions/setup-node@v7
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
+        with:
+          node-version: ${{ env.PINNED_NODE }}
+
+      - name: Install JS dependencies
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
+        working-directory: 03-sdk-rn/sdks/core
+        run: npm ci
+
+      - name: Install Pods
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
+        working-directory: 03-sdk-rn/ios
+        run: |
+          pod --version || sudo gem install cocoapods --no-document
+          pod install
+
       # 02-core-rust is the one host whose dependency is not a pinned release: its UniFFI
       # bindings and xcframework are build output, so the core has to be packaged here
       # before the app will compile. The other four resolve artifacts over HTTPS.
@@ -83,9 +110,24 @@ jobs:
         if: steps.guard.outputs.exists == 'true' && inputs.run-tests
         working-directory: ${{ inputs.project-dir }}
         run: |
+          if [[ ! -d "${{ inputs.scheme }}Tests" ]]; then
+            echo "::notice::${{ inputs.approach }} has no unit test target — nothing to run"
+            exit 0
+          fi
+          ARGS=(-scheme "${{ inputs.scheme }}")
+          if [[ -d "${{ inputs.scheme }}.xcworkspace" ]]; then
+            ARGS+=(-workspace "${{ inputs.scheme }}.xcworkspace")
+          fi
+          # The screenshot tour drives a simulator for minutes to produce images a human
+          # looks at; the unit suite is what guards the numbers this workflow publishes.
+          if [[ -d "${{ inputs.scheme }}UITests" ]]; then
+            ARGS+=(-skip-testing:"${{ inputs.scheme }}UITests")
+          fi
           xcodebuild test \
-            -scheme "${{ inputs.scheme }}" \
+            "${ARGS[@]}" \
             -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify
 

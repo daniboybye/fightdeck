@@ -12,6 +12,14 @@ let package = Package(
             name: "FightCore",
             targets: ["FightCore"]
         ),
+        // Android loads code as a shared object, and SwiftPM only emits one for a product
+        // declared dynamic. Apple builds keep using the static product above, which is
+        // what the xcframework is assembled from.
+        .library(
+            name: "FightCoreShared",
+            type: .dynamic,
+            targets: ["FightCore"]
+        ),
     ],
     targets: [
         .target(

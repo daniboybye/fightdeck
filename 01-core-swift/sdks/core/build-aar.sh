@@ -23,16 +23,17 @@ for triple in "${ABIS[@]}"; do
     swift build \
         --package-path "$ROOT" \
         --swift-sdk "$triple" \
+        --product FightCoreShared \
         --static-swift-stdlib \
         -c release \
-        -Xlinker -shared \
         2>&1 || {
             echo "ERROR: swift build failed for $triple" >&2
             exit 1
         }
-    lib_src="$ROOT/.build/$triple/release/libFightCore.so"
+    lib_src="$ROOT/.build/$triple/release/libFightCoreShared.so"
     if [[ ! -f "$lib_src" ]]; then
-        lib_src="$ROOT/.build/release/libFightCore.so"
+        echo "ERROR: no shared library at $lib_src" >&2
+        exit 1
     fi
     abi="$(echo "$triple" | cut -d- -f1)"
     mkdir -p "$OUT/android-libs/$abi"

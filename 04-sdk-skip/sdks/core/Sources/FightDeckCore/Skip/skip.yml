@@ -1,0 +1,3 @@
+# Skip Lite — Swift transpiled to Kotlin via skipstone (no Swift runtime on Android).
+skip:
+  mode: 'transpiled'

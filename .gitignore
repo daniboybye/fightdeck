@@ -72,8 +72,10 @@ Cargo.lock.local
 02-core-rust/ios/FightDeck/Generated/
 
 # ---- Skip ----
+# Only the transpiler's scratch dir. A module's Sources/<Target>/Skip/skip.yml is
+# hand-written configuration without which skipstone refuses to process the module,
+# and an ignore rule of `Skip/` silently kept it out of every clone.
 .skip/
-Skip/
 
 # ---- IDE ----
 .idea/

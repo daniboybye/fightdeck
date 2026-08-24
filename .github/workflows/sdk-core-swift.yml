@@ -104,6 +104,7 @@ jobs:
           POST_INSTALL="$RUNNER_TEMP/swift-post-install.sh"
           swiftly install "$PINNED_SWIFT" --use --assume-yes --post-install-file "$POST_INSTALL"
           if [[ -s "$POST_INSTALL" ]]; then
+            sudo apt-get update -qq
             sudo bash "$POST_INSTALL"
           fi
           echo "${SWIFTLY_BIN_DIR:-$HOME/.local/share/swiftly/bin}" >> "$GITHUB_PATH"

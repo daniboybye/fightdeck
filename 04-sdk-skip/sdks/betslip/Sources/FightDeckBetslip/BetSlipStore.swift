@@ -45,7 +45,7 @@ public final class BetSlipStore {
         balance -= state.totalStake
         slip.selections.removeAll()
         syncMode()
-        betPlacedMessage = "Bet placed · \(Money.formatCurrency(state.potentialReturn)) to return"
+        betPlacedMessage = "\(Money.formatCurrency(state.potentialReturn)) returns if it lands"
     }
 
     private func syncMode() {

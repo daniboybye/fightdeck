@@ -9,6 +9,14 @@
 import FightDeckCore
 import SwiftUI
 
+private enum Layout {
+    static let minTapTarget: CGFloat = 44
+    static let primaryActionHeight: CGFloat = 44
+    static let secondaryActionHeight: CGFloat = 44
+    static let secondaryActionPadding: CGFloat = 24
+    static let actionBarGap: CGFloat = 12
+}
+
 private enum DepositLimits {
     static let minimum = Money.parse("10")
     static let maximum = Money.parse("2000")
@@ -79,19 +87,39 @@ public struct DepositFlowView: View {
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
     // and stepping through them only hides the total from the person approving it.
     private var formContent: some View {
+        #if SKIP
+        skipFormContent
+        #else
+        formScroll
+            .modifier(DepositBottomBarModifier(
+                theme: theme,
+                amountFocused: amountFocused,
+                isEnabled: amountValidationMessage == nil && !amountText.isEmpty,
+                onConfirm: { withAnimation(.smooth(duration: 0.35)) { didSucceed = true } },
+                onDismissKeyboard: { amountFocused = false }
+            ))
+        #endif
+    }
+
+    #if SKIP
+    private var skipFormContent: some View {
         ScrollView {
             VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
                 amountSection
                 methodSection
                 summarySection
-
-                Button("Confirm deposit") { didSucceed = true }
-                    .font(Typography.semibold(theme.fontCallout))
-                    .foregroundStyle(theme.onAccent)
-                    .frame(maxWidth: CGFloat.infinity, minHeight: 52)
-                    .background(theme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
-                    .disabled(amountValidationMessage != nil || amountText.isEmpty)
+                Button {
+                    didSucceed = true
+                } label: {
+                    Text("Confirm deposit")
+                        .font(Typography.semibold(theme.fontCallout))
+                        .foregroundStyle(theme.onAccent)
+                        .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
+                }
+                .frame(height: Layout.primaryActionHeight)
+                .background(theme.accent)
+                .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+                .disabled(amountValidationMessage != nil || amountText.isEmpty)
             }
             .padding(theme.spacingLG)
         }
@@ -100,6 +128,18 @@ public struct DepositFlowView: View {
                 Spacer()
                 Button("Done") { amountFocused = false }
             }
+        }
+    }
+    #endif
+
+    private var formScroll: some View {
+        ScrollView {
+            VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
+                amountSection
+                methodSection
+                summarySection
+            }
+            .padding(theme.spacingLG)
         }
     }
 
@@ -122,18 +162,25 @@ public struct DepositFlowView: View {
                     .font(Typography.body(theme.fontCaption))
             }
 
-            HStack {
-                ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                    Button("€\(chip)") { amountText = chip }
-                        .font(Typography.medium(theme.fontCaption))
-                        .padding(Edge.Set.horizontal, theme.spacingMD)
-                        .padding(Edge.Set.vertical, theme.spacingSM)
-                        .background(theme.surfaceElevated)
-                        .foregroundStyle(theme.accent)
-                        .clipShape(Capsule())
-                }
+            amountChipRow
+        }
+    }
+
+    @ViewBuilder
+    private var amountChipRow: some View {
+        #if SKIP
+        HStack {
+            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
+                amountChip("€\(chip)") { amountText = chip }
             }
         }
+        #else
+        PresetChipRow(theme: theme) {
+            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
+                PresetChipButton(title: "€\(chip)", theme: theme) { amountText = chip }
+            }
+        }
+        #endif
     }
 
     private var methodSection: some View {
@@ -183,21 +230,37 @@ public struct DepositFlowView: View {
 
     private var successContent: some View {
         VStack(spacing: theme.spacingLG) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(Typography.body(64))
-                .foregroundStyle(theme.positive)
+            successIcon
             Text("Deposit successful")
                 .font(Typography.bold(theme.fontTitle))
             Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
                 .foregroundStyle(theme.textSecondary)
-            Button("Done") { onResult(DepositResult.completed(amount: parsedAmount)) }
-                .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.onAccent)
-                .frame(maxWidth: CGFloat.infinity, minHeight: 52)
-                .background(theme.accent)
-                .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+            secondaryDoneButton
         }
         .padding(theme.spacingXL)
+        #if !SKIP
+        .modifier(SuccessPresentationModifier(trigger: didSucceed))
+        #endif
+    }
+
+    @ViewBuilder
+    private var successIcon: some View {
+        #if !SKIP
+        if #available(iOS 18, *) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(Typography.body(64))
+                .foregroundStyle(theme.positive)
+                .symbolEffect(.bounce, options: .nonRepeating)
+        } else {
+            Image(systemName: "checkmark.circle.fill")
+                .font(Typography.body(64))
+                .foregroundStyle(theme.positive)
+        }
+        #else
+        Image(systemName: "checkmark.circle.fill")
+            .font(Typography.body(64))
+            .foregroundStyle(theme.positive)
+        #endif
     }
 
     private var parsedAmount: Decimal {
@@ -225,4 +288,244 @@ public struct DepositFlowView: View {
                 .foregroundStyle(theme.textPrimary)
         }
     }
+
+    @ViewBuilder
+    private var secondaryDoneButton: some View {
+        #if SKIP
+        Button("Done") { onResult(DepositResult.completed(amount: parsedAmount)) }
+            .font(Typography.semibold(theme.fontCallout))
+            .foregroundStyle(theme.onAccent)
+            .padding(.horizontal, Layout.secondaryActionPadding)
+            .frame(height: Layout.secondaryActionHeight)
+            .background(theme.accent)
+            .clipShape(Capsule())
+        #else
+        Group {
+            if #available(iOS 26, *) {
+                Button {
+                    onResult(DepositResult.completed(amount: parsedAmount))
+                } label: {
+                    Text("Done")
+                        .font(.headline)
+                        .foregroundStyle(theme.onAccent)
+                        .padding(.horizontal, Layout.secondaryActionPadding)
+                        .frame(height: Layout.secondaryActionHeight)
+                        .contentShape(.capsule)
+                }
+                .buttonStyle(.plain)
+                .glassEffect(.regular.tint(theme.accent).interactive(), in: .capsule)
+            } else {
+                Button("Done") { onResult(DepositResult.completed(amount: parsedAmount)) }
+                    .font(Typography.semibold(theme.fontCallout))
+                    .foregroundStyle(theme.onAccent)
+                    .padding(.horizontal, Layout.secondaryActionPadding)
+                    .frame(height: Layout.secondaryActionHeight)
+                    .background(theme.accent)
+                    .clipShape(Capsule())
+            }
+        }
+        #endif
+    }
+
+    @ViewBuilder
+    private func amountChip(_ title: String, action: @escaping () -> Void) -> some View {
+        #if SKIP
+        Button(action: action) {
+            Text(title)
+                .font(Typography.medium(theme.fontCaption))
+                .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
+        }
+        .frame(height: Layout.secondaryActionHeight)
+        .background(theme.surfaceElevated)
+        .foregroundStyle(theme.accent)
+        .clipShape(Capsule())
+        #else
+        Button(action: action) {
+            Text(title)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .tint(theme.accent)
+        .frame(height: Layout.secondaryActionHeight)
+        #endif
+    }
 }
+
+#if !SKIP
+private struct DepositBottomBarModifier: ViewModifier {
+    let theme: ThemeTokens
+    let amountFocused: Bool
+    let isEnabled: Bool
+    let onConfirm: () -> Void
+    let onDismissKeyboard: () -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            content
+                .safeAreaBar(edge: .bottom) { barContent }
+                .scrollDismissesKeyboard(.interactively)
+        } else {
+            legacyBottomBar(content)
+        }
+    }
+
+    private func legacyBottomBar(_ content: Content) -> some View {
+        content
+            .safeAreaInset(edge: .bottom) {
+                barContent
+                    .padding(theme.spacingLG)
+                    .background(.bar)
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: ToolbarItemPlacement.keyboard) {
+                    Spacer()
+                    Button("Done", action: onDismissKeyboard)
+                }
+            }
+    }
+
+    private var barContent: some View {
+        HStack(spacing: theme.spacingSM) {
+            primaryConfirmButton
+            if amountFocused {
+                keyboardDoneButton
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal, theme.spacingLG)
+        .padding(.bottom, Layout.actionBarGap)
+        .animation(.snappy(duration: 0.25), value: amountFocused)
+    }
+
+    @ViewBuilder
+    private var primaryConfirmButton: some View {
+        if #available(iOS 26, *) {
+            Button(action: onConfirm) {
+                Text("Confirm deposit")
+                    .font(.headline)
+                    .foregroundStyle(isEnabled ? theme.onAccent : Color.secondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: Layout.primaryActionHeight)
+                    .contentShape(.capsule)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(
+                .regular
+                    .tint(isEnabled ? theme.accent : nil)
+                    .interactive(isEnabled),
+                in: .capsule
+            )
+            .disabled(!isEnabled)
+        } else {
+            Button(action: onConfirm) {
+                Text("Confirm deposit")
+                    .font(Typography.semibold(theme.fontCallout))
+                    .foregroundStyle(theme.onAccent)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(.rect)
+            }
+            .frame(height: Layout.primaryActionHeight)
+            .background(theme.accent)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+            .disabled(!isEnabled)
+        }
+    }
+
+    @ViewBuilder
+    private var keyboardDoneButton: some View {
+        if #available(iOS 26, *) {
+            Button(action: onDismissKeyboard) {
+                Text("Done")
+                    .font(.headline)
+                    .foregroundStyle(theme.accent)
+                    .padding(.horizontal, theme.spacingLG)
+                    .frame(height: Layout.primaryActionHeight)
+                    .contentShape(.capsule)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        } else {
+            Button(action: onDismissKeyboard) {
+                Text("Done")
+                    .font(Typography.semibold(theme.fontCallout))
+                    .foregroundStyle(theme.accent)
+                    .padding(.horizontal, theme.spacingMD)
+                    .frame(maxHeight: .infinity)
+                    .contentShape(.rect)
+            }
+            .frame(height: Layout.primaryActionHeight)
+            .background(theme.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+        }
+    }
+}
+
+private struct PresetChipRow<Content: View>: View {
+    let theme: ThemeTokens
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        if #available(iOS 26, *) {
+            GlassEffectContainer(spacing: theme.spacingSM) {
+                HStack(spacing: theme.spacingSM) {
+                    content()
+                }
+            }
+        } else {
+            HStack(spacing: theme.spacingSM) {
+                content()
+            }
+        }
+    }
+}
+
+private struct PresetChipButton: View {
+    let title: String
+    let theme: ThemeTokens
+    let action: () -> Void
+
+    var body: some View {
+        if #available(iOS 26, *) {
+            Button(action: action) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(theme.accent)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: Layout.secondaryActionHeight)
+                    .contentShape(.capsule)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        } else {
+            Button(action: action) {
+                Text(title)
+                    .font(Typography.medium(theme.fontCaption))
+                    .foregroundStyle(theme.accent)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(.rect)
+            }
+            .frame(height: Layout.secondaryActionHeight)
+            .background(theme.surfaceElevated)
+            .clipShape(Capsule())
+        }
+    }
+}
+#endif
+
+#if !SKIP
+private struct SuccessPresentationModifier: ViewModifier {
+    let trigger: Bool
+
+    func body(content: Content) -> some View {
+        if #available(iOS 17, *) {
+            content
+                .sensoryFeedback(.success, trigger: trigger)
+                .transition(.scale(scale: 0.92).combined(with: .opacity))
+        } else {
+            content
+        }
+    }
+}
+#endif

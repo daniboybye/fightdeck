@@ -51,6 +51,11 @@ fi
 
 cp "$BUILT" "$OUT/FightDeckDeposit-release.aar"
 
+# A successful `skip export` also drops the raw module AAR and core's here. Both are
+# duplicates of something the host already links, and duplicates collide in the
+# manifest merger and in the release staging directory.
+rm -f "$OUT/${BINARY_MODULE}-release.aar" "$OUT"/FightDeckCore*-release.aar
+
 # Copy Skip runtime AARs from the skipstone build for local Android consumption.
 REPO_ROOT="$(cd "$ROOT/../../.." && pwd)"
 RELEASE_AARS="$REPO_ROOT/tools/out/release/skip"

@@ -13,8 +13,10 @@ rm -f "$OUT"/*.aar
 
 skip export --module "$BINARY_MODULE" --release -d "$OUT" --project "$ROOT"
 
+# Renamed, not copied: the host links every AAR in this directory, and two files with
+# the same Android namespace fail the manifest merger.
 if [[ -f "$OUT/${BINARY_MODULE}-release.aar" ]]; then
-    cp "$OUT/${BINARY_MODULE}-release.aar" "$OUT/FightDeckCore-release.aar"
+    mv "$OUT/${BINARY_MODULE}-release.aar" "$OUT/FightDeckCore-release.aar"
 fi
 
 for aar in "$OUT"/*.aar; do

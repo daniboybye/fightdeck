@@ -58,6 +58,11 @@ fi
 
 cp "$BUILT" "$OUT/FightDeckBetslip-release.aar"
 
+# A successful `skip export` also drops the raw module AAR and core's here. Both are
+# duplicates of something the host already links, and duplicates collide in the
+# manifest merger and in the release staging directory.
+rm -f "$OUT/${BINARY_MODULE}-release.aar" "$OUT"/FightDeckCore*-release.aar
+
 bytes="$(stat -f%z "$OUT/FightDeckBetslip-release.aar" 2>/dev/null || stat -c%s "$OUT/FightDeckBetslip-release.aar")"
 if (( bytes < 1024 )); then
     echo "error: stub-sized AAR ($bytes B)" >&2

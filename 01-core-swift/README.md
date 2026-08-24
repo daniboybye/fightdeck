@@ -8,7 +8,7 @@ Two host apps (SwiftUI + Compose) sharing one **Swift FightCore** package. On iO
 - **`@Observable` slip state** in `BetSlipStore`, tracked by SwiftUI on iOS. The Android headline is getting the same object to drive Compose recomposition (Skip route) or manual observation (swift-java route).
 - **Ports across the language boundary** — `PreferencesStore` is declared in Swift, implemented in Kotlin over `SharedPreferences`.
 - **Typed throws** — `FightRepository` uses `async throws(FightCoreError)` in Swift; the Android binding should surface Kotlin `suspend` with a typed domain error.
-- **Honest failure mode** — Android cross-compilation hit a real toolchain mismatch on this machine. The Compose app builds with a **clearly marked stub** rather than pretending the Swift `.so` is linked.
+- **Honest failure mode** — the cross-compile needs an open-source toolchain, which a Mac with Xcode does not have, and the JNI bindings are unwritten. The Compose app builds with a **clearly marked stub** rather than pretending the Swift `.so` is linked.
 
 ## Build commands
 
@@ -187,10 +187,10 @@ None blocking. One observation:
 
 | Intended | Actual |
 | --- | --- |
-| Swift `.so` + swift-java JNI `.aar` on Android | Cross-compile blocked by toolchain mismatch; no `.so` sizes to report |
+| Swift `.so` + swift-java JNI `.aar` on Android | `.so` and `.aar` ✅ in CI; the JNI bindings that would let Kotlin call into them ❌ |
 | `@Observable` driving Compose recomposition | iOS ✅ via `BetSlipStore`; Android uses Kotlin `StateFlow` stub |
 | `PreferencesStore` in Swift, Kotlin JNI impl | Swift protocol ✅; Kotlin `SharedPreferencesStore` ✅; JNI bridge ❌ |
-| Skip fallback AAR | Skip CLI not installed |
+| Skip fallback AAR | Not attempted; approach 04 covers the same tool |
 | Android app consuming Swift core | **Stub** — app builds, UI matches baseline, logic is Kotlin marked STUB |
 
-The talk can show two phones with identical €361.11 on iOS (real Swift core) and Android (Kotlin stub with same fixtures), and be honest that the Android half of the Swift story stops at the compiler error above until the open-source toolchain is installed.
+The talk can show two phones with identical €361.11 on iOS (real Swift core) and Android (Kotlin stub with the same fixtures), and be honest about where the Swift story stops on Android: not at the compiler, which does the job on an open-source toolchain, but at the binding layer and at 81 MB of runtime for 615 KB of logic.

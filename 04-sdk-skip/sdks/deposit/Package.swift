@@ -32,6 +32,13 @@ let depositBinary: Target = useLocal
             checksum: releaseChecksum
         )
 
+// The xcframework this package is distributed as contains a dylib, and SwiftPM only
+// links one for a dynamic product. Consumers of a published release get that dylib
+// through the binary target above, so only the source build needs the switch.
+let fightDeckDepositLibrary: Product = useLocal
+    ? .library(name: "FightDeckDeposit", type: .dynamic, targets: ["FightDeckDeposit"])
+    : .library(name: "FightDeckDeposit", targets: ["FightDeckDeposit"])
+
 let package = Package(
     name: "FightDeckDeposit",
     defaultLocalization: "en",
@@ -40,7 +47,7 @@ let package = Package(
         .macOS(.v14),
     ],
     products: [
-        .library(name: "FightDeckDeposit", targets: ["FightDeckDeposit"]),
+        fightDeckDepositLibrary,
     ],
     dependencies: [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.6"),

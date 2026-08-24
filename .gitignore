@@ -89,5 +89,8 @@ Cargo.lock.local
 tools/out/
 *.receipt.md
 
+# Staging directory for tools/ci-local.sh release-sdk checksum checks.
+release-staging/
+
 # JVM heap dumps from Gradle OOMs
 *.hprof

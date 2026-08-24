@@ -13,6 +13,7 @@
 // downsample, memory and disk cache — so Kingfisher, Coil and RN's Image are doing
 // identical work in all five apps.
 
+import AppKit
 import CoreGraphics
 import CoreText
 import Foundation
@@ -25,7 +26,7 @@ private enum Layout {
     static let portraitSize = CGSize(width: 512, height: 512)
     static let posterSize = CGSize(width: 1024, height: 576)
     static let newsSize = CGSize(width: 1024, height: 576)
-    static let portraitFontRatio: CGFloat = 0.34
+    static let portraitInitialsRatio: CGFloat = 0.075
     static let posterTitleRatio: CGFloat = 0.085
     static let posterSubtitleRatio: CGFloat = 0.045
     static let newsHeadlineRatio: CGFloat = 0.072
@@ -197,32 +198,99 @@ private struct Failure: LocalizedError {
 
 // MARK: - Renderers
 
+/// A fighter in a guard stance, lit from behind. Initials on a gradient read as a broken
+/// image on a screen that is meant to show a person; a silhouette reads as a portrait, and
+/// it survives the circular crop the avatars apply.
 private func renderPortrait(name: String, id: String, to url: URL) throws {
     let size = Layout.portraitSize
     guard let context = makeContext(size) else { throw Failure("no context for \(id)") }
 
     let seed = stableHash(id)
     fillGradient(context, size: size, seed: seed)
-
-    // A faint corner wedge so the placeholders do not read as flat colour swatches.
-    context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.04))
-    context.move(to: CGPoint(x: 0, y: size.height))
-    context.addLine(to: CGPoint(x: size.width, y: size.height))
-    context.addLine(to: CGPoint(x: size.width, y: size.height * 0.62))
-    context.closePath()
-    context.fillPath()
+    drawSpotlight(context, size: size)
+    drawFighterSilhouette(context, size: size, seed: seed)
 
     draw(
         initials(for: name),
         in: context,
         size: size,
-        fontSize: size.height * Layout.portraitFontRatio,
-        weight: 0.4,
-        centerY: size.height * 0.5
+        fontSize: size.height * Layout.portraitInitialsRatio,
+        weight: 0.5,
+        centerY: size.height * 0.075,
+        alpha: 0.55
     )
 
     guard let image = context.makeImage() else { throw Failure("no image for \(id)") }
     try write(image, to: url)
+}
+
+/// A soft pool of light behind the head, so the silhouette has something to separate from.
+private func drawSpotlight(_ context: CGContext, size: CGSize) {
+    guard let gradient = CGGradient(
+        colorsSpace: CGColorSpaceCreateDeviceRGB(),
+        colors: [
+            CGColor(red: 1, green: 1, blue: 1, alpha: 0.18),
+            CGColor(red: 1, green: 1, blue: 1, alpha: 0),
+        ] as CFArray,
+        locations: [0, 1]
+    ) else { return }
+
+    let center = CGPoint(x: size.width * 0.5, y: size.height * 0.62)
+    context.drawRadialGradient(
+        gradient,
+        startCenter: center,
+        startRadius: 0,
+        endCenter: center,
+        endRadius: size.width * 0.52,
+        options: []
+    )
+}
+
+/// One of the combat-sport figures from SF Symbols, drawn as a lit silhouette. Hand-rolled
+/// shapes were tried first and read as a snowman: anatomy is exactly the kind of detail a
+/// system asset already gets right.
+/// Upright poses only. The floor work reads as a smudge once the avatars crop it to a circle.
+private let fighterPoses = [
+    "figure.boxing",
+    "figure.kickboxing",
+    "figure.martial.arts",
+]
+
+private func drawFighterSilhouette(_ context: CGContext, size: CGSize, seed: UInt64) {
+    let pose = fighterPoses[Int(seed >> 32) % fighterPoses.count]
+    guard let glyph = symbolImage(named: pose) else { return }
+
+    let target = size.height * 0.62
+    let aspect = CGFloat(glyph.width) / CGFloat(glyph.height)
+    let box = CGRect(
+        x: (size.width - target * aspect) / 2,
+        y: size.height * 0.13,
+        width: target * aspect,
+        height: target
+    )
+
+    // A pale copy behind the dark one reads as the rim light you get shooting into the
+    // arena lamps, and it keeps the figure off the background at avatar size.
+    context.saveGState()
+    context.setAlpha(0.22)
+    context.draw(glyph, in: box.insetBy(dx: -size.width * 0.012, dy: -size.height * 0.012))
+    context.restoreGState()
+
+    context.saveGState()
+    context.setAlpha(0.86)
+    context.setBlendMode(.multiply)
+    context.draw(glyph, in: box)
+    context.restoreGState()
+}
+
+/// SF Symbols ship as template images: black glyph, transparent elsewhere. Drawing one over
+/// the gradient keeps the shape and lets the blend mode decide whether it darkens or lifts.
+private func symbolImage(named name: String) -> CGImage? {
+    let configuration = NSImage.SymbolConfiguration(pointSize: 512, weight: .regular)
+    guard let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+        .withSymbolConfiguration(configuration) else { return nil }
+    var rect = CGRect(origin: .zero, size: symbol.size)
+    return symbol.cgImage(forProposedRect: &rect, context: nil, hints: nil)
 }
 
 private func renderPoster(title: String, subtitle: String, id: String, to url: URL) throws {
@@ -256,49 +324,115 @@ private func renderPoster(title: String, subtitle: String, id: String, to url: U
 /// Every article used to reuse its event poster, so a news feed of eight stories showed the
 /// same two images. Seeding on the article id gives each one its own composition.
 ///
-/// Deliberately text-free: this image stands in for a press photo, and the row already renders
-/// the kicker and headline as real text. Baking them into the bitmap too printed everything
-/// twice and made the feed look like a slide deck.
-private func renderNewsCard(id: String, to url: URL) throws {
+/// The headline is burned into the bitmap. A press agency card carries its own title, and
+/// without one an abstract gradient is indistinguishable from a failed image load.
+private func renderNewsCard(id: String, headline: String, to url: URL) throws {
     let size = Layout.newsSize
     guard let context = makeContext(size) else { throw Failure("no context for \(id)") }
 
     let seed = stableHash(id)
     fillGradient(context, size: size, seed: seed)
+    drawNewsMotif(context, size: size, seed: seed)
+    drawHeadlineScrim(context, size: size)
 
-    context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 0.22))
-    context.move(to: .zero)
-    context.addLine(to: CGPoint(x: size.width, y: 0))
-    context.addLine(to: CGPoint(x: size.width, y: size.height * 0.55))
-    context.addLine(to: CGPoint(x: 0, y: size.height * 0.78))
-    context.closePath()
-    context.fillPath()
-
-    // Two overlapping discs, placed from the seed, give each story a recognisable silhouette
-    // without any two articles colliding on the same composition.
-    let radius = size.height * 0.34
-    let centers = [
-        CGPoint(
-            x: size.width * (0.22 + CGFloat(seed % 17) / 60),
-            y: size.height * (0.34 + CGFloat((seed >> 8) % 13) / 55)
+    let inset = Layout.newsInset
+    let textBox = CGRect(
+        x: inset,
+        y: inset,
+        width: size.width - inset * 2,
+        height: size.height * 0.6
+    )
+    let headlineHeight = drawWrapped(
+        headline,
+        in: context,
+        box: textBox,
+        fontSize: size.height * Layout.newsHeadlineRatio,
+        weight: 0.4
+    )
+    drawWrapped(
+        "FIGHTDECK · REPORT",
+        in: context,
+        box: CGRect(
+            x: textBox.minX,
+            y: textBox.minY + headlineHeight + Layout.newsInset * 0.3,
+            width: textBox.width,
+            height: size.height * 0.1
         ),
-        CGPoint(
-            x: size.width * (0.58 + CGFloat((seed >> 16) % 19) / 70),
-            y: size.height * (0.52 + CGFloat((seed >> 24) % 11) / 50)
-        ),
-    ]
-    for (index, center) in centers.enumerated() {
-        context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: index == 0 ? 0.07 : 0.05))
-        context.fillEllipse(in: CGRect(
-            x: center.x - radius,
-            y: center.y - radius,
-            width: radius * 2,
-            height: radius * 2
-        ))
-    }
+        fontSize: size.height * Layout.newsKickerRatio,
+        weight: 0.6,
+        alpha: 0.75
+    )
 
     guard let image = context.makeImage() else { throw Failure("no image for \(id)") }
     try write(image, to: url)
+}
+
+/// Clips used to borrow the news art, so a thumbnail advertised a headline the video was not
+/// about. Same treatment, own title, own file.
+private func renderVideoCard(id: String, title: String, to url: URL) throws {
+    let size = Layout.newsSize
+    guard let context = makeContext(size) else { throw Failure("no context for \(id)") }
+
+    let seed = stableHash(id)
+    fillGradient(context, size: size, seed: seed)
+    drawNewsMotif(context, size: size, seed: seed)
+    drawHeadlineScrim(context, size: size)
+
+    let inset = Layout.newsInset
+    drawWrapped(
+        title,
+        in: context,
+        box: CGRect(
+            x: inset,
+            y: inset,
+            width: size.width * 0.62,
+            height: size.height * 0.5
+        ),
+        fontSize: size.height * Layout.newsHeadlineRatio,
+        weight: 0.4
+    )
+
+    guard let image = context.makeImage() else { throw Failure("no image for \(id)") }
+    try write(image, to: url)
+}
+
+/// An oversized, heavily faded glyph on the right. It gives each card a subject without
+/// pretending to be a photograph, and it stays out of the way of the headline on the left.
+private func drawNewsMotif(_ context: CGContext, size: CGSize, seed: UInt64) {
+    let motifs = ["trophy.fill", "figure.boxing", "bolt.fill", "flame.fill", "medal.fill"]
+    guard let glyph = symbolImage(named: motifs[Int(seed >> 40) % motifs.count]) else { return }
+
+    let target = size.height * 0.86
+    let aspect = CGFloat(glyph.width) / CGFloat(glyph.height)
+    context.saveGState()
+    context.setAlpha(0.10)
+    context.draw(glyph, in: CGRect(
+        x: size.width * 0.66,
+        y: size.height * 0.16,
+        width: target * aspect,
+        height: target
+    ))
+    context.restoreGState()
+}
+
+/// Headlines land on whatever the gradient happens to be doing underneath them, so they need
+/// their own floor to stay legible.
+private func drawHeadlineScrim(_ context: CGContext, size: CGSize) {
+    guard let gradient = CGGradient(
+        colorsSpace: CGColorSpaceCreateDeviceRGB(),
+        colors: [
+            CGColor(red: 0, green: 0, blue: 0, alpha: 0.78),
+            CGColor(red: 0, green: 0, blue: 0, alpha: 0),
+        ] as CFArray,
+        locations: [0, 1]
+    ) else { return }
+
+    context.drawLinearGradient(
+        gradient,
+        start: CGPoint(x: 0, y: 0),
+        end: CGPoint(x: 0, y: size.height * 0.82),
+        options: []
+    )
 }
 
 // MARK: - Entry point
@@ -316,6 +450,11 @@ private struct News: Decodable {
 private struct Events: Decodable {
     struct Event: Decodable { let id: String; let name: String; let venue: String; let date: String }
     let events: [Event]
+}
+
+private struct Media: Decodable {
+    struct Clip: Decodable { let id: String; let title: String }
+    let media: [Clip]
 }
 
 private let repoRoot = URL(fileURLWithPath: #filePath)
@@ -355,6 +494,16 @@ private let news = try JSONDecoder().decode(
 )
 for article in news.news {
     let url = datasetDir.appendingPathComponent("assets/news/\(article.id).jpg")
-    try renderNewsCard(id: article.id, to: url)
+    try renderNewsCard(id: article.id, headline: article.headline, to: url)
 }
+
+private let media = try JSONDecoder().decode(
+    Media.self,
+    from: Data(contentsOf: datasetDir.appendingPathComponent("media.json"))
+)
+for clip in media.media {
+    let url = datasetDir.appendingPathComponent("assets/video/\(clip.id).jpg")
+    try renderVideoCard(id: clip.id, title: clip.title, to: url)
+}
+print("  \(media.media.count) video posters")
 print("  \(news.news.count) news cards")

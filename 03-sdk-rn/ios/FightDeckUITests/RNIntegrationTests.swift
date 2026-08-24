@@ -1,99 +1,157 @@
+//
+// ScreenshotTour.swift
+// FightDeckUITests
+//
+// Created by FightDeck on 23.08.26.
+// Copyright © 2026 Paysafe. All rights reserved.
+//
+
 import XCTest
 
-final class RNIntegrationTests: XCTestCase {
-    private var app: XCUIApplication!
-
-    private enum TestId {
-        static let betslipAddFunds = "betslip-add-funds"
-        static let betslipEmpty = "betslip-empty"
-        static let depositReady = "deposit-ready"
-        static let depositBalance = "deposit-balance"
-    }
-
-    override func setUp() {
-        continueAfterFailure = false
-        app = XCUIApplication()
-    }
-
-    private func launch(skipPrewarm: Bool = false) {
-        app.launchArguments = skipPrewarm ? ["-SkipRNPrewarm"] : []
+final class ScreenshotTour: XCTestCase {
+    func testTour() {
+        let app = XCUIApplication()
+        app.launchEnvironment["FIGHTDECK_DATASET_ROOT"] = datasetRoot
         app.launch()
-    }
+        sleep(4)
+        shot("01-upcoming")
 
-    private func goToSlipTab() {
+        app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Freedom")).firstMatch.tap()
+        sleep(2)
+        shot("02-event")
+
+        let bout = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Topuria")).firstMatch
+        if bout.waitForExistence(timeout: 3) {
+            bout.tap()
+            sleep(2)
+            shot("03-bout")
+            app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "1.2")).firstMatch.tap()
+            sleep(1)
+            shot("04-bout-selected")
+            app.swipeUp()
+            sleep(1)
+            shot("05-tape")
+            app.navigationBars.buttons.firstMatch.tap()
+            sleep(1)
+        }
+
+        app.navigationBars.buttons.firstMatch.tap()
+        sleep(1)
+        app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "UFC 328")).firstMatch.tap()
+        sleep(2)
+        let longCountry = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Cortes")).firstMatch
+        if longCountry.waitForExistence(timeout: 5) {
+            longCountry.tap()
+            sleep(2)
+            app.swipeUp()
+            sleep(1)
+            shot("05b-tape-long-country")
+            app.navigationBars.buttons.firstMatch.tap()
+            sleep(1)
+        }
+        app.navigationBars.buttons.firstMatch.tap()
+        sleep(1)
+
+        // The tab bar minimises on scroll down; nudge it back before reaching for a tab.
+        app.swipeDown()
+        sleep(1)
         app.tabBars.buttons["Slip"].tap()
+        sleep(3)
+        shot("06-slip")
+
+        let stakeChip = app.buttons["€25"].firstMatch
+        if stakeChip.waitForExistence(timeout: 3) {
+            stakeChip.tap()
+            sleep(2)
+            shot("06b-slip-preset")
+        }
+
+        let amount = visibleTextField(in: app)
+        if amount.waitForExistence(timeout: 3) {
+            focus(amount, in: app)
+            shot("07-slip-keyboard")
+            let done = app.buttons["Done"].firstMatch
+            if done.waitForExistence(timeout: 2) {
+                done.tap()
+                sleep(1)
+            }
+        }
+
+        app.buttons["Add funds"].firstMatch.tap()
+        sleep(2)
+        shot("08-deposit")
+        let depositChip = app.buttons["€50"].firstMatch
+        if depositChip.waitForExistence(timeout: 3) {
+            depositChip.tap()
+            sleep(2)
+            shot("08b-deposit-preset")
+        }
+        let depositAmount = visibleTextField(in: app)
+        if depositAmount.waitForExistence(timeout: 3) {
+            focus(depositAmount, in: app)
+            depositAmount.typeText("0")
+            sleep(2)
+            shot("09-deposit-keyboard")
+            let done = app.buttons["Done"].firstMatch
+            if done.waitForExistence(timeout: 2) {
+                done.tap()
+                sleep(1)
+            }
+            app.buttons["Confirm deposit"].firstMatch.tap()
+            sleep(2)
+            shot("10-deposit-success")
+            app.buttons["Done"].firstMatch.tap()
+            sleep(2)
+        }
+
+        shot("11-slip-after-deposit")
+        app.buttons["Place bet"].firstMatch.tap()
+        sleep(2)
+        shot("12-bet-placed")
+
+        app.tabBars.buttons["Past"].tap()
+        sleep(3)
+        shot("13-past")
+        for _ in 0..<10 {
+            app.swipeUp()
+        }
+        sleep(2)
+        shot("14-past-scrolled")
     }
 
-    /// Matches React Native `testID` values exposed as accessibility identifiers.
-    private func element(identifier: String) -> XCUIElement {
-        app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", identifier)).firstMatch
+    private var datasetRoot: String {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("dataset")
+            .path
     }
 
-    /// Odds buttons only appear on the Upcoming tab. Pick one leg so the slip RN surface
-    /// shows the deposit card with an Add funds action.
-    private func addSelectionFromUpcoming() {
-        app.tabBars.buttons["Upcoming"].tap()
-        let event = app.staticTexts["UFC Freedom 250"]
-        XCTAssertTrue(event.waitForExistence(timeout: 15))
-        event.tap()
-        let odds = app.buttons["1.20"].firstMatch
-        XCTAssertTrue(odds.waitForExistence(timeout: 15))
-        odds.tap()
+    /// Tabs that have already been visited keep their fields in the hierarchy, so `firstMatch`
+    /// can hand back a search field from another screen.
+    private func visibleTextField(in app: XCUIApplication) -> XCUIElement {
+        app.textFields.allElementsBoundByIndex.first { $0.isHittable } ?? app.textFields.firstMatch
     }
 
-    private func waitForBetslipAddFunds(timeout: TimeInterval = 30) -> Bool {
-        element(identifier: TestId.betslipAddFunds).waitForExistence(timeout: timeout)
+    /// A React Native `TextInput` does not always take focus from a hit on the element's centre,
+    /// which for a labelled row lands on the label rather than the field.
+    private func focus(_ field: XCUIElement, in app: XCUIApplication) {
+        field.tap()
+        if app.keyboards.element.waitForExistence(timeout: 3) {
+            sleep(1)
+            return
+        }
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        _ = app.keyboards.element.waitForExistence(timeout: 3)
+        sleep(1)
     }
 
-    private func waitForDepositReady(timeout: TimeInterval = 30) -> Bool {
-        element(identifier: TestId.depositReady).waitForExistence(timeout: timeout)
-            || element(identifier: TestId.depositBalance).waitForExistence(timeout: timeout)
-    }
-
-    private func launchToDeposit(skipPrewarm: Bool) -> Int {
-        let start = Date()
-        launch(skipPrewarm: skipPrewarm)
-        addSelectionFromUpcoming()
-        goToSlipTab()
-        XCTAssertTrue(waitForBetslipAddFunds())
-        element(identifier: TestId.betslipAddFunds).tap()
-        let ready = waitForDepositReady()
-        let elapsed = Int(Date().timeIntervalSince(start) * 1000)
-        NSLog(
-            "[FightDeckBenchmark] mode=%@ firstSurfaceMs=%d ready=%@",
-            skipPrewarm ? "unprewarmed" : "prewarmed",
-            elapsed,
-            ready ? "true" : "false"
-        )
-        XCTAssertTrue(ready)
-        return elapsed
-    }
-
-    func testUnprewarmedFirstDepositSurface() throws {
-        _ = launchToDeposit(skipPrewarm: true)
-    }
-
-    func testPrewarmedFirstDepositSurface() throws {
-        _ = launchToDeposit(skipPrewarm: false)
-    }
-
-    func testDepositScreenIsReactNative() throws {
-        launch()
-        addSelectionFromUpcoming()
-        goToSlipTab()
-        XCTAssertTrue(waitForBetslipAddFunds())
-        element(identifier: TestId.betslipAddFunds).tap()
-        XCTAssertTrue(waitForDepositReady())
-    }
-
-    func testBetslipScreenIsReactNative() throws {
-        launch()
-        goToSlipTab()
-
-        XCTAssertTrue(
-            element(identifier: TestId.betslipEmpty).waitForExistence(timeout: 30)
-                || app.staticTexts["No selections yet"].waitForExistence(timeout: 1)
-                || app.buttons["Browse Events"].waitForExistence(timeout: 1)
-        )
+    private func shot(_ name: String) {
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }

@@ -29,7 +29,6 @@ final class AppState {
     var slip = BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
     var balance = Decimal(string: "500.00")!
     var betPlacedMessage: String?
-    var simulateNetworkFailure = false
 
     let repository: JSONFileRepository
     let fightCore: FightCore
@@ -61,7 +60,6 @@ final class AppState {
 
     func loadEvents() async {
         eventsState = .loading
-        repository.shouldFail = simulateNetworkFailure
         do {
             let events = try await repository.loadEvents()
             eventsState = events.isEmpty ? .empty : .loaded(events)
@@ -138,6 +136,7 @@ final class AppState {
         }
         slip = payload.toBetSlip()
         syncMode()
+        betPlacedMessage = nil
     }
 
     func placeBetFromSDK(message: String, slipJSON: String, balanceString: String) {

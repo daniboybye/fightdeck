@@ -72,7 +72,7 @@ jobs:
           # and a size number that cannot quietly change after the measurement.
           ./build-xcframework.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           name: rn-${{ matrix.module }}-xcframework
@@ -128,7 +128,7 @@ jobs:
         working-directory: 03-sdk-rn/sdks/${{ matrix.module }}
         run: ./build-aar.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           name: rn-${{ matrix.module }}-aar

@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Collect artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: ${{ inputs.sdk }}-*
           path: release-staging
@@ -97,7 +97,7 @@ jobs:
           echo "snippet-file=$SNIPPET_FILE" >> "$GITHUB_OUTPUT"
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: sdk-v${{ inputs.version }}
           name: SDK ${{ inputs.sdk }} v${{ inputs.version }}

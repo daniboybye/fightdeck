@@ -48,7 +48,7 @@ jobs:
         working-directory: 01-core-swift/sdks/core
         run: ./build-xcframework.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           name: swift-core-xcframework
@@ -87,10 +87,20 @@ jobs:
           distribution: temurin
           java-version: ${{ env.PINNED_JDK }}
 
-      - uses: swift-actions/setup-swift@v2
+      # swiftly rather than a marketplace action: the toolchain version this repository
+      # pins is newer than any action's hard-coded table, and swiftly is what swift.org
+      # documents. It also keeps the job off a Node 20 action.
+      - name: Install Swift ${{ env.PINNED_SWIFT }}
         if: steps.guard.outputs.exists == 'true'
-        with:
-          swift-version: ${{ env.PINNED_SWIFT }}
+        run: |
+          curl -fsSLO "https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz"
+          tar zxf "swiftly-$(uname -m).tar.gz"
+          ./swiftly init --assume-yes --quiet-shell-followup --skip-install
+          # shellcheck source=/dev/null
+          . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+          swiftly install "$PINNED_SWIFT" --use --assume-yes
+          echo "${SWIFTLY_BIN_DIR:-$HOME/.local/share/swiftly/bin}" >> "$GITHUB_PATH"
+          swift --version
 
       - name: Install the Swift SDK for Android
         if: steps.guard.outputs.exists == 'true'
@@ -117,7 +127,7 @@ jobs:
           # Android: ART is not a JVM and has no Panama. JNI mode is the only option here.
           ./build-aar.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           name: swift-core-aar

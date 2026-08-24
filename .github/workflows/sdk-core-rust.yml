@@ -44,7 +44,7 @@ jobs:
         working-directory: 02-core-rust/sdks/core
         run: ./build-xcframework.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           name: rust-core-xcframework
@@ -97,7 +97,7 @@ jobs:
         working-directory: 02-core-rust/sdks/core
         run: ./build-aar.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           name: rust-core-aar

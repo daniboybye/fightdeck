@@ -32,7 +32,7 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         working-directory: 01-core-swift/sdks/core
         run: swift test --parallel
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true' && always()
         with:
           name: contract-swift
@@ -65,7 +65,7 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         working-directory: 02-core-rust/sdks/core
         run: cargo test --release
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true' && always()
         with:
           name: contract-rust
@@ -99,7 +99,7 @@ jobs:
     if: always()
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: contract-*
           path: tools/out

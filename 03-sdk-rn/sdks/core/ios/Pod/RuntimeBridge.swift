@@ -45,4 +45,5 @@ final class RuntimeBridge: NSObject {
 
 extension Notification.Name {
     static let fightdeckFeatureResult = Notification.Name("FightDeckFeatureResult")
+    static let fightdeckSurfaceLayout = Notification.Name("FightDeckSurfaceLayout")
 }

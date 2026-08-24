@@ -46,7 +46,7 @@
 - (void)viewDidLoad
 {
   [super viewDidLoad];
-  self.view.backgroundColor = [UIColor colorWithRed:0.043 green:0.055 blue:0.078 alpha:1.0];
+  self.view.backgroundColor = UIColor.systemGroupedBackgroundColor;
   if (self.surfaceView != nil) {
     self.surfaceView.frame = self.view.bounds;
     self.surfaceView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -113,6 +113,7 @@
 
   FightDeckRNSurfaceController *existing = host->_controllers[moduleName];
   if (existing != nil) {
+    [self updateProperties:properties forModuleName:moduleName];
     return existing;
   }
 
@@ -126,7 +127,19 @@
   FightDeckRNSurfaceController *controller = [FightDeckRNSurfaceController new];
   controller.surfaceView = surfaceView;
   host->_controllers[moduleName] = controller;
+  [self updateProperties:properties forModuleName:moduleName];
   return controller;
+}
+
++ (void)updateProperties:(NSDictionary *)properties forModuleName:(NSString *)moduleName
+{
+  FightDeckRNSurfaceController *controller = [self shared]->_controllers[moduleName];
+  if (controller == nil || controller.surfaceView == nil) {
+    return;
+  }
+  if ([controller.surfaceView isKindOfClass:[RCTSurfaceHostingProxyRootView class]]) {
+    ((RCTSurfaceHostingProxyRootView *)controller.surfaceView).appProperties = properties ?: @{};
+  }
 }
 
 + (void)destroySurface:(NSString *)moduleName

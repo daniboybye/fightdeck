@@ -8,19 +8,37 @@ public struct DepositParams: Sendable {
     public let locale: String
     public let themeJSON: String
     public let currentBalance: Decimal
+    public let safeAreaTop: CGFloat
+    public let safeAreaBottom: CGFloat
+    public let keyboardBottomInset: CGFloat
+    public let chromeBackground: String
+    public let textInputActive: Bool
+    public let layoutStamp: Double
 
     public init(
         accessToken: String,
         environment: String,
         locale: String,
         themeJSON: String,
-        currentBalance: Decimal
+        currentBalance: Decimal,
+        safeAreaTop: CGFloat = 0,
+        safeAreaBottom: CGFloat = 0,
+        keyboardBottomInset: CGFloat = 0,
+        chromeBackground: String = "#0B0E14",
+        textInputActive: Bool = false,
+        layoutStamp: Double = 0
     ) {
         self.accessToken = accessToken
         self.environment = environment
         self.locale = locale
         self.themeJSON = themeJSON
         self.currentBalance = currentBalance
+        self.safeAreaTop = safeAreaTop
+        self.safeAreaBottom = safeAreaBottom
+        self.keyboardBottomInset = keyboardBottomInset
+        self.chromeBackground = chromeBackground
+        self.textInputActive = textInputActive
+        self.layoutStamp = layoutStamp
     }
 }
 
@@ -38,6 +56,7 @@ public protocol DepositHosting: AnyObject {
         params: DepositParams,
         onResult: @escaping @Sendable (DepositResult) -> Void
     ) -> UIViewController
+    func update(params: DepositParams)
 }
 
 public struct BetslipParams: Sendable {
@@ -48,6 +67,15 @@ public struct BetslipParams: Sendable {
     public let balance: Decimal
     public let slipJSON: String
     public let eventsJSON: String
+    /// Set by the host, not the surface: a property update restarts the React tree, so state
+    /// the SDK kept locally would not survive the very update that announces it.
+    public let betPlacedMessage: String
+    public let safeAreaTop: CGFloat
+    public let safeAreaBottom: CGFloat
+    public let keyboardBottomInset: CGFloat
+    public let chromeBackground: String
+    public let textInputActive: Bool
+    public let layoutStamp: Double
 
     public init(
         accessToken: String,
@@ -56,7 +84,14 @@ public struct BetslipParams: Sendable {
         themeJSON: String,
         balance: Decimal,
         slipJSON: String,
-        eventsJSON: String
+        eventsJSON: String,
+        betPlacedMessage: String = "",
+        safeAreaTop: CGFloat = 0,
+        safeAreaBottom: CGFloat = 0,
+        keyboardBottomInset: CGFloat = 0,
+        chromeBackground: String = "#0B0E14",
+        textInputActive: Bool = false,
+        layoutStamp: Double = 0
     ) {
         self.accessToken = accessToken
         self.environment = environment
@@ -65,6 +100,13 @@ public struct BetslipParams: Sendable {
         self.balance = balance
         self.slipJSON = slipJSON
         self.eventsJSON = eventsJSON
+        self.betPlacedMessage = betPlacedMessage
+        self.safeAreaTop = safeAreaTop
+        self.safeAreaBottom = safeAreaBottom
+        self.keyboardBottomInset = keyboardBottomInset
+        self.chromeBackground = chromeBackground
+        self.textInputActive = textInputActive
+        self.layoutStamp = layoutStamp
     }
 }
 
@@ -83,4 +125,5 @@ public protocol BetslipHosting: AnyObject {
         params: BetslipParams,
         onResult: @escaping @Sendable (BetslipResult) -> Void
     ) -> UIViewController
+    func update(params: BetslipParams)
 }

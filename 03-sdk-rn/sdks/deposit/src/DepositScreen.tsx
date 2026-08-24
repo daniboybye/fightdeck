@@ -1,26 +1,30 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   BackHandler,
-  InputAccessoryView,
   Keyboard,
   Platform,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { notifyNative } from '../../core/src/runtime/RuntimeRegistry';
 import { formatCurrency, money, parseMoney } from '../../core/src/fightcore/money';
+import { PinnedActionBar } from '../../core/src/ui/PinnedActionBar';
+import {
+  MIN_TAP_TARGET,
+  SECONDARY_ACTION_PADDING,
+  SUCCESS_BUTTON_HEIGHT,
+  actionBarScrollInset,
+  useSurfaceLayout,
+} from '../../core/src/ui/layout';
 import { parseThemeJSON } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
 
 const MIN_DEPOSIT = parseMoney('10.00');
 const MAX_DEPOSIT = parseMoney('2000.00');
-const AMOUNT_INPUT_ID = 'depositAmountInput';
 
 const METHODS = [
   { id: 'card', title: 'Card', fee: 'Instant · 0% fee', rate: 0 },
@@ -29,6 +33,12 @@ const METHODS = [
 ];
 
 export function DepositScreen(props: Record<string, unknown>) {
+  return <DepositScreenContent {...props} />;
+}
+
+function DepositScreenContent(props: Record<string, unknown>) {
+  const layoutFrame = useSurfaceLayout(props, 'DepositFeature');
+
   const theme = useMemo(
     () => parseThemeJSON(String(props.themeJSON ?? '{}')),
     [props.themeJSON],
@@ -37,8 +47,9 @@ export function DepositScreen(props: Record<string, unknown>) {
   const [amountText, setAmountText] = useState('');
   const [methodId, setMethodId] = useState('card');
   const [didSucceed, setDidSucceed] = useState(false);
+  const [amountFocused, setAmountFocused] = useState(false);
 
-  const styles = makeStyles(theme);
+  const styles = makeStyles(theme, layoutFrame.chromeBackground);
   const amount = parseMoney(amountText || '0');
   const method = METHODS.find((m) => m.id === methodId) ?? METHODS[0];
   const fee = money(amount.times(method.rate));
@@ -77,114 +88,130 @@ export function DepositScreen(props: Record<string, unknown>) {
 
   if (didSucceed) {
     return (
-      <SafeAreaView style={styles.root} testID="deposit-success">
-        <View style={styles.successContent}>
+      <View style={[styles.root, styles.successRoot]} testID="deposit-success">
+        <View style={[styles.successContent, { paddingTop: layoutFrame.safeAreaTop }]}>
           <Text style={styles.successIcon}>✓</Text>
           <Text style={styles.title}>Deposit successful</Text>
           <Text style={styles.secondary}>
             New balance: {formatCurrency(money(balance.plus(amount)))}
           </Text>
-          <Pressable style={styles.primaryButton} onPress={done}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Done"
+            style={({ pressed }) => [styles.doneButton, pressed && styles.pressed]}
+            onPress={done}
+          >
             <Text style={styles.primaryLabel}>Done</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  return (
-    <SafeAreaView
-      style={styles.root}
-      testID={TestIds.depositReady}
-      accessible
-      accessibilityLabel="Deposit"
-    >
-      <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Text style={styles.sectionTitle}>Amount</Text>
-          <Text
-            testID={TestIds.depositBalance}
-            accessibilityLabel="Balance"
-            style={styles.secondary}
-          >
-            Balance: {formatCurrency(balance)}
-          </Text>
-          <TextInput
-            nativeID={AMOUNT_INPUT_ID}
-            inputAccessoryViewID={Platform.OS === 'ios' ? AMOUNT_INPUT_ID : undefined}
-            style={styles.amountInput}
-            keyboardType="decimal-pad"
-            returnKeyType="done"
-            blurOnSubmit
-            onSubmitEditing={dismissKeyboard}
-            placeholder="€0.00"
-            placeholderTextColor={theme.colors.textSecondary}
-            value={amountText}
-            onChangeText={setAmountText}
-          />
-          {amountError ? <Text style={styles.error}>{amountError}</Text> : null}
-          <View style={styles.chipRow}>
-            {[10, 25, 50, 100].map((chip) => (
-              <Pressable key={chip} style={styles.chip} onPress={() => setAmountText(String(chip))}>
-                <Text style={styles.chipLabel}>€{chip}</Text>
-              </Pressable>
-            ))}
-          </View>
+  const scrollInset = actionBarScrollInset(
+    layoutFrame.safeAreaBottom,
+    layoutFrame.keyboardBottomInset,
+  );
+  const confirmDisabled = amountError != null || amountText.length === 0;
 
-          <Text style={styles.sectionTitle}>Method</Text>
-          {METHODS.map((item) => (
+  return (
+    // No `accessible` on this container: it would collapse the whole screen into a single
+    // accessibility element and hide the amount field, the presets and the action bar from
+    // VoiceOver — and from anything else driving the app through the accessibility tree.
+    <View style={styles.root} testID={TestIds.depositReady}>
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: layoutFrame.safeAreaTop + (theme.spacing.lg ?? 16), paddingBottom: scrollInset },
+        ]}
+        // The host hands the surface the area under the navigation bar and tells us how deep
+        // it is; letting UIKit guess as well would inset the content twice.
+        contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      >
+        <Text style={styles.sectionTitle}>Amount</Text>
+        <Text
+          testID={TestIds.depositBalance}
+          accessibilityLabel="Balance"
+          style={styles.secondary}
+        >
+          Balance: {formatCurrency(balance)}
+        </Text>
+        <TextInput
+          style={styles.amountInput}
+          testID="deposit-amount"
+          // No returnKeyType: a decimal pad has no return key, so React Native answers one
+          // by hanging its own Done toolbar off the keyboard — which lands on top of the
+          // action bar. Done lives in the bar instead.
+          keyboardType="decimal-pad"
+          placeholder="€0.00"
+          placeholderTextColor={theme.colors.textSecondary}
+          value={amountText}
+          onPressIn={() => setAmountFocused(true)}
+          onFocus={() => setAmountFocused(true)}
+          onBlur={() => setAmountFocused(false)}
+          onChangeText={setAmountText}
+        />
+        {amountError ? <Text style={styles.error}>{amountError}</Text> : null}
+        <View style={styles.chipRow}>
+          {[10, 25, 50, 100].map((chip) => (
             <Pressable
-              key={item.id}
-              style={[styles.methodRow, methodId === item.id && styles.methodSelected]}
-              onPress={() => setMethodId(item.id)}
+              key={chip}
+              accessibilityRole="button"
+              accessibilityLabel={`€${chip}`}
+              style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+              onPress={() => setAmountText(String(chip))}
             >
-              <Text style={styles.methodRadio}>{methodId === item.id ? '◉' : '○'}</Text>
-              <View style={styles.flex}>
-                <Text style={styles.body}>{item.title}</Text>
-                <Text style={styles.secondary}>{item.fee}</Text>
-              </View>
+              <Text style={styles.chipLabel}>€{chip}</Text>
             </Pressable>
           ))}
+        </View>
 
-          <Text style={styles.sectionTitle}>Summary</Text>
-          <View style={styles.summary}>
-            <SummaryRow label="Amount" value={formatCurrency(amount)} styles={styles} />
-            <SummaryRow label="Method" value={method.title} styles={styles} />
-            <SummaryRow label="Fee" value={formatCurrency(fee)} styles={styles} />
-            <SummaryRow label="Total" value={formatCurrency(total)} styles={styles} />
-            <SummaryRow
-              label="New balance"
-              value={formatCurrency(money(balance.plus(amount)))}
-              styles={styles}
-            />
-          </View>
-
+        <Text style={styles.sectionTitle}>Method</Text>
+        {METHODS.map((item) => (
           <Pressable
-            style={[
-              styles.primaryButton,
-              (amountError != null || amountText.length === 0) && styles.disabled,
+            key={item.id}
+            style={({ pressed }) => [
+              styles.methodRow,
+              methodId === item.id && styles.methodSelected,
+              pressed && styles.pressed,
             ]}
-            disabled={amountError != null || amountText.length === 0}
-            onPress={confirmDeposit}
+            onPress={() => setMethodId(item.id)}
           >
-            <Text style={styles.primaryLabel}>Confirm deposit</Text>
+            <Text style={styles.methodRadio}>{methodId === item.id ? '◉' : '○'}</Text>
+            <View style={styles.flex}>
+              <Text style={styles.body}>{item.title}</Text>
+              <Text style={styles.secondary}>{item.fee}</Text>
+            </View>
           </Pressable>
-        </ScrollView>
-      </TouchableWithoutFeedback>
-      {Platform.OS === 'ios' ? (
-        <InputAccessoryView nativeID={AMOUNT_INPUT_ID}>
-          <View style={styles.accessoryBar}>
-            <Pressable onPress={dismissKeyboard} hitSlop={8}>
-              <Text style={styles.accessoryDone}>Done</Text>
-            </Pressable>
-          </View>
-        </InputAccessoryView>
-      ) : null}
-    </SafeAreaView>
+        ))}
+
+        <Text style={styles.sectionTitle}>Summary</Text>
+        <View style={styles.summary}>
+          <SummaryRow label="Amount" value={formatCurrency(amount)} styles={styles} />
+          <SummaryRow label="Method" value={method.title} styles={styles} />
+          <SummaryRow label="Fee" value={formatCurrency(fee)} styles={styles} />
+          <SummaryRow label="Total" value={formatCurrency(total)} styles={styles} />
+          <SummaryRow
+            label="New balance"
+            value={formatCurrency(money(balance.plus(amount)))}
+            styles={styles}
+          />
+        </View>
+      </ScrollView>
+      <PinnedActionBar
+        theme={theme}
+        primaryTitle="Confirm deposit"
+        safeAreaBottom={layoutFrame.safeAreaBottom}
+        keyboardBottomInset={layoutFrame.keyboardBottomInset}
+        primaryDisabled={confirmDisabled}
+        showDone={amountFocused || layoutFrame.textInputActive || layoutFrame.keyboardBottomInset > 0}
+        onDonePress={dismissKeyboard}
+        onPrimaryPress={confirmDeposit}
+      />
+    </View>
   );
 }
 
@@ -205,19 +232,20 @@ function SummaryRow({
   );
 }
 
-function makeStyles(theme: ReturnType<typeof parseThemeJSON>) {
+function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: string) {
   const c = theme.colors;
   const s = theme.spacing;
   const r = theme.radius;
+  const pageBackground = chromeBackground || c.background || '#0B0E14';
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: c.background ?? '#0B0E14' },
+    root: { flex: 1, backgroundColor: pageBackground },
+    successRoot: { flex: 1 },
     flex: { flex: 1 },
-    content: { padding: s.lg ?? 16, gap: s.lg ?? 16, paddingBottom: s.xl ?? 24 },
+    content: { paddingHorizontal: s.lg ?? 16, paddingBottom: s.lg ?? 16, gap: s.lg ?? 16 },
+    // Sentence case, not caps: this is what a SwiftUI `Section("Amount")` header looks like.
     sectionTitle: {
       color: c.textSecondary ?? '#9AA5B8',
-      fontSize: theme.fontSize.caption ?? 12,
-      fontWeight: '600',
-      textTransform: 'uppercase',
+      fontSize: theme.fontSize.callout ?? 17,
     },
     title: { color: c.textPrimary ?? '#F5F7FA', fontSize: theme.fontSize.title ?? 22, fontWeight: '700' },
     body: { color: c.textPrimary ?? '#F5F7FA', fontSize: theme.fontSize.body ?? 15 },
@@ -241,10 +269,12 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>) {
     },
     chipRow: { flexDirection: 'row', gap: s.sm ?? 8 },
     chip: {
-      paddingHorizontal: s.lg ?? 16,
-      paddingVertical: s.sm ?? 8,
+      flex: 1,
+      height: MIN_TAP_TARGET,
       borderRadius: r.full ?? 999,
       backgroundColor: c.surfaceElevated ?? '#1C2230',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     chipLabel: { color: c.accent ?? '#E8B33C' },
     methodRow: {
@@ -264,28 +294,15 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>) {
       borderRadius: r.lg ?? 16,
     },
     summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    primaryButton: {
-      minHeight: 52,
-      borderRadius: r.md ?? 12,
+    doneButton: {
+      height: SUCCESS_BUTTON_HEIGHT,
+      paddingHorizontal: SECONDARY_ACTION_PADDING,
+      borderRadius: SUCCESS_BUTTON_HEIGHT / 2,
       backgroundColor: c.accent ?? '#E8B33C',
       alignItems: 'center',
       justifyContent: 'center',
     },
     primaryLabel: { color: c.onAccent ?? '#0B0E14', fontWeight: '700', fontSize: theme.fontSize.callout ?? 17 },
-    disabled: { opacity: 0.4 },
-    accessoryBar: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      paddingHorizontal: s.lg ?? 16,
-      paddingVertical: s.sm ?? 8,
-      backgroundColor: c.surfaceElevated ?? '#1C2230',
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: c.border ?? '#232A38',
-    },
-    accessoryDone: {
-      color: c.accent ?? '#E8B33C',
-      fontWeight: '600',
-      fontSize: theme.fontSize.callout ?? 17,
-    },
+    pressed: { opacity: 0.85 },
   });
 }

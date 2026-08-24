@@ -25,4 +25,8 @@ enum RNHostEngine {
         controllers.removeValue(forKey: name)
         RNHostEngineObjC.destroySurface(name: name)
     }
+
+    static func updateProperties(moduleName: String, properties: [String: Any]) {
+        RNHostEngineObjC.updateProperties(properties, forModuleName: moduleName)
+    }
 }

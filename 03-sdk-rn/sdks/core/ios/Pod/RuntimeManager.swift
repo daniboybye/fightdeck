@@ -51,6 +51,11 @@ public final class FightDeckRNRuntime {
         return FightDeckRNHost.makeViewController(withModuleName: module, properties: properties)
     }
 
+    public func updateProperties(feature: String, properties: [String: Any]) {
+        let module = featureModules[feature] ?? feature
+        FightDeckRNHost.updateProperties(properties, forModuleName: module)
+    }
+
     public func destroyFeature(_ name: String) {
         registeredFeatures.remove(name)
         RuntimeBridge.shared.destroyFeature(name: name)

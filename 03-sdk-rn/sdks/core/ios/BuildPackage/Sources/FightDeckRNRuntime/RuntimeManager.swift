@@ -55,6 +55,10 @@ public final class FightDeckRNRuntime {
         )
     }
 
+    public func updateProperties(feature: String, properties: [String: Any]) {
+        RuntimeBridge.shared.updateProperties(feature: feature, properties: properties)
+    }
+
     public func destroyFeature(_ name: String) {
         registeredFeatures.remove(name)
         RuntimeBridge.shared.destroyFeature(name: name)

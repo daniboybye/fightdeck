@@ -14,6 +14,10 @@ final class RNHostEngineObjC: NSObject {
     static func destroySurface(name: String) {
         RNHostEngineImpl.shared.destroySurface(name: name)
     }
+
+    static func updateProperties(_ properties: [String: Any], forModuleName moduleName: String) {
+        RNHostEngineImpl.shared.updateProperties(properties, forModuleName: moduleName)
+    }
 }
 
 @MainActor
@@ -37,6 +41,11 @@ final class RNHostEngineImpl {
 
     func destroySurface(name: String) {
         surfaces.removeValue(forKey: name)
+    }
+
+    func updateProperties(_ properties: [String: Any], forModuleName moduleName: String) {
+        _ = properties
+        _ = moduleName
     }
 }
 

@@ -8,7 +8,7 @@ Two host apps (SwiftUI + Compose) sharing one **Swift FightCore** package. On iO
 - **`@Observable` slip state** in `BetSlipStore`, tracked by SwiftUI on iOS. The Android headline is getting the same object to drive Compose recomposition (Skip route) or manual observation (swift-java route).
 - **Ports across the language boundary** — `PreferencesStore` is declared in Swift, implemented in Kotlin over `SharedPreferences`.
 - **Typed throws** — `FightRepository` uses `async throws(FightCoreError)` in Swift; the Android binding should surface Kotlin `suspend` with a typed domain error.
-- **Honest failure mode** — the cross-compile needs an open-source toolchain, which a Mac with Xcode does not have, and the JNI bindings are unwritten. The Compose app builds with a **clearly marked stub** rather than pretending the Swift `.so` is linked.
+- **Honest failure mode** — the cross-compile needs an open-source toolchain installed beside Xcode's, and the JNI bindings are unwritten. The Compose app builds with a **clearly marked stub** rather than pretending the Swift `.so` is linked.
 
 ## Build commands
 
@@ -18,7 +18,7 @@ Two host apps (SwiftUI + Compose) sharing one **Swift FightCore** package. On iO
 cd 01-core-swift/sdks/core
 swift test                                    # 72 golden fixture cases
 ./build-xcframework.sh                        # → out/FightCore.xcframework.zip
-./build-aar.sh                                # → out/fightcore.aar (see Android section)
+swiftly run ./build-aar.sh +6.3.3             # → out/fightcore.aar (see Android section)
 ```
 
 ### iOS host
@@ -86,13 +86,13 @@ Built with Apple Swift 6.3.3 / Xcode 26.6 for `arm64-apple-ios`, `arm64-apple-io
 
 ### Route 1 — Bare Swift SDK + swift-java
 
-The cross-compile works, and where it runs decides whether it works at all.
+The cross-compile works, and which Swift runs it decides whether it works at all.
 
 | Step | Result |
 | --- | --- |
 | Install `swift-6.3.3-RELEASE_android` SDK | ✅ `swift sdk install` with the published checksum, then `setup-android-sdk.sh` against NDK r27d |
 | `swift build --swift-sdk aarch64-unknown-linux-android28` | ✅ On an **open-source** toolchain — ❌ on Xcode's |
-| `./build-aar.sh` | ✅ `fightcore.aar` with both ABIs, built by `sdk-core-swift.yml` on every dispatch |
+| `./build-aar.sh` | ✅ `fightcore.aar` with both ABIs, on a Mac in ten seconds and in `sdk-core-swift.yml` on every dispatch |
 
 **The failure worth knowing about.** On a Mac whose `swift` is Xcode's, the same command dies at the first import:
 
@@ -106,7 +106,7 @@ The SDK's prebuilt Foundation was compiled by the open-source Swift 6.3.3 toolch
 
 > using a cross-compilation Swift SDK requires using an open-source toolchain and for the Swift SDK version to match exactly.
 
-So the toolchain a developer already has on a Mac is the one that cannot do this. CI installs the open-source build with `swiftly` and the same script succeeds unchanged.
+The constraint is the toolchain, not the operating system: swift.org supports macOS as a host, and `swiftly install 6.3.3` puts the open-source build alongside Xcode's without touching the `swift` in `PATH`. Prefixed with `swiftly run … +6.3.3`, the same script that CI runs produces the same 51 MB AAR here — 5 seconds for one ABI, 10 for both plus packaging, against 97 seconds for the Ubuntu job. What a developer needs is not a Linux machine but a second Swift with the same version number as the one they already have, which is its own kind of trap.
 
 ### Measured `.so` / `.aar` sizes
 
@@ -156,9 +156,9 @@ We did not confirm whether future swift-java tooling adds a debugger; as of Swif
 ## Rough edges hit
 
 1. **Two Swifts with the same version number** — Apple Xcode 6.3.3 ≠ open-source 6.3.3-RELEASE for Android SDK module compatibility.
-2. **NDK version drift** — Spec pins r27d; local install is r27.1. Setup script accepted it; r29 compatibility unconfirmed.
+2. **NDK version drift** — Spec pins r27d, which builds both ABIs cleanly; r29 compatibility unconfirmed.
 3. **swift-java pre-1.0** — Not installed; JNI packaging untested.
-4. **Skip not installed** — Route 2 fallback unavailable without `skipstone` 1.9.6.
+4. **Route 2 never exercised here** — `skipstone` 1.9.6 is installed for approach 04, but the `--native-model` export was not attempted for this core.
 5. **`@Observable` + Observation on Android** — Requires Skip bridge or hand-rolled `StateFlow` glue; neither is wired yet.
 6. **XCFramework from SPM** — No linked `.dylib` from `swift build` alone; script uses `libtool -static` on `.o` files, then `xcodebuild -create-xcframework`.
 7. **Android Gradle OOM** — First `./gradlew` failed on dex merge; fixed by copying `gradle.properties` heap settings from `00-native`.
@@ -169,7 +169,7 @@ We did not confirm whether future swift-java tooling adds a debugger; as of Swif
 
 None blocking. One observation:
 
-- `versions.lock.toml` pins NDK `27.3.13750724`; CI Ubuntu runners may have it preinstalled. Local macOS Android SDK had `27.1.12297006` only. The Swift SDK setup script accepted it; whether r27.1 vs r27d affects Foundation cross-compilation is untested.
+- `versions.lock.toml` pins NDK `27.3.13750724`, which both the Ubuntu runner and a local Android SDK install provide. Whether an older r27.1 affects Foundation cross-compilation was never tested, because nothing needed it.
 
 ---
 

@@ -24,9 +24,11 @@ copy_swift_runtime() {
     local arch="$1"
     local dest="$2"
     local runtime readelf
-    # `|| true`: one of the two roots is always absent, and find reports that as failure,
-    # which pipefail would otherwise turn into a silent exit.
+    # SwiftPM keeps installed Swift SDKs under Library on macOS and under ~/.swiftpm or
+    # ~/.config on Linux, so all three roots are searched. `|| true`: the absent ones make
+    # find exit non-zero, which pipefail would otherwise turn into a silent exit.
     runtime="$(find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
+        "$HOME/Library/org.swift.swiftpm/swift-sdks" \
         -name libswiftCore.so -path "*${arch}*" 2>/dev/null | head -1 || true)"
     if [[ -z "$runtime" ]]; then
         echo "ERROR: no Swift runtime for $arch in the installed Swift SDK bundle" >&2

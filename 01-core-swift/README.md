@@ -46,7 +46,7 @@ cd 01-core-swift/android
 ./gradlew :app:assembleDebug
 ```
 
-**The Android app does not load cross-compiled Swift today.** See [Android: what worked and what didn't](#android-what-worked-and-what-didnt).
+**The Android app does not load the cross-compiled Swift today**, though the AAR now builds: the app links a Kotlin stub because the JNI bindings between Kotlin and the Swift `.so` are not written. See [Android: what worked and what didn't](#android-what-worked-and-what-didnt).
 
 ---
 
@@ -84,17 +84,17 @@ Built with Apple Swift 6.3.3 / Xcode 26.6 for `arm64-apple-ios`, `arm64-apple-io
 
 ## Android: what worked and what didn't
 
-### Route 1 — Bare Swift SDK + swift-java (attempted)
+### Route 1 — Bare Swift SDK + swift-java
+
+The cross-compile works, and where it runs decides whether it works at all.
 
 | Step | Result |
 | --- | --- |
-| Install `swift-6.3.3-RELEASE_android` SDK | ✅ Downloaded and installed |
-| NDK setup (`setup-android-sdk.sh`) | ✅ Using local NDK **27.1.12297006** (pinned spec asks r27d `27.3.13750724`; r29 unconfirmed) |
-| `swift build --swift-sdk aarch64-unknown-linux-android28` | ❌ **Failed** |
-| `swift-java jextract --mode=jni` | ❌ Not reached — `jextract` not on PATH; swift-java 0.4.2 not installed |
-| `./build-aar.sh` | ❌ Exits at cross-compile step |
+| Install `swift-6.3.3-RELEASE_android` SDK | ✅ `swift sdk install` with the published checksum, then `setup-android-sdk.sh` against NDK r27d |
+| `swift build --swift-sdk aarch64-unknown-linux-android28` | ✅ On an **open-source** toolchain — ❌ on Xcode's |
+| `./build-aar.sh` | ✅ `fightcore.aar` with both ABIs, built by `sdk-core-swift.yml` on every dispatch |
 
-**Precise failure (reproducible):**
+**The failure worth knowing about.** On a Mac whose `swift` is Xcode's, the same command dies at the first import:
 
 ```
 BetSlipStore.swift:9:8: error: compiled module was created by an older version of the compiler;
@@ -102,29 +102,33 @@ rebuild 'Foundation' and try again:
 .../swift-6.3.3-RELEASE_android.artifactbundle/.../Foundation.swiftmodule/aarch64-unknown-linux-android.swiftmodule
 ```
 
-**Root cause:** The Swift SDK for Android's prebuilt Foundation module was compiled with the **open-source** Swift 6.3.3 toolchain. This machine runs **Apple's Xcode Swift 6.3.3** (`swiftlang-6.3.3.1.3`). Same version number, different compiler build — the module format is incompatible. [Swift.org's getting-started guide](https://www.swift.org/documentation/articles/swift-sdk-for-android-getting-started.html) explicitly requires the open-source toolchain:
+The SDK's prebuilt Foundation was compiled by the open-source Swift 6.3.3 toolchain; Xcode ships `swiftlang-6.3.3.1.3`. Same version number, different compiler build, incompatible module format. [Swift.org's guide](https://www.swift.org/documentation/articles/swift-sdk-for-android-getting-started.html) says so outright:
 
 > using a cross-compilation Swift SDK requires using an open-source toolchain and for the Swift SDK version to match exactly.
 
-**Fix (not applied here — 1.5 GB download):**
-
-```bash
-# Install open-source Swift 6.3.3 (NOT Xcode's swift)
-curl -fLO https://download.swift.org/swift-6.3.3-release/xcode/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE-osx.pkg
-sudo installer -pkg swift-6.3.3-RELEASE-osx.pkg -target /
-export PATH="/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin:$PATH"
-swift --version   # must show swift-6.3.3-RELEASE, not swiftlang-6.3.3.1.3
-```
-
-Then re-run `./build-aar.sh`. Expected `.so` sizes from Swift.org/blog estimates: **~4–8 MB per ABI** minimal, **~15 MB** with Foundation + ICU.
-
-### Route 2 — Skip `--native-model` (not attempted)
-
-`skip` CLI is **not installed** on this machine. Skip would provide `skip export` → `.aar`, transparent `@Observable` → Compose tracking, and `async` → `suspend`. Documented as fallback in the talk spec; blocked on toolchain install, not on conceptual issues.
+So the toolchain a developer already has on a Mac is the one that cannot do this. CI installs the open-source build with `swiftly` and the same script succeeds unchanged.
 
 ### Measured `.so` / `.aar` sizes
 
-**None.** Cross-compilation did not produce a linked `.so`. No `fightcore.aar` with native libraries exists. The `build-aar.sh` script is ready but untested end-to-end.
+From the `swift-core-aar` artifact, per ABI, uncompressed:
+
+| Library | Size |
+| --- | --- |
+| `libfightcore.so` — the shared business logic | **615 KB** |
+| `lib_FoundationICU.so` | 41.5 MB |
+| `libFoundationEssentials.so` | 10.0 MB |
+| `libswiftCore.so` | 9.7 MB |
+| `libFoundation.so` | 8.9 MB |
+| 13 more runtime libraries | 10.7 MB |
+| **Total, 18 libraries** | **81.4 MB** (26.6 MB compressed in the AAR) |
+
+Those 18 are the ELF `NEEDED` closure of the core, not the whole runtime directory — nothing here is padding. The ratio is the number to argue about: **615 KB of shared logic arrives with 81 MB of runtime**, three quarters of it ICU, because the core touches `Decimal` and date formatting. A core written against nothing but the standard library links a fraction of this, and that is a design decision, not a toolchain limitation.
+
+Android App Bundle splits per ABI, so a device downloads one column rather than both.
+
+### Route 2 — Skip `--native-model` (not attempted)
+
+Skip would provide `skip export` → `.aar`, transparent `@Observable` → Compose tracking, and `async` → `suspend`. Approach 04 demonstrates the transpiled mode of the same tool; the native mode is a variation on it, not a separate discovery.
 
 ### Android app stub
 

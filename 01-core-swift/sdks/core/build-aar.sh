@@ -19,13 +19,15 @@ mkdir -p "$OUT/android-libs"
 # Everything the .so needs at load time lives next to libswiftCore.so inside the Swift
 # SDK bundle, whose path SwiftPM has moved between releases — hence the search.
 copy_swift_runtime() {
-    local abi="$1"
+    local arch="$1"
     local dest="$2"
     local core
+    # `|| true`: one of the two roots is always absent, and find reports that as failure,
+    # which pipefail would otherwise turn into a silent exit.
     core="$(find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
-        -name libswiftCore.so -path "*${abi}*" 2>/dev/null | head -1)"
+        -name libswiftCore.so -path "*${arch}*" 2>/dev/null | head -1 || true)"
     if [[ -z "$core" ]]; then
-        echo "ERROR: no Swift runtime for $abi in the installed Swift SDK bundle" >&2
+        echo "ERROR: no Swift runtime for $arch in the installed Swift SDK bundle" >&2
         exit 1
     fi
     find "$(dirname "$core")" -maxdepth 1 -name '*.so' -exec cp {} "$dest/" \;
@@ -48,7 +50,11 @@ for triple in "${ABIS[@]}"; do
         }
     lib_src="$ROOT/.build/$triple/release/libFightCoreShared.so"
     if [[ ! -f "$lib_src" ]]; then
-        echo "ERROR: no shared library at $lib_src" >&2
+        lib_src="$(find "$ROOT/.build" -name libFightCoreShared.so \
+            -path "*${triple%%-*}*" 2>/dev/null | head -1 || true)"
+    fi
+    if [[ ! -f "$lib_src" ]]; then
+        echo "ERROR: no shared library for $triple under $ROOT/.build" >&2
         exit 1
     fi
     # Swift names the architecture, Android names the ABI, and an AAR is only loadable
@@ -60,7 +66,7 @@ for triple in "${ABIS[@]}"; do
     esac
     mkdir -p "$OUT/android-libs/$abi"
     cp "$lib_src" "$OUT/android-libs/$abi/libfightcore.so"
-    copy_swift_runtime "$abi" "$OUT/android-libs/$abi"
+    copy_swift_runtime "${triple%%-*}" "$OUT/android-libs/$abi"
     echo "  $(du -h "$OUT/android-libs/$abi/libfightcore.so" | cut -f1)  $abi/libfightcore.so"
 done
 

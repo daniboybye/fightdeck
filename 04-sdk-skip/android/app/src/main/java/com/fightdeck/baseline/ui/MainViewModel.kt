@@ -64,8 +64,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _betPlacedMessage = MutableStateFlow<String?>(null)
     val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
 
-    var simulateNetworkFailure = false
-
     val slipState: SlipState
         get() = fightCore.slipState(_slip.value, _balance.value)
 
@@ -80,7 +78,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshEvents() {
         viewModelScope.launch {
             _events.value = LoadState.Loading
-            repository.shouldFail = simulateNetworkFailure
             _events.value = runCatching { repository.loadEvents() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },

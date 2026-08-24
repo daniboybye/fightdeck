@@ -2,6 +2,13 @@ package com.fightdeck.baseline.ui
 
 import android.widget.MediaController
 import android.widget.VideoView
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,10 +19,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +48,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,6 +82,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
@@ -77,6 +90,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -89,7 +103,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import com.fightdeck.baseline.core.BetMode
 import com.fightdeck.baseline.core.BetSlip
 import com.fightdeck.baseline.core.Money
@@ -237,7 +251,7 @@ private fun BetSlipToolbar(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -246,7 +260,10 @@ private fun BetSlipToolbar(
         shape = RoundedCornerShape(percent = 50),
     ) {
         Row(
-            Modifier.padding(horizontal = Tokens.spacingXl, vertical = Tokens.spacingLg),
+            Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = Tokens.minTapTarget)
+                .padding(horizontal = Tokens.spacingXl, vertical = Tokens.spacingMd),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val suffix = if (legCount == 1) "" else "s"
@@ -284,11 +301,13 @@ private fun EventsNavHost(
             EventListScreen(
                 state = events,
                 news = news,
+                media = media,
                 mode = mode,
                 viewModel = viewModel,
                 onRetry = viewModel::refreshEvents,
                 onEventClick = { nav.navigate("event/${it.id}") },
                 onArticleClick = { nav.navigate("article/${it.id}") },
+                onVideoClick = { nav.navigate("video/${it.id}") },
             )
         }
         composable(
@@ -414,11 +433,13 @@ private fun SlipNavHost(
 private fun EventListScreen(
     state: LoadState<List<EventItem>>,
     news: LoadState<List<NewsItem>>,
+    media: LoadState<List<MediaItem>>,
     mode: EventMode,
     viewModel: MainViewModel,
     onRetry: () -> Unit,
     onEventClick: (EventItem) -> Unit,
     onArticleClick: (NewsItem) -> Unit,
+    onVideoClick: (MediaItem) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -469,6 +490,20 @@ private fun EventListScreen(
                             )
                         }
                     }
+                    val clips = (media as? LoadState.Loaded)?.value.orEmpty()
+                    if (clips.isNotEmpty()) {
+                        item {
+                            SectionHeader("Video")
+                        }
+                        items(clips, key = { it.id }) { clip ->
+                            VideoCard(
+                                item = clip,
+                                eventName = state.value.firstOrNull { it.id == clip.eventId }?.name.orEmpty(),
+                                posterUrl = viewModel.imageUrl(clip.poster),
+                                onClick = { onVideoClick(clip) },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -486,6 +521,223 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun RemoteImage(
+    url: String,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+) {
+    SubcomposeAsyncImage(
+        model = url,
+        contentDescription = null,
+        modifier = modifier,
+        contentScale = contentScale,
+        loading = {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        },
+    )
+}
+
+@Composable
+private fun VideoCard(
+    item: MediaItem,
+    eventName: String,
+    posterUrl: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(Tokens.radiusLg),
+    ) {
+        Column(
+            Modifier.padding(Tokens.spacingLg),
+            verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(Tokens.radiusMd)),
+            ) {
+                RemoteImage(
+                    url = posterUrl,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(44.dp),
+                )
+                Surface(
+                    color = Color.Black.copy(alpha = 0.6f),
+                    shape = RoundedCornerShape(percent = 50),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(Tokens.spacingSm),
+                ) {
+                    Text(
+                        item.durationLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        modifier = Modifier.padding(
+                            horizontal = Tokens.spacingSm,
+                            vertical = Tokens.spacingXs,
+                        ),
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(Tokens.spacingXs)) {
+                if (eventName.isNotEmpty()) {
+                    Text(
+                        eventName.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Tokens.accent,
+                    )
+                }
+                Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 2)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PrimaryActionButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.fixedActionHeight(Tokens.primaryActionHeight),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.secondaryActionPadding),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Tokens.accent,
+            contentColor = Tokens.onAccent,
+            disabledContainerColor = Tokens.accent.copy(alpha = 0.38f),
+            disabledContentColor = Tokens.onAccent.copy(alpha = 0.38f),
+        ),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun SecondaryActionButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fixedActionHeight(Tokens.secondaryActionHeight),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.secondaryActionPadding),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Tokens.accent,
+            contentColor = Tokens.onAccent,
+        ),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun KeyboardDoneButton(onClick: () -> Unit) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = Modifier.fixedActionHeight(Tokens.secondaryActionHeight),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.secondaryActionPadding),
+    ) {
+        Text("Done", style = MaterialTheme.typography.titleMedium, color = Tokens.accent)
+    }
+}
+
+@Composable
+private fun PresetChipButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier
+            .fixedActionHeight(Tokens.secondaryActionHeight)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.spacingSm),
+    ) {
+        Text(title, color = Tokens.accent, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+@Composable
+private fun LinkRowButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .fixedActionHeight(Tokens.minTapTarget),
+        contentPadding = PaddingValues(0.dp),
+        shape = RoundedCornerShape(Tokens.radiusMd),
+    ) {
+        Text(
+            title,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = Tokens.positive,
+            modifier = Modifier.size(64.dp),
+        )
+        Spacer(Modifier.height(Tokens.spacingLg))
+        Text("Bet placed", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(Tokens.spacingSm))
+        Text(
+            message,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = Tokens.spacingXl),
+        )
+        Spacer(Modifier.height(Tokens.spacingXl))
+        SecondaryActionButton(
+            title = "Browse Events",
+            onClick = onBrowseEvents,
+        )
+    }
+}
+
+@Composable
 private fun EventCard(event: EventItem, mode: EventMode, posterUrl: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -493,13 +745,11 @@ private fun EventCard(event: EventItem, mode: EventMode, posterUrl: String, onCl
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(Tokens.radiusLg),
     ) {
-        AsyncImage(
-            model = posterUrl,
-            contentDescription = null,
+        RemoteImage(
+            url = posterUrl,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(160.dp),
-            contentScale = ContentScale.Crop,
         )
         Column(
             Modifier.padding(Tokens.spacingLg),
@@ -549,13 +799,11 @@ private fun NewsCard(item: NewsItem, eventName: String, imageUrl: String, onClic
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(Tokens.radiusLg),
     ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = null,
+        RemoteImage(
+            url = imageUrl,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(140.dp),
-            contentScale = ContentScale.Crop,
         )
         Column(
             Modifier.padding(Tokens.spacingLg),
@@ -627,6 +875,8 @@ private fun EventDetailScreen(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             ),
                             modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = Tokens.minTapTarget)
                                 .clip(RoundedCornerShape(Tokens.radiusLg))
                                 .clickable { onVideoClick(clip) },
                         )
@@ -752,7 +1002,7 @@ private fun CornerLine(
 
 @Composable
 private fun FighterAvatar(url: String, ring: Color, size: Dp) {
-    AsyncImage(
+    SubcomposeAsyncImage(
         model = url,
         contentDescription = null,
         modifier = Modifier
@@ -761,18 +1011,46 @@ private fun FighterAvatar(url: String, ring: Color, size: Dp) {
             .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
             .border(2.dp, ring, CircleShape),
         contentScale = ContentScale.Crop,
+        loading = {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        },
     )
 }
 
 @Composable
 private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val chipModifier = Modifier
+        .defaultMinSize(minWidth = 64.dp, minHeight = Tokens.minTapTarget)
+        .heightIn(max = Tokens.minTapTarget)
+        .height(Tokens.minTapTarget)
+    val labelModifier = Modifier.defaultMinSize(minHeight = Tokens.oddsLabelHeight)
+    val contentPadding = PaddingValues(horizontal = Tokens.spacingMd, vertical = 0.dp)
     if (selected) {
-        Button(onClick = onClick, shape = RoundedCornerShape(Tokens.radiusMd)) {
-            Text(label, fontWeight = FontWeight.SemiBold)
+        Button(
+            onClick = onClick,
+            shape = RoundedCornerShape(Tokens.radiusMd),
+            modifier = chipModifier,
+            contentPadding = contentPadding,
+        ) {
+            Text(label, fontWeight = FontWeight.SemiBold, modifier = labelModifier)
         }
     } else {
-        FilledTonalButton(onClick = onClick, shape = RoundedCornerShape(Tokens.radiusMd)) {
-            Text(label, fontWeight = FontWeight.SemiBold, color = Tokens.accent)
+        FilledTonalButton(
+            onClick = onClick,
+            shape = RoundedCornerShape(Tokens.radiusMd),
+            modifier = chipModifier,
+            contentPadding = contentPadding,
+        ) {
+            Text(
+                label,
+                fontWeight = FontWeight.SemiBold,
+                color = Tokens.accent,
+                modifier = labelModifier,
+            )
         }
     }
 }
@@ -891,7 +1169,10 @@ private fun FighterHero(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
-        modifier = modifier.clickable { onClick(corner.fighterId) },
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = Tokens.minTapTarget)
+            .clickable { onClick(corner.fighterId) },
     ) {
         FighterAvatar(viewModel.imageUrl("assets/fighters/${corner.fighterId}.jpg"), ring, 88.dp)
         Text(
@@ -936,11 +1217,17 @@ private fun TaleOfTheTape(bout: BoutItem, fighters: List<FighterItem>) {
  */
 @Composable
 private fun TapeRow(left: String?, label: String, right: String?) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+    ) {
         Text(
             left ?: "—",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Start,
+            softWrap = true,
+            maxLines = 2,
+            overflow = TextOverflow.Visible,
             modifier = Modifier.weight(1f),
         )
         Text(
@@ -955,6 +1242,9 @@ private fun TapeRow(left: String?, label: String, right: String?) {
             right ?: "—",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.End,
+            softWrap = true,
+            maxLines = 2,
+            overflow = TextOverflow.Visible,
             modifier = Modifier.weight(1f),
         )
     }
@@ -971,13 +1261,11 @@ private fun FighterProfileScreen(fighter: FighterItem, viewModel: MainViewModel,
         ) {
             item {
                 Box {
-                    AsyncImage(
-                        model = viewModel.imageUrl(fighter.portrait),
-                        contentDescription = null,
+                    RemoteImage(
+                        url = viewModel.imageUrl(fighter.portrait),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(320.dp),
-                        contentScale = ContentScale.Crop,
                     )
                     Column(
                         Modifier
@@ -1059,13 +1347,11 @@ private fun NewsArticleScreen(
             ),
         ) {
             item {
-                AsyncImage(
-                    model = viewModel.imageUrl(item.heroImage),
-                    contentDescription = null,
+                RemoteImage(
+                    url = viewModel.imageUrl(item.heroImage),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(240.dp),
-                    contentScale = ContentScale.Crop,
                 )
             }
             item {
@@ -1094,7 +1380,10 @@ private fun NewsArticleScreen(
                             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Tokens.accent)
                         },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        modifier = Modifier.clickable { onVideoClick(clip) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Tokens.minTapTarget)
+                            .clickable { onVideoClick(clip) },
                     )
                 }
             }
@@ -1178,6 +1467,8 @@ private fun BetSlipScreen(
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val focusManager = LocalFocusManager.current
+    var stakeFocused by remember { mutableStateOf(false) }
+    val state = viewModel.slipState
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -1191,129 +1482,174 @@ private fun BetSlipScreen(
         },
         bottomBar = {
             if (slip.selections.isNotEmpty()) {
-                Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-                    Column(
-                        Modifier.padding(Tokens.spacingLg),
-                        verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .imePadding(),
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Tokens.spacingLg)
+                            .padding(top = Tokens.spacingSm, bottom = Tokens.actionBarGap),
+                        horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        placedMessage?.let {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Tokens.positive)
-                                Spacer(Modifier.width(Tokens.spacingSm))
-                                Text(it, color = Tokens.positive, style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                        Button(
+                        PrimaryActionButton(
+                            title = "Place bet",
                             onClick = viewModel::placeBet,
-                            enabled = viewModel.slipState.errors.isEmpty(),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) { Text("Place bet") }
+                            enabled = state.errors.isEmpty(),
+                            modifier = Modifier.weight(1f),
+                        )
+                        AnimatedVisibility(visible = stakeFocused) {
+                            KeyboardDoneButton { focusManager.clearFocus() }
+                        }
                     }
                 }
             }
         },
     ) { padding ->
-        if (slip.selections.isEmpty()) {
-            EmptyState("No selections yet", Modifier.padding(padding), onBrowseEvents)
-            return@Scaffold
+        val screenState = when {
+            slip.selections.isNotEmpty() -> 0
+            placedMessage != null -> 1
+            else -> 2
         }
-
-        val state = viewModel.slipState
-        LazyColumn(
-            modifier = Modifier.imePadding(),
-            contentPadding = PaddingValues(
-                start = Tokens.spacingLg,
-                end = Tokens.spacingLg,
-                top = padding.calculateTopPadding(),
-                bottom = padding.calculateBottomPadding() + Tokens.spacingLg,
-            ),
-            verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
-        ) {
-            // One leg is a single, two or more is an accumulator. The user never picks — the
-            // slip just says which one it currently is.
-            item {
-                SectionHeader(if (slip.mode == BetMode.accumulator) "Accumulator" else "Single")
-            }
-            items(slip.selections, key = { "${it.boutId}-${it.fighterId}" }) { selection ->
-                val name = fighters.firstOrNull { it.id == selection.fighterId }?.name ?: selection.fighterId
-                val event = events.firstOrNull { event -> event.bouts.any { it.id == selection.boutId } }
-                ListItem(
-                    headlineContent = { Text(name) },
-                    supportingContent = { Text(event?.name ?: "—") },
-                    trailingContent = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(Money.format(selection.odds), color = Tokens.accent, fontWeight = FontWeight.SemiBold)
-                            IconButton(onClick = {
-                                viewModel.removeSelection(selection.boutId, selection.fighterId)
-                            }) {
-                                Icon(Icons.Default.Close, contentDescription = "Remove")
+        AnimatedContent(
+            targetState = screenState,
+            transitionSpec = {
+                (scaleIn(initialScale = 0.92f) + fadeIn()) togetherWith
+                    (scaleOut(targetScale = 0.92f) + fadeOut())
+            },
+            label = "slipContent",
+            modifier = Modifier.padding(padding),
+        ) { contentState ->
+            when (contentState) {
+                0 -> LazyColumn(
+                    contentPadding = PaddingValues(
+                        start = Tokens.spacingLg,
+                        end = Tokens.spacingLg,
+                        top = padding.calculateTopPadding(),
+                        bottom = padding.calculateBottomPadding() + Tokens.spacingLg,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
+                ) {
+                    item {
+                        SectionHeader(if (slip.mode == BetMode.accumulator) "Accumulator" else "Single")
+                    }
+                    items(slip.selections, key = { "${it.boutId}-${it.fighterId}" }) { selection ->
+                        val name = fighters.firstOrNull { it.id == selection.fighterId }?.name
+                            ?: selection.fighterId
+                        val event = events.firstOrNull { event ->
+                            event.bouts.any { it.id == selection.boutId }
+                        }
+                        val opponentBout = event?.bouts?.firstOrNull { it.id == selection.boutId }
+                        val opponentName = opponentBout?.let { bout ->
+                            when (selection.fighterId) {
+                                bout.redCorner.fighterId -> bout.blueCorner.name
+                                bout.blueCorner.fighterId -> bout.redCorner.name
+                                else -> "—"
+                            }
+                        } ?: "—"
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                            shape = RoundedCornerShape(Tokens.radiusLg),
+                        ) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(Tokens.spacingLg),
+                                verticalAlignment = Alignment.Top,
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(name, style = MaterialTheme.typography.bodyLarge)
+                                    Text(
+                                        "vs $opponentName · ${event?.name ?: "—"}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                Text(
+                                    Money.format(selection.odds),
+                                    color = Tokens.accent,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(start = Tokens.spacingMd),
+                                )
+                                IconButton(onClick = {
+                                    viewModel.removeSelection(selection.boutId, selection.fighterId)
+                                }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Remove")
+                                }
                             }
                         }
-                    },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ),
-                    modifier = Modifier.clip(RoundedCornerShape(Tokens.radiusLg)),
-                )
-            }
-            item { SectionHeader("Stake") }
-            item {
-                OutlinedTextField(
-                    value = slip.stake.toPlainString(),
-                    onValueChange = { viewModel.updateStake(Money.parse(it.ifBlank { "0" })) },
-                    label = { Text("Amount") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal,
-                        imeAction = ImeAction.Done,
-                    ),
-                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm)) {
-                    listOf(5, 10, 25, 50).forEach { chip ->
-                        FilledTonalButton(
-                            onClick = { viewModel.updateStake(BigDecimal(chip)) },
-                            modifier = Modifier.weight(1f),
-                        ) { Text("€$chip") }
                     }
-                }
-            }
-            item { SummaryBlock(state) }
-            items(state.errors, key = { it.code }) { error ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = Tokens.negative,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(Tokens.spacingSm))
-                    Text(
-                        error.code.displayMethod,
-                        color = Tokens.negative,
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
-            }
-            item { SectionHeader("Deposit") }
-            item {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                    shape = RoundedCornerShape(Tokens.radiusLg),
-                ) {
-                    Column(
-                        Modifier.padding(Tokens.spacingLg),
-                        verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
-                    ) {
-                        DetailRow("Balance", Money.formatCurrency(balance))
-                        FilledTonalButton(onClick = onDeposit, modifier = Modifier.fillMaxWidth()) {
-                            Text("Add funds")
+                    item { SectionHeader("Stake") }
+                    item {
+                        OutlinedTextField(
+                            value = slip.stake.toPlainString(),
+                            onValueChange = { viewModel.updateStake(Money.parse(it.ifBlank { "0" })) },
+                            label = { Text("Amount") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                                imeAction = ImeAction.Done,
+                            ),
+                            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onFocusChanged { stakeFocused = it.isFocused },
+                        )
+                    }
+                    item {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm)) {
+                            listOf(5, 10, 25, 50).forEach { chip ->
+                                PresetChipButton(
+                                    title = "€$chip",
+                                    onClick = { viewModel.updateStake(BigDecimal(chip)) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
+                    item { SummaryBlock(state) }
+                    items(state.errors, key = { it.code }) { error ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Tokens.negative,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(Tokens.spacingSm))
+                            Text(
+                                error.code.displayMethod,
+                                color = Tokens.negative,
+                                style = MaterialTheme.typography.labelMedium,
+                            )
+                        }
+                    }
+                    item { SectionHeader("Deposit") }
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                            shape = RoundedCornerShape(Tokens.radiusLg),
+                        ) {
+                            Column(
+                                Modifier.padding(Tokens.spacingLg),
+                                verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
+                            ) {
+                                DetailRow("Balance", Money.formatCurrency(balance))
+                                LinkRowButton(title = "Add funds", onClick = onDeposit)
+                            }
                         }
                     }
                 }
+                1 -> BetPlacedState(placedMessage.orEmpty(), onBrowseEvents, Modifier.fillMaxSize())
+                else -> EmptyState("No selections yet", Modifier.fillMaxSize(), onBrowseEvents)
             }
         }
     }
@@ -1343,6 +1679,7 @@ private fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onB
     var amountText by remember { mutableStateOf("") }
     var method by remember { mutableStateOf(DepositMethod.Card) }
     var didSucceed by remember { mutableStateOf(false) }
+    var amountFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     val amount = runCatching { BigDecimal(amountText.ifBlank { "0" }) }.getOrDefault(BigDecimal.ZERO)
@@ -1367,47 +1704,73 @@ private fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onB
         },
         bottomBar = {
             if (!didSucceed) {
-                Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-                    Button(
-                        onClick = { didSucceed = true },
-                        enabled = validationMessage == null && amountText.isNotBlank(),
-                        modifier = Modifier
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    modifier = Modifier
+                        .navigationBarsPadding()
+                        .imePadding(),
+                ) {
+                    Row(
+                        Modifier
                             .fillMaxWidth()
-                            .padding(Tokens.spacingLg),
-                    ) { Text("Confirm deposit") }
+                            .padding(horizontal = Tokens.spacingLg)
+                            .padding(top = Tokens.spacingSm, bottom = Tokens.actionBarGap),
+                        horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        PrimaryActionButton(
+                            title = "Confirm deposit",
+                            onClick = { didSucceed = true },
+                            enabled = validationMessage == null && amountText.isNotBlank(),
+                            modifier = Modifier.weight(1f),
+                        )
+                        AnimatedVisibility(visible = amountFocused) {
+                            KeyboardDoneButton { focusManager.clearFocus() }
+                        }
+                    }
                 }
             }
         },
     ) { padding ->
         if (didSucceed) {
-            Column(
-                Modifier
+            AnimatedContent(
+                targetState = true,
+                transitionSpec = {
+                    (scaleIn(initialScale = 0.92f) + fadeIn()) togetherWith fadeOut()
+                },
+                label = "depositSuccess",
+                modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(Tokens.spacingXl),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Tokens.spacingLg, Alignment.CenterVertically),
+                    .padding(padding),
             ) {
-                Icon(
-                    Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = Tokens.positive,
-                    modifier = Modifier.size(64.dp),
-                )
-                Text("Deposit successful", style = MaterialTheme.typography.headlineSmall)
-                Text(
-                    "New balance: ${Money.formatCurrency(balance.add(amount))}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Button(onClick = { onDone(amount) }, modifier = Modifier.fillMaxWidth()) { Text("Done") }
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(Tokens.spacingXl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Tokens.spacingLg, Alignment.CenterVertically),
+                ) {
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Tokens.positive,
+                        modifier = Modifier.size(64.dp),
+                    )
+                    Text("Deposit successful", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        "New balance: ${Money.formatCurrency(balance.add(amount))}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    SecondaryActionButton(
+                        title = "Done",
+                        onClick = { onDone(amount) },
+                    )
+                }
             }
             return@Scaffold
         }
 
-        // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
-        // and stepping through them only hides the total from the person approving it.
         LazyColumn(
-            modifier = Modifier.imePadding(),
             contentPadding = PaddingValues(
                 start = Tokens.spacingLg,
                 end = Tokens.spacingLg,
@@ -1430,16 +1793,19 @@ private fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onB
                         imeAction = ImeAction.Done,
                     ),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { amountFocused = it.isFocused },
                 )
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm)) {
                     listOf("10", "25", "50", "100").forEach { chip ->
-                        FilledTonalButton(
+                        PresetChipButton(
+                            title = "€$chip",
                             onClick = { amountText = chip },
                             modifier = Modifier.weight(1f),
-                        ) { Text("€$chip") }
+                        )
                     }
                 }
             }
@@ -1455,6 +1821,8 @@ private fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onB
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
                     modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = Tokens.minTapTarget)
                         .clip(RoundedCornerShape(Tokens.radiusLg))
                         .clickable { method = item },
                 )
@@ -1528,7 +1896,10 @@ private fun EmptyState(
         Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (onAction != null) {
             Spacer(Modifier.height(Tokens.spacingMd))
-            Button(onClick = onAction) { Text("Browse Events") }
+            SecondaryActionButton(
+                title = "Browse Events",
+                onClick = onAction,
+            )
         }
     }
 }
@@ -1548,9 +1919,17 @@ private fun ErrorState(onRetry: () -> Unit, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(Tokens.spacingMd))
         Text("Something went wrong", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(Tokens.spacingMd))
-        Button(onClick = onRetry) { Text("Retry") }
+        SecondaryActionButton(
+            title = "Retry",
+            onClick = onRetry,
+        )
     }
 }
+
+private fun Modifier.fixedActionHeight(height: Dp = Tokens.primaryActionHeight): Modifier =
+    defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+        .heightIn(max = height)
+        .height(height)
 
 /** `split_decision` reads as a database column; `Split decision` reads as a result. */
 private val String.displayMethod: String

@@ -58,8 +58,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _betPlacedMessage = MutableStateFlow<String?>(null)
     val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
 
-    var simulateNetworkFailure = false
-
     init {
         LocalAssetServer.start(application)
         refreshEvents()
@@ -71,7 +69,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshEvents() {
         viewModelScope.launch {
             _events.value = LoadState.Loading
-            repository.shouldFail = simulateNetworkFailure
             _events.value = runCatching { repository.loadEvents() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
@@ -135,7 +132,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun placeBet() {
         val state = slipStore.placeBet() ?: return
         _betPlacedMessage.value =
-            "Bet placed · ${FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)} to return"
+            "${FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)} returns if it lands"
     }
 
     fun deposit(amount: String) {

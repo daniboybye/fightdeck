@@ -27,4 +27,22 @@ object Tokens {
 
     val radiusMd = 12.dp
     val radiusLg = 16.dp
+
+    /** Material 3 minimum touch target — visual height and hit area both land here. */
+    val minTapTarget = 48.dp
+
+    /** Full-width primary actions — tap-target floor is also the ceiling. */
+    val primaryActionHeight = 48.dp
+
+    /** Chips, keyboard dismissal and confirmation acknowledgements — present but quiet. */
+    val secondaryActionHeight = 48.dp
+
+    /** Horizontal breathing room for a button that hugs its label instead of filling a bar. */
+    val secondaryActionPadding = 24.dp
+
+    /** What an odds pill asks for before padding brings it to the tap target. */
+    val oddsLabelHeight = 30.dp
+
+    /** Keeps a pinned action bar off whatever sits below it — nav bar or IME. */
+    val actionBarGap = 12.dp
 }

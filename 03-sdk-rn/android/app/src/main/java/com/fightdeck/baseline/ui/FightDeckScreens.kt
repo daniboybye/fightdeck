@@ -2,6 +2,13 @@ package com.fightdeck.baseline.ui
 
 import android.widget.MediaController
 import android.widget.VideoView
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,10 +19,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +48,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,6 +82,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
@@ -77,6 +90,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -89,7 +103,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
 import com.fightdeck.baseline.core.BetMode
 import com.fightdeck.baseline.core.BetSlip
 import com.fightdeck.baseline.core.Money
@@ -237,7 +251,7 @@ private fun BetSlipToolbar(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             contentColor = MaterialTheme.colorScheme.onSurface,
@@ -246,7 +260,10 @@ private fun BetSlipToolbar(
         shape = RoundedCornerShape(percent = 50),
     ) {
         Row(
-            Modifier.padding(horizontal = Tokens.spacingXl, vertical = Tokens.spacingLg),
+            Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = Tokens.minTapTarget)
+                .padding(horizontal = Tokens.spacingXl, vertical = Tokens.spacingMd),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val suffix = if (legCount == 1) "" else "s"
@@ -284,11 +301,13 @@ private fun EventsNavHost(
             EventListScreen(
                 state = events,
                 news = news,
+                media = media,
                 mode = mode,
                 viewModel = viewModel,
                 onRetry = viewModel::refreshEvents,
                 onEventClick = { nav.navigate("event/${it.id}") },
                 onArticleClick = { nav.navigate("article/${it.id}") },
+                onVideoClick = { nav.navigate("video/${it.id}") },
             )
         }
         composable(
@@ -408,11 +427,13 @@ private fun SlipNavHost(
 private fun EventListScreen(
     state: LoadState<List<EventItem>>,
     news: LoadState<List<NewsItem>>,
+    media: LoadState<List<MediaItem>>,
     mode: EventMode,
     viewModel: MainViewModel,
     onRetry: () -> Unit,
     onEventClick: (EventItem) -> Unit,
     onArticleClick: (NewsItem) -> Unit,
+    onVideoClick: (MediaItem) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -463,6 +484,20 @@ private fun EventListScreen(
                             )
                         }
                     }
+                    val clips = (media as? LoadState.Loaded)?.value.orEmpty()
+                    if (clips.isNotEmpty()) {
+                        item {
+                            SectionHeader("Video")
+                        }
+                        items(clips, key = { it.id }) { clip ->
+                            VideoCard(
+                                item = clip,
+                                eventName = state.value.firstOrNull { it.id == clip.eventId }?.name.orEmpty(),
+                                posterUrl = viewModel.imageUrl(clip.poster),
+                                onClick = { onVideoClick(clip) },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -480,6 +515,201 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+private fun RemoteImage(
+    url: String,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+) {
+    SubcomposeAsyncImage(
+        model = url,
+        contentDescription = null,
+        modifier = modifier,
+        contentScale = contentScale,
+        loading = {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        },
+    )
+}
+
+@Composable
+private fun VideoCard(
+    item: MediaItem,
+    eventName: String,
+    posterUrl: String,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(Tokens.radiusLg),
+    ) {
+        Column(
+            Modifier.padding(Tokens.spacingLg),
+            verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(Tokens.radiusMd)),
+            ) {
+                RemoteImage(
+                    url = posterUrl,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(44.dp),
+                )
+                Surface(
+                    color = Color.Black.copy(alpha = 0.6f),
+                    shape = RoundedCornerShape(percent = 50),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(Tokens.spacingSm),
+                ) {
+                    Text(
+                        item.durationLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        modifier = Modifier.padding(
+                            horizontal = Tokens.spacingSm,
+                            vertical = Tokens.spacingXs,
+                        ),
+                    )
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(Tokens.spacingXs)) {
+                if (eventName.isNotEmpty()) {
+                    Text(
+                        eventName.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Tokens.accent,
+                    )
+                }
+                Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 2)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PrimaryActionButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.fixedActionHeight(Tokens.primaryActionHeight),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.secondaryActionPadding),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Tokens.accent,
+            contentColor = Tokens.onAccent,
+            disabledContainerColor = Tokens.accent.copy(alpha = 0.38f),
+            disabledContentColor = Tokens.onAccent.copy(alpha = 0.38f),
+        ),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun SecondaryActionButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fixedActionHeight(Tokens.secondaryActionHeight),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.secondaryActionPadding),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Tokens.accent,
+            contentColor = Tokens.onAccent,
+        ),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun KeyboardDoneButton(onClick: () -> Unit) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = Modifier.fixedActionHeight(Tokens.secondaryActionHeight),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.secondaryActionPadding),
+    ) {
+        Text("Done", style = MaterialTheme.typography.titleMedium, color = Tokens.accent)
+    }
+}
+
+@Composable
+private fun PresetChipButton(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = modifier
+            .fixedActionHeight(Tokens.secondaryActionHeight)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(percent = 50),
+        contentPadding = PaddingValues(horizontal = Tokens.spacingSm),
+    ) {
+        Text(title, color = Tokens.accent, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+
+@Composable
+private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = Tokens.positive,
+            modifier = Modifier.size(64.dp),
+        )
+        Spacer(Modifier.height(Tokens.spacingLg))
+        Text("Bet placed", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(Tokens.spacingSm))
+        Text(
+            message,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = Tokens.spacingXl),
+        )
+        Spacer(Modifier.height(Tokens.spacingXl))
+        SecondaryActionButton(
+            title = "Browse Events",
+            onClick = onBrowseEvents,
+        )
+    }
+}
+
+@Composable
 private fun EventCard(event: EventItem, mode: EventMode, posterUrl: String, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -487,13 +717,11 @@ private fun EventCard(event: EventItem, mode: EventMode, posterUrl: String, onCl
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(Tokens.radiusLg),
     ) {
-        AsyncImage(
-            model = posterUrl,
-            contentDescription = null,
+        RemoteImage(
+            url = posterUrl,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(160.dp),
-            contentScale = ContentScale.Crop,
         )
         Column(
             Modifier.padding(Tokens.spacingLg),
@@ -543,13 +771,11 @@ private fun NewsCard(item: NewsItem, eventName: String, imageUrl: String, onClic
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(Tokens.radiusLg),
     ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = null,
+        RemoteImage(
+            url = imageUrl,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(140.dp),
-            contentScale = ContentScale.Crop,
         )
         Column(
             Modifier.padding(Tokens.spacingLg),
@@ -621,6 +847,8 @@ private fun EventDetailScreen(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             ),
                             modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = Tokens.minTapTarget)
                                 .clip(RoundedCornerShape(Tokens.radiusLg))
                                 .clickable { onVideoClick(clip) },
                         )
@@ -746,7 +974,7 @@ private fun CornerLine(
 
 @Composable
 private fun FighterAvatar(url: String, ring: Color, size: Dp) {
-    AsyncImage(
+    SubcomposeAsyncImage(
         model = url,
         contentDescription = null,
         modifier = Modifier
@@ -755,18 +983,46 @@ private fun FighterAvatar(url: String, ring: Color, size: Dp) {
             .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
             .border(2.dp, ring, CircleShape),
         contentScale = ContentScale.Crop,
+        loading = {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            )
+        },
     )
 }
 
 @Composable
 private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val chipModifier = Modifier
+        .defaultMinSize(minWidth = 64.dp, minHeight = Tokens.minTapTarget)
+        .heightIn(max = Tokens.minTapTarget)
+        .height(Tokens.minTapTarget)
+    val labelModifier = Modifier.defaultMinSize(minHeight = Tokens.oddsLabelHeight)
+    val contentPadding = PaddingValues(horizontal = Tokens.spacingMd, vertical = 0.dp)
     if (selected) {
-        Button(onClick = onClick, shape = RoundedCornerShape(Tokens.radiusMd)) {
-            Text(label, fontWeight = FontWeight.SemiBold)
+        Button(
+            onClick = onClick,
+            shape = RoundedCornerShape(Tokens.radiusMd),
+            modifier = chipModifier,
+            contentPadding = contentPadding,
+        ) {
+            Text(label, fontWeight = FontWeight.SemiBold, modifier = labelModifier)
         }
     } else {
-        FilledTonalButton(onClick = onClick, shape = RoundedCornerShape(Tokens.radiusMd)) {
-            Text(label, fontWeight = FontWeight.SemiBold, color = Tokens.accent)
+        FilledTonalButton(
+            onClick = onClick,
+            shape = RoundedCornerShape(Tokens.radiusMd),
+            modifier = chipModifier,
+            contentPadding = contentPadding,
+        ) {
+            Text(
+                label,
+                fontWeight = FontWeight.SemiBold,
+                color = Tokens.accent,
+                modifier = labelModifier,
+            )
         }
     }
 }
@@ -885,7 +1141,10 @@ private fun FighterHero(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
-        modifier = modifier.clickable { onClick(corner.fighterId) },
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = Tokens.minTapTarget)
+            .clickable { onClick(corner.fighterId) },
     ) {
         FighterAvatar(viewModel.imageUrl("assets/fighters/${corner.fighterId}.jpg"), ring, 88.dp)
         Text(
@@ -930,11 +1189,17 @@ private fun TaleOfTheTape(bout: BoutItem, fighters: List<FighterItem>) {
  */
 @Composable
 private fun TapeRow(left: String?, label: String, right: String?) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+    ) {
         Text(
             left ?: "—",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Start,
+            softWrap = true,
+            maxLines = 2,
+            overflow = TextOverflow.Visible,
             modifier = Modifier.weight(1f),
         )
         Text(
@@ -949,6 +1214,9 @@ private fun TapeRow(left: String?, label: String, right: String?) {
             right ?: "—",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.End,
+            softWrap = true,
+            maxLines = 2,
+            overflow = TextOverflow.Visible,
             modifier = Modifier.weight(1f),
         )
     }
@@ -965,13 +1233,11 @@ private fun FighterProfileScreen(fighter: FighterItem, viewModel: MainViewModel,
         ) {
             item {
                 Box {
-                    AsyncImage(
-                        model = viewModel.imageUrl(fighter.portrait),
-                        contentDescription = null,
+                    RemoteImage(
+                        url = viewModel.imageUrl(fighter.portrait),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(320.dp),
-                        contentScale = ContentScale.Crop,
                     )
                     Column(
                         Modifier
@@ -1053,13 +1319,11 @@ private fun NewsArticleScreen(
             ),
         ) {
             item {
-                AsyncImage(
-                    model = viewModel.imageUrl(item.heroImage),
-                    contentDescription = null,
+                RemoteImage(
+                    url = viewModel.imageUrl(item.heroImage),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(240.dp),
-                    contentScale = ContentScale.Crop,
                 )
             }
             item {
@@ -1088,7 +1352,10 @@ private fun NewsArticleScreen(
                             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Tokens.accent)
                         },
                         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                        modifier = Modifier.clickable { onVideoClick(clip) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = Tokens.minTapTarget)
+                            .clickable { onVideoClick(clip) },
                     )
                 }
             }
@@ -1199,7 +1466,10 @@ private fun EmptyState(
         Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (onAction != null) {
             Spacer(Modifier.height(Tokens.spacingMd))
-            Button(onClick = onAction) { Text("Browse Events") }
+            SecondaryActionButton(
+                title = "Browse Events",
+                onClick = onAction,
+            )
         }
     }
 }
@@ -1219,9 +1489,17 @@ private fun ErrorState(onRetry: () -> Unit, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(Tokens.spacingMd))
         Text("Something went wrong", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(Tokens.spacingMd))
-        Button(onClick = onRetry) { Text("Retry") }
+        SecondaryActionButton(
+            title = "Retry",
+            onClick = onRetry,
+        )
     }
 }
+
+private fun Modifier.fixedActionHeight(height: Dp = Tokens.primaryActionHeight): Modifier =
+    defaultMinSize(minWidth = 0.dp, minHeight = 0.dp)
+        .heightIn(max = height)
+        .height(height)
 
 /** `split_decision` reads as a database column; `Split decision` reads as a result. */
 private val String.displayMethod: String

@@ -19,8 +19,6 @@ class JsonFileRepository(
     private val datasetRoot: File,
     private val json: Json = Json { ignoreUnknownKeys = true },
 ) : FightRepository {
-    var shouldFail: Boolean = false
-
     suspend fun loadNews(): List<NewsItem> = load("news.json", "news")
     suspend fun loadMedia(): List<MediaItem> = load("media.json", "media")
 
@@ -28,11 +26,10 @@ class JsonFileRepository(
 
     override suspend fun loadFighters(): List<FighterItem> = load("fighters.json", "fighters")
 
-    fun imageUrl(path: String): String = "http://127.0.0.1:${LocalAssetServer.PORT}/$path"
+    fun imageUrl(path: String): String = "http://127.0.0.1:${LocalAssetServer.port}/$path"
 
     private suspend inline fun <reified T> load(fileName: String, key: String): List<T> =
         withContext(Dispatchers.IO) {
-            if (shouldFail) error("network")
             val text = datasetRoot.resolve(fileName).readText()
             val wrapper = json.decodeFromString<Map<String, List<T>>>(text)
             wrapper[key] ?: error("missing $key")

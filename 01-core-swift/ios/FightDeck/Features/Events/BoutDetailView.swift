@@ -91,25 +91,30 @@ struct BoutDetailView: View {
         .buttonStyle(.plain)
     }
 
-    /// A `Grid` rather than three `.frame(maxWidth: .infinity)` texts: the frames centred each
-    /// value inside its own third, so the columns never lined up with each other.
+    /// The outer columns take the leftover width so the values sit on the row's edges. A bare
+    /// `Grid` sizes every column to its widest cell and centres the whole block, which leaves
+    /// both fighters floating in the middle of the card.
     private var taleOfTheTape: some View {
         Grid(horizontalSpacing: DesignTokens.Spacing.md, verticalSpacing: DesignTokens.Spacing.md) {
             ForEach(tapeRows, id: \.label) { row in
                 GridRow {
                     Text(row.red)
-                        .gridColumnAlignment(.leading)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Text(row.label)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .gridColumnAlignment(.center)
                     Text(row.blue)
-                        .gridColumnAlignment(.trailing)
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .font(.callout)
+                // A long country name is worth two lines. Without this the grid hands the
+                // cell its one-line ideal width and truncates instead.
+                .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .frame(maxWidth: .infinity)
         .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
@@ -130,28 +135,29 @@ struct BoutDetailView: View {
         return "\(value) \(unit)"
     }
 
+    /// An `HStack` rather than `LabeledContent`: an avatar plus two lines of text is enough to
+    /// tip that layout into stacking, which would drop the odds under the name on some rows
+    /// and leave them at the trailing edge on others.
     private func marketRow(_ corner: CornerItem, ring: Color) -> some View {
-        LabeledContent {
+        HStack(spacing: DesignTokens.Spacing.md) {
+            FighterAvatar(
+                url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"),
+                ring: ring,
+                size: 32
+            )
+            VStack(alignment: .leading) {
+                Text(corner.name)
+                Text("Implied \(FightCoreDisplay.formatImpliedProbability(Money.parse(corner.closingOdds.decimal)))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             OddsButton(
                 label: FightCoreDisplay.formatOdds(Money.parse(corner.closingOdds.decimal)),
                 fractional: corner.closingOdds.fractional,
                 isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
             ) {
                 state.toggleSelection(bout: bout, fighterID: corner.fighterId, odds: corner.closingOdds.decimal)
-            }
-        } label: {
-            HStack(spacing: DesignTokens.Spacing.md) {
-                FighterAvatar(
-                    url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"),
-                    ring: ring,
-                    size: 32
-                )
-                VStack(alignment: .leading) {
-                    Text(corner.name)
-                    Text("Implied \(FightCoreDisplay.formatImpliedProbability(Money.parse(corner.closingOdds.decimal)))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
             }
         }
     }

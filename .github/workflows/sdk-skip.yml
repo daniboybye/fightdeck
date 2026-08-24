@@ -18,6 +18,11 @@ jobs:
     name: XCFramework (${{ matrix.module }})
     runs-on: macos-26
     timeout-minutes: 45
+    # The manifests resolve a published .zip unless told otherwise, and the release this
+    # workflow feeds does not exist yet. The build scripts export this themselves; the
+    # bare `swift test` below would otherwise try to download a 404.
+    env:
+      FIGHTDECK_LOCAL_SDK: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -42,9 +47,12 @@ jobs:
           sudo xcode-select -switch "/Applications/Xcode_${XCODE_VERSION}.app" 2>/dev/null \
             || echo "::warning::Xcode ${XCODE_VERSION} not found; using runner default"
 
+      # Only the headless module. `swift test` builds for the host, and the two feature
+      # modules are SwiftUI over UIKit, which does not exist on macOS; their behaviour is
+      # covered by the host app's own suite against the framework this job produces.
       - name: Test
-        if: steps.guard.outputs.exists == 'true'
-        working-directory: 04-sdk-skip/sdks/${{ matrix.module }}
+        if: steps.guard.outputs.exists == 'true' && matrix.module == 'core'
+        working-directory: 04-sdk-skip/sdks/core
         run: swift test
 
       - name: Package XCFramework
@@ -67,6 +75,8 @@ jobs:
     # something to discover is broken the week of the talk.
     timeout-minutes: 75
     continue-on-error: true
+    env:
+      FIGHTDECK_LOCAL_SDK: "1"
     strategy:
       fail-fast: false
       matrix:

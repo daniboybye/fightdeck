@@ -99,10 +99,7 @@ jobs:
 
       - name: Export the Skip AARs
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
-        run: |
-          for module in core deposit betslip; do
-            (cd "04-sdk-skip/sdks/$module" && ./build-aar.sh)
-          done
+        run: ./04-sdk-skip/sdks/build-aars.sh
 
       # 02-core-rust is the one host whose dependency is not a pinned release: its UniFFI
       # bindings and jniLibs are build output, so the core has to be packaged here before

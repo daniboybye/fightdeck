@@ -67,8 +67,10 @@ jobs:
           path: 04-sdk-skip/sdks/${{ matrix.module }}/out/*.xcframework.zip
           if-no-files-found: warn
 
+  # One job for all three AARs, unlike the Apple side: the feature modules link against
+  # core's AAR instead of re-transpiling it, so they cannot be built in parallel with it.
   android:
-    name: AAR (${{ matrix.module }})
+    name: AARs
     runs-on: macos-26
     # macOS rather than Linux: skipstone drives the Swift toolchain plus Gradle, and the
     # documented path runs on a Mac. Moving it to Linux is an optimisation for later, not
@@ -77,17 +79,13 @@ jobs:
     continue-on-error: true
     env:
       FIGHTDECK_LOCAL_SDK: "1"
-    strategy:
-      fail-fast: false
-      matrix:
-        module: [core, deposit, betslip]
     steps:
       - uses: actions/checkout@v7
 
       - name: Guard
         id: guard
         run: |
-          if [[ -f 04-sdk-skip/sdks/${{ matrix.module }}/Package.swift ]]; then
+          if [[ -f 04-sdk-skip/sdks/core/Package.swift ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -112,14 +110,13 @@ jobs:
           skip checkup --verbose || echo "::warning::skip checkup reported problems"
           echo "Pinned skipstone in lock file: $PINNED_SKIPSTONE"
 
-      - name: Export AAR
+      - name: Export the AARs
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 04-sdk-skip/sdks/${{ matrix.module }}
-        run: ./build-aar.sh
+        run: ./04-sdk-skip/sdks/build-aars.sh
 
       - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
-          name: skip-${{ matrix.module }}-aar
-          path: 04-sdk-skip/sdks/${{ matrix.module }}/out/*.aar
+          name: skip-aars
+          path: 04-sdk-skip/sdks/*/out/*.aar
           if-no-files-found: warn

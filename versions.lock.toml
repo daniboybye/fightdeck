@@ -26,6 +26,9 @@ macos_deployment = "26.0"
 [apple.swift_sdks]
 # Cross-compilation bundles installed with `swift sdk install`
 android = "swift-6.3.3-RELEASE_android"
+# swift sdk install refuses a remote bundle without one. Published alongside the
+# bundle on swift.org/documentation/articles/swift-sdk-for-android-getting-started.
+android_checksum = "d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
 wasm = "swift-6.3.3-RELEASE_wasm"
 
 [apple.packages]

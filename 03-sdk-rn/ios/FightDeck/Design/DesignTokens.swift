@@ -33,6 +33,22 @@ enum DesignTokens {
         static let md: CGFloat = 12
         static let lg: CGFloat = 16
     }
+
+    enum Layout {
+        /// The floor the Human Interface Guidelines put on any control you can tap. Button
+        /// styles size to their label, which lands well under it for a one-line title.
+        static let minTapTarget: CGFloat = 44
+        /// A full-width call to action reads as a button, not a label, at this height.
+        static let primaryActionHeight: CGFloat = 50
+    }
+}
+
+extension View {
+    /// Grows a control to the 44pt tap-target floor without changing how it looks.
+    func minimumTapTarget() -> some View {
+        frame(minHeight: DesignTokens.Layout.minTapTarget)
+            .contentShape(.rect)
+    }
 }
 
 private extension Color {

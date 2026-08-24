@@ -38,8 +38,7 @@ struct ErrorStateView: View {
         } description: {
             Text("Check your connection and try again.")
         } actions: {
-            Button("Retry", action: retry)
-                .buttonStyle(.glassProminent)
+            SecondaryActionButton(title: "Retry", action: retry)
         }
     }
 }
@@ -67,8 +66,128 @@ struct RemoteImage: View {
 
     var body: some View {
         KFImage(url)
+            .placeholder { Rectangle().fill(.quaternary) }
+            .fade(duration: 0.2)
             .resizable()
             .scaledToFill()
+    }
+}
+
+/// The one action a screen exists for. `.glassProminent` sizes itself around its label and
+/// lands near 60pt for a headline title, which reads as a banner; the glass goes on a plain
+/// button instead so the capsule is exactly as tall as the tap target and no taller. The
+/// label carries the frame so every point of that capsule is inside the button.
+struct PrimaryActionButton: View {
+    let title: String
+    var systemImage: String?
+    var isEnabled = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            label
+                .font(.headline)
+                .foregroundStyle(isEnabled ? DesignTokens.ColorToken.onAccent : Color.secondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: DesignTokens.Layout.primaryActionHeight)
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(
+            .regular
+                .tint(isEnabled ? DesignTokens.ColorToken.accent : nil)
+                .interactive(isEnabled),
+            in: .capsule
+        )
+        .disabled(!isEnabled)
+    }
+
+    @ViewBuilder
+    private var label: some View {
+        if let systemImage {
+            Label(title, systemImage: systemImage)
+        } else {
+            Text(title)
+        }
+    }
+}
+
+/// A confirmation or a way out — sized to its label, not to the screen, so it does not read
+/// as the primary action of the view it closes.
+struct SecondaryActionButton: View {
+    let title: String
+    var isProminent = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(isProminent ? DesignTokens.ColorToken.onAccent : Color.primary)
+                .padding(.horizontal, DesignTokens.Layout.secondaryActionPadding)
+                .frame(height: DesignTokens.Layout.secondaryActionHeight)
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(
+            .regular
+                .tint(isProminent ? DesignTokens.ColorToken.accent : nil)
+                .interactive(),
+            in: .capsule
+        )
+    }
+}
+
+/// Sits next to the primary action while a number pad is up. The keyboard toolbar placement
+/// would draw this on top of the action bar instead of beside it.
+struct KeyboardDoneButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text("Done")
+                .font(.headline)
+                .foregroundStyle(DesignTokens.ColorToken.accent)
+                .padding(.horizontal, DesignTokens.Spacing.lg)
+                .frame(height: DesignTokens.Layout.primaryActionHeight)
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+    }
+}
+
+/// A chip in a row of preset values. Same reason as `PrimaryActionButton` for putting the
+/// frame on the label: the capsule has to grow, not just the space around it.
+struct PresetChipButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(DesignTokens.ColorToken.accent)
+                .frame(maxWidth: .infinity)
+                .frame(height: DesignTokens.Layout.secondaryActionHeight)
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+    }
+}
+
+/// Preset chips read as one control broken into parts; the container lets their glass merge
+/// at the edges instead of stacking four separate highlights.
+struct PresetChipRow<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        GlassEffectContainer(spacing: DesignTokens.Spacing.sm) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                content()
+            }
+        }
     }
 }
 

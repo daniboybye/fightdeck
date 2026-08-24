@@ -45,12 +45,17 @@ struct BetSlipView: View {
 
     var body: some View {
         Group {
-            if state.slip.selections.isEmpty {
-                emptyState
-            } else {
+            if !state.slip.selections.isEmpty {
                 slipContent
+            } else if let message = state.betPlacedMessage {
+                placedState(message)
+            } else {
+                emptyState
             }
         }
+        .animation(.smooth(duration: 0.35), value: state.slip.selections.count)
+        .animation(.smooth(duration: 0.35), value: state.betPlacedMessage)
+        .sensoryFeedback(.success, trigger: state.betPlacedMessage) { _, new in new != nil }
     }
 
     private var emptyState: some View {
@@ -59,9 +64,26 @@ struct BetSlipView: View {
         } description: {
             Text("Pick a winner on any upcoming bout and it lands here.")
         } actions: {
-            Button("Browse Events", action: onBrowseEvents)
-                .buttonStyle(.glassProminent)
+            SecondaryActionButton(title: "Browse Events", action: onBrowseEvents)
         }
+    }
+
+    /// Placing a bet empties the slip, so the confirmation has to live where the slip was.
+    private func placedState(_ message: String) -> some View {
+        ContentUnavailableView {
+            Label {
+                Text("Bet placed")
+            } icon: {
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundStyle(DesignTokens.ColorToken.positive)
+                    .symbolEffect(.bounce, options: .nonRepeating)
+            }
+        } description: {
+            Text(message)
+        } actions: {
+            SecondaryActionButton(title: "Browse Events", action: onBrowseEvents)
+        }
+        .transition(.scale(scale: 0.92).combined(with: .opacity))
     }
 
     private var slipContent: some View {
@@ -97,17 +119,22 @@ struct BetSlipView: View {
                     Text(Money.formatCurrency(state.balance))
                         .contentTransition(.numericText())
                 }
-                Button("Add funds") { path.append(.deposit) }
+                Button {
+                    path.append(.deposit)
+                } label: {
+                    // Filling the row and giving it a shape is what makes the whole row
+                    // tappable; a bare title button only responds on the glyphs themselves.
+                    Text("Add funds")
+                        .frame(maxWidth: .infinity, minHeight: DesignTokens.Layout.minTapTarget, alignment: .leading)
+                        .contentShape(.rect)
+                }
             }
         }
         .listStyle(.insetGrouped)
-        .safeAreaInset(edge: .bottom) { placeBetBar }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { stakeFocused = false }
-            }
-        }
+        // A bar rather than a plain inset: the list keeps scrolling under it and the glass
+        // picks up the scroll edge effect, so the last row stays legible behind the button.
+        .safeAreaBar(edge: .bottom) { placeBetBar }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     /// One leg is a single, two or more is an accumulator. The user never picks — the slip
@@ -116,19 +143,21 @@ struct BetSlipView: View {
         state.slip.mode == .accumulator ? "Accumulator" : "Single"
     }
 
+    /// An `HStack` rather than `LabeledContent`: the two-line label pushes that layout into
+    /// its stacked form, which drops the odds under the fighter instead of out to the edge.
     private func selectionRow(_ selection: Selection) -> some View {
-        LabeledContent {
-            Text(FightCoreDisplay.formatOdds(selection.odds))
-                .font(.callout.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(DesignTokens.ColorToken.accent)
-        } label: {
+        HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
             VStack(alignment: .leading) {
                 Text(state.fighter(selection.fighterID)?.name ?? selection.fighterID)
                 Text("vs \(opponentName(for: selection)) · \(eventName(for: selection))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Text(FightCoreDisplay.formatOdds(selection.odds))
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(DesignTokens.ColorToken.accent)
         }
     }
 
@@ -142,36 +171,34 @@ struct BetSlipView: View {
     }
 
     private var stakeChips: some View {
-        HStack {
+        PresetChipRow {
             ForEach([5, 10, 25, 50], id: \.self) { chip in
-                Button("€\(chip)") { state.slip.stake = Decimal(chip) }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
-                    .frame(maxWidth: .infinity)
+                PresetChipButton(title: "€\(chip)") { state.slip.stake = Decimal(chip) }
             }
         }
-        .tint(DesignTokens.ColorToken.accent)
     }
 
+    /// Done sits in this bar, not in a keyboard toolbar: the toolbar draws its pill on top of
+    /// whatever the bottom safe area already holds, and leaves a gap above the keyboard.
     private var placeBetBar: some View {
-        VStack(spacing: DesignTokens.Spacing.sm) {
-            if let message = state.betPlacedMessage {
-                Label(message, systemImage: "checkmark.circle.fill")
-                    .font(.callout)
-                    .foregroundStyle(DesignTokens.ColorToken.positive)
-            }
-            Button {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            PrimaryActionButton(
+                title: "Place bet",
+                systemImage: "checkmark.seal",
+                isEnabled: state.slipState.errors.isEmpty
+            ) {
                 state.placeBet()
-            } label: {
-                Text("Place bet")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.glassProminent)
-            .tint(DesignTokens.ColorToken.accent)
-            .disabled(!state.slipState.errors.isEmpty)
+            if stakeFocused {
+                KeyboardDoneButton { stakeFocused = false }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
         }
-        .padding(DesignTokens.Spacing.lg)
-        .background(.bar)
+        .padding(.horizontal, DesignTokens.Spacing.lg)
+        // Whatever the bar is currently sitting on — tab bar or keyboard — it should not
+        // look welded to it.
+        .padding(.bottom, stakeFocused ? DesignTokens.Layout.actionBarGap : DesignTokens.Layout.tabBarActionGap)
+        .animation(.snappy(duration: 0.25), value: stakeFocused)
     }
 
     private func opponentName(for selection: Selection) -> String {

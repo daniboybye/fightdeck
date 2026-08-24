@@ -28,6 +28,7 @@ struct EventsTabView: View {
                     }
                     if mode.showsResults {
                         newsSection(events: events)
+                        videoSection(events: events)
                     }
                 }
                 .listStyle(.insetGrouped)
@@ -36,15 +37,6 @@ struct EventsTabView: View {
                 ContentUnavailableView("No events", systemImage: "calendar")
             }
             .navigationTitle(mode.title)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Toggle(isOn: $state.simulateNetworkFailure) {
-                        Label("Simulate offline", systemImage: "wifi.slash")
-                    }
-                    .toggleStyle(.button)
-                    .labelStyle(.iconOnly)
-                }
-            }
             .navigationDestination(for: EventsRoute.self) { route in
                 destination(for: route, events: eventsOrEmpty)
             }
@@ -63,6 +55,25 @@ struct EventsTabView: View {
                             item: item,
                             eventName: events.first { $0.id == item.eventId }?.name ?? "",
                             imageURL: state.imageURL(item.heroImage)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /// Clips also hang off their event, but nobody opens an event card looking for the press
+    /// conference, so the feed carries them next to the news.
+    @ViewBuilder
+    private func videoSection(events: [EventItem]) -> some View {
+        if case .loaded(let clips) = state.mediaState, !clips.isEmpty {
+            Section("Video") {
+                ForEach(clips) { clip in
+                    NavigationLink(value: EventsRoute.video(clip.id)) {
+                        VideoRow(
+                            item: clip,
+                            eventName: events.first { $0.id == clip.eventId }?.name ?? "",
+                            posterURL: state.imageURL(clip.poster)
                         )
                     }
                 }
@@ -268,6 +279,48 @@ struct BoutRowView: View {
     }
 }
 
+/// The poster with a play badge, the way Photos and TV present a clip: the thumbnail is the
+/// tappable object and the text sits under it.
+struct VideoRow: View {
+    let item: MediaItem
+    let eventName: String
+    let posterURL: URL
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            RemoteImageTile(url: posterURL, height: 140)
+                .overlay {
+                    Image(systemName: "play.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundStyle(.white, .ultraThinMaterial)
+                        .shadow(radius: 8)
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    Text(item.durationSeconds.formattedDuration)
+                        .font(.caption2.weight(.semibold))
+                        .monospacedDigit()
+                        .padding(.horizontal, DesignTokens.Spacing.sm)
+                        .padding(.vertical, DesignTokens.Spacing.xs)
+                        .background(.black.opacity(0.6), in: .capsule)
+                        .foregroundStyle(.white)
+                        .padding(DesignTokens.Spacing.sm)
+                }
+                .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
+            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+                if !eventName.isEmpty {
+                    Text(eventName.uppercased())
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(DesignTokens.ColorToken.accent)
+                }
+                Text(item.title)
+                    .font(.headline)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+}
+
 struct FighterAvatar: View {
     let url: URL
     let ring: Color
@@ -305,10 +358,13 @@ struct OddsButton: View {
             action()
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         } label: {
+            // The bordered style adds its own padding around the label, so the label asks for
+            // less than the tap target and the finished control lands on it.
             Text(showFractional ? fractional : label)
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()
-                .frame(minWidth: 56)
+                .frame(minWidth: 64, minHeight: DesignTokens.Layout.oddsLabelHeight)
+                .contentShape(.rect)
         }
         .tint(DesignTokens.ColorToken.accent)
         .buttonBorderShape(.roundedRectangle(radius: DesignTokens.Radius.sm))

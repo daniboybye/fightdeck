@@ -85,15 +85,11 @@ struct DepositFlowView: View {
                         .font(.caption)
                         .foregroundStyle(DesignTokens.ColorToken.negative)
                 }
-                HStack {
+                PresetChipRow {
                     ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                        Button("€\(chip)") { amountText = chip }
-                            .buttonStyle(.bordered)
-                            .buttonBorderShape(.capsule)
-                            .frame(maxWidth: .infinity)
+                        PresetChipButton(title: "€\(chip)") { amountText = chip }
                     }
                 }
-                .tint(DesignTokens.ColorToken.accent)
             }
 
             Section("Method") {
@@ -126,37 +122,46 @@ struct DepositFlowView: View {
                 LabeledContent("New balance", value: Money.formatCurrency(params.currentBalance + parsedAmount))
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            Button {
-                didSucceed = true
-            } label: {
-                Text("Confirm deposit")
-                    .frame(maxWidth: .infinity)
+        // A bar rather than a plain inset: the form keeps scrolling under it, and Done sits
+        // beside the action instead of in a keyboard toolbar that would overlap it.
+        .safeAreaBar(edge: .bottom) {
+            HStack(spacing: DesignTokens.Spacing.sm) {
+                PrimaryActionButton(
+                    title: "Confirm deposit",
+                    isEnabled: amountValidationMessage == nil && !amountText.isEmpty
+                ) {
+                    withAnimation(.smooth(duration: 0.35)) { didSucceed = true }
+                }
+                if amountFocused {
+                    KeyboardDoneButton { amountFocused = false }
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
             }
-            .buttonStyle(.glassProminent)
-            .tint(DesignTokens.ColorToken.accent)
-            .disabled(amountValidationMessage != nil || amountText.isEmpty)
-            .padding(DesignTokens.Spacing.lg)
-            .background(.bar)
+            .padding(.horizontal, DesignTokens.Spacing.lg)
+            // Whatever the bar is currently sitting on — home indicator or keyboard — it
+            // should not look welded to it.
+            .padding(.bottom, DesignTokens.Layout.actionBarGap)
+            .animation(.snappy(duration: 0.25), value: amountFocused)
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { amountFocused = false }
-            }
-        }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var successContent: some View {
         ContentUnavailableView {
-            Label("Deposit successful", systemImage: "checkmark.circle.fill")
+            Label {
+                Text("Deposit successful")
+            } icon: {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(DesignTokens.ColorToken.positive)
+                    .symbolEffect(.bounce, options: .nonRepeating)
+            }
         } description: {
             Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
         } actions: {
-            Button("Done") { onResult(.completed(amount: parsedAmount)) }
-                .buttonStyle(.glassProminent)
-                .tint(DesignTokens.ColorToken.accent)
+            SecondaryActionButton(title: "Done") { onResult(.completed(amount: parsedAmount)) }
         }
+        .sensoryFeedback(.success, trigger: didSucceed)
+        .transition(.scale(scale: 0.92).combined(with: .opacity))
     }
 
     private var parsedAmount: Decimal {

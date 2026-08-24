@@ -30,7 +30,6 @@ final class AppState {
     var slip = BetSlip(mode: .single, selections: [], stake: Money.parse("10.00"))
     var balance = Money.parse("500.00")
     var betPlacedMessage: String?
-    var simulateNetworkFailure = false
 
     let repository: JSONFileRepository
     let fightCore: FightCore
@@ -62,7 +61,6 @@ final class AppState {
 
     func loadEvents() async {
         eventsState = .loading
-        repository.shouldFail = simulateNetworkFailure
         do {
             let events = try await repository.loadEvents()
             eventsState = events.isEmpty ? .empty : .loaded(events)

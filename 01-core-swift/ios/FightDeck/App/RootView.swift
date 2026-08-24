@@ -80,7 +80,10 @@ private struct BetSlipAccessory: View {
             }
             .font(.subheadline)
             .padding(.horizontal, DesignTokens.Spacing.lg)
-            .frame(maxWidth: .infinity)
+            // The label only covers the two runs of text, so without a shape to hit, taps
+            // anywhere else in the accessory fall through to the tab bar behind it.
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(.rect)
         }
         .buttonStyle(.plain)
     }

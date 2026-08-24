@@ -25,7 +25,6 @@ final class AppState {
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
     var betPlacedMessage: String?
-    var simulateNetworkFailure = false
 
     let repository: JSONFileRepository
     let slipStore: BetSlipStore
@@ -67,7 +66,6 @@ final class AppState {
 
     func loadEvents() async {
         eventsState = .loading
-        repository.shouldFail = simulateNetworkFailure
         do {
             let events = try await repository.loadEvents()
             eventsState = events.isEmpty ? .empty : .loaded(events)
@@ -132,7 +130,7 @@ final class AppState {
         slipStore.balance -= state.totalStake
         slipStore.slip.selections.removeAll()
         syncMode()
-        betPlacedMessage = "Bet placed · \(Money.formatCurrency(state.potentialReturn)) to return"
+        betPlacedMessage = "\(Money.formatCurrency(state.potentialReturn)) returns if it lands"
     }
 
     func fighter(_ id: String) -> FighterItem? {

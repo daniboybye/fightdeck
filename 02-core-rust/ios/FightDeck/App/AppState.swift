@@ -29,7 +29,6 @@ final class AppState {
     let preferences: UserDefaultsPreferencesStore
 
     var betPlacedMessage: String?
-    var simulateNetworkFailure = false
 
     private let repository: JSONFileRepository
 
@@ -60,7 +59,6 @@ final class AppState {
 
     func loadEvents() async {
         eventsState = .loading
-        repository.shouldFail = simulateNetworkFailure
         do {
             let events = try await repository.loadEvents()
             eventsState = events.isEmpty ? .empty : .loaded(events)
@@ -115,7 +113,7 @@ final class AppState {
 
     func placeBet() {
         guard let state = slipStore.placeBet() else { return }
-        betPlacedMessage = "Bet placed · \(FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)) to return"
+        betPlacedMessage = "\(FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)) returns if it lands"
     }
 
     func deposit(amount: Decimal) {

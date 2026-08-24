@@ -59,43 +59,43 @@ private struct FeatureUnavailableView: View {
 
 #if FIGHTDECK_BOTH
 struct BetslipBridgeView: View {
-    @Bindable var state: AppState
+    let state: AppState
     @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
 
-    @State private var store: BetSlipStore?
+    // Built in `init`, not in `onAppear`. An optional store leaves the `if let` branch empty
+    // on first render, and SwiftUI drops lifecycle modifiers attached to an empty view — so
+    // the store was never created and the tab stayed blank.
+    @State private var store: BetSlipStore
 
-    var body: some View {
-        Group {
-            if let store {
-                BetSlipRootView(
-                    store: store,
-                    display: HostSlipDisplayContext(state: state),
-                    theme: BetslipTheme.parse(ThemeLoader.tokensJSON()),
-                    onDeposit: { path.append(.deposit) },
-                    onBrowseEvents: onBrowseEvents,
-                    onHostSync: { slip, balance, message in
-                        state.applySdkSlip(slip, balance: balance, betPlacedMessage: message)
-                    }
-                )
-            }
-        }
-        .onAppear { ensureStore() }
-        .onChange(of: state.slip) { _, newSlip in
-            store?.slip = newSlip
-        }
-        .onChange(of: state.balance) { _, newBalance in
-            store?.balance = newBalance
-        }
-    }
-
-    private func ensureStore() {
-        guard store == nil else { return }
-        store = BetSlipStore(
+    init(state: AppState, path: Binding<[SlipRoute]>, onBrowseEvents: @escaping () -> Void) {
+        self.state = state
+        _path = path
+        self.onBrowseEvents = onBrowseEvents
+        _store = State(initialValue: BetSlipStore(
             fightCore: state.fightCore,
             slip: state.slip,
             balance: state.balance
+        ))
+    }
+
+    var body: some View {
+        BetSlipRootView(
+            store: store,
+            display: HostSlipDisplayContext(state: state),
+            theme: BetslipTheme.parse(ThemeLoader.tokensJSON()),
+            onDeposit: { path.append(.deposit) },
+            onBrowseEvents: onBrowseEvents,
+            onHostSync: { slip, balance, message in
+                state.applySdkSlip(slip, balance: balance, betPlacedMessage: message)
+            }
         )
+        .onChange(of: state.slip) { _, newSlip in
+            store.slip = newSlip
+        }
+        .onChange(of: state.balance) { _, newBalance in
+            store.balance = newBalance
+        }
     }
 }
 

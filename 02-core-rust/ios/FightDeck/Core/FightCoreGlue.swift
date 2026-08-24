@@ -12,6 +12,8 @@ import Observation
 @MainActor
 final class ObservableBetSlipStore {
     private(set) var slipState: SlipStateRecord
+    private(set) var slip: BetSlipRecord
+    private(set) var balance: String
     private let store: BetSlipStore
     private let listener: SlipStateListenerBridge
 
@@ -19,44 +21,60 @@ final class ObservableBetSlipStore {
         self.store = store
         store.setMode(mode: .single)
         self.slipState = store.currentState()
+        self.slip = store.currentSlip()
+        self.balance = store.balance()
         let bridge = SlipStateListenerBridge()
         self.listener = bridge
         bridge.onUpdate = { [weak self] state in
-            self?.slipState = state
+            self?.applyListenerUpdate(state)
         }
         store.addListener(listener: bridge)
     }
 
-    var slip: BetSlipRecord { store.currentSlip() }
-    var balance: String { store.balance() }
+    func setStake(_ stake: String) {
+        store.setStake(stake: stake)
+        syncReadModel()
+    }
 
-    func setStake(_ stake: String) { store.setStake(stake: stake) }
     func toggleSelection(boutId: String, fighterId: String, odds: String) {
         store.toggleSelection(boutId: boutId, fighterId: fighterId, odds: odds)
+        syncReadModel()
         syncMode()
     }
+
     func removeSelection(boutId: String, fighterId: String) {
         store.removeSelection(boutId: boutId, fighterId: fighterId)
+        syncReadModel()
         syncMode()
     }
+
     func isSelected(boutId: String, fighterId: String) -> Bool {
-        store.isSelected(boutId: boutId, fighterId: fighterId)
+        slip.selections.contains { $0.boutId == boutId && $0.fighterId == fighterId }
     }
-    func deposit(amount: String) { store.deposit(amount: amount) }
-    func setBalance(_ balance: String) { store.setBalance(balance: balance) }
+
+    func deposit(amount: String) {
+        store.deposit(amount: amount)
+        syncReadModel()
+    }
+
+    func setBalance(_ balance: String) {
+        store.setBalance(balance: balance)
+        syncReadModel()
+    }
 
     /// Deducts stake, clears selections. Returns the pre-clear slip state when successful.
     func placeBet() -> SlipStateRecord? {
         let state = slipState
         guard state.errors.isEmpty else { return nil }
-        let balance = Decimal(string: store.balance()) ?? 0
+        let currentBalance = Decimal(string: balance) ?? 0
         let stake = Decimal(string: state.totalStake) ?? 0
-        let newBalance = balance - stake
+        let newBalance = currentBalance - stake
         store.setBalance(balance: formatMoney(amount: NSDecimalNumber(decimal: newBalance).stringValue))
-        let selections = Array(store.currentSlip().selections)
+        let selections = Array(slip.selections)
         for selection in selections {
             store.removeSelection(boutId: selection.boutId, fighterId: selection.fighterId)
         }
+        syncReadModel()
         syncMode()
         return state
     }
@@ -68,6 +86,19 @@ final class ObservableBetSlipStore {
             ? .accumulator
             : .single
         store.setMode(mode: mode)
+        syncReadModel()
+    }
+
+    private func applyListenerUpdate(_ state: SlipStateRecord) {
+        slipState = state
+        slip = store.currentSlip()
+        balance = store.balance()
+    }
+
+    private func syncReadModel() {
+        slip = store.currentSlip()
+        balance = store.balance()
+        slipState = store.currentState()
     }
 }
 

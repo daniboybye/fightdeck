@@ -12,19 +12,34 @@ import Network
 /// Serves `dataset/assets/` over HTTP on localhost so Kingfisher performs a real network fetch.
 actor LocalAssetServer {
     static let shared = LocalAssetServer()
-    static let port: UInt16 = 8765
+
+    /// The kernel assigns the port. The five demo apps share one simulator, and a hard-coded
+    /// port goes to whichever app launches first — the rest then show no images at all.
+    nonisolated(unsafe) static private(set) var port: UInt16 = 0
 
     private var listener: NWListener?
     private var assetsRoot: URL?
 
-    func start(assetsRoot: URL) throws {
+    func start(assetsRoot: URL) async throws {
         guard listener == nil else { return }
         self.assetsRoot = assetsRoot
-        listener = try NWListener(using: .tcp, on: NWEndpoint.Port(rawValue: Self.port)!)
-        listener?.newConnectionHandler = { [weak self] connection in
+        let listener = try NWListener(using: .tcp, on: .any)
+        listener.newConnectionHandler = { [weak self] connection in
             Task { await self?.serve(connection: connection) }
         }
-        listener?.start(queue: .global(qos: .userInitiated))
+        self.listener = listener
+        try await withCheckedThrowingContinuation { continuation in
+            let once = OneShotContinuation(continuation)
+            listener.stateUpdateHandler = { state in
+                switch state {
+                case .ready: once.finish(.success(()))
+                case .failed(let error): once.finish(.failure(error))
+                default: break
+                }
+            }
+            listener.start(queue: .global(qos: .userInitiated))
+        }
+        Self.port = listener.port?.rawValue ?? 0
     }
 
     func stop() {
@@ -105,6 +120,25 @@ actor LocalAssetServer {
         case "png": "image/png"
         default: "application/octet-stream"
         }
+    }
+}
+
+/// `stateUpdateHandler` reports every transition, and a checked continuation may only be
+/// resumed once.
+private final class OneShotContinuation: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Void, Error>?
+
+    init(_ continuation: CheckedContinuation<Void, Error>) {
+        self.continuation = continuation
+    }
+
+    func finish(_ result: Result<Void, Error>) {
+        lock.lock()
+        let pending = continuation
+        continuation = nil
+        lock.unlock()
+        pending?.resume(with: result)
     }
 }
 

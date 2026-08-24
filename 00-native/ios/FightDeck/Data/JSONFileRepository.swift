@@ -11,7 +11,7 @@ import Foundation
 @MainActor
 final class JSONFileRepository: FightRepository {
     private let datasetRoot: URL
-    var shouldFail = false
+
     init(datasetRoot: URL = DatasetLocator.datasetRoot()) {
         self.datasetRoot = datasetRoot
     }
@@ -37,9 +37,6 @@ final class JSONFileRepository: FightRepository {
     }
 
     private func load<T: Decodable>(file: String, key: String) async throws -> [T] {
-        if shouldFail {
-            throw RepositoryError.network(retryable: true)
-        }
         let url = datasetRoot.appendingPathComponent(file)
         let data: Data
         do {

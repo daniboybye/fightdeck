@@ -15,8 +15,8 @@
 # By default the repo is copied into a fresh temp directory so stale AARs and dylibs cannot
 # mask a break. Pass --in-place to run against the current checkout (faster, less honest).
 #
-# Jobs that genuinely need a Linux runner (Swift-on-Android cross-compile) are reported as
-# SKIP with an explanation, not silently treated as pass.
+# A target whose prerequisites are missing is reported as SKIP with the command that would
+# install them, not silently treated as pass.
 
 set -euo pipefail
 
@@ -252,20 +252,74 @@ run_sdk_core_swift_apple() {
     (cd 01-core-swift/sdks/core && ./build-xcframework.sh)
 }
 
+# Xcode's Swift cannot use a cross-compilation Swift SDK: the bundle's Foundation was built
+# by the open-source 6.3.3 and, identical version number notwithstanding, the module format
+# differs. swiftly installs that toolchain beside Xcode's without displacing the `swift` in
+# PATH, which turns this from a CI-only job into a ten-second local one.
+swift_android_blocker() {
+    local pinned sdk_name ndk
+    pinned="$(./tools/versions.py apple.swift)"
+    sdk_name="$(./tools/versions.py apple.swift_sdks.android)"
+    ndk="$(./tools/versions.py android.ndk)"
+
+    if ! command -v swiftly >/dev/null 2>&1; then
+        echo "swiftly is not installed — brew install swiftly"
+        return 0
+    fi
+    if ! swiftly list 2>/dev/null | grep -q "Swift ${pinned}"; then
+        echo "open-source Swift ${pinned} is missing, and Xcode's cannot cross-compile — swiftly install ${pinned}"
+        return 0
+    fi
+    if [[ -z "$(swift_sdk_bundle "$sdk_name")" ]]; then
+        echo "the Swift SDK for Android is not installed — see 01-core-swift/README.md"
+        return 0
+    fi
+    if [[ ! -d "$(android_sdk_home)/ndk/${ndk}" ]]; then
+        echo "NDK ${ndk} is missing under $(android_sdk_home)/ndk"
+        return 0
+    fi
+    return 1
+}
+
+swift_sdk_bundle() {
+    find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
+        "$HOME/Library/org.swift.swiftpm/swift-sdks" \
+        -maxdepth 1 -name "${1}.artifactbundle" 2>/dev/null | head -1 || true
+}
+
+android_sdk_home() {
+    echo "${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+}
+
 run_sdk_core_swift_android() {
-    skip_step "sdk-core-swift/android" \
-        "Needs the open-source Swift toolchain and Swift SDK for Android on Linux (see 01-core-swift/README.md). Xcode's Swift cannot cross-compile for aarch64-unknown-linux-android."
-    return 0
+    guard_file 01-core-swift/sdks/core/Package.swift || return 0
+    local pinned ndk
+    pinned="$(./tools/versions.py apple.swift)"
+    ndk="$(./tools/versions.py android.ndk)"
+    (
+        cd 01-core-swift/sdks/core
+        ANDROID_NDK_HOME="$(android_sdk_home)/ndk/${ndk}" \
+            swiftly run ./build-aar.sh "+${pinned}"
+    )
+}
+
+step_sdk_core_swift_android() {
+    local blocker
+    if blocker="$(swift_android_blocker)"; then
+        skip_step "sdk-core-swift/android" "$blocker"
+    else
+        run_step "sdk-core-swift/android" run_sdk_core_swift_android || true
+    fi
 }
 
 run_sdk_core_swift() {
     local part="${1:-all}"
     case "$part" in
         apple) run_step "sdk-core-swift/apple" run_sdk_core_swift_apple || true ;;
-        android) run_sdk_core_swift_android ;;
+        android) step_sdk_core_swift_android ;;
         all)
             run_step "sdk-core-swift/apple" run_sdk_core_swift_apple || true
-            run_sdk_core_swift_android
+            step_sdk_core_swift_android
             ;;
         *)
             echo "unknown sdk-core-swift part: $part" >&2

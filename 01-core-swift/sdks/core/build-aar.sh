@@ -16,21 +16,41 @@ ABIS=(
 
 mkdir -p "$OUT/android-libs"
 
-# Everything the .so needs at load time lives next to libswiftCore.so inside the Swift
-# SDK bundle, whose path SwiftPM has moved between releases — hence the search.
+# The Swift runtime for Android is a directory of shared objects, of which a headless
+# core needs a fraction — copying all of them triples the AAR with XCTest and the XML
+# and networking halves of Foundation that nothing here references. Walking the ELF
+# NEEDED entries from the built library ships exactly what the loader will ask for.
 copy_swift_runtime() {
     local arch="$1"
     local dest="$2"
-    local core
+    local runtime readelf
     # `|| true`: one of the two roots is always absent, and find reports that as failure,
     # which pipefail would otherwise turn into a silent exit.
-    core="$(find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
+    runtime="$(find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
         -name libswiftCore.so -path "*${arch}*" 2>/dev/null | head -1 || true)"
-    if [[ -z "$core" ]]; then
+    if [[ -z "$runtime" ]]; then
         echo "ERROR: no Swift runtime for $arch in the installed Swift SDK bundle" >&2
         exit 1
     fi
-    find "$(dirname "$core")" -maxdepth 1 -name '*.so' -exec cp {} "$dest/" \;
+    runtime="$(dirname "$runtime")"
+
+    readelf="$(find "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt" -name llvm-readelf 2>/dev/null | head -1 || true)"
+    if [[ -z "$readelf" ]]; then
+        echo "ERROR: llvm-readelf not found under $ANDROID_NDK_HOME" >&2
+        exit 1
+    fi
+
+    local queue=("$dest/libfightcore.so")
+    while (( ${#queue[@]} )); do
+        local lib="${queue[0]}"
+        queue=("${queue[@]:1}")
+        local needed
+        while read -r needed; do
+            [[ -f "$runtime/$needed" && ! -f "$dest/$needed" ]] || continue
+            cp "$runtime/$needed" "$dest/$needed"
+            queue+=("$dest/$needed")
+        done < <("$readelf" --needed-libs "$lib" | awk '/^ /{print $1}')
+    done
 }
 
 echo "=== Cross-compiling FightCore for Android ==="

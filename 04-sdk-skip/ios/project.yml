@@ -92,11 +92,25 @@ targets:
       - package: FightDeckDeposit
         product: FightDeckDeposit
 
+  FightDeckUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: FightDeckUITests
+    dependencies:
+      - target: FightDeck
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.uitests
+      GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   FightDeck:
     build:
       targets:
         FightDeck: all
+    test:
+      targets:
+        - FightDeckUITests
     run:
       environmentVariables:
         FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset

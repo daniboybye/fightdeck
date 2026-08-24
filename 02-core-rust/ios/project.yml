@@ -52,6 +52,7 @@ targets:
     scheme:
       testTargets:
         - FightDeckTests
+        - FightDeckUITests
 
   FightDeckTests:
     type: bundle.unit-test
@@ -83,6 +84,17 @@ targets:
       FRAMEWORK_SEARCH_PATHS:
         - $(SRCROOT)/../sdks/core/out
 
+  FightDeckUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: FightDeckUITests
+    dependencies:
+      - target: FightDeck
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.rust.uitests
+      GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   FightDeck:
     build:
@@ -90,6 +102,7 @@ schemes:
         FightDeck: all
     test:
       targets:
+        - FightDeckUITests
         - FightDeckTests
     run:
       environmentVariables:

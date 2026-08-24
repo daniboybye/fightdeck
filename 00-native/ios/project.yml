@@ -37,6 +37,18 @@ targets:
     scheme:
       testTargets:
         - FightDeckTests
+        - FightDeckUITests
+
+  FightDeckUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: FightDeckUITests
+    dependencies:
+      - target: FightDeck
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.native.uitests
+      GENERATE_INFOPLIST_FILE: YES
 
   FightDeckTests:
     type: bundle.unit-test
@@ -61,6 +73,7 @@ schemes:
     test:
       targets:
         - FightDeckTests
+        - FightDeckUITests
     run:
       environmentVariables:
         FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset

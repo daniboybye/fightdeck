@@ -53,6 +53,7 @@
 		A517FBFDEBCAE44BDAD4DAC9 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
 		A9A9015BFEAC6B0641118019 /* DisplayFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */; };
 		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
+		B32901AFEBA37B42E2A4E949 /* ScreenshotTour.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */; };
 		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
 		B46DA165B69DDFC0F3D14C3A /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
 		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
@@ -72,10 +73,21 @@
 		F502F17CC36E3303471CFBD6 /* FightDeckBetslip in Frameworks */ = {isa = PBXBuildFile; productRef = EB8D6D7EABFFCE9FD6725FB8 /* FightDeckBetslip */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		F38554DA20F31E855AEE5D7A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9F0D4232E4AEFDB2469578BB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A14FF0BBB1A87FBC2C0E6EB7;
+			remoteInfo = FightDeck;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		1263D571D324D8C7E4BEB673 /* FightDeckSkipDeposit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckSkipDeposit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
 		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
+		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C15AC4F04B3055B51F23702 /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../sdks/core; sourceTree = SOURCE_ROOT; };
 		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
 		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
@@ -93,6 +105,7 @@
 		AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoutDetailView.swift; sourceTree = "<group>"; };
 		ADDF1CDA0A11FAECC2BEA97E /* deposit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = deposit; path = ../sdks/deposit; sourceTree = SOURCE_ROOT; };
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
+		C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTour.swift; sourceTree = "<group>"; };
 		D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKBootstrap.swift; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatting.swift; sourceTree = "<group>"; };
@@ -175,6 +188,7 @@
 			isa = PBXGroup;
 			children = (
 				1A992D0B696BC9CBBD148621 /* FightDeck */,
+				E3612764317CDA593DFB745F /* FightDeckUITests */,
 				C9BD2751AFE81497FA442198 /* Packages */,
 				A1088A6E4DD381B5E286242F /* Products */,
 			);
@@ -186,6 +200,7 @@
 				992440A70F2E2DCD051FFF1F /* FightDeck.app */,
 				75B01DA66DC915B97C8A39DD /* FightDeckRuntime.app */,
 				1263D571D324D8C7E4BEB673 /* FightDeckSkipDeposit.app */,
+				19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -248,6 +263,14 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
+		E3612764317CDA593DFB745F /* FightDeckUITests */ = {
+			isa = PBXGroup;
+			children = (
+				C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */,
+			);
+			path = FightDeckUITests;
+			sourceTree = "<group>";
+		};
 		F8E622B7794169669381AB5A /* SDK */ = {
 			isa = PBXGroup;
 			children = (
@@ -298,6 +321,24 @@
 			productName = FightDeckSkipDeposit;
 			productReference = 1263D571D324D8C7E4BEB673 /* FightDeckSkipDeposit.app */;
 			productType = "com.apple.product-type.application";
+		};
+		4E593AC1BB4F8BA756C61049 /* FightDeckUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B7B15D16CC95842B0276D311 /* Build configuration list for PBXNativeTarget "FightDeckUITests" */;
+			buildPhases = (
+				E8F74D1D220DC49B5AFC32CE /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				800E654811EE2322AF35036B /* PBXTargetDependency */,
+			);
+			name = FightDeckUITests;
+			packageProductDependencies = (
+			);
+			productName = FightDeckUITests;
+			productReference = 19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		675B247C2039F2847AD686AB /* FightDeckRuntime */ = {
 			isa = PBXNativeTarget;
@@ -353,6 +394,9 @@
 					40FAA2A63413AB8F1D3B1161 = {
 						DevelopmentTeam = "";
 					};
+					4E593AC1BB4F8BA756C61049 = {
+						TestTargetID = A14FF0BBB1A87FBC2C0E6EB7;
+					};
 					675B247C2039F2847AD686AB = {
 						DevelopmentTeam = "";
 					};
@@ -384,6 +428,7 @@
 				A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */,
 				675B247C2039F2847AD686AB /* FightDeckRuntime */,
 				40FAA2A63413AB8F1D3B1161 /* FightDeckSkipDeposit */,
+				4E593AC1BB4F8BA756C61049 /* FightDeckUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -439,6 +484,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E8F74D1D220DC49B5AFC32CE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B32901AFEBA37B42E2A4E949 /* ScreenshotTour.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FC3813595ECDA33A018457F6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -465,6 +518,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		800E654811EE2322AF35036B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */;
+			targetProxy = F38554DA20F31E855AEE5D7A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2F178065AA8DE8889944FEA8 /* Release */ = {
@@ -547,6 +608,23 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		67FE8D83695E986DBD3919D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.skip.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = FightDeck;
+			};
+			name = Release;
 		};
 		7263C747539B67B5423DB18A /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -736,6 +814,23 @@
 			};
 			name = Debug;
 		};
+		CA0FFB70C20594FC1AC2FFAF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.skip.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = FightDeck;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -771,6 +866,15 @@
 			buildConfigurations = (
 				5564E6125AEF64BFA977DA9C /* Debug */,
 				A51EFA01273B92885CB2B6B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B7B15D16CC95842B0276D311 /* Build configuration list for PBXNativeTarget "FightDeckUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CA0FFB70C20594FC1AC2FFAF /* Debug */,
+				67FE8D83695E986DBD3919D2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

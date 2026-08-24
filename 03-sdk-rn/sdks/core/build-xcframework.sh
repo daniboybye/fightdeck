@@ -54,7 +54,9 @@ echo "Hermes bytecode: $(stat -f%z "$ROOT/ios/Resources/fightdeck.hbc" 2>/dev/nu
 PODS_ROOT="$ROOT/../../ios/Pods"
 if [[ ! -d "$PODS_ROOT/React-Core-prebuilt" ]]; then
     echo "Installing CocoaPods (required for RN xcframeworks)…"
-    (cd "$ROOT/../../ios" && pod install)
+    # The Podfile's other branch consumes an already released vendor drop — which is what this
+    # script is about to produce. Resolving from source is the only branch that can bootstrap.
+    (cd "$ROOT/../../ios" && FIGHTDECK_LOCAL_SDK=1 pod install)
     PODS_ROOT="$ROOT/../../ios/Pods"
 fi
 

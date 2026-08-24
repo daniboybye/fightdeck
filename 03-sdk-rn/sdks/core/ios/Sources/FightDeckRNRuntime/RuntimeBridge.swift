@@ -7,6 +7,7 @@ final class RuntimeBridge: NSObject {
 
     private var resultHandlers: [String: ([String: Any]) -> Void] = [:]
     private var featureModules: [String: String] = [:]
+    private var surfaces: [String: RNFeatureSurface] = [:]
 
     override private init() {
         super.init()
@@ -37,9 +38,43 @@ final class RuntimeBridge: NSObject {
         resultHandlers[feature] = handler
     }
 
+    func startHostIfNeeded() {
+        RNHostHolder.shared.start()
+    }
+
+    func makeSurfaceController(
+        feature: String,
+        properties: [String: Any],
+        onResult: @escaping ([String: Any]) -> Void
+    ) -> UIViewController {
+        setResultHandler(for: feature, handler: onResult)
+        startHostIfNeeded()
+        if let existing = surfaces[feature] {
+            updateProperties(feature: feature, properties: properties)
+            return existing.viewController
+        }
+        let surface = RNFeatureSurface(
+            feature: feature,
+            moduleName: moduleName(for: feature),
+            properties: properties
+        )
+        surfaces[feature] = surface
+        return surface.viewController
+    }
+
+    func updateProperties(feature: String, properties: [String: Any]) {
+        RNHostEngine.updateProperties(moduleName: moduleName(for: feature), properties: properties)
+    }
+
     func destroyFeature(name: String) {
+        surfaces.removeValue(forKey: name)
+        RNHostHolder.shared.unmountFeature(moduleName(for: name))
         resultHandlers.removeValue(forKey: name)
         featureModules.removeValue(forKey: name)
+    }
+
+    private func moduleName(for feature: String) -> String {
+        featureModules[feature] ?? feature
     }
 }
 

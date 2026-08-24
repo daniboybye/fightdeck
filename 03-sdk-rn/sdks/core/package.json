@@ -4,6 +4,7 @@
   "private": true,
   "main": "src/index.ts",
   "scripts": {
+    "postinstall": "node scripts/align-rn-gradle-kotlin.mjs",
     "test": "jest",
     "bundle:runtime": "react-native bundle --platform ios --dev false --entry-file src/runtime/index.js --bundle-output ios/build/main.jsbundle --assets-dest ios/build && react-native bundle --platform android --dev false --entry-file src/runtime/index.js --bundle-output android/build/main.jsbundle --assets-dest android/build",
     "bundle:deposit": "react-native bundle --platform ios --dev false --entry-file ../deposit/src/index.js --bundle-output ../deposit/ios/build/deposit.jsbundle",

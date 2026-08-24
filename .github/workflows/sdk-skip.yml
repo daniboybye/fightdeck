@@ -10,12 +10,25 @@
 name: SDK — Skip
 
 on:
+  # Both halves run on macOS here, because Skip transpiles on a Mac even for Android, so a
+  # dispatch that only needs one of them costs twice what it should. workflow_call leaves
+  # the input unset, so the measure run still gets both.
   workflow_dispatch:
+    inputs:
+      job:
+        description: Which half to run
+        type: choice
+        default: both
+        options:
+          - both
+          - apple
+          - android
   workflow_call:
 
 jobs:
   apple:
     name: XCFramework (${{ matrix.module }})
+    if: inputs.job != 'android'
     runs-on: macos-26
     timeout-minutes: 45
     # The manifests resolve a published .zip unless told otherwise, and the release this
@@ -71,6 +84,7 @@ jobs:
   # core's AAR instead of re-transpiling it, so they cannot be built in parallel with it.
   android:
     name: AARs
+    if: inputs.job != 'apple'
     runs-on: macos-26
     # macOS rather than Linux: skipstone drives the Swift toolchain plus Gradle, and the
     # documented path runs on a Mac. Moving it to Linux is an optimisation for later, not

@@ -8,12 +8,25 @@
 name: SDK — React Native
 
 on:
+  # Three modules times two platforms is six jobs, three of them on macOS at ten times the
+  # Linux rate. When only one half is being debugged, dispatch only that half.
+  # workflow_call leaves the input unset, so the measure run still gets both.
   workflow_dispatch:
+    inputs:
+      job:
+        description: Which half to run
+        type: choice
+        default: both
+        options:
+          - both
+          - apple
+          - android
   workflow_call:
 
 jobs:
   apple:
     name: XCFramework (${{ matrix.module }})
+    if: inputs.job != 'android'
     runs-on: macos-26
     timeout-minutes: 60
     strategy:
@@ -81,6 +94,7 @@ jobs:
 
   android:
     name: AAR (${{ matrix.module }})
+    if: inputs.job != 'apple'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:

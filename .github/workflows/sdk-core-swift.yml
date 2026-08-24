@@ -9,12 +9,25 @@
 name: SDK — Swift core
 
 on:
+  # Debugging the Android half used to drag the Apple half along for the ride, nine times
+  # over, and macOS minutes bill at ten times the Linux rate. Pick a half when iterating.
+  # workflow_call leaves the input unset, so the measure run still gets both.
   workflow_dispatch:
+    inputs:
+      job:
+        description: Which half to run
+        type: choice
+        default: both
+        options:
+          - both
+          - apple
+          - android
   workflow_call:
 
 jobs:
   apple:
     name: Apple
+    if: inputs.job != 'android'
     runs-on: macos-26
     timeout-minutes: 45
     steps:
@@ -57,6 +70,7 @@ jobs:
 
   android:
     name: Android (Swift SDK)
+    if: inputs.job != 'apple'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     continue-on-error: true

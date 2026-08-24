@@ -8,12 +8,26 @@
 name: SDK — Rust core
 
 on:
+  # Iterating on one target should not pay for the other two, and the XCFramework job is on
+  # macOS at ten times the Linux rate. workflow_call leaves the input unset, so the measure
+  # run still gets all three.
   workflow_dispatch:
+    inputs:
+      job:
+        description: Which target to build
+        type: choice
+        default: both
+        options:
+          - both
+          - apple
+          - android
+          - wasm
   workflow_call:
 
 jobs:
   apple:
     name: XCFramework
+    if: inputs.job != 'android' && inputs.job != 'wasm'
     runs-on: macos-26
     timeout-minutes: 45
     steps:
@@ -53,6 +67,7 @@ jobs:
 
   android:
     name: AAR
+    if: inputs.job != 'apple' && inputs.job != 'wasm'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -108,6 +123,7 @@ jobs:
     # The bonus slide: the same core, compiled to WebAssembly. Element and Crux both do
     # this in production, so it is worth one measured data point rather than a claim.
     name: Wasm (bonus)
+    if: inputs.job != 'apple' && inputs.job != 'android'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     continue-on-error: true

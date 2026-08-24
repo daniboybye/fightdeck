@@ -3,7 +3,7 @@
 // FightDeck
 //
 // Created by FightDeck on 23.08.26.
-// Copyright © 2026 Paysafe. All rights reserved.
+// Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
 import FightDeckRNRuntime

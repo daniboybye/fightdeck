@@ -3,7 +3,7 @@
 // FightDeckBetslip
 //
 // Created by FightDeck on 20.08.26.
-// Copyright © 2026 Paysafe. All rights reserved.
+// Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
 import Foundation

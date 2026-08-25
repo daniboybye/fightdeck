@@ -51,7 +51,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
     let posterURL: URL
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
-        configureAudioSession()
+            VideoPlayerContainer.activateAudioSession()
         let controller = AVPlayerViewController()
         controller.allowsPictureInPicturePlayback = true
         controller.canStartPictureInPictureAutomaticallyFromInline = true
@@ -103,15 +103,17 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         }
 
         private func detachForBackground() {
-            guard let player, controller?.player != nil else { return }
-            shouldResumeAfterForeground = player.timeControlStatus == .playing
+            guard let player else { return }
+            shouldResumeAfterForeground = player.rate > 0
             controller?.player = nil
             guard shouldResumeAfterForeground else { return }
+            VideoPlayerContainer.activateAudioSession()
             player.play()
         }
 
         private func reattachAfterForeground() {
             guard let player, let controller, controller.player == nil else { return }
+            VideoPlayerContainer.activateAudioSession()
             controller.player = player
             if shouldResumeAfterForeground {
                 player.play()
@@ -133,7 +135,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         }
     }
 
-    private func configureAudioSession() {
+    private static func activateAudioSession() {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay])
         try? session.setActive(true)

@@ -28,6 +28,7 @@ import {
   actionBarScrollInset,
   useSurfaceLayout,
 } from '../../core/src/ui/layout';
+import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
 import { parseThemeJSON, slipSummaryRows, type ThemeTokens } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
 import type { BetMode, Selection } from '../../core/src/fightcore/types';
@@ -256,10 +257,8 @@ function BetslipScreenContent(props: SlipProps) {
           })}
         </GroupedSection>
 
-        <GroupedSection title="Stake" theme={theme}>
+        <GroupedSection title="Stake" theme={theme} overflowVisible>
           <GroupedRow theme={theme} compact>
-            {/* The whole row focuses the field. A text input is the one control a finger
-                cannot enlarge with padding alone, and the label beside it is dead space. */}
             <Pressable style={styles.labeledRow} onPress={() => stakeInputRef.current?.focus()}>
               <Text style={styles.body}>Amount</Text>
               <TextInput
@@ -267,8 +266,6 @@ function BetslipScreenContent(props: SlipProps) {
                 style={styles.stakeInput}
                 testID="betslip-stake-amount"
                 keyboardType="decimal-pad"
-                // Currency while it is being read, plain digits while it is being typed — the
-                // decimal pad cannot delete a symbol it did not enter.
                 value={stakeFocused ? stakeText : formatCurrency(parseMoney(stakeText || '0'))}
                 onFocus={() => {
                   stakeFocusedRef.current = true;
@@ -286,21 +283,15 @@ function BetslipScreenContent(props: SlipProps) {
             </Pressable>
           </GroupedRow>
           <View style={styles.chipRow}>
-            {[5, 10, 25, 50].map((chip) => (
-              <Pressable
-                key={chip}
-                accessibilityRole="button"
-                accessibilityLabel={`€${chip}`}
-                style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
-                onPress={() => {
-                  const next = String(chip);
-                  setStakeText(next);
-                  notifyUpdated(selections, next);
-                }}
-              >
-                <Text style={styles.chipLabel}>€{chip}</Text>
-              </Pressable>
-            ))}
+            <GlassPresetChipRow
+              theme={theme}
+              values={[5, 10, 25, 50]}
+              onSelect={(chip) => {
+                const next = String(chip);
+                setStakeText(next);
+                notifyUpdated(selections, next);
+              }}
+            />
           </View>
         </GroupedSection>
 
@@ -308,8 +299,8 @@ function BetslipScreenContent(props: SlipProps) {
           {summary.map((row, index) => (
             <GroupedRow key={row.label} theme={theme} isLast={index === summary.length - 1}>
               <View style={styles.summaryRow}>
-                <Text style={styles.secondary}>{row.label}</Text>
-                <Text style={styles.body}>{row.value}</Text>
+                <Text style={styles.body}>{row.label}</Text>
+                <Text style={styles.secondary}>{row.value}</Text>
               </View>
             </GroupedRow>
           ))}
@@ -379,18 +370,20 @@ function GroupedSection({
   theme,
   children,
   style,
+  overflowVisible = false,
 }: {
   title?: string;
   theme: ThemeTokens;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  overflowVisible?: boolean;
 }) {
   const c = theme.colors;
   const s = theme.spacing;
   return (
     <View style={[{ marginBottom: s.lg ?? 16 }, style]}>
       {title ? <Text style={groupedStyles(c, theme).header}>{title}</Text> : null}
-      <View style={groupedStyles(c, theme).group}>{children}</View>
+      <View style={[groupedStyles(c, theme, overflowVisible).group]}>{children}</View>
     </View>
   );
 }
@@ -424,12 +417,10 @@ function GroupedRow({
   );
 }
 
-function groupedStyles(c: Record<string, string>, theme: ThemeTokens) {
+function groupedStyles(c: Record<string, string>, theme: ThemeTokens, overflowVisible = false) {
   const s = theme.spacing;
   const r = theme.radius;
   return StyleSheet.create({
-    // Sentence case, not caps: this is what a SwiftUI `Section("Stake")` header looks like in
-    // an inset-grouped list, and the whole screen is trying to pass for one.
     header: {
       color: c.textSecondary ?? '#9AA5B8',
       fontSize: theme.fontSize.callout ?? 17,
@@ -439,7 +430,7 @@ function groupedStyles(c: Record<string, string>, theme: ThemeTokens) {
     group: {
       backgroundColor: c.surface ?? '#141922',
       borderRadius: r.lg ?? 16,
-      overflow: 'hidden',
+      overflow: overflowVisible ? 'visible' : 'hidden',
     },
     divider: {
       height: StyleSheet.hairlineWidth,
@@ -496,8 +487,6 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: 
       paddingVertical: 0,
     },
     chipRow: {
-      flexDirection: 'row',
-      gap: s.sm ?? 8,
       paddingHorizontal: s.lg ?? 16,
       paddingBottom: s.md ?? 12,
     },
@@ -521,7 +510,6 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: 
     },
     linkLabel: {
       color: c.accent ?? '#E8B33C',
-      fontWeight: '600',
       fontSize: theme.fontSize.body ?? 15,
     },
     removeLabel: {

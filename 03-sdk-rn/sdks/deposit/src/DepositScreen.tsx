@@ -20,6 +20,7 @@ import {
   actionBarScrollInset,
   useSurfaceLayout,
 } from '../../core/src/ui/layout';
+import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
 import { parseThemeJSON } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
 
@@ -156,17 +157,11 @@ function DepositScreenContent(props: Record<string, unknown>) {
         />
         {amountError ? <Text style={styles.error}>{amountError}</Text> : null}
         <View style={styles.chipRow}>
-          {[10, 25, 50, 100].map((chip) => (
-            <Pressable
-              key={chip}
-              accessibilityRole="button"
-              accessibilityLabel={`€${chip}`}
-              style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
-              onPress={() => setAmountText(String(chip))}
-            >
-              <Text style={styles.chipLabel}>€{chip}</Text>
-            </Pressable>
-          ))}
+          <GlassPresetChipRow
+            theme={theme}
+            values={[10, 25, 50, 100]}
+            onSelect={(chip) => setAmountText(String(chip))}
+          />
         </View>
 
         <Text style={styles.sectionTitle}>Method</Text>

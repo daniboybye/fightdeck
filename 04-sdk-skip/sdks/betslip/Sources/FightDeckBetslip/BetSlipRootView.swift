@@ -116,7 +116,7 @@ public struct BetSlipRootView: View {
         #if SKIP
         skipSlipScroll
         #else
-        slipScroll
+        nativeSlipList
             .modifier(SlipBottomBarModifier(
                 theme: theme,
                 stakeFocused: stakeFocused,
@@ -132,21 +132,65 @@ public struct BetSlipRootView: View {
 
     #if SKIP
     private var skipSlipScroll: some View {
-        ScrollView {
-            VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
-                Text(betTypeTitle)
-                    .font(Typography.semibold(theme.fontCallout))
-                    .foregroundStyle(theme.textPrimary)
-                ForEach(store.slip.selections) { selection in
-                    selectionRow(selection)
+        ZStack(alignment: Alignment.bottom) {
+            ScrollView {
+                VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
+                    skipGroupedSection(title: betTypeTitle) {
+                        ForEach(store.slip.selections) { selection in
+                            SkipGroupedRow(
+                                theme: theme,
+                                isLast: selection.id == store.slip.selections.last?.id
+                            ) {
+                                skipSelectionRow(selection)
+                            }
+                        }
+                    }
+                    skipGroupedSection(title: "Stake") {
+                        SkipGroupedRow(theme: theme, isLast: false) {
+                            skipStakeField
+                        }
+                        SkipGroupedRow(theme: theme, isLast: true, compact: true) {
+                            stakeChipRow
+                        }
+                    }
+                    skipGroupedSection(title: nil) {
+                        ForEach(0 ..< skipSummaryRows.count, id: \.self) { index in
+                            SkipGroupedRow(
+                                theme: theme,
+                                isLast: index == skipSummaryRows.count - 1
+                            ) {
+                                skipSummaryRow(skipSummaryRows[index].label, skipSummaryRows[index].value)
+                            }
+                        }
+                    }
+                    if !skipErrorMessages.isEmpty {
+                        skipGroupedSection(title: nil) {
+                            ForEach(0 ..< skipErrorMessages.count, id: \.self) { index in
+                                SkipGroupedRow(
+                                    theme: theme,
+                                    isLast: index == skipErrorMessages.count - 1
+                                ) {
+                                    Text(skipErrorMessages[index])
+                                        .foregroundStyle(theme.negative)
+                                        .font(Typography.body(theme.fontCaption))
+                                        .frame(maxWidth: CGFloat.infinity, alignment: .leading)
+                                }
+                            }
+                        }
+                    }
+                    skipGroupedSection(title: "Deposit") {
+                        SkipGroupedRow(theme: theme, isLast: false) {
+                            skipLabeledRow("Balance", Money.formatCurrency(store.balance))
+                        }
+                        SkipGroupedRow(theme: theme, isLast: true) {
+                            skipAddFundsButton
+                        }
+                    }
                 }
-                stakeField
-                summaryBlock
-                validationErrors
-                depositSection
-                skipPlaceBetActions
+                .padding(theme.spacingLG)
+                .padding(.bottom, Layout.primaryActionHeight + Layout.tabBarActionGap + theme.spacingLG)
             }
-            .padding(theme.spacingLG)
+            skipPlaceBetBar
         }
         .toolbar {
             ToolbarItemGroup(placement: ToolbarItemPlacement.keyboard) {
@@ -154,6 +198,20 @@ public struct BetSlipRootView: View {
                 Button("Done") { stakeFocused = false }
             }
         }
+    }
+
+    private var skipPlaceBetBar: some View {
+        skipPlaceBetActions
+            .padding(.horizontal, theme.spacingLG)
+            .padding(.bottom, Layout.tabBarActionGap)
+    }
+
+    private var skipSummaryRows: [(label: String, value: String)] {
+        FightCoreDisplay.slipSummary(state: store.slipState)
+    }
+
+    private var skipErrorMessages: [String] {
+        store.slipState.errors.map { $0.rawValue.replacingOccurrences(of: "_", with: " ") }
     }
 
     private var skipPlaceBetActions: some View {
@@ -168,46 +226,63 @@ public struct BetSlipRootView: View {
         }
         .frame(height: Layout.primaryActionHeight)
         .background(theme.accent)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+        .clipShape(Capsule())
         .disabled(!store.slipState.errors.isEmpty)
     }
-    #endif
 
-    private var slipScroll: some View {
-        ScrollView {
-            VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
-                Text(betTypeTitle)
-                    .font(Typography.semibold(theme.fontCallout))
-                    .foregroundStyle(theme.textPrimary)
-                ForEach(store.slip.selections) { selection in
-                    selectionRow(selection)
-                }
-                stakeField
-                summaryBlock
-                validationErrors
-                depositSection
+    private func skipGroupedSection<Content: View>(
+        title: String?,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingSM) {
+            if let title {
+                Text(title)
+                    .font(Typography.body(theme.fontCallout))
+                    .foregroundStyle(theme.textSecondary)
+                    .padding(.horizontal, theme.spacingLG)
             }
-            .padding(theme.spacingLG)
+            VStack(spacing: 0) {
+                content()
+            }
+            .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
         }
     }
 
-    /// One leg is a single, two or more is an accumulator. The user never picks — the slip
-    /// just says which one it currently is.
-    private var betTypeTitle: String {
-        store.slip.mode == BetMode.accumulator ? "Accumulator" : "Single"
+    private struct SkipGroupedRow<Content: View>: View {
+        let theme: BetslipTheme
+        let isLast: Bool
+        var compact = false
+        @ViewBuilder let content: () -> Content
+
+        var body: some View {
+            VStack(spacing: 0) {
+                content()
+                    .padding(.horizontal, theme.spacingLG)
+                    .padding(.vertical, compact ? theme.spacingSM : theme.spacingMD)
+                if !isLast {
+                    Rectangle()
+                        .fill(theme.textSecondary.opacity(0.25))
+                        .frame(height: 1)
+                        .padding(.leading, theme.spacingLG)
+                }
+            }
+        }
     }
 
-    private func selectionRow(_ selection: Selection) -> some View {
-        HStack {
+    private func skipSelectionRow(_ selection: Selection) -> some View {
+        HStack(alignment: VerticalAlignment.top, spacing: theme.spacingMD) {
             VStack(alignment: HorizontalAlignment.leading) {
                 Text(display.fighterName(id: selection.fighterID))
                     .font(Typography.body(theme.fontCallout))
+                    .foregroundStyle(theme.textPrimary)
                 Text("vs \(display.opponentName(for: selection)) · \(display.eventName(for: selection))")
                     .font(Typography.body(theme.fontCaption))
                     .foregroundStyle(theme.textSecondary)
             }
             .frame(maxWidth: CGFloat.infinity, alignment: .leading)
             Text(FightCoreDisplay.formatOdds(selection.odds))
+                .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.accent)
             Button {
                 store.removeSelection(id: selection.id)
@@ -218,24 +293,129 @@ public struct BetSlipRootView: View {
             }
             .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
         }
-        .padding(theme.spacingLG)
-        .background(theme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
     }
 
-    private var stakeField: some View {
-        VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingSM) {
+    private var skipStakeField: some View {
+        HStack {
             Text("Amount")
-                .font(Typography.semibold(theme.fontCallout))
+                .font(Typography.body(theme.fontBody))
                 .foregroundStyle(theme.textPrimary)
+            Spacer()
             TextField("Stake", text: stakeBinding)
                 .keyboardType(UIKeyboardType.decimalPad)
+                .multilineTextAlignment(.trailing)
                 .focused($stakeFocused)
-                .padding(theme.spacingLG)
-                .background(theme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
-            stakeChipRow
+                .foregroundStyle(theme.textPrimary)
         }
+        .frame(minHeight: Layout.minTapTarget)
+    }
+
+    private func skipSummaryRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Text(value)
+                .foregroundStyle(theme.textSecondary)
+        }
+        .font(Typography.body(theme.fontBody))
+    }
+
+    private func skipLabeledRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Text(value)
+                .foregroundStyle(theme.textPrimary)
+        }
+        .font(Typography.body(theme.fontBody))
+    }
+
+    private var skipAddFundsButton: some View {
+        Button(action: onDeposit) {
+            Text("Add funds")
+                .font(Typography.body(theme.fontBody))
+                .foregroundStyle(theme.accent)
+                .frame(maxWidth: CGFloat.infinity, minHeight: Layout.minTapTarget, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+    #endif
+
+    #if !SKIP
+    private var nativeSlipList: some View {
+        List {
+            Section(betTypeTitle) {
+                ForEach(store.slip.selections) { selection in
+                    listSelectionRow(selection)
+                }
+                .onDelete { offsets in
+                    offsets.map { store.slip.selections[$0].id }.forEach { id in
+                        store.removeSelection(id: id)
+                        onHostSync(store.slip, store.balance, nil)
+                    }
+                }
+            }
+            Section("Stake") {
+                LabeledContent("Amount") {
+                    TextField("Stake", text: stakeBinding)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .focused($stakeFocused)
+                }
+                stakeChipRow
+            }
+            Section {
+                ForEach(Array(FightCoreDisplay.slipSummary(state: store.slipState).enumerated()), id: \.offset) { _, row in
+                    LabeledContent(row.label, value: row.value)
+                }
+            }
+            if !store.slipState.errors.isEmpty {
+                Section {
+                    ForEach(store.slipState.errors, id: \.self) { error in
+                        Label(error.rawValue.replacingOccurrences(of: "_", with: " "), systemImage: "exclamationmark.triangle.fill")
+                            .font(.callout)
+                            .foregroundStyle(theme.negative)
+                    }
+                }
+            }
+            Section("Deposit") {
+                LabeledContent("Balance") {
+                    Text(Money.formatCurrency(store.balance))
+                }
+                Button(action: onDeposit) {
+                    Text("Add funds")
+                        .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
+                        .contentShape(.rect)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private func listSelectionRow(_ selection: Selection) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: theme.spacingMD) {
+            VStack(alignment: .leading) {
+                Text(display.fighterName(id: selection.fighterID))
+                Text("vs \(display.opponentName(for: selection)) · \(display.eventName(for: selection))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Text(FightCoreDisplay.formatOdds(selection.odds))
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(theme.accent)
+        }
+    }
+    #endif
+
+    /// One leg is a single, two or more is an accumulator. The user never picks — the slip
+    /// just says which one it currently is.
+    private var betTypeTitle: String {
+        store.slip.mode == BetMode.accumulator ? "Accumulator" : "Single"
     }
 
     private var stakeBinding: Binding<String> {
@@ -251,7 +431,7 @@ public struct BetSlipRootView: View {
     @ViewBuilder
     private var stakeChipRow: some View {
         #if SKIP
-        HStack {
+        HStack(spacing: theme.spacingSM) {
             ForEach([5, 10, 25, 50], id: \.self) { chip in
                 stakeChip("€\(chip)") {
                     store.slip.stake = Money.parse(String(chip))
@@ -269,68 +449,6 @@ public struct BetSlipRootView: View {
             }
         }
         #endif
-    }
-
-    private var summaryBlock: some View {
-        let state = store.slipState
-        return VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingSM) {
-            summaryRow("Total stake", Money.formatCurrency(state.totalStake))
-            if let display = state.combinedOddsDisplay {
-                summaryRow("Combined odds", Money.format(display))
-            }
-            summaryRow("Potential return", Money.formatCurrency(state.potentialReturn))
-            summaryRow("Potential profit", Money.formatCurrency(state.potentialProfit))
-        }
-        .font(Typography.body(theme.fontBody))
-        .padding(theme.spacingLG)
-        .background(theme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
-    }
-
-    private func summaryRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label)
-                .foregroundStyle(theme.textSecondary)
-            Spacer()
-            Text(value)
-        }
-    }
-
-    private var validationErrors: some View {
-        VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingXS) {
-            ForEach(store.slipState.errors, id: \.self) { error in
-                Text(error.rawValue.replacingOccurrences(of: "_", with: " "))
-                    .foregroundStyle(theme.negative)
-                    .font(Typography.body(theme.fontCaption))
-            }
-        }
-    }
-
-    private var depositSection: some View {
-        VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingSM) {
-            Text("Deposit")
-                .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.textPrimary)
-            HStack {
-                Text("Balance")
-                    .foregroundStyle(theme.textSecondary)
-                Spacer()
-                Text(Money.formatCurrency(store.balance))
-            }
-            .font(Typography.body(theme.fontBody))
-            Button(action: onDeposit) {
-                Text("Add funds")
-                    .font(Typography.semibold(theme.fontCallout))
-                    .foregroundStyle(theme.onAccent)
-                    .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
-            }
-            .frame(height: Layout.minTapTarget)
-            .background(theme.accent)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
-        }
-        .padding(theme.spacingLG)
-        .background(theme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
     }
 
     @ViewBuilder
@@ -382,11 +500,15 @@ public struct BetSlipRootView: View {
         Button(action: action) {
             Text(title)
                 .font(Typography.medium(theme.fontCaption))
+                .foregroundStyle(theme.accent)
                 .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
         }
         .frame(height: Layout.secondaryActionHeight)
-        .background(theme.surfaceElevated)
-        .foregroundStyle(theme.accent)
+        .background(theme.surface)
+        .overlay {
+            Capsule()
+                .stroke(theme.textSecondary.opacity(0.35), lineWidth: 1)
+        }
         .clipShape(Capsule())
         #else
         Button(action: action) {
@@ -460,8 +582,6 @@ private struct SlipBottomBarModifier: ViewModifier {
             }
         }
         .padding(.horizontal, theme.spacingLG)
-        // Whatever the bar is currently sitting on — tab bar or keyboard — it should not look
-        // welded to it, and the host's floating tab bar sits above the safe area it reports.
         .padding(.bottom, stakeFocused ? Layout.actionBarGap : Layout.tabBarActionGap)
         .animation(.snappy(duration: 0.25), value: stakeFocused)
     }

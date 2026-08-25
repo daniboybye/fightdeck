@@ -59,6 +59,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
 
         if let url = URL(string: item.url) {
             let player = AVPlayer(url: url)
+            player.audiovisualBackgroundPlaybackPolicy = .continuesIfPossible
             controller.player = player
             context.coordinator.bind(controller: controller, player: player)
             updateNowPlaying(item: item)
@@ -70,9 +71,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
 
     static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
-        uiViewController.player?.pause()
-        uiViewController.player = nil
-        coordinator.teardown()
+        coordinator.teardown(stopPlayback: true)
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -81,6 +80,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         private weak var controller: AVPlayerViewController?
         private var player: AVPlayer?
         private var observers: [any NSObjectProtocol] = []
+        private var shouldResumeAfterForeground = false
 
         func bind(controller: AVPlayerViewController, player: AVPlayer) {
             self.controller = controller
@@ -103,21 +103,31 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         }
 
         private func detachForBackground() {
-            guard let player, player.rate > 0 else { return }
+            guard let player, controller?.player != nil else { return }
+            shouldResumeAfterForeground = player.timeControlStatus == .playing
             controller?.player = nil
+            guard shouldResumeAfterForeground else { return }
             player.play()
         }
 
         private func reattachAfterForeground() {
             guard let player, let controller, controller.player == nil else { return }
             controller.player = player
+            if shouldResumeAfterForeground {
+                player.play()
+                shouldResumeAfterForeground = false
+            }
         }
 
-        func teardown() {
+        func teardown(stopPlayback: Bool) {
+            if stopPlayback {
+                player?.pause()
+            }
             for observer in observers {
                 NotificationCenter.default.removeObserver(observer)
             }
             observers.removeAll()
+            controller?.player = nil
             player = nil
             controller = nil
         }

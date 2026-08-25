@@ -127,7 +127,7 @@ private struct EventRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            RemoteImageTile(url: posterURL, height: 150)
+            RemoteImageTile(url: posterURL)
                 .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                 Text(event.name)
@@ -289,7 +289,7 @@ struct VideoRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            RemoteImageTile(url: posterURL, height: 140)
+            RemoteImageTile(url: posterURL)
                 .overlay {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 44))

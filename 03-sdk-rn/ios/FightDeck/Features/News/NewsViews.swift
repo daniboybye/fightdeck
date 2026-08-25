@@ -15,7 +15,7 @@ struct NewsRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            RemoteImageTile(url: imageURL, height: 140)
+            RemoteImageTile(url: imageURL)
                 .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                 if !eventName.isEmpty {

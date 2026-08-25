@@ -40,6 +40,7 @@ enum DesignTokens {
         static let minTapTarget: CGFloat = 44
         /// A full-width call to action reads as a button, not a label, at this height.
         static let primaryActionHeight: CGFloat = 50
+        static let mediaTileAspectRatio: CGFloat = 16 / 9
     }
 }
 

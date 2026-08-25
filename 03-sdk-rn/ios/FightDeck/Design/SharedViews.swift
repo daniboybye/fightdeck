@@ -121,16 +121,18 @@ struct KeyboardDoneButton: View {
     }
 }
 
-/// A poster or portrait that fills its slot without letting the image push the row wider
-/// than the list. `scaledToFill` alone would do exactly that.
 struct RemoteImageTile: View {
     let url: URL
-    var height: CGFloat
+    var aspectRatio: CGFloat = DesignTokens.Layout.mediaTileAspectRatio
 
     var body: some View {
-        RemoteImage(url: url)
-            .frame(height: height)
+        KFImage(url)
+            .placeholder { Rectangle().fill(.quaternary) }
+            .fade(duration: 0.2)
+            .resizable()
+            .scaledToFit()
             .frame(maxWidth: .infinity)
-            .clipped()
+            .aspectRatio(aspectRatio, contentMode: .fit)
+            .background(.quaternary)
     }
 }

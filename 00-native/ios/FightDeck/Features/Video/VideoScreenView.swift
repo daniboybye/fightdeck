@@ -51,7 +51,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
     let posterURL: URL
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
-            VideoPlayerContainer.activateAudioSession()
+        Self.activateAudioSession()
         let controller = AVPlayerViewController()
         controller.allowsPictureInPicturePlayback = true
         controller.canStartPictureInPictureAutomaticallyFromInline = true

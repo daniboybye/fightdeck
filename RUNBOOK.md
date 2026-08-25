@@ -48,7 +48,17 @@ Regenerate if needed:
 ```bash
 cd "$REPO"
 python3 tools/build-dataset.py
-swift tools/generate-placeholder-art.swift
+python3 tools/fetch-real-art.py   # real Wikimedia photos + placeholders for gaps
+```
+
+`fetch-real-art.py` generates placeholders first, then overlays photographs listed in
+`tools/image-sources.json`. Credits and fallbacks are recorded in `dataset/image-credits.json`.
+To revert art only: `swift tools/generate-placeholder-art.swift`.
+
+Regenerate launcher icons after changing approach colours or numbering:
+
+```bash
+swift tools/generate-app-icons.swift
 ```
 
 Confirm:

@@ -27,6 +27,11 @@ targets:
       - path: FightDeck
     dependencies:
       - package: Kingfisher
+    info:
+      path: FightDeck/Info.plist
+      properties:
+        UIBackgroundModes:
+          - audio
     settings:
       INFOPLIST_KEY_CFBundleDisplayName: FD 3 RN
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn

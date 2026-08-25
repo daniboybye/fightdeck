@@ -83,6 +83,7 @@
 		B446C2F8B801B69265FA3752 /* FightCoreGlue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreGlue.swift; sourceTree = "<group>"; };
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
 		C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTour.swift; sourceTree = "<group>"; };
+		D83B2FF9D94616387CC70FFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 		FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -146,6 +147,7 @@
 				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
 				9DB30B02F6D5FF14A9B89E9A /* Generated */,
 				FE9EE388C310ED4AB6AE0712 /* Services */,
+				D83B2FF9D94616387CC70FFE /* Info.plist */,
 			);
 			path = FightDeck;
 			sourceTree = "<group>";
@@ -567,6 +569,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/FightDeck/Generated",
 				);
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 2 Rust";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -661,6 +664,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(SRCROOT)/FightDeck/Generated",
 				);
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 2 Rust";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

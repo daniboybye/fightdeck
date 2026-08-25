@@ -81,6 +81,7 @@
 		B472255B466D66FBEFC149DD /* FightCoreTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreTypes.swift; sourceTree = "<group>"; };
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
 		C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTour.swift; sourceTree = "<group>"; };
+		D83B2FF9D94616387CC70FFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		F13620DECF8F3F4F8315E5EE /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
@@ -139,6 +140,7 @@
 				AC106BAA8D8C9E35E88A5DB7 /* Design */,
 				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
 				FE9EE388C310ED4AB6AE0712 /* Services */,
+				D83B2FF9D94616387CC70FFE /* Info.plist */,
 			);
 			path = FightDeck;
 			sourceTree = "<group>";
@@ -514,6 +516,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 0 Native";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -568,6 +571,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 0 Native";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

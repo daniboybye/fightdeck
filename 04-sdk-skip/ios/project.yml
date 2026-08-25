@@ -34,6 +34,11 @@ targetTemplates:
   FightDeckHost:
     type: application
     platform: iOS
+    info:
+      path: FightDeck/Info.plist
+      properties:
+        UIBackgroundModes:
+          - audio
     settings:
       groups:
         - fightdeck_app

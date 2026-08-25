@@ -29,6 +29,11 @@ targets:
       - framework: ../sdks/core/out/FightCore.xcframework
         embed: false
       - package: Kingfisher
+    info:
+      path: FightDeck/Info.plist
+      properties:
+        UIBackgroundModes:
+          - audio
     settings:
       INFOPLIST_KEY_CFBundleDisplayName: FD 2 Rust
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.rust

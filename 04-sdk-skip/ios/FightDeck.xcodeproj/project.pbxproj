@@ -107,6 +107,7 @@
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
 		C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTour.swift; sourceTree = "<group>"; };
 		D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKBootstrap.swift; sourceTree = "<group>"; };
+		D83B2FF9D94616387CC70FFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatting.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
@@ -164,6 +165,7 @@
 				F8E622B7794169669381AB5A /* SDK */,
 				FE9EE388C310ED4AB6AE0712 /* Services */,
 				E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */,
+				D83B2FF9D94616387CC70FFE /* Info.plist */,
 			);
 			path = FightDeck;
 			sourceTree = "<group>";
@@ -592,6 +594,7 @@
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 4 Skip";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -634,6 +637,7 @@
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD4 Deposit";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -659,6 +663,7 @@
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD4 Deposit";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -684,6 +689,7 @@
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 4 Skip";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -772,6 +778,7 @@
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD4 Runtime";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -797,6 +804,7 @@
 				CODE_SIGN_IDENTITY = "";
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD4 Runtime";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

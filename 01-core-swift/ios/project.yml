@@ -30,6 +30,11 @@ targets:
     dependencies:
       - package: FightCore
       - package: Kingfisher
+    info:
+      path: FightDeck/Info.plist
+      properties:
+        UIBackgroundModes:
+          - audio
     settings:
       INFOPLIST_KEY_CFBundleDisplayName: FD 1 Swift
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.coreswift

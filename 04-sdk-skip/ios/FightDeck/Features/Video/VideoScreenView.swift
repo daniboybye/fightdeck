@@ -9,6 +9,7 @@
 import AVKit
 import MediaPlayer
 import SwiftUI
+import UIKit
 
 struct VideoScreenView: View {
     let item: MediaItem
@@ -59,7 +60,7 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         if let url = URL(string: item.url) {
             let player = AVPlayer(url: url)
             controller.player = player
-            context.coordinator.player = player
+            context.coordinator.bind(controller: controller, player: player)
             updateNowPlaying(item: item)
             player.play()
         }
@@ -68,10 +69,58 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
 
+    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
+        uiViewController.player?.pause()
+        uiViewController.player = nil
+        coordinator.teardown()
+    }
+
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     final class Coordinator {
-        var player: AVPlayer?
+        private weak var controller: AVPlayerViewController?
+        private var player: AVPlayer?
+        private var observers: [any NSObjectProtocol] = []
+
+        func bind(controller: AVPlayerViewController, player: AVPlayer) {
+            self.controller = controller
+            self.player = player
+            let center = NotificationCenter.default
+            observers.append(center.addObserver(
+                forName: UIApplication.willResignActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.detachForBackground()
+            })
+            observers.append(center.addObserver(
+                forName: UIApplication.didBecomeActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.reattachAfterForeground()
+            })
+        }
+
+        private func detachForBackground() {
+            guard let player, player.rate > 0 else { return }
+            controller?.player = nil
+            player.play()
+        }
+
+        private func reattachAfterForeground() {
+            guard let player, let controller, controller.player == nil else { return }
+            controller.player = player
+        }
+
+        func teardown() {
+            for observer in observers {
+                NotificationCenter.default.removeObserver(observer)
+            }
+            observers.removeAll()
+            player = nil
+            controller = nil
+        }
     }
 
     private func configureAudioSession() {

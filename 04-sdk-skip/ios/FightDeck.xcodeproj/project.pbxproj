@@ -50,6 +50,7 @@
 		8D9D6F3D5C283BE96968F992 /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFE3F0A2ABFBDB3D70586AB4 /* FightDeckCore */; };
 		97D8BED61A61C1DEB1D1973F /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
 		9FAE979935271512DD91DA3D /* FightDeckDeposit in Frameworks */ = {isa = PBXBuildFile; productRef = 19678514C928A35DB4F989E8 /* FightDeckDeposit */; };
+		A14E03A8CF4DF30382238B9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42A7D4655065DF81DD8E152C /* Assets.xcassets */; };
 		A517FBFDEBCAE44BDAD4DAC9 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
 		A9A9015BFEAC6B0641118019 /* DisplayFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */; };
 		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
@@ -57,6 +58,7 @@
 		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
 		B46DA165B69DDFC0F3D14C3A /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
 		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
+		B6D9AD2AAC514D4E6A09798F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42A7D4655065DF81DD8E152C /* Assets.xcassets */; };
 		C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
 		C7B96C3DA94D87430A321617 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
 		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
@@ -70,6 +72,7 @@
 		EB3C292B157452A71EB9AE68 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
 		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
+		F2E7E45FE4A2343FF24C566E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42A7D4655065DF81DD8E152C /* Assets.xcassets */; };
 		F502F17CC36E3303471CFBD6 /* FightDeckBetslip in Frameworks */ = {isa = PBXBuildFile; productRef = EB8D6D7EABFFCE9FD6725FB8 /* FightDeckBetslip */; };
 /* End PBXBuildFile section */
 
@@ -90,6 +93,7 @@
 		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C15AC4F04B3055B51F23702 /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../sdks/core; sourceTree = SOURCE_ROOT; };
 		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
+		42A7D4655065DF81DD8E152C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
 		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
 		5CB34A2F61DC158028871445 /* DatasetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetModels.swift; sourceTree = "<group>"; };
@@ -164,6 +168,7 @@
 				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
 				F8E622B7794169669381AB5A /* SDK */,
 				FE9EE388C310ED4AB6AE0712 /* Services */,
+				42A7D4655065DF81DD8E152C /* Assets.xcassets */,
 				E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */,
 				D83B2FF9D94616387CC70FFE /* Info.plist */,
 			);
@@ -308,6 +313,7 @@
 			buildConfigurationList = 1D415B34FFC1D6BB85C96213 /* Build configuration list for PBXNativeTarget "FightDeckSkipDeposit" */;
 			buildPhases = (
 				FC3813595ECDA33A018457F6 /* Sources */,
+				5910A6877A33F27CE05C639C /* Resources */,
 				4F74D80C3F38E86B74D25C6C /* Frameworks */,
 			);
 			buildRules = (
@@ -347,6 +353,7 @@
 			buildConfigurationList = 43C152A50E062055EC795A43 /* Build configuration list for PBXNativeTarget "FightDeckRuntime" */;
 			buildPhases = (
 				92B76B245DF42DBE3272B234 /* Sources */,
+				D72B6AF0E708ADC6649D319E /* Resources */,
 				F60386423F8BC517AE64A1FC /* Frameworks */,
 			);
 			buildRules = (
@@ -367,6 +374,7 @@
 			buildConfigurationList = AE21C478BC5DC370EF8E33A0 /* Build configuration list for PBXNativeTarget "FightDeck" */;
 			buildPhases = (
 				3AD307C6196DE9DC1C5BD5E4 /* Sources */,
+				77BEBE6D04B62A674E0DC9CC /* Resources */,
 				8FB1D06474B2D730B4A262FC /* Frameworks */,
 			);
 			buildRules = (
@@ -434,6 +442,33 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5910A6877A33F27CE05C639C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F2E7E45FE4A2343FF24C566E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		77BEBE6D04B62A674E0DC9CC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6D9AD2AAC514D4E6A09798F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D72B6AF0E708ADC6649D319E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A14E03A8CF4DF30382238B9B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3AD307C6196DE9DC1C5BD5E4 /* Sources */ = {

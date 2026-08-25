@@ -33,6 +33,7 @@ targets:
         UIBackgroundModes:
           - audio
     settings:
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       INFOPLIST_KEY_CFBundleDisplayName: FD 3 RN
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn
       SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_BOTH

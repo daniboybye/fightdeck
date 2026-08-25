@@ -35,6 +35,7 @@ targets:
         UIBackgroundModes:
           - audio
     settings:
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       INFOPLIST_KEY_CFBundleDisplayName: FD 2 Rust
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.rust
       INFOPLIST_KEY_UILaunchScreen_Generation: YES

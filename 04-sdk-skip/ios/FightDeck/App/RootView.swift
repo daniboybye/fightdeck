@@ -43,19 +43,19 @@ struct RootView: View {
         // the tab you pick odds on. As a tab view accessory it also inflates the safe area,
         // which is what keeps it off the last row of every scroll view.
         .tabViewBottomAccessory(isEnabled: selectedTab == .upcoming) {
-            if state.slip.selections.isEmpty {
-                Color.clear
-                    .frame(height: 0)
-                    .accessibilityHidden(true)
-            } else {
-                BetSlipAccessory(
-                    legCount: state.slip.selections.count,
-                    potentialReturn: Money.formatCurrency(state.slipState.potentialReturn)
-                ) {
-                    selectedTab = .slip
-                    slipPath = []
-                }
+            BetSlipAccessory(
+                legCount: max(state.slip.selections.count, 1),
+                potentialReturn: Money.formatCurrency(
+                    state.slip.selections.isEmpty ? 0 : state.slipState.potentialReturn
+                )
+            ) {
+                guard !state.slip.selections.isEmpty else { return }
+                selectedTab = .slip
+                slipPath = []
             }
+            .opacity(state.slip.selections.isEmpty ? 0 : 1)
+            .allowsHitTesting(!state.slip.selections.isEmpty)
+            .accessibilityHidden(state.slip.selections.isEmpty)
         }
         .task {
             SDKBootstrap.shared.configureOnce()

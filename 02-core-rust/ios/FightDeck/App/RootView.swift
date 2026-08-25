@@ -42,21 +42,24 @@ struct RootView: View {
         // The bar is a shortcut into the slip while you are picking odds, so it belongs to
         // the tab you pick odds on. As a tab view accessory it also inflates the safe area,
         // which is what keeps it off the last row of every scroll view.
-        .tabViewBottomAccessory(isEnabled: showsSlipAccessory) {
-            BetSlipAccessory(
-                legCount: state.slipStore.slip.selections.count,
-                potentialReturn: FightCoreDisplay.formatCurrencyAmount(state.slipState.potentialReturn)
-            ) {
-                selectedTab = .slip
-                slipPath = []
+        .tabViewBottomAccessory(isEnabled: selectedTab == .upcoming) {
+            if state.slipStore.slip.selections.isEmpty {
+                Color.clear
+                    .frame(height: 0)
+                    .accessibilityHidden(true)
+            } else {
+                BetSlipAccessory(
+                    legCount: state.slipStore.slip.selections.count,
+                    potentialReturn: FightCoreDisplay.formatCurrencyAmount(state.slipState.potentialReturn)
+                ) {
+                    selectedTab = .slip
+                    slipPath = []
+                }
             }
         }
         .task { await state.bootstrap() }
     }
 
-    private var showsSlipAccessory: Bool {
-        selectedTab == .upcoming && !state.slipStore.slip.selections.isEmpty
-    }
 }
 
 private struct BetSlipAccessory: View {
@@ -64,18 +67,14 @@ private struct BetSlipAccessory: View {
     let potentialReturn: String
     let action: () -> Void
 
-    @Environment(\.tabViewBottomAccessoryPlacement) private var placement
-
     var body: some View {
         Button(action: action) {
             HStack {
                 Label("\(legCount) selection\(legCount == 1 ? "" : "s")", systemImage: "ticket")
                     .labelStyle(.titleAndIcon)
-                if placement != .inline {
-                    Spacer()
-                    Text("Return \(potentialReturn)")
-                        .fontWeight(.semibold)
-                }
+                Spacer()
+                Text("Return \(potentialReturn)")
+                    .fontWeight(.semibold)
             }
             .font(.subheadline)
             .padding(.horizontal, DesignTokens.Spacing.lg)

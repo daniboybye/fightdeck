@@ -13,10 +13,7 @@ import UIKit
 
 struct VideoScreenView: View {
     let item: MediaItem
-    let posterURL: URL
-
-    @State private var player: AVPlayer?
-    @State private var controller: AVPlayerViewController?
+    let posterURL: URL?
 
     var body: some View {
         List {
@@ -48,7 +45,7 @@ struct VideoScreenView: View {
 
 struct VideoPlayerContainer: UIViewControllerRepresentable {
     let item: MediaItem
-    let posterURL: URL
+    let posterURL: URL?
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         Self.activateAudioSession()
@@ -76,6 +73,9 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
+    /// Main-actor isolated so the notification closures below, which are `@Sendable`, may capture
+    /// it and touch the player. Everything here already runs on the main thread.
+    @MainActor
     final class Coordinator {
         private weak var controller: AVPlayerViewController?
         private var player: AVPlayer?
@@ -91,14 +91,16 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.detachForBackground()
+                // `queue: .main` already guarantees main-thread delivery; the compiler cannot
+                // see that through NotificationCenter's `@Sendable` closure.
+                MainActor.assumeIsolated { self?.detachForBackground() }
             })
             observers.append(center.addObserver(
                 forName: UIApplication.didBecomeActiveNotification,
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.reattachAfterForeground()
+                MainActor.assumeIsolated { self?.reattachAfterForeground() }
             })
         }
 

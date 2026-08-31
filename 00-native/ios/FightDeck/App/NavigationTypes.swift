@@ -37,6 +37,3 @@ enum EventsRoute: Hashable {
     case video(String)
 }
 
-enum SlipRoute: Hashable {
-    case deposit
-}

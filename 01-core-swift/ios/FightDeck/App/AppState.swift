@@ -10,6 +10,13 @@ import FightCore
 import Foundation
 import Observation
 
+
+enum AppBootstrapState: Equatable {
+    case loading
+    case failed(String)
+    case ready
+}
+
 enum LoadState<Value>: Sendable where Value: Sendable {
     case loading
     case loaded(Value)
@@ -20,11 +27,18 @@ enum LoadState<Value>: Sendable where Value: Sendable {
 @Observable
 @MainActor
 final class AppState {
-    var eventsState: LoadState<[EventItem]> = .loading
-    var fightersState: LoadState<[FighterItem]> = .loading
+    var eventsState: LoadState<[Event]> = .loading
+    var fightersState: LoadState<[Fighter]> = .loading
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
+
+    var bootstrapState: AppBootstrapState = .loading
     var betPlacedMessage: String?
+
+    /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
+    /// toolbars depend on observable state rather than on a closure handed down through the
+    /// environment, which is a new value on every `RootView` body pass.
+    var isPresentingDeposit = false
 
     let repository: JSONFileRepository
     let slipStore: BetSlipStore
@@ -51,10 +65,19 @@ final class AppState {
     var slipState: SlipState { slipStore.slipState }
 
     func bootstrap() async {
-        // The dataset stores image paths relative to the dataset root ("assets/..."), so the
-        // server is rooted there. Rooting it at assets/ would strip the prefix and 404.
-        try? await LocalAssetServer.shared.start(assetsRoot: DatasetLocator.datasetRoot())
-        await refreshAll()
+        bootstrapState = .loading
+        let datasetRoot = DatasetLocator.datasetRoot()
+        do {
+            try await LocalAssetServer.shared.start(assetsRoot: datasetRoot)
+            bootstrapState = .ready
+            await refreshAll()
+        } catch {
+            bootstrapState = .failed("Could not start image server. Check the dataset path.")
+        }
+    }
+
+    func retryBootstrap() async {
+        await bootstrap()
     }
 
     func refreshAll() async {
@@ -104,13 +127,12 @@ final class AppState {
         }
     }
 
-    func toggleSelection(bout: BoutItem, fighterID: String, odds: String) {
+    func toggleSelection(bout: Bout, fighterID: String, odds: String) {
         slipStore.toggleSelection(
             boutID: bout.id,
             fighterID: fighterID,
             odds: Money.parse(odds)
         )
-        syncMode()
         betPlacedMessage = nil
     }
 
@@ -120,20 +142,20 @@ final class AppState {
 
     func removeSelection(id: String) {
         slipStore.removeSelection(id: id)
-        syncMode()
+        betPlacedMessage = nil
+    }
+
+    func removeSelection(boutID: String, fighterID: String) {
+        slipStore.removeSelection(boutID: boutID, fighterID: fighterID)
         betPlacedMessage = nil
     }
 
     func placeBet() {
-        let state = slipState
-        guard state.errors.isEmpty else { return }
-        slipStore.balance -= state.totalStake
-        slipStore.slip.selections.removeAll()
-        syncMode()
+        guard let state = slipStore.placeBet() else { return }
         betPlacedMessage = "\(Money.formatCurrency(state.potentialReturn)) returns if it lands"
     }
 
-    func fighter(_ id: String) -> FighterItem? {
+    func fighter(_ id: String) -> Fighter? {
         guard case .loaded(let fighters) = fightersState else { return nil }
         return fighters.first { $0.id == id }
     }
@@ -142,15 +164,15 @@ final class AppState {
         fighter(id)?.recordDisplay ?? "—"
     }
 
-    private func syncMode() {
-        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
+    func presentDeposit() {
+        isPresentingDeposit = true
     }
 
     func deposit(amount: Decimal) {
         slipStore.deposit(amount: amount)
     }
 
-    func imageURL(_ path: String) -> URL {
+    func imageURL(_ path: String) -> URL? {
         repository.imageURL(for: path)
     }
 
@@ -161,37 +183,10 @@ final class AppState {
               let file = try? JSONDecoder().decode(EventsEnvelope.self, from: data) else {
             return FightCore(bouts: [])
         }
-        let bouts = file.events.flatMap(\.bouts).map { bout in
-            BoutIndex(
-                id: bout.id,
-                redFighterID: bout.redCorner.fighterId,
-                blueFighterID: bout.blueCorner.fighterId,
-                winnerID: bout.result.winnerId
-            )
-        }
-        return FightCore(bouts: bouts)
+        return FightCore.make(from: file.events)
     }
 }
 
 private struct EventsEnvelope: Decodable {
-    let events: [EventEnvelope]
-}
-
-private struct EventEnvelope: Decodable {
-    let bouts: [BoutEnvelope]
-}
-
-private struct BoutEnvelope: Decodable {
-    let id: String
-    let redCorner: CornerEnvelope
-    let blueCorner: CornerEnvelope
-    let result: ResultEnvelope
-}
-
-private struct CornerEnvelope: Decodable {
-    let fighterId: String
-}
-
-private struct ResultEnvelope: Decodable {
-    let winnerId: String
+    let events: [Event]
 }

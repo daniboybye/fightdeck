@@ -26,7 +26,8 @@ class JsonFileRepository(
 
     override suspend fun loadFighters(): List<FighterItem> = load("fighters.json", "fighters")
 
-    fun imageUrl(path: String): String = "http://127.0.0.1:${LocalAssetServer.port}/$path"
+    fun imageUrl(path: String): String? =
+        if (LocalAssetServer.port > 0) "http://127.0.0.1:${LocalAssetServer.port}/$path" else null
 
     private suspend inline fun <reified T> load(fileName: String, key: String): List<T> =
         withContext(Dispatchers.IO) {

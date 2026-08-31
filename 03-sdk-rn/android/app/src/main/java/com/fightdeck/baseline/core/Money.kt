@@ -8,7 +8,8 @@ object Money {
 
     fun money(value: BigDecimal): BigDecimal = value.setScale(SCALE, RoundingMode.HALF_UP)
 
-    fun parse(string: String): BigDecimal = BigDecimal(string)
+    fun parse(string: String): BigDecimal =
+        runCatching { BigDecimal(string.trim()) }.getOrDefault(BigDecimal.ZERO)
 
     fun format(value: BigDecimal): String = money(value).toPlainString()
 

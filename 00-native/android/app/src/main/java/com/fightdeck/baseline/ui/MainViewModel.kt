@@ -19,11 +19,13 @@ import com.fightdeck.baseline.data.NewsItem
 import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.baseline.services.LocalAssetServer
 import java.math.BigDecimal
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 sealed interface LoadState<out T> {
@@ -33,9 +35,20 @@ sealed interface LoadState<out T> {
     data class Error(val message: String) : LoadState<Nothing>
 }
 
+sealed interface BootstrapState {
+    data class Loading(val step: String) : BootstrapState
+    data class Failed(val message: String) : BootstrapState
+    data object Ready : BootstrapState
+}
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = JsonFileRepository.create(application)
-    private val fightCore = buildFightCore()
+    private var repository: JsonFileRepository? = null
+    private var fightCore: FightCore? = null
+
+    private val _bootstrapState = MutableStateFlow<BootstrapState>(
+        BootstrapState.Loading("Loading fight core…"),
+    )
+    val bootstrapState: StateFlow<BootstrapState> = _bootstrapState.asStateFlow()
 
     private val _events = MutableStateFlow<LoadState<List<EventItem>>>(LoadState.Loading)
     val events: StateFlow<LoadState<List<EventItem>>> = _events.asStateFlow()
@@ -65,20 +78,57 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
 
     val slipState: SlipState
-        get() = fightCore.slipState(_slip.value, _balance.value)
+        get() = requireNotNull(fightCore).slipState(_slip.value, _balance.value)
 
     init {
-        LocalAssetServer.start(application)
-        refreshEvents()
-        refreshFighters()
-        refreshNews()
-        refreshMedia()
+        bootstrap()
+    }
+
+    fun retryBootstrap() {
+        bootstrap()
+    }
+
+    private fun bootstrap() {
+        viewModelScope.launch {
+            _bootstrapState.value = BootstrapState.Loading("Loading fight core…")
+            val booted = withContext(Dispatchers.Default) {
+                runCatching { bootstrapEngine(getApplication()) }
+            }
+            booted.fold(
+                onSuccess = { engine ->
+                    repository = engine.repository
+                    fightCore = engine.fightCore
+                    _bootstrapState.value = BootstrapState.Ready
+                    refreshEvents()
+                    refreshFighters()
+                    refreshNews()
+                    refreshMedia()
+                },
+                onFailure = { error ->
+                    _bootstrapState.value = BootstrapState.Failed(
+                        error.message ?: "Could not load dataset",
+                    )
+                },
+            )
+        }
+    }
+
+    private data class Engine(
+        val repository: JsonFileRepository,
+        val fightCore: FightCore,
+    )
+
+    private fun bootstrapEngine(application: Application): Engine {
+        val root = DatasetLocator.datasetRoot(application)
+        LocalAssetServer.start(root)
+        val fightCore = buildFightCore(root)
+        return Engine(JsonFileRepository(root), fightCore)
     }
 
     fun refreshEvents() {
         viewModelScope.launch {
             _events.value = LoadState.Loading
-            _events.value = runCatching { repository.loadEvents() }
+            _events.value = runCatching { requireNotNull(repository).loadEvents() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load events") },
@@ -89,7 +139,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshFighters() {
         viewModelScope.launch {
             _fighters.value = LoadState.Loading
-            _fighters.value = runCatching { repository.loadFighters() }
+            _fighters.value = runCatching { requireNotNull(repository).loadFighters() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load fighters") },
@@ -100,7 +150,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshNews() {
         viewModelScope.launch {
             _news.value = LoadState.Loading
-            _news.value = runCatching { repository.loadNews() }
+            _news.value = runCatching { requireNotNull(repository).loadNews() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load news") },
@@ -111,7 +161,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshMedia() {
         viewModelScope.launch {
             _media.value = LoadState.Loading
-            _media.value = runCatching { repository.loadMedia() }
+            _media.value = runCatching { requireNotNull(repository).loadMedia() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load media") },
@@ -119,7 +169,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun imageUrl(path: String): String = repository.imageUrl(path)
+    fun imageUrl(path: String): String? = repository?.imageUrl(path)
 
     fun toggleSelection(bout: BoutItem, fighterId: String, odds: String) {
         _slip.update { slip ->
@@ -172,12 +222,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _balance.update { it.add(amount) }
     }
 
-    private fun buildFightCore(): FightCore {
+    private fun buildFightCore(root: java.io.File): FightCore {
         val events = Json { ignoreUnknownKeys = true }
             .decodeFromString<EventsEnvelope>(
-                DatasetLocator.datasetRoot(getApplication())
-                    .resolve("events.json")
-                    .readText(),
+                root.resolve("events.json").readText(),
             )
         val bouts = events.events.flatMap { it.bouts }.map {
             BoutIndex(it.id, it.redCorner.fighterId, it.blueCorner.fighterId, it.result.winnerId)

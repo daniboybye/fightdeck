@@ -12,8 +12,6 @@ struct RootView: View {
     @State private var state = AppState()
     @State private var upcomingPath: [EventsRoute] = []
     @State private var pastPath: [EventsRoute] = []
-    @State private var slipPath: [SlipRoute] = []
-
     @State private var selectedTab = AppTab.upcoming
 
     private enum AppTab: Hashable {
@@ -22,7 +20,30 @@ struct RootView: View {
         case slip
     }
 
+    private var showsBetSlipAccessory: Bool {
+        !state.slip.selections.isEmpty && !state.isPresentingDeposit
+    }
+
     var body: some View {
+        Group {
+            switch state.bootstrapState {
+            case .loading:
+                bootstrapView(message: "Starting…", showsProgress: true)
+            case .failed(let message):
+                bootstrapView(message: message, showsProgress: false) {
+                    Task { await state.retryBootstrap() }
+                }
+            case .ready:
+                mainTabs
+            }
+        }
+        .task {
+            SDKBootstrap.shared.configureOnce()
+            await state.bootstrap()
+        }
+    }
+
+    private var mainTabs: some View {
         TabView(selection: $selectedTab) {
             Tab("Upcoming", systemImage: "calendar", value: AppTab.upcoming) {
                 EventsTabView(state: state, path: $upcomingPath, mode: .upcoming)
@@ -31,37 +52,49 @@ struct RootView: View {
                 EventsTabView(state: state, path: $pastPath, mode: .past)
             }
             Tab("Slip", systemImage: "list.bullet.rectangle", value: AppTab.slip) {
-                SlipTabView(state: state, path: $slipPath) {
+                SlipTabView(state: state) {
                     selectedTab = .upcoming
                 }
             }
         }
         .tint(DesignTokens.ColorToken.accent)
-        .tabBarMinimizeBehavior(.onScrollDown)
-        // The bar is a shortcut into the slip while you are picking odds, so it belongs to
-        // the tab you pick odds on. As a tab view accessory it also inflates the safe area,
-        // which is what keeps it off the last row of every scroll view.
-        .tabViewBottomAccessory(isEnabled: selectedTab == .upcoming) {
+        .tabBarMinimizeBehavior(.never)
+        .tabViewBottomAccessory(isEnabled: showsBetSlipAccessory) {
             BetSlipAccessory(
-                legCount: max(state.slip.selections.count, 1),
-                potentialReturn: Money.formatCurrency(
-                    state.slip.selections.isEmpty ? 0 : state.slipState.potentialReturn
-                )
+                legCount: state.slip.selections.count,
+                potentialReturn: Money.formatCurrency(state.slipState.potentialReturn)
             ) {
-                guard !state.slip.selections.isEmpty else { return }
                 selectedTab = .slip
-                slipPath = []
             }
-            .opacity(state.slip.selections.isEmpty ? 0 : 1)
-            .allowsHitTesting(!state.slip.selections.isEmpty)
-            .accessibilityHidden(state.slip.selections.isEmpty)
         }
-        .task {
-            SDKBootstrap.shared.configureOnce()
-            await state.bootstrap()
+        .animation(.none, value: showsBetSlipAccessory)
+        .sheet(isPresented: $state.isPresentingDeposit) {
+            DepositSheetView(state: state) {
+                state.isPresentingDeposit = false
+            }
         }
     }
 
+    private func bootstrapView(
+        message: String,
+        showsProgress: Bool,
+        retry: (() -> Void)? = nil
+    ) -> some View {
+        VStack(spacing: DesignTokens.Spacing.lg) {
+            if showsProgress {
+                ProgressView()
+            }
+            Text(message)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+            if let retry {
+                Button("Retry", action: retry)
+                    .buttonStyle(.glassProminent)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black)
+    }
 }
 
 private struct BetSlipAccessory: View {
@@ -80,9 +113,8 @@ private struct BetSlipAccessory: View {
             }
             .font(.subheadline)
             .padding(.horizontal, DesignTokens.Spacing.lg)
-            // The label only covers the two runs of text, so without a shape to hit, taps
-            // anywhere else in the accessory fall through to the tab bar behind it.
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity)
+            .frame(height: DesignTokens.Layout.betSlipAccessoryHeight)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)

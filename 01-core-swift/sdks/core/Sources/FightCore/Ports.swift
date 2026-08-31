@@ -165,11 +165,6 @@ public protocol PreferencesStore: Sendable {
     func write(key: String, value: String)
 }
 
-/// Platform port — host supplies the current time.
-public protocol Clock: Sendable {
-    func now() -> Date
-}
-
 /// Platform port — async data loading with typed errors across the FFI boundary.
 public protocol FightRepository: Sendable {
     func loadEvents() async throws(FightCoreError) -> [Event]

@@ -9,6 +9,13 @@
 import Foundation
 import Observation
 
+
+enum AppBootstrapState: Equatable {
+    case loading
+    case failed(String)
+    case ready
+}
+
 enum LoadState<Value>: Sendable where Value: Sendable {
     case loading
     case loaded(Value)
@@ -24,11 +31,18 @@ final class AppState {
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
+    var bootstrapState: AppBootstrapState = .loading
+
     let slipStore: ObservableBetSlipStore
     let core: FightCoreHandle
     let preferences: UserDefaultsPreferencesStore
 
     var betPlacedMessage: String?
+
+    /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
+    /// toolbars depend on observable state rather than on a closure handed down through the
+    /// environment, which is a new value on every `RootView` body pass.
+    var isPresentingDeposit = false
 
     private let repository: JSONFileRepository
 
@@ -36,18 +50,26 @@ final class AppState {
         self.repository = repository
         self.preferences = UserDefaultsPreferencesStore()
         self.core = AppState.makeCore()
-        let store = BetSlipStore(core: core, balance: "500.00")
+        let store = try! BetSlipStore(core: core, balance: "500.00")
         self.slipStore = ObservableBetSlipStore(store: store)
     }
 
     var slipState: SlipStateRecord { slipStore.slipState }
 
     func bootstrap() async {
+        bootstrapState = .loading
         let datasetRoot = DatasetLocator.datasetRoot()
-        // The dataset stores image paths relative to the dataset root ("assets/..."), so the
-        // server is rooted there. Rooting it at assets/ would strip the prefix and 404.
-        try? await LocalAssetServer.shared.start(assetsRoot: datasetRoot)
-        await refreshAll()
+        do {
+            try await LocalAssetServer.shared.start(assetsRoot: datasetRoot)
+            bootstrapState = .ready
+            await refreshAll()
+        } catch {
+            bootstrapState = .failed("Could not start image server. Check the dataset path.")
+        }
+    }
+
+    func retryBootstrap() async {
+        await bootstrap()
     }
 
     func refreshAll() async {
@@ -116,11 +138,17 @@ final class AppState {
         betPlacedMessage = "\(FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)) returns if it lands"
     }
 
-    func deposit(amount: Decimal) {
-        slipStore.deposit(amount: formatMoney(amount: NSDecimalNumber(decimal: amount).stringValue))
+    func presentDeposit() {
+        isPresentingDeposit = true
     }
 
-    func imageURL(_ path: String) -> URL {
+    func deposit(amount: Decimal) {
+        let raw = NSDecimalNumber(decimal: amount).stringValue
+        guard let formatted = try? formatMoney(amount: raw) else { return }
+        try? slipStore.deposit(amount: formatted)
+    }
+
+    func imageURL(_ path: String) -> URL? {
         repository.imageURL(for: path)
     }
 
@@ -175,22 +203,9 @@ private struct ResultEnvelope: Decodable {
 }
 
 extension ValidationErrorRecord: Identifiable {
-    public var id: String { String(describing: self) }
+    public var id: String { validationErrorCode(error: self) }
 }
 
 extension ValidationErrorRecord {
-    var displayName: String {
-        switch self {
-        case .emptySlip: return "empty_slip"
-        case .stakeBelowMinimum: return "stake_below_minimum"
-        case .stakeAboveMaximum: return "stake_above_maximum"
-        case .insufficientBalance: return "insufficient_balance"
-        case .tooManySelections: return "too_many_selections"
-        case .accumulatorNeedsTwoLegs: return "accumulator_needs_two_legs"
-        case .duplicateBout: return "duplicate_bout"
-        case .unknownBout: return "unknown_bout"
-        case .fighterNotInBout: return "fighter_not_in_bout"
-        case .payoutExceedsLimit: return "payout_exceeds_limit"
-        }
-    }
+    var displayName: String { validationErrorCode(error: self) }
 }

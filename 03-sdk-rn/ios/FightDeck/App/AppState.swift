@@ -9,6 +9,13 @@
 import Foundation
 import Observation
 
+
+enum AppBootstrapState: Equatable {
+    case loading
+    case failed(String)
+    case ready
+}
+
 enum LoadState<Value>: Sendable where Value: Sendable {
     case loading
     case loaded(Value)
@@ -24,11 +31,18 @@ final class AppState {
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
+    var bootstrapState: AppBootstrapState = .loading
+
     /// The mode follows the number of legs instead of a picker: one selection is a single,
     /// two or more is an accumulator. Both modes stay covered by the golden fixtures.
     var slip = BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
     var balance = Decimal(string: "500.00")!
     var betPlacedMessage: String?
+
+    /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
+    /// toolbars depend on observable state rather than on a closure handed down through the
+    /// environment, which is a new value on every `RootView` body pass.
+    var isPresentingDeposit = false
 
     let repository: JSONFileRepository
     let fightCore: FightCore
@@ -43,12 +57,19 @@ final class AppState {
     }
 
     func bootstrap() async {
+        bootstrapState = .loading
         let datasetRoot = DatasetLocator.datasetRoot()
-        // The dataset stores image paths relative to the dataset root ("assets/..."), so the
-        // server is rooted there. Rooting it at assets/ would strip the prefix and 404.
-        let assetsRoot = datasetRoot
-        try? await LocalAssetServer.shared.start(assetsRoot: assetsRoot)
-        await refreshAll()
+        do {
+            try await LocalAssetServer.shared.start(assetsRoot: datasetRoot)
+            bootstrapState = .ready
+            await refreshAll()
+        } catch {
+            bootstrapState = .failed("Could not start image server. Check the dataset path.")
+        }
+    }
+
+    func retryBootstrap() async {
+        await bootstrap()
     }
 
     func refreshAll() async {
@@ -145,6 +166,10 @@ final class AppState {
         betPlacedMessage = message
     }
 
+    func presentDeposit() {
+        isPresentingDeposit = true
+    }
+
     func deposit(amount: Decimal) {
         balance += amount
     }
@@ -162,7 +187,7 @@ final class AppState {
         slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
     }
 
-    func imageURL(_ path: String) -> URL {
+    func imageURL(_ path: String) -> URL? {
         repository.imageURL(for: path)
     }
 

@@ -48,15 +48,38 @@ public final class BetSlipStore {
             slip.selections.append(Selection(boutID: boutID, fighterID: fighterID, odds: odds))
         }
         settlement = nil
+        syncMode()
     }
 
     public func isSelected(boutID: String, fighterID: String) -> Bool {
         slip.selections.contains { $0.boutID == boutID && $0.fighterID == fighterID }
     }
 
+    public func removeSelection(boutID: String, fighterID: String) {
+        slip.selections.removeAll { $0.boutID == boutID && $0.fighterID == fighterID }
+        settlement = nil
+        syncMode()
+    }
+
     public func removeSelection(id: String) {
         slip.selections.removeAll { $0.id == id }
         settlement = nil
+        syncMode()
+    }
+
+    /// Validates, deducts stake, clears selections. Returns the pre-clear slip state when successful.
+    public func placeBet() -> SlipState? {
+        let state = slipState
+        guard state.errors.isEmpty else { return nil }
+        balance -= state.totalStake
+        slip.selections.removeAll()
+        syncMode()
+        settlement = nil
+        return state
+    }
+
+    private func syncMode() {
+        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
     }
 
     public func settleSlip() {

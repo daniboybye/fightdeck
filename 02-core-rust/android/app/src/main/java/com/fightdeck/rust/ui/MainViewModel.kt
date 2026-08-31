@@ -1,11 +1,12 @@
 package com.fightdeck.rust.ui
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.core.StateFlowBetSlipStore
-import com.fightdeck.rust.core.validationErrorCode
+import uniffi.fightcore.validationErrorCode
 import com.fightdeck.rust.data.BoutItem
 import com.fightdeck.rust.data.EventItem
 import com.fightdeck.rust.data.FighterItem
@@ -14,10 +15,12 @@ import com.fightdeck.rust.data.MediaItem
 import com.fightdeck.rust.data.NewsItem
 import com.fightdeck.rust.services.DatasetLocator
 import com.fightdeck.rust.services.LocalAssetServer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -33,11 +36,28 @@ sealed interface LoadState<out T> {
     data class Error(val message: String) : LoadState<Nothing>
 }
 
+sealed interface BootstrapState {
+    data class Loading(val step: String) : BootstrapState
+    data class Failed(val message: String) : BootstrapState
+    data object Ready : BootstrapState
+}
+
+/** Rust core + slip store; available after background bootstrap completes. */
+data class RustEngine(
+    val core: FightCoreHandle,
+    val slipStore: StateFlowBetSlipStore,
+)
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = JsonFileRepository.create(application)
-    private val core = buildFightCore()
-    private val slipStoreBacking = uniffi.fightcore.BetSlipStore(core, "500.00")
-    private val slipStore = StateFlowBetSlipStore(slipStoreBacking)
+    private var repository: JsonFileRepository? = null
+
+    private val _bootstrapState = MutableStateFlow<BootstrapState>(
+        BootstrapState.Loading("Loading fight core…"),
+    )
+    val bootstrapState: StateFlow<BootstrapState> = _bootstrapState.asStateFlow()
+
+    private val _engine = MutableStateFlow<RustEngine?>(null)
+    val engine: StateFlow<RustEngine?> = _engine.asStateFlow()
 
     private val _events = MutableStateFlow<LoadState<List<EventItem>>>(LoadState.Loading)
     val events: StateFlow<LoadState<List<EventItem>>> = _events.asStateFlow()
@@ -51,25 +71,64 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _media = MutableStateFlow<LoadState<List<MediaItem>>>(LoadState.Loading)
     val media: StateFlow<LoadState<List<MediaItem>>> = _media.asStateFlow()
 
-    val slipState: StateFlow<SlipStateRecord> = slipStore.slipState
-    val slip: StateFlow<BetSlipRecord> = slipStore.slip
-    val balance: StateFlow<String> = slipStore.balance
-
     private val _betPlacedMessage = MutableStateFlow<String?>(null)
     val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
 
     init {
-        LocalAssetServer.start(application)
-        refreshEvents()
-        refreshFighters()
-        refreshNews()
-        refreshMedia()
+        bootstrap()
     }
+
+    fun retryBootstrap() {
+        bootstrap()
+    }
+
+    private fun bootstrap() {
+        viewModelScope.launch {
+            _engine.value?.slipStore?.close()
+            _engine.value?.core?.close()
+            _engine.value = null
+            _bootstrapState.value = BootstrapState.Loading("Loading fight core…")
+            val booted = withContext(Dispatchers.Default) {
+                runCatching { bootstrapRustEngine(getApplication()) { step ->
+                    _bootstrapState.value = BootstrapState.Loading(step)
+                } }
+            }
+            booted.fold(
+                onSuccess = { engine ->
+                    repository = JsonFileRepository(engine.datasetRoot)
+                    _engine.value = engine.rustEngine
+                    _bootstrapState.value = BootstrapState.Ready
+                    refreshEvents()
+                    refreshFighters()
+                    refreshNews()
+                    refreshMedia()
+                },
+                onFailure = { error ->
+                    Log.e(TAG, "Rust bootstrap failed", error)
+                    _bootstrapState.value = BootstrapState.Failed(
+                        error.message ?: "Could not start fight core",
+                    )
+                },
+            )
+        }
+    }
+
+    private fun requireSlipStore(): StateFlowBetSlipStore =
+        requireNotNull(_engine.value?.slipStore) { "Rust engine not ready" }
+
+    val slip: StateFlow<BetSlipRecord>
+        get() = requireSlipStore().slip
+
+    val slipState: StateFlow<SlipStateRecord>
+        get() = requireSlipStore().slipState
+
+    val balance: StateFlow<String>
+        get() = requireSlipStore().balance
 
     fun refreshEvents() {
         viewModelScope.launch {
             _events.value = LoadState.Loading
-            _events.value = runCatching { repository.loadEvents() }
+            _events.value = runCatching { requireNotNull(repository).loadEvents() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load events") },
@@ -80,7 +139,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshFighters() {
         viewModelScope.launch {
             _fighters.value = LoadState.Loading
-            _fighters.value = runCatching { repository.loadFighters() }
+            _fighters.value = runCatching { requireNotNull(repository).loadFighters() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load fighters") },
@@ -91,7 +150,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshNews() {
         viewModelScope.launch {
             _news.value = LoadState.Loading
-            _news.value = runCatching { repository.loadNews() }
+            _news.value = runCatching { requireNotNull(repository).loadNews() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load news") },
@@ -102,7 +161,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshMedia() {
         viewModelScope.launch {
             _media.value = LoadState.Loading
-            _media.value = runCatching { repository.loadMedia() }
+            _media.value = runCatching { requireNotNull(repository).loadMedia() }
                 .fold(
                     onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
                     onFailure = { LoadState.Error("Could not load media") },
@@ -110,33 +169,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun imageUrl(path: String): String = repository.imageUrl(path)
+    fun imageUrl(path: String): String? = repository?.imageUrl(path)
 
     fun toggleSelection(bout: BoutItem, fighterId: String, odds: String) {
-        slipStore.toggleSelection(bout.id, fighterId, odds)
+        requireSlipStore().toggleSelection(bout.id, fighterId, odds)
         _betPlacedMessage.value = null
     }
 
     fun isSelected(boutId: String, fighterId: String): Boolean =
-        slipStore.isSelected(boutId, fighterId)
+        requireSlipStore().isSelected(boutId, fighterId)
 
     fun updateStake(stake: String) {
-        slipStore.setStake(stake)
+        requireSlipStore().setStake(stake)
     }
 
     fun removeSelection(boutId: String, fighterId: String) {
-        slipStore.removeSelection(boutId, fighterId)
+        requireSlipStore().removeSelection(boutId, fighterId)
         _betPlacedMessage.value = null
     }
 
     fun placeBet() {
-        val state = slipStore.placeBet() ?: return
+        val state = requireSlipStore().placeBet() ?: return
         _betPlacedMessage.value =
             "${FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)} returns if it lands"
     }
 
     fun deposit(amount: String) {
-        slipStore.deposit(amount)
+        requireSlipStore().deposit(amount)
     }
 
     fun slipSummary(state: SlipStateRecord) = FightCoreDisplay.slipSummary(state)
@@ -145,28 +204,54 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun formatCurrency(amount: String) = FightCoreDisplay.formatCurrencyAmount(amount)
     fun errorCode(error: uniffi.fightcore.ValidationErrorRecord) = validationErrorCode(error)
 
-    private fun buildFightCore(): FightCoreHandle {
-        val events = Json { ignoreUnknownKeys = true }
-            .decodeFromString<EventsEnvelope>(
-                DatasetLocator.datasetRoot(getApplication())
-                    .resolve("events.json")
-                    .readText(),
-            )
-        val bouts = events.events.flatMap { it.bouts }.map {
-            BoutIndexRecord(
-                id = it.id,
-                redFighterId = it.redCorner.fighterId,
-                blueFighterId = it.blueCorner.fighterId,
-                winnerId = it.result.winnerId,
-            )
-        }
-        return FightCoreHandle(bouts)
+    override fun onCleared() {
+        _engine.value?.slipStore?.close()
+        _engine.value?.core?.close()
+        super.onCleared()
     }
 
-    override fun onCleared() {
-        slipStore.close()
-        core.close()
-        super.onCleared()
+    private data class BootstrapResult(
+        val datasetRoot: java.io.File,
+        val rustEngine: RustEngine,
+    )
+
+    private companion object {
+        private const val TAG = "FightDeckRustBoot"
+
+        private fun bootstrapRustEngine(
+            application: Application,
+            onStep: (String) -> Unit,
+        ): BootstrapResult {
+            Log.i(TAG, "bootstrapRustEngine start")
+            onStep("Loading fight core…")
+            val root = DatasetLocator.datasetRoot(application)
+            LocalAssetServer.start(root)
+            val core = buildFightCore(root)
+            Log.i(TAG, "FightCoreHandle ready")
+            onStep("Starting bet slip…")
+            val slipBacking = uniffi.fightcore.BetSlipStore(core, "500.00")
+            Log.i(TAG, "BetSlipStore ready")
+            onStep("Preparing UI…")
+            val slipStore = StateFlowBetSlipStore(slipBacking)
+            Log.i(TAG, "StateFlowBetSlipStore ready")
+            return BootstrapResult(root, RustEngine(core, slipStore))
+        }
+
+        private fun buildFightCore(root: java.io.File): FightCoreHandle {
+            Log.i(TAG, "buildFightCore dataset=$root")
+            val eventsJson = root.resolve("events.json").readText()
+            val events = Json { ignoreUnknownKeys = true }
+                .decodeFromString<EventsEnvelope>(eventsJson)
+            val bouts = events.events.flatMap { it.bouts }.map {
+                BoutIndexRecord(
+                    id = it.id,
+                    redFighterId = it.redCorner.fighterId,
+                    blueFighterId = it.blueCorner.fighterId,
+                    winnerId = it.result.winnerId,
+                )
+            }
+            return FightCoreHandle(bouts)
+        }
     }
 }
 

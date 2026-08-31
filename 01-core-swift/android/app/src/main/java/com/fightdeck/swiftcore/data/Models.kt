@@ -1,82 +1,44 @@
 package com.fightdeck.swiftcore.data
 
-import android.content.Context
-import com.fightdeck.swiftcore.services.DatasetLocator
-import com.fightdeck.swiftcore.services.LocalAssetServer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import java.io.File
 import java.math.BigDecimal
 
-interface FightRepository {
-    suspend fun loadEvents(): List<EventItem>
-    suspend fun loadFighters(): List<FighterItem>
-}
-
-class JsonFileRepository(
-    private val datasetRoot: File,
-    private val json: Json = Json { ignoreUnknownKeys = true },
-) : FightRepository {
-    suspend fun loadNews(): List<NewsItem> = load("news.json", "news")
-    suspend fun loadMedia(): List<MediaItem> = load("media.json", "media")
-
-    override suspend fun loadEvents(): List<EventItem> = load("events.json", "events")
-
-    override suspend fun loadFighters(): List<FighterItem> = load("fighters.json", "fighters")
-
-    fun imageUrl(path: String): String = "http://127.0.0.1:${LocalAssetServer.port}/$path"
-
-    private suspend inline fun <reified T> load(fileName: String, key: String): List<T> =
-        withContext(Dispatchers.IO) {
-            val text = datasetRoot.resolve(fileName).readText()
-            val wrapper = json.decodeFromString<Map<String, List<T>>>(text)
-            wrapper[key] ?: error("missing $key")
-        }
-
-    companion object {
-        fun create(context: Context): JsonFileRepository =
-            JsonFileRepository(DatasetLocator.datasetRoot(context))
-    }
-}
-
 @Serializable
-data class EventItem(
+data class Event(
     val id: String,
     val name: String,
     val date: String,
     val venue: String,
     val city: String,
-    val bouts: List<BoutItem>,
+    val bouts: List<Bout>,
 )
 
 @Serializable
-data class BoutItem(
+data class Bout(
     val id: String,
     val order: Int,
     val segment: String,
     val weightClass: String,
     val titleFight: Boolean,
     val scheduledRounds: Int,
-    val redCorner: CornerItem,
-    val blueCorner: CornerItem,
-    val result: BoutResultItem,
+    val redCorner: Corner,
+    val blueCorner: Corner,
+    val result: BoutResult,
 )
 
 @Serializable
-data class CornerItem(
+data class Corner(
     @SerialName("fighterId") val fighterId: String,
     val name: String,
-    val closingOdds: OddsItem,
+    val closingOdds: OddsQuote,
 )
 
 @Serializable
-data class OddsItem(val decimal: String, val fractional: String)
+data class OddsQuote(val decimal: String, val fractional: String)
 
 @Serializable
-data class BoutResultItem(
+data class BoutResult(
     @SerialName("winnerId") val winnerId: String,
     val winnerName: String,
     val method: String,
@@ -86,7 +48,7 @@ data class BoutResultItem(
 )
 
 @Serializable
-data class FighterItem(
+data class Fighter(
     val id: String,
     val name: String,
     val nickname: String? = null,
@@ -96,7 +58,9 @@ data class FighterItem(
     val stance: String? = null,
     val record: FighterRecord,
     val portrait: String,
-)
+) {
+    val recordDisplay: String get() = record.display
+}
 
 @Serializable
 data class FighterRecord(
@@ -134,3 +98,53 @@ data class MediaItem(
      */
     val note: String? = null,
 )
+
+interface FightRepository {
+    suspend fun loadEvents(): List<Event>
+    suspend fun loadFighters(): List<Fighter>
+}
+
+class JsonFileRepository(
+    private val datasetRoot: java.io.File,
+    private val json: kotlinx.serialization.json.Json = kotlinx.serialization.json.Json {
+        ignoreUnknownKeys = true
+    },
+) : FightRepository {
+    suspend fun loadNews(): List<NewsItem> = load("news.json", "news")
+    suspend fun loadMedia(): List<MediaItem> = load("media.json", "media")
+
+    override suspend fun loadEvents(): List<Event> = load("events.json", "events")
+
+    override suspend fun loadFighters(): List<Fighter> = load("fighters.json", "fighters")
+
+    fun imageUrl(path: String): String? =
+        if (com.fightdeck.swiftcore.services.LocalAssetServer.port > 0) {
+            "http://127.0.0.1:${com.fightdeck.swiftcore.services.LocalAssetServer.port}/$path"
+        } else {
+            null
+        }
+
+    private suspend inline fun <reified T> load(fileName: String, key: String): List<T> =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val text = datasetRoot.resolve(fileName).readText()
+            val wrapper = json.decodeFromString<Map<String, List<T>>>(text)
+            wrapper[key] ?: error("missing $key")
+        }
+
+    companion object {
+        fun create(context: android.content.Context): JsonFileRepository =
+            JsonFileRepository(com.fightdeck.swiftcore.services.DatasetLocator.datasetRoot(context))
+    }
+}
+
+fun com.fightdeck.swiftcore.core.FightCore.Companion.fromEvents(events: List<Event>): com.fightdeck.swiftcore.core.FightCore {
+    val bouts = events.flatMap { it.bouts }.map {
+        com.fightdeck.swiftcore.core.BoutIndex(
+            it.id,
+            it.redCorner.fighterId,
+            it.blueCorner.fighterId,
+            it.result.winnerId,
+        )
+    }
+    return com.fightdeck.swiftcore.core.FightCore(bouts.associateBy { bout -> bout.id })
+}

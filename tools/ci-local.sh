@@ -29,6 +29,7 @@ TARGET_ARGS=()
 
 declare -a RESULT_LABELS=()
 declare -a RESULT_OUTCOMES=()
+declare -a RESULT_SECONDS=()
 
 usage() {
     cat <<'EOF'
@@ -101,6 +102,7 @@ fi
 record() {
     RESULT_LABELS+=("$1")
     RESULT_OUTCOMES+=("$2")
+    RESULT_SECONDS+=("${3:-0}")
 }
 
 run_step() {
@@ -108,10 +110,13 @@ run_step() {
     shift
     echo ""
     echo "======== $label ========"
+    # Timed because the build-time column in README.md is sourced from these numbers, and a
+    # figure nobody can reproduce is a figure nobody should trust.
+    local started=$SECONDS
     if "$@"; then
-        record "$label" "PASS"
+        record "$label" "PASS" "$((SECONDS - started))"
     else
-        record "$label" "FAIL"
+        record "$label" "FAIL" "$((SECONDS - started))"
         return 1
     fi
 }
@@ -730,7 +735,8 @@ print_summary() {
     echo "==================== CI local summary ===================="
     for i in "${!RESULT_LABELS[@]}"; do
         outcome="${RESULT_OUTCOMES[$i]}"
-        printf "  %-40s %s\n" "${RESULT_LABELS[$i]}" "$outcome"
+        printf "  %-40s %-6s %4dm %02ds\n" "${RESULT_LABELS[$i]}" "$outcome" \
+            "$((RESULT_SECONDS[i] / 60))" "$((RESULT_SECONDS[i] % 60))"
         case "$outcome" in
             PASS) pass=$((pass + 1)) ;;
             FAIL) fail=$((fail + 1)) ;;

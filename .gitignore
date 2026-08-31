@@ -92,5 +92,16 @@ tools/out/
 # Staging directory for tools/ci-local.sh release-sdk checksum checks.
 release-staging/
 
+# Wikimedia Commons API cache for tools/fetch-real-art.py (regenerated locally).
+tools/.commons-cache.json
+
+# Copied from dataset/ by the syncDemoAssets Gradle task before every build, so the APK can
+# run without an adb push. Committing it would be a second copy of the dataset, free to drift.
+04-sdk-skip/android/app/src/main/assets/
+
+# rsync'd from ios/Sources by build-xcframework.sh. A committed copy of sources that already
+# live next door only ever ends up stale.
+03-sdk-rn/sdks/core/ios/BuildPackage/
+
 # JVM heap dumps from Gradle OOMs
 *.hprof

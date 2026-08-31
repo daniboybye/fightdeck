@@ -1,0 +1,465 @@
+{
+  "generatedBy": "tools/fetch-real-art.py",
+  "note": "Real photographs from Wikimedia Commons (or generated placeholders where no suitable licensed portrait exists). Attribution for the talk.",
+  "images": {
+    "assets/events/ufc-328.jpg": {
+      "status": "real",
+      "commonsFile": "President Donald Trump attends UFC 316 at the Prudential Center (54576727552) (cropped).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:President_Donald_Trump_attends_UFC_316_at_the_Prudential_Center_%2854576727552%29_%28cropped%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/d/db/President_Donald_Trump_attends_UFC_316_at_the_Prudential_Center_%2854576727552%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "Public domain",
+      "artist": "The White House",
+      "originalSize": "1499x2000",
+      "outputSize": "1024x576"
+    },
+    "assets/events/ufc-freedom-250.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250 arena at the White House Washington DC 20260-6-08 13-36-45.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250_arena_at_the_White_House_Washington_DC_20260-6-08_13-36-45.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/UFC_Freedom_250_arena_at_the_White_House_Washington_DC_20260-6-08_13-36-45.jpg/3840px-UFC_Freedom_250_arena_at_the_White_House_Washington_DC_20260-6-08_13-36-45.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "CC BY 4.0",
+      "artist": "G. Edward Johnson",
+      "originalSize": "7447x4965",
+      "outputSize": "1024x576"
+    },
+    "assets/fighters/aiemann-zahabi.jpg": {
+      "status": "real",
+      "commonsFile": "Aiemann Zahabi.png",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Aiemann_Zahabi.png",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Aiemann_Zahabi.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "MM-eh",
+      "originalSize": "454x539",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/alex-pereira.jpg": {
+      "status": "real",
+      "commonsFile": "Alex Pereira UFC 300.png",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Alex_Pereira_UFC_300.png",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Alex_Pereira_UFC_300.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "Chamatkar Sandhu",
+      "originalSize": "455x614",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/alexander-volkov.jpg": {
+      "status": "real",
+      "commonsFile": "Sergei Pavlovich vs Alexander Volkov face off (cropped).png",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sergei_Pavlovich_vs_Alexander_Volkov_face_off_%28cropped%29.png",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Sergei_Pavlovich_vs_Alexander_Volkov_face_off_%28cropped%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "Sexto Round",
+      "originalSize": "400x622",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/bo-nickal.jpg": {
+      "status": "real",
+      "commonsFile": "Bo Nickal Las Vegas 2023.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Bo_Nickal_Las_Vegas_2023.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Bo_Nickal_Las_Vegas_2023.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY-SA 4.0",
+      "artist": "TaurusEmerald",
+      "originalSize": "1166x1431",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/ciryl-gane.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250 Ceremonial Weigh In (9748626).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250_Ceremonial_Weigh_In_%289748626%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/UFC_Freedom_250_Ceremonial_Weigh_In_%289748626%29.jpg/1280px-UFC_Freedom_250_Ceremonial_Weigh_In_%289748626%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "Public domain",
+      "artist": "U.S. Army photo by Sgt. 1st Class Brittany Primavera",
+      "originalSize": "5281x3521",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/derrick-lewis.jpg": {
+      "status": "real",
+      "commonsFile": "Derrick Lewis after UFC 239.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Derrick_Lewis_after_UFC_239.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Derrick_Lewis_after_UFC_239.jpg/1280px-Derrick_Lewis_after_UFC_239.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "CC BY 3.0",
+      "artist": "MMAnytt",
+      "originalSize": "1755x1407",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/diego-lopes.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250, the mixed martial arts event produced by the Ultimate Fighting Championship, Sunday, June 14, 2026, in the Grand Foyer of the White House - 31(cropped).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250%2C_the_mixed_martial_arts_event_produced_by_the_Ultimate_Fighting_Championship%2C_Sunday%2C_June_14%2C_2026%2C_in_the_Grand_Foyer_of_the_White_House_-_31%28cropped%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a7/UFC_Freedom_250%2C_the_mixed_martial_arts_event_produced_by_the_Ultimate_Fighting_Championship%2C_Sunday%2C_June_14%2C_2026%2C_in_the_Grand_Foyer_of_the_White_House_-_31%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "Public domain",
+      "artist": "The White House",
+      "originalSize": "1124x1596",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/ilia-topuria.jpg": {
+      "status": "real",
+      "commonsFile": "Ilia Topuria.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Ilia_Topuria.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/3/37/Ilia_Topuria.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "MMAnytt",
+      "originalSize": "1024x1128",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/jeremy-stephens.jpg": {
+      "status": "real",
+      "commonsFile": "Jeremy Stephens (cropped).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Jeremy_Stephens_%28cropped%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Jeremy_Stephens_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "Public domain",
+      "artist": "Sgt. Christopher Vann",
+      "originalSize": "1190x2018",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/jim-miller.jpg": {
+      "status": "real",
+      "commonsFile": "Jim.miller.2.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Jim.miller.2.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Jim.miller.2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC0",
+      "artist": "Aleks Ozolins",
+      "originalSize": "1059x1570",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/joel-alvarez.jpg": {
+      "status": "real",
+      "commonsFile": "Joel-alvarez-posando.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Joel-alvarez-posando.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Joel-alvarez-posando.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY-SA 4.0",
+      "artist": "Jprietf",
+      "originalSize": "776x851",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/josh-hokit.jpg": {
+      "status": "real",
+      "commonsFile": "JoshHokit.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:JoshHokit.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c5/JoshHokit.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 4.0",
+      "artist": "Unknown",
+      "originalSize": "404x501",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/joshua-van.jpg": {
+      "status": "real",
+      "commonsFile": "Joshua Van in 2025.png",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Joshua_Van_in_2025.png",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Joshua_Van_in_2025.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 4.0",
+      "artist": "Nina Drama",
+      "originalSize": "597x713",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/justin-gaethje.jpg": {
+      "status": "real",
+      "commonsFile": "Justin Gaethje.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Justin_Gaethje.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Justin_Gaethje.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY-SA 4.0",
+      "artist": "Richard Norris",
+      "originalSize": "277x395",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/khamzat-chimaev.jpg": {
+      "status": "real",
+      "commonsFile": "Khamzat Chimaev 2022 (cropped).png",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Khamzat_Chimaev_2022_%28cropped%29.png",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Khamzat_Chimaev_2022_%28cropped%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "MMAnytt",
+      "originalSize": "298x397",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/michael-chandler.jpg": {
+      "status": "real",
+      "commonsFile": "MichaelChandler0523 (cropped).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:MichaelChandler0523_%28cropped%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/MichaelChandler0523_%28cropped%29.jpg/1280px-MichaelChandler0523_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "CC BY-SA 2.0",
+      "artist": "Gage Skidmore",
+      "originalSize": "2924x3650",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/sean-brady.jpg": {
+      "status": "real",
+      "commonsFile": "SeanBrady.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:SeanBrady.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/SeanBrady.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "WEIGHING IN",
+      "originalSize": "540x455",
+      "outputSize": "512x512"
+    },
+    "assets/fighters/sean-strickland.jpg": {
+      "status": "real",
+      "commonsFile": "Sean Strickland 2022.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sean_Strickland_2022.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Sean_Strickland_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "MMAnytt",
+      "originalSize": "442x608",
+      "outputSize": "512x512"
+    },
+    "assets/news/all-seven-finish.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250 arena at the White House Washington DC 20260-6-08 13-36-45.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250_arena_at_the_White_House_Washington_DC_20260-6-08_13-36-45.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/UFC_Freedom_250_arena_at_the_White_House_Washington_DC_20260-6-08_13-36-45.jpg/3840px-UFC_Freedom_250_arena_at_the_White_House_Washington_DC_20260-6-08_13-36-45.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "CC BY 4.0",
+      "artist": "G. Edward Johnson",
+      "originalSize": "7447x4965",
+      "outputSize": "1024x576"
+    },
+    "assets/news/brady-shutout.jpg": {
+      "status": "real",
+      "commonsFile": "SeanBrady.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:SeanBrady.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d1/SeanBrady.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "WEIGHING IN",
+      "originalSize": "540x455",
+      "outputSize": "1024x576"
+    },
+    "assets/news/gane-interim.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250 Press Conference (9747961).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250_Press_Conference_%289747961%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/UFC_Freedom_250_Press_Conference_%289747961%29.jpg/3840px-UFC_Freedom_250_Press_Conference_%289747961%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "Public domain",
+      "artist": "U.S. Army photo by Sgt. 1st Class Brittany Primavera",
+      "originalSize": "5409x3864",
+      "outputSize": "1024x576"
+    },
+    "assets/news/green-submits-stephens.jpg": {
+      "status": "real",
+      "commonsFile": "Jeremy Stephens (cropped).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Jeremy_Stephens_%28cropped%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Jeremy_Stephens_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "Public domain",
+      "artist": "Sgt. Christopher Vann",
+      "originalSize": "1190x2018",
+      "outputSize": "1024x576"
+    },
+    "assets/news/miller-milestone.jpg": {
+      "status": "real",
+      "commonsFile": "Jim.miller.2.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Jim.miller.2.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Jim.miller.2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC0",
+      "artist": "Aleks Ozolins",
+      "originalSize": "1059x1570",
+      "outputSize": "1024x576"
+    },
+    "assets/news/omalley-second-act.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250 Press Conference (9747958).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250_Press_Conference_%289747958%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/UFC_Freedom_250_Press_Conference_%289747958%29.jpg/3840px-UFC_Freedom_250_Press_Conference_%289747958%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "Public domain",
+      "artist": "U.S. Army photo by Sgt. 1st Class Brittany Primavera",
+      "originalSize": "4659x3106",
+      "outputSize": "1024x576"
+    },
+    "assets/news/ruffy-wheel-kick.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250 Press Conference (9747950).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250_Press_Conference_%289747950%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/UFC_Freedom_250_Press_Conference_%289747950%29.jpg/3840px-UFC_Freedom_250_Press_Conference_%289747950%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "Public domain",
+      "artist": "U.S. Army photo by Sgt. 1st Class Brittany Primavera",
+      "originalSize": "5512x3937",
+      "outputSize": "1024x576"
+    },
+    "assets/news/strickland-upset.jpg": {
+      "status": "real",
+      "commonsFile": "Sean Strickland 2022.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sean_Strickland_2022.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Sean_Strickland_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "MMAnytt",
+      "originalSize": "442x608",
+      "outputSize": "1024x576"
+    },
+    "assets/news/van-defends.jpg": {
+      "status": "real",
+      "commonsFile": "Joshua Van in 2025.png",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Joshua_Van_in_2025.png",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/11/Joshua_Van_in_2025.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 4.0",
+      "artist": "Nina Drama",
+      "originalSize": "597x713",
+      "outputSize": "1024x576"
+    },
+    "assets/video/freedom-250-finishes.jpg": {
+      "status": "real",
+      "commonsFile": "Stage and UFC Freedom 250 arena Washington DC 2026-06-08 13-28-56.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Stage_and_UFC_Freedom_250_arena_Washington_DC_2026-06-08_13-28-56.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Stage_and_UFC_Freedom_250_arena_Washington_DC_2026-06-08_13-28-56.jpg/3840px-Stage_and_UFC_Freedom_250_arena_Washington_DC_2026-06-08_13-28-56.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "CC BY 4.0",
+      "artist": "G. Edward Johnson",
+      "originalSize": "8256x5504",
+      "outputSize": "1024x576"
+    },
+    "assets/video/freedom-250-gaethje-recap.jpg": {
+      "status": "real",
+      "commonsFile": "Justin Gaethje.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Justin_Gaethje.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Justin_Gaethje.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY-SA 4.0",
+      "artist": "Richard Norris",
+      "originalSize": "277x395",
+      "outputSize": "1024x576"
+    },
+    "assets/video/freedom-250-presser.jpg": {
+      "status": "real",
+      "commonsFile": "UFC Freedom 250 Press Conference at the Lincoln Memorial in Washington on June 12, 2026 - 24.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:UFC_Freedom_250_Press_Conference_at_the_Lincoln_Memorial_in_Washington_on_June_12%2C_2026_-_24.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/UFC_Freedom_250_Press_Conference_at_the_Lincoln_Memorial_in_Washington_on_June_12%2C_2026_-_24.jpg/3840px-UFC_Freedom_250_Press_Conference_at_the_Lincoln_Memorial_in_Washington_on_June_12%2C_2026_-_24.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "license": "Public domain",
+      "artist": "usarmyband",
+      "originalSize": "5412x3608",
+      "outputSize": "1024x576"
+    },
+    "assets/video/ufc-328-presser.jpg": {
+      "status": "real",
+      "commonsFile": "Sean Strickland 2022.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sean_Strickland_2022.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Sean_Strickland_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "MMAnytt",
+      "originalSize": "442x608",
+      "outputSize": "1024x576"
+    },
+    "assets/video/ufc-328-strickland-upset.jpg": {
+      "status": "real",
+      "commonsFile": "Sean Strickland 2022.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sean_Strickland_2022.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Sean_Strickland_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "CC BY 3.0",
+      "artist": "MMAnytt",
+      "originalSize": "442x608",
+      "outputSize": "1024x576"
+    },
+    "assets/video/ufc-328-weigh-ins.jpg": {
+      "status": "real",
+      "commonsFile": "President Donald Trump attends UFC 316 at the Prudential Center (54576728072) (cropped).jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:President_Donald_Trump_attends_UFC_316_at_the_Prudential_Center_%2854576728072%29_%28cropped%29.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/2/20/President_Donald_Trump_attends_UFC_316_at_the_Prudential_Center_%2854576728072%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "license": "Public domain",
+      "artist": "The White House",
+      "originalSize": "2237x1796",
+      "outputSize": "1024x576"
+    }
+  },
+  "fallbacks": [
+    {
+      "path": "assets/fighters/ateba-gautier.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/baisangur-susurkaev.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/clayton-carpenter.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/djorden-santos.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/grant-dawson.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/jared-gordon.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/joaquin-buckley.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/jose-ochoa.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/king-green.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/kyle-daukaus.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmpbl5fehjp/raw', 'https://upload.wikimedia.org/wikipedia/commons/0/01/Kyle_Daukaus.png']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/fighters/marco-tulio.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmpcxukyt6q/raw', 'https://upload.wikimedia.org/wikipedia/commons/3/34/Marco_Tulio_2023.png']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/fighters/mateusz-rebecki.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/mauricio-ruffy.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmp2thhdp0k/raw', 'https://upload.wikimedia.org/wikipedia/commons/b/bb/Maur%C3%ADcio_Ruffy_2025.jpg']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/fighters/osman-diaz.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/pat-sabatini.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/roman-kopylov.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/sean-omalley.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmpvanvosce/raw', 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Sean_O%27Malley_in_2024.jpg']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/fighters/steve-garcia.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmp6sw8jje8/raw', 'https://upload.wikimedia.org/wikipedia/commons/b/b1/SteveGarcia.png']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/fighters/tatsuro-taira.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmph6sql21m/raw', 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Tatsuro_taira_2025.png']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/fighters/waldo-cortes-acosta.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/william-gomis.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/fighters/yaroslav-amosov.jpg",
+      "reason": "No suitable Wikimedia photograph found"
+    },
+    {
+      "path": "assets/news/gaethje-unifies.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmptult0gbz/raw', 'https://upload.wikimedia.org/wikipedia/commons/8/86/UFC_Freedom_250%2C_the_mixed_martial_arts_event_produced_by_the_Ultimate_Fighting_Championship%2C_Sunday%2C_June_14%2C_2026%2C_in_the_Grand_Foyer_of_the_White_House_-_67%28cropped%29.jpg']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/news/nickal-arrives.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmp6emtg12r/raw', 'https://upload.wikimedia.org/wikipedia/commons/3/34/Bo_Nickal_%2852791819473%29.jpg']' returned non-zero exit status 56.); kept placeholder"
+    },
+    {
+      "path": "assets/news/prelims-five-finishes.jpg",
+      "reason": "Fetch failed (Command '['curl', '-fsSL', '--retry', '5', '--retry-delay', '10', '--retry-all-errors', '-A', 'fightdeck-demo/1.0 (conference talk dataset; contact: local)', '-o', '/var/folders/nw/tgh9rzb56573zdd7x10bdc0m0000gp/T/tmpefyrr8tj/raw', 'https://upload.wikimedia.org/wikipedia/commons/2/20/President_Donald_Trump_attends_UFC_316_at_the_Prudential_Center_%2854576728072%29_%28cropped%29.jpg']' returned non-zero exit status 56.); kept placeholder"
+    }
+  ],
+  "summary": {
+    "totalAssets": 60,
+    "replacedWithReal": 35,
+    "keptPlaceholder": 25,
+    "fetchFailures": 9,
+    "noSourceListed": 16
+  }
+}

@@ -38,8 +38,10 @@ struct EventsTabView: View {
                 ContentUnavailableView("No events", systemImage: "calendar")
             }
             .navigationTitle(mode.title)
+            .balanceToolbar(state: state)
             .navigationDestination(for: EventsRoute.self) { route in
                 destination(for: route, events: eventsOrEmpty)
+                    .balanceToolbar(state: state)
             }
         }
     }
@@ -47,7 +49,7 @@ struct EventsTabView: View {
     /// Every article carries its event, and the feed mixes both cards, so the row has to say
     /// which event it belongs to — otherwise the list reads as unrelated stories.
     @ViewBuilder
-    private func newsSection(events: [EventItem]) -> some View {
+    private func newsSection(events: [Event]) -> some View {
         if case .loaded(let items) = state.newsState, !items.isEmpty {
             Section("News") {
                 ForEach(items) { item in
@@ -66,7 +68,7 @@ struct EventsTabView: View {
     /// Clips also hang off their event, but nobody opens an event card looking for the press
     /// conference, so the feed carries them next to the news.
     @ViewBuilder
-    private func videoSection(events: [EventItem]) -> some View {
+    private func videoSection(events: [Event]) -> some View {
         if case .loaded(let clips) = state.mediaState, !clips.isEmpty {
             Section("Video") {
                 ForEach(clips) { clip in
@@ -82,13 +84,13 @@ struct EventsTabView: View {
         }
     }
 
-    private var eventsOrEmpty: [EventItem] {
+    private var eventsOrEmpty: [Event] {
         if case .loaded(let events) = state.eventsState { return events }
         return []
     }
 
     @ViewBuilder
-    private func destination(for route: EventsRoute, events: [EventItem]) -> some View {
+    private func destination(for route: EventsRoute, events: [Event]) -> some View {
         switch route {
         case .event(let id):
             if let event = events.first(where: { $0.id == id }) {
@@ -115,20 +117,19 @@ struct EventsTabView: View {
         }
     }
 
-    private func posterURL(for event: EventItem) -> URL {
+    private func posterURL(for event: Event) -> URL? {
         state.imageURL("assets/events/\(event.id).jpg")
     }
 }
 
 private struct EventRow: View {
-    let event: EventItem
-    let posterURL: URL
+    let event: Event
+    let posterURL: URL?
     let mode: EventMode
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             RemoteImageTile(url: posterURL)
-                .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                 Text(event.name)
                     .font(.headline)
@@ -163,7 +164,7 @@ private struct EventRow: View {
 
 struct EventDetailView: View {
     @Bindable var state: AppState
-    let event: EventItem
+    let event: Event
     let mode: EventMode
 
     var body: some View {
@@ -214,7 +215,7 @@ struct EventDetailView: View {
         }
     }
 
-    private var grouped: [String: [BoutItem]] {
+    private var grouped: [String: [Bout]] {
         Dictionary(grouping: event.bouts.sorted { $0.order < $1.order }, by: \.segment)
     }
 
@@ -234,7 +235,7 @@ struct EventDetailView: View {
 
 struct BoutRowView: View {
     @Bindable var state: AppState
-    let bout: BoutItem
+    let bout: Bout
     let mode: EventMode
 
     var body: some View {
@@ -256,7 +257,7 @@ struct BoutRowView: View {
         .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
-    private func cornerRow(_ corner: CornerItem, ring: Color) -> some View {
+    private func cornerRow(_ corner: Corner, ring: Color) -> some View {
         HStack(spacing: DesignTokens.Spacing.md) {
             FighterAvatar(url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"), ring: ring, size: 40)
             VStack(alignment: .leading) {
@@ -285,28 +286,27 @@ struct BoutRowView: View {
 struct VideoRow: View {
     let item: MediaItem
     let eventName: String
-    let posterURL: URL
+    let posterURL: URL?
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            RemoteImageTile(url: posterURL)
-                .overlay {
-                    Image(systemName: "play.circle.fill")
-                        .font(.system(size: 44))
-                        .foregroundStyle(.white, .ultraThinMaterial)
-                        .shadow(radius: 8)
-                }
-                .overlay(alignment: .bottomTrailing) {
-                    Text(item.durationSeconds.formattedDuration)
-                        .font(.caption2.weight(.semibold))
-                        .monospacedDigit()
-                        .padding(.horizontal, DesignTokens.Spacing.sm)
-                        .padding(.vertical, DesignTokens.Spacing.xs)
-                        .background(.black.opacity(0.6), in: .capsule)
-                        .foregroundStyle(.white)
-                        .padding(DesignTokens.Spacing.sm)
-                }
-                .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
+            ZStack {
+                RemoteImageTile(url: posterURL)
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.white, .ultraThinMaterial)
+                    .shadow(radius: 8)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                Text(item.durationSeconds.formattedDuration)
+                    .font(.caption2.weight(.semibold))
+                    .monospacedDigit()
+                    .padding(.horizontal, DesignTokens.Spacing.sm)
+                    .padding(.vertical, DesignTokens.Spacing.xs)
+                    .background(.black.opacity(0.6), in: .capsule)
+                    .foregroundStyle(.white)
+                    .padding(DesignTokens.Spacing.sm)
+            }
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                 if !eventName.isEmpty {
                     Text(eventName.uppercased())
@@ -323,7 +323,7 @@ struct VideoRow: View {
 }
 
 struct FighterAvatar: View {
-    let url: URL
+    let url: URL?
     let ring: Color
     var size: CGFloat
 

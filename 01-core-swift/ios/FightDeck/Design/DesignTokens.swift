@@ -55,6 +55,7 @@ enum DesignTokens {
         /// What an odds pill asks for before the bordered style pads it out to the tap target.
         static let oddsLabelHeight: CGFloat = 30
         static let mediaTileAspectRatio: CGFloat = 16 / 9
+        static let betSlipAccessoryHeight: CGFloat = 44
     }
 }
 

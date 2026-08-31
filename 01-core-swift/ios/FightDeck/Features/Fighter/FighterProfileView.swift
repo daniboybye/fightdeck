@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
 import SwiftUI
 
 struct FighterProfileView: View {
@@ -24,7 +25,7 @@ struct FighterProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func profile(_ fighter: FighterItem) -> some View {
+    private func profile(_ fighter: Fighter) -> some View {
         List {
             Section {
                 hero(fighter)
@@ -59,7 +60,7 @@ struct FighterProfileView: View {
 
     /// The portrait carries the screen the way it does in Photos: full bleed, with the name
     /// sitting on a scrim over the image instead of in a caption below it.
-    private func hero(_ fighter: FighterItem) -> some View {
+    private func hero(_ fighter: Fighter) -> some View {
         RemoteImage(url: state.imageURL(fighter.portrait))
             .frame(height: 320)
             .frame(maxWidth: .infinity)

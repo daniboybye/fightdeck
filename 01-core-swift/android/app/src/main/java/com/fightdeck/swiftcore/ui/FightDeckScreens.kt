@@ -1,5 +1,6 @@
 package com.fightdeck.swiftcore.ui
 
+import android.net.Uri
 import android.widget.MediaController
 import android.widget.VideoView
 import androidx.compose.animation.AnimatedContent
@@ -51,6 +52,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -59,6 +61,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -108,12 +111,13 @@ import com.fightdeck.swiftcore.core.BetMode
 import com.fightdeck.swiftcore.core.BetSlip
 import com.fightdeck.swiftcore.core.Money
 import com.fightdeck.swiftcore.core.SlipState
-import com.fightdeck.swiftcore.data.BoutItem
-import com.fightdeck.swiftcore.data.CornerItem
-import com.fightdeck.swiftcore.data.EventItem
-import com.fightdeck.swiftcore.data.FighterItem
+import com.fightdeck.swiftcore.data.Bout
+import com.fightdeck.swiftcore.data.Corner
+import com.fightdeck.swiftcore.data.Event
+import com.fightdeck.swiftcore.data.Fighter
 import com.fightdeck.swiftcore.data.MediaItem
 import com.fightdeck.swiftcore.data.NewsItem
+import com.fightdeck.swiftcore.design.BalanceMenuAction
 import com.fightdeck.swiftcore.design.Tokens
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -134,14 +138,54 @@ enum class EventMode(val title: String) {
     val showsResults: Boolean get() = this == Past
 }
 
-private const val DEPOSIT_ROUTE = "deposit"
 private const val UPCOMING_TAB = 0
 private const val PAST_TAB = 1
 private const val SLIP_TAB = 2
 
+/** Scroll inset that clears pinned primary actions when scaffold padding reads zero. */
+private fun pinnedScrollBottomInset(scaffoldBottom: Dp): Dp =
+    maxOf(
+        scaffoldBottom + Tokens.spacingLg,
+        Tokens.primaryActionHeight + Tokens.actionBarGap + Tokens.spacingSm + Tokens.spacingLg,
+    )
+
 // MaterialExpressiveTheme and the floating toolbar are still internal in material3 1.4.0, so
 // the expressive look comes from what is public: ShortNavigationBar, the tonal button set and
 // the surface-container roles.
+
+@Composable
+private fun BootstrapScreen(
+    message: String,
+    showProgress: Boolean,
+    onRetry: (() -> Unit)? = null,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Tokens.background),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Tokens.spacingLg),
+            modifier = Modifier.padding(horizontal = Tokens.spacingXl),
+        ) {
+            if (showProgress) {
+                CircularProgressIndicator(color = Tokens.accent)
+            }
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (onRetry != null) {
+                PrimaryActionButton(title = "Retry", onClick = onRetry)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
     MaterialTheme(
@@ -155,28 +199,43 @@ fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
             surfaceContainerHigh = Tokens.surfaceElevated,
         ),
     ) {
+        val bootstrap by viewModel.bootstrapState.collectAsStateWithLifecycle()
+        when (val state = bootstrap) {
+            is BootstrapState.Loading -> BootstrapScreen(
+                message = state.step,
+                showProgress = true,
+            )
+            is BootstrapState.Failed -> BootstrapScreen(
+                message = state.message,
+                showProgress = false,
+                onRetry = viewModel::retryBootstrap,
+            )
+            BootstrapState.Ready -> FightDeckMain(viewModel)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FightDeckMain(viewModel: MainViewModel) {
         val slip by viewModel.slip.collectAsStateWithLifecycle()
+        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        var showDepositSheet by remember { mutableStateOf(false) }
+        val onDepositFromToolbar = { showDepositSheet = true }
 
         var selectedTab by remember { mutableIntStateOf(UPCOMING_TAB) }
         val upcomingNav = rememberNavController()
         val pastNav = rememberNavController()
         val slipNav = rememberNavController()
-        val slipEntry by slipNav.currentBackStackEntryAsState()
-
-        // The deposit flow is a single self-contained task; the tab bar would invite the user
-        // to abandon it half-way.
-        val onDeposit = slipEntry?.destination?.route == DEPOSIT_ROUTE
-
-        // The bar is a shortcut into the slip while you are picking odds, so it belongs to the
-        // tab you pick odds on.
-        val showsSlipToolbar = selectedTab == UPCOMING_TAB && slip.selections.isNotEmpty()
+        // The bar is a shortcut into the slip on every tab while selections exist, and it
+        // hides while the deposit sheet is open — matching iOS tabViewBottomAccessory.
+        val showsSlipToolbar = slip.selections.isNotEmpty() && !showDepositSheet
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Tokens.background,
             bottomBar = {
-                if (!onDeposit) {
-                    Column {
+                Column {
                         // In the bottom bar rather than the floating-action slot: the slot
                         // floats over the content, and this bar has to be part of the scroll
                         // insets so it never covers the last row.
@@ -210,7 +269,6 @@ fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
                             label = { Text("Slip") },
                         )
                         }
-                    }
                 }
             },
         ) { padding ->
@@ -220,6 +278,8 @@ fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
                         nav = upcomingNav,
                         mode = EventMode.Upcoming,
                         viewModel = viewModel,
+                        balance = balance,
+                        onDeposit = onDepositFromToolbar,
                         modifier = Modifier.fillMaxSize(),
                     )
 
@@ -227,20 +287,36 @@ fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
                         nav = pastNav,
                         mode = EventMode.Past,
                         viewModel = viewModel,
+                        balance = balance,
+                        onDeposit = onDepositFromToolbar,
                         modifier = Modifier.fillMaxSize(),
                     )
 
                     else -> SlipNavHost(
                         slipNav = slipNav,
                         viewModel = viewModel,
+                        balance = balance,
+                        onDeposit = onDepositFromToolbar,
                         onBrowseEvents = { selectedTab = UPCOMING_TAB },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
         }
+
+        if (showDepositSheet) {
+            ModalBottomSheet(onDismissRequest = { showDepositSheet = false }) {
+                DepositScreen(
+                    balance = balance,
+                    onDone = { amount ->
+                        viewModel.deposit(amount)
+                        showDepositSheet = false
+                    },
+                    onBack = { showDepositSheet = false },
+                )
+            }
+        }
     }
-}
 
 @Composable
 private fun BetSlipToolbar(
@@ -284,6 +360,8 @@ private fun EventsNavHost(
     nav: NavHostController,
     mode: EventMode,
     viewModel: MainViewModel,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val events by viewModel.events.collectAsStateWithLifecycle()
@@ -304,6 +382,8 @@ private fun EventsNavHost(
                 media = media,
                 mode = mode,
                 viewModel = viewModel,
+                balance = balance,
+                onDeposit = onDeposit,
                 onRetry = viewModel::refreshEvents,
                 onEventClick = { nav.navigate("event/${it.id}") },
                 onArticleClick = { nav.navigate("article/${it.id}") },
@@ -323,6 +403,8 @@ private fun EventsNavHost(
                     viewModel = viewModel,
                     fighters = loadedFighters,
                     media = media,
+                    balance = balance,
+                    onDeposit = onDeposit,
                     onBoutClick = { nav.navigate("bout/${event.id}/${it.id}") },
                     onVideoClick = { nav.navigate("video/${it.id}") },
                     onBack = { nav.popBackStack() },
@@ -345,6 +427,8 @@ private fun EventsNavHost(
                     slip = slip,
                     viewModel = viewModel,
                     fighters = loadedFighters,
+                    balance = balance,
+                    onDeposit = onDeposit,
                     onFighterClick = { nav.navigate("fighter/$it") },
                     onBack = { nav.popBackStack() },
                 )
@@ -357,7 +441,13 @@ private fun EventsNavHost(
             val fighter = loadedFighters
                 .firstOrNull { it.id == entry.arguments?.getString("fighterId") }
             if (fighter != null) {
-                FighterProfileScreen(fighter, viewModel, onBack = { nav.popBackStack() })
+                FighterProfileScreen(
+                    fighter,
+                    viewModel,
+                    balance = balance,
+                    onDeposit = onDeposit,
+                    onBack = { nav.popBackStack() },
+                )
             }
         }
         composable(
@@ -371,6 +461,8 @@ private fun EventsNavHost(
                     item = article,
                     media = media,
                     viewModel = viewModel,
+                    balance = balance,
+                    onDeposit = onDeposit,
                     onVideoClick = { nav.navigate("video/${it.id}") },
                     onBack = { nav.popBackStack() },
                 )
@@ -383,7 +475,7 @@ private fun EventsNavHost(
             val clip = (media as? LoadState.Loaded)?.value
                 ?.firstOrNull { it.id == entry.arguments?.getString("videoId") }
             if (clip != null) {
-                VideoScreen(clip, onBack = { nav.popBackStack() })
+                VideoScreen(clip, balance = balance, onDeposit = onDeposit, onBack = { nav.popBackStack() })
             }
         }
     }
@@ -393,11 +485,12 @@ private fun EventsNavHost(
 private fun SlipNavHost(
     slipNav: NavHostController,
     viewModel: MainViewModel,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
     onBrowseEvents: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val slip by viewModel.slip.collectAsStateWithLifecycle()
-    val balance by viewModel.balance.collectAsStateWithLifecycle()
     val fighters by viewModel.fighters.collectAsStateWithLifecycle()
     val events by viewModel.events.collectAsStateWithLifecycle()
     val placedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
@@ -412,17 +505,7 @@ private fun SlipNavHost(
                 events = (events as? LoadState.Loaded)?.value.orEmpty(),
                 placedMessage = placedMessage,
                 onBrowseEvents = onBrowseEvents,
-                onDeposit = { slipNav.navigate(DEPOSIT_ROUTE) },
-            )
-        }
-        composable(DEPOSIT_ROUTE) {
-            DepositScreen(
-                balance = balance,
-                onDone = { amount ->
-                    viewModel.deposit(amount)
-                    slipNav.popBackStack()
-                },
-                onBack = { slipNav.popBackStack() },
+                onDeposit = onDeposit,
             )
         }
     }
@@ -431,13 +514,15 @@ private fun SlipNavHost(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventListScreen(
-    state: LoadState<List<EventItem>>,
+    state: LoadState<List<Event>>,
     news: LoadState<List<NewsItem>>,
     media: LoadState<List<MediaItem>>,
     mode: EventMode,
     viewModel: MainViewModel,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
     onRetry: () -> Unit,
-    onEventClick: (EventItem) -> Unit,
+    onEventClick: (Event) -> Unit,
     onArticleClick: (NewsItem) -> Unit,
     onVideoClick: (MediaItem) -> Unit,
 ) {
@@ -451,6 +536,12 @@ private fun EventListScreen(
                 title = { Text(mode.title, style = MaterialTheme.typography.headlineMedium) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                actions = {
+                    BalanceMenuAction(
+                        balanceLabel = Money.formatCurrency(balance),
+                        onDeposit = onDeposit,
+                    )
+                },
             )
         },
     ) { padding ->
@@ -522,10 +613,17 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun RemoteImage(
-    url: String,
+    url: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
 ) {
+    if (url == null) {
+        Box(
+            modifier
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        )
+        return
+    }
     SubcomposeAsyncImage(
         model = url,
         contentDescription = null,
@@ -545,7 +643,7 @@ private fun RemoteImage(
 private fun VideoCard(
     item: MediaItem,
     eventName: String,
-    posterUrl: String,
+    posterUrl: String?,
     onClick: () -> Unit,
 ) {
     Card(
@@ -706,7 +804,6 @@ private fun LinkRowButton(
     }
 }
 
-
 @Composable
 private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier: Modifier = Modifier) {
     Column(
@@ -739,7 +836,7 @@ private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier
 }
 
 @Composable
-private fun EventCard(event: EventItem, mode: EventMode, posterUrl: String, onClick: () -> Unit) {
+private fun EventCard(event: Event, mode: EventMode, posterUrl: String?, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
@@ -793,7 +890,7 @@ private fun StatusBadge(mode: EventMode) {
 }
 
 @Composable
-private fun NewsCard(item: NewsItem, eventName: String, imageUrl: String, onClick: () -> Unit) {
+private fun NewsCard(item: NewsItem, eventName: String, imageUrl: String?, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
@@ -838,17 +935,19 @@ private fun NewsCard(item: NewsItem, eventName: String, imageUrl: String, onClic
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventDetailScreen(
-    event: EventItem,
+    event: Event,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     media: LoadState<List<MediaItem>>,
-    onBoutClick: (BoutItem) -> Unit,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
+    onBoutClick: (Bout) -> Unit,
     onVideoClick: (MediaItem) -> Unit,
     onBack: () -> Unit,
 ) {
-    DetailScaffold(title = event.name, onBack = onBack) { padding ->
+    DetailScaffold(title = event.name, onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 start = Tokens.spacingLg,
@@ -893,6 +992,8 @@ private fun EventDetailScreen(
 private fun DetailScaffold(
     title: String,
     onBack: () -> Unit,
+    balance: BigDecimal? = null,
+    onDeposit: (() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -905,6 +1006,14 @@ private fun DetailScaffold(
                 navigationIcon = { BackButton(onBack) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                actions = {
+                    if (balance != null && onDeposit != null) {
+                        BalanceMenuAction(
+                            balanceLabel = Money.formatCurrency(balance),
+                            onDeposit = onDeposit,
+                        )
+                    }
+                },
             )
         },
         content = content,
@@ -913,11 +1022,11 @@ private fun DetailScaffold(
 
 @Composable
 private fun BoutRow(
-    bout: BoutItem,
+    bout: Bout,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     onClick: () -> Unit,
 ) {
     Card(
@@ -962,12 +1071,12 @@ private fun BoutRow(
 
 @Composable
 private fun CornerLine(
-    corner: CornerItem,
-    bout: BoutItem,
+    corner: Corner,
+    bout: Bout,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     ring: Color,
 ) {
     Row(
@@ -1002,7 +1111,17 @@ private fun CornerLine(
 }
 
 @Composable
-private fun FighterAvatar(url: String, ring: Color, size: Dp) {
+private fun FighterAvatar(url: String?, ring: Color, size: Dp) {
+    if (url == null) {
+        Box(
+            Modifier
+                .size(size)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape)
+                .border(2.dp, ring, CircleShape),
+        )
+        return
+    }
     SubcomposeAsyncImage(
         model = url,
         contentDescription = null,
@@ -1024,12 +1143,8 @@ private fun FighterAvatar(url: String, ring: Color, size: Dp) {
 
 @Composable
 private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val chipModifier = Modifier
-        .defaultMinSize(minWidth = 64.dp, minHeight = Tokens.minTapTarget)
-        .heightIn(max = Tokens.minTapTarget)
-        .height(Tokens.minTapTarget)
-    val labelModifier = Modifier.defaultMinSize(minHeight = Tokens.oddsLabelHeight)
-    val contentPadding = PaddingValues(horizontal = Tokens.spacingMd, vertical = 0.dp)
+    val chipModifier = Modifier.defaultMinSize(minWidth = 64.dp, minHeight = Tokens.minTapTarget)
+    val contentPadding = PaddingValues(horizontal = Tokens.spacingMd)
     if (selected) {
         Button(
             onClick = onClick,
@@ -1037,7 +1152,7 @@ private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
             modifier = chipModifier,
             contentPadding = contentPadding,
         ) {
-            Text(label, fontWeight = FontWeight.SemiBold, modifier = labelModifier)
+            Text(label, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
         }
     } else {
         FilledTonalButton(
@@ -1050,7 +1165,7 @@ private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
                 label,
                 fontWeight = FontWeight.SemiBold,
                 color = Tokens.accent,
-                modifier = labelModifier,
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -1058,15 +1173,22 @@ private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun BoutDetailScreen(
-    bout: BoutItem,
+    bout: Bout,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
     onFighterClick: (String) -> Unit,
     onBack: () -> Unit,
 ) {
-    DetailScaffold(title = bout.weightClass.displayMethod, onBack = onBack) { padding ->
+    DetailScaffold(
+        title = bout.weightClass.displayMethod,
+        onBack = onBack,
+        balance = balance,
+        onDeposit = onDeposit,
+    ) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 start = Tokens.spacingLg,
@@ -1160,10 +1282,10 @@ private fun DetailRow(label: String, value: String, valueColor: Color = Color.Un
 
 @Composable
 private fun FighterHero(
-    corner: CornerItem,
+    corner: Corner,
     ring: Color,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -1190,8 +1312,8 @@ private fun FighterHero(
 }
 
 @Composable
-private fun TaleOfTheTape(bout: BoutItem, fighters: List<FighterItem>) {
-    fun of(id: String): FighterItem? = fighters.firstOrNull { it.id == id }
+private fun TaleOfTheTape(bout: Bout, fighters: List<Fighter>) {
+    fun of(id: String): Fighter? = fighters.firstOrNull { it.id == id }
     val red = of(bout.redCorner.fighterId)
     val blue = of(bout.blueCorner.fighterId)
 
@@ -1252,8 +1374,14 @@ private fun TapeRow(left: String?, label: String, right: String?) {
 }
 
 @Composable
-private fun FighterProfileScreen(fighter: FighterItem, viewModel: MainViewModel, onBack: () -> Unit) {
-    DetailScaffold(title = fighter.name, onBack = onBack) { padding ->
+private fun FighterProfileScreen(
+    fighter: Fighter,
+    viewModel: MainViewModel,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
+    onBack: () -> Unit,
+) {
+    DetailScaffold(title = fighter.name, onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 top = padding.calculateTopPadding(),
@@ -1337,10 +1465,12 @@ private fun NewsArticleScreen(
     item: NewsItem,
     media: LoadState<List<MediaItem>>,
     viewModel: MainViewModel,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
     onVideoClick: (MediaItem) -> Unit,
     onBack: () -> Unit,
 ) {
-    DetailScaffold(title = "Article", onBack = onBack) { padding ->
+    DetailScaffold(title = "Article", onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 top = padding.calculateTopPadding(),
@@ -1393,8 +1523,13 @@ private fun NewsArticleScreen(
 }
 
 @Composable
-private fun VideoScreen(item: MediaItem, onBack: () -> Unit) {
-    DetailScaffold(title = "Video", onBack = onBack) { padding ->
+private fun VideoScreen(
+    item: MediaItem,
+    balance: BigDecimal,
+    onDeposit: () -> Unit,
+    onBack: () -> Unit,
+) {
+    DetailScaffold(title = "Video", onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 start = Tokens.spacingLg,
@@ -1405,19 +1540,65 @@ private fun VideoScreen(item: MediaItem, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
         ) {
             item {
-                AndroidView(
-                    factory = { context ->
-                        VideoView(context).apply {
-                            setVideoPath(item.url)
-                            setMediaController(MediaController(context).also { it.setAnchorView(this) })
-                            setOnPreparedListener { start() }
+                if (item.kind == "hls") {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                        shape = RoundedCornerShape(Tokens.radiusMd),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f),
+                    ) {
+                        Column(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(Tokens.spacingLg),
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                "HLS is not supported by VideoView",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                item.note ?: "This clip requires a streaming engine beyond the platform player.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
-                        .clip(RoundedCornerShape(Tokens.radiusMd)),
-                )
+                    }
+                } else {
+                    var playbackError by remember(item.id) { mutableStateOf<String?>(null) }
+                    if (playbackError != null) {
+                        Text(playbackError!!, color = Tokens.negative)
+                    } else {
+                        AndroidView(
+                            factory = { context ->
+                                VideoView(context).apply {
+                                    setVideoURI(Uri.parse(item.url))
+                                    setMediaController(
+                                        MediaController(context).also { controller ->
+                                            controller.setAnchorView(this)
+                                        },
+                                    )
+                                    setOnPreparedListener { mediaPlayer ->
+                                        mediaPlayer.setVolume(1f, 1f)
+                                        start()
+                                    }
+                                    setOnErrorListener { _, what, extra ->
+                                        post {
+                                            playbackError = "Cannot start playback ($what/$extra)"
+                                        }
+                                        true
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(16f / 9f)
+                                .clip(RoundedCornerShape(Tokens.radiusMd)),
+                            onRelease = { it.stopPlayback() },
+                        )
+                    }
+                }
             }
             item { Text(item.title, style = MaterialTheme.typography.titleLarge) }
             item {
@@ -1460,8 +1641,8 @@ private fun BetSlipScreen(
     viewModel: MainViewModel,
     slip: BetSlip,
     balance: BigDecimal,
-    fighters: List<FighterItem>,
-    events: List<EventItem>,
+    fighters: List<Fighter>,
+    events: List<Event>,
     placedMessage: String?,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,
@@ -1479,6 +1660,12 @@ private fun BetSlipScreen(
                 title = { Text("Bet Slip", style = MaterialTheme.typography.headlineMedium) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                actions = {
+                    BalanceMenuAction(
+                        balanceLabel = Money.formatCurrency(balance),
+                        onDeposit = onDeposit,
+                    )
+                },
             )
         },
         bottomBar = {
@@ -1531,7 +1718,7 @@ private fun BetSlipScreen(
                         start = Tokens.spacingLg,
                         end = Tokens.spacingLg,
                         top = padding.calculateTopPadding(),
-                        bottom = padding.calculateBottomPadding() + Tokens.spacingLg,
+                        bottom = pinnedScrollBottomInset(padding.calculateBottomPadding()),
                     ),
                     verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                 ) {
@@ -1645,7 +1832,6 @@ private fun BetSlipScreen(
                             ) {
                                 DetailRow("Balance", Money.formatCurrency(balance))
                                 LinkRowButton(title = "Add funds", onClick = onDeposit)
-
                             }
                         }
                     }
@@ -1684,7 +1870,7 @@ private fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onB
     var amountFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    val amount = runCatching { BigDecimal(amountText.ifBlank { "0" }) }.getOrDefault(BigDecimal.ZERO)
+    val amount = Money.parse(amountText.ifBlank { "0" })
     val validationMessage = when {
         amountText.isBlank() -> null
         amount < BigDecimal("10") -> "Minimum deposit is €10"
@@ -1777,7 +1963,7 @@ private fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onB
                 start = Tokens.spacingLg,
                 end = Tokens.spacingLg,
                 top = padding.calculateTopPadding(),
-                bottom = padding.calculateBottomPadding() + Tokens.spacingLg,
+                bottom = pinnedScrollBottomInset(padding.calculateBottomPadding()),
             ),
             verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
         ) {

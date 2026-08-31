@@ -11,12 +11,11 @@ import SwiftUI
 struct NewsRow: View {
     let item: NewsItem
     let eventName: String
-    let imageURL: URL
+    let imageURL: URL?
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             RemoteImageTile(url: imageURL)
-                .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
                 if !eventName.isEmpty {
                     Text(eventName.uppercased())
@@ -42,15 +41,12 @@ struct NewsRow: View {
 struct NewsArticleView: View {
     @Bindable var state: AppState
     let item: NewsItem
-    let imageURL: URL
+    let imageURL: URL?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-                RemoteImage(url: imageURL)
-                    .frame(height: 240)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
+                RemoteImageTile(url: imageURL)
 
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                     Text(item.headline)

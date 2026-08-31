@@ -62,14 +62,18 @@ struct SkeletonListView: View {
 }
 
 struct RemoteImage: View {
-    let url: URL
+    let url: URL?
 
     var body: some View {
-        KFImage(url)
+        if let url {
+            KFImage(url)
             .placeholder { Rectangle().fill(.quaternary) }
             .fade(duration: 0.2)
             .resizable()
             .scaledToFill()
+        } else {
+            Rectangle().fill(.quaternary)
+        }
     }
 }
 
@@ -192,11 +196,12 @@ struct PresetChipRow<Content: View>: View {
 }
 
 struct RemoteImageTile: View {
-    let url: URL
+    let url: URL?
     var aspectRatio: CGFloat = DesignTokens.Layout.mediaTileAspectRatio
 
     var body: some View {
-        KFImage(url)
+        if let url {
+            KFImage(url)
             .placeholder { Rectangle().fill(.quaternary) }
             .fade(duration: 0.2)
             .resizable()
@@ -204,5 +209,11 @@ struct RemoteImageTile: View {
             .frame(maxWidth: .infinity)
             .aspectRatio(aspectRatio, contentMode: .fit)
             .background(.quaternary)
+            .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
+        } else {
+            Rectangle().fill(.quaternary)
+                .aspectRatio(aspectRatio, contentMode: .fit)
+                .clipShape(.rect(cornerRadius: DesignTokens.Radius.md))
+        }
     }
 }

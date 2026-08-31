@@ -41,6 +41,10 @@ enum DesignTokens {
         /// A full-width call to action reads as a button, not a label, at this height.
         static let primaryActionHeight: CGFloat = 50
         static let mediaTileAspectRatio: CGFloat = 16 / 9
+        static let betSlipAccessoryHeight: CGFloat = 44
+        /// The floating tab bar's capsule rises above the safe area it reports, so a bar
+        /// sitting on it needs more than a plain gap to read as separate.
+        static let tabBarActionGap: CGFloat = 20
     }
 }
 

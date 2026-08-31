@@ -14,6 +14,7 @@ struct BoutDetailView: View {
     let bout: BoutItem
     @Binding var path: [EventsRoute]
     let mode: EventMode
+    var posterNamespace: Namespace.ID
 
     var body: some View {
         List {
@@ -78,6 +79,7 @@ struct BoutDetailView: View {
                     ring: ring,
                     size: 88
                 )
+                .matchedTransitionSource(id: corner.fighterId, in: posterNamespace)
                 Text(corner.name)
                     .font(.headline)
                     .multilineTextAlignment(.center)

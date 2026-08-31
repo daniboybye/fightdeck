@@ -10,35 +10,17 @@ import SwiftUI
 
 struct SlipTabView: View {
     @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
-    let depositHosting: DepositHosting
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        NavigationStack(path: $path) {
-            BetSlipView(
-                state: state,
-                depositHosting: depositHosting,
-                path: $path,
-                onBrowseEvents: onBrowseEvents
-            )
+        BetSlipView(state: state, onBrowseEvents: onBrowseEvents)
             .navigationTitle("Bet Slip")
-            .navigationDestination(for: SlipRoute.self) { route in
-                if route == .deposit {
-                    DepositBridgeView(state: state, depositHosting: depositHosting, path: $path)
-                        // The deposit flow is a single self-contained task; the tab bar would
-                        // invite the user to abandon it half-way.
-                        .toolbar(.hidden, for: .tabBar)
-                }
-            }
-        }
+                .balanceToolbar(state: state)
     }
 }
 
 struct BetSlipView: View {
     @Bindable var state: AppState
-    let depositHosting: DepositHosting
-    @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
 
     @FocusState private var stakeFocused: Bool
@@ -89,12 +71,12 @@ struct BetSlipView: View {
     private var slipContent: some View {
         List {
             Section(betTypeTitle) {
-                ForEach(Array(state.slipStore.slip.selections.enumerated()), id: \.offset) { _, selection in
+                ForEach(state.slipStore.slip.selections, id: \.self) { selection in
                     selectionRow(selection)
                 }
                 .onDelete { offsets in
-                    for index in offsets {
-                        let selection = state.slipStore.slip.selections[index]
+                    let toRemove = offsets.map { state.slipStore.slip.selections[$0] }
+                    for selection in toRemove {
                         state.removeSelection(boutID: selection.boutId, fighterID: selection.fighterId)
                     }
                 }
@@ -122,9 +104,7 @@ struct BetSlipView: View {
                     Text(FightCoreDisplay.formatCurrencyAmount(state.slipStore.balance))
                         .contentTransition(.numericText())
                 }
-                Button {
-                    path.append(.deposit)
-                } label: {
+                Button(action: state.presentDeposit) {
                     // Filling the row and giving it a shape is what makes the whole row
                     // tappable; a bare title button only responds on the glyphs themselves.
                     Text("Add funds")
@@ -134,9 +114,10 @@ struct BetSlipView: View {
             }
         }
         .listStyle(.insetGrouped)
-        // A bar rather than a plain inset: the list keeps scrolling under it and the glass
-        // picks up the scroll edge effect, so the last row stays legible behind the button.
+        // safeAreaBar clears the Place bet button; the tab accessory sits below that bar and
+        // still needs its own scroll margin or the Deposit rows scroll into its glass slot.
         .safeAreaBar(edge: .bottom) { placeBetBar }
+        .contentMargins(.bottom, DesignTokens.Layout.betSlipAccessoryHeight, for: .scrollContent)
         .scrollDismissesKeyboard(.interactively)
     }
 
@@ -204,9 +185,9 @@ struct BetSlipView: View {
             }
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        // Whatever the bar is currently sitting on — tab bar or keyboard — it should not
-        // look welded to it.
-        .padding(.bottom, stakeFocused ? DesignTokens.Layout.actionBarGap : DesignTokens.Layout.tabBarActionGap)
+        // The tab accessory now clears the bar from the tab bar, so only keyboard focus needs
+        // extra breathing room — tabBarActionGap would double up with the accessory slot.
+        .padding(.bottom, DesignTokens.Layout.actionBarGap)
         .animation(.snappy(duration: 0.25), value: stakeFocused)
     }
 
@@ -232,36 +213,5 @@ struct BetSlipView: View {
             return "—"
         }
         return event.name
-    }
-}
-
-struct DepositBridgeView: View {
-    @Bindable var state: AppState
-    let depositHosting: DepositHosting
-    @Binding var path: [SlipRoute]
-
-    var body: some View {
-        DepositFlowView(params: depositParams) { result in
-            if case .completed(let amount) = result {
-                Task { @MainActor in
-                    state.deposit(amount: amount)
-                    path.removeAll()
-                }
-            }
-        }
-    }
-
-    private var depositParams: DepositParams {
-        DepositParams(
-            accessToken: "demo-token",
-            environment: "demo",
-            locale: Locale.current.identifier,
-            themeJSON: themeJSON,
-            currentBalance: Decimal(string: state.slipStore.balance) ?? 0
-        )
-    }
-
-    private var themeJSON: String {
-        DatasetLocator.tokensJSON()
     }
 }

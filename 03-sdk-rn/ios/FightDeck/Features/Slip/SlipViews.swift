@@ -17,37 +17,23 @@ import DepositSDK
 
 struct SlipTabView: View {
     @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        NavigationStack(path: $path) {
-            slipRoot
-                .navigationTitle("Bet Slip")
-                // A large title collapses as its scroll view moves, and the nav bar can only
-                // watch a SwiftUI scroll view. React Native owns this one, so a large title
-                // would hang there at full size while the content slid underneath it.
-                .navigationBarTitleDisplayMode(.inline)
-                .navigationDestination(for: SlipRoute.self) { route in
-                    if route == .deposit {
-                        #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
-                        DepositBridgeView(state: state, path: $path)
-                            // The deposit flow is a single self-contained task; the tab bar would
-                            // invite the user to abandon it half-way.
-                            .toolbar(.hidden, for: .tabBar)
-                        #else
-                        FeatureUnavailableView(label: "Deposit")
-                            .toolbar(.hidden, for: .tabBar)
-                        #endif
-                    }
-                }
-        }
+        slipRoot
+            .navigationTitle("Bet Slip")
+            .navigationBarTitleDisplayMode(.inline)
+            .balanceToolbar(state: state)
     }
 
     @ViewBuilder
     private var slipRoot: some View {
         #if FIGHTDECK_BOTH
-        BetslipBridgeView(state: state, path: $path, onBrowseEvents: onBrowseEvents)
+        BetslipBridgeView(
+            state: state,
+            onBrowseEvents: onBrowseEvents,
+            onDeposit: state.presentDeposit
+        )
         #else
         SlipPlaceholderView(onBrowseEvents: onBrowseEvents)
         #endif
@@ -84,8 +70,8 @@ private struct FeatureUnavailableView: View {
 #if FIGHTDECK_BOTH
 struct BetslipBridgeView: View {
     @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
+    let onDeposit: @MainActor @Sendable () -> Void
     @State private var layoutMetrics = RNSurfaceLayoutMetrics()
     @State private var textInputActive = false
 
@@ -93,8 +79,8 @@ struct BetslipBridgeView: View {
         RNSurfaceLayoutReader(metrics: $layoutMetrics) {
             BetslipSDKView(
                 state: state,
-                path: $path,
                 onBrowseEvents: onBrowseEvents,
+                onDeposit: onDeposit,
                 layoutMetrics: layoutMetrics,
                 textInputActive: textInputActive
             )
@@ -119,8 +105,8 @@ struct BetslipBridgeView: View {
 
 struct BetslipSDKView: UIViewControllerRepresentable {
     @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
+    let onDeposit: @MainActor @Sendable () -> Void
     var layoutMetrics: RNSurfaceLayoutMetrics
     var textInputActive: Bool
 
@@ -140,7 +126,7 @@ struct BetslipSDKView: UIViewControllerRepresentable {
                 case .browseEvents:
                     onBrowseEvents()
                 case .deposit:
-                    path.append(.deposit)
+                    onDeposit()
                 case .placed(let message, let slipJSON, let balance):
                     state.placeBetFromSDK(message: message, slipJSON: slipJSON, balanceString: balance)
                 case .cancelled:
@@ -179,7 +165,8 @@ struct BetslipSDKView: UIViewControllerRepresentable {
         let slipJSON = (try? JSONEncoder().encode(SlipPayload(from: state.slip))).flatMap {
             String(data: $0, encoding: .utf8)
         } ?? "{}"
-        let eventsJSON = (try? String(contentsOf: DatasetLocator.eventsURL())) ?? "{\"events\":[]}"
+        let eventsURL = DatasetLocator.datasetRoot().appendingPathComponent("events.json")
+        let eventsJSON = (try? String(contentsOf: eventsURL, encoding: .utf8)) ?? "{\"events\":[]}"
         return BetslipParams(
             accessToken: "demo-token",
             environment: "demo",
@@ -238,53 +225,9 @@ struct BetslipSDKView: UIViewControllerRepresentable {
 #endif
 
 #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
-struct DepositBridgeView: View {
-    @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
-    @State private var depositConfirmed = false
-    @State private var layoutMetrics = {
-        var metrics = RNSurfaceLayoutMetrics()
-        metrics.includesTabBarClearance = false
-        return metrics
-    }()
-    @State private var textInputActive = false
-
-    var body: some View {
-        RNSurfaceLayoutReader(metrics: $layoutMetrics) {
-            DepositSDKView(
-                state: state,
-                path: $path,
-                onConfirmed: { depositConfirmed = true },
-                layoutMetrics: layoutMetrics,
-                textInputActive: textInputActive
-            )
-        }
-        .navigationTitle(depositConfirmed ? "Confirmed" : "Deposit")
-        .navigationBarTitleDisplayMode(.inline)
-        // The money has already moved by the time this screen appears, so going back to
-        // the amount field would offer to spend it a second time.
-        .navigationBarBackButtonHidden(depositConfirmed)
-        .onAppear {
-            layoutMetrics.includesTabBarClearance = false
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UITextField.textDidBeginEditingNotification)) { _ in
-            textInputActive = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UITextField.textDidEndEditingNotification)) { _ in
-            textInputActive = false
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            textInputActive = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            textInputActive = false
-        }
-    }
-}
-
 struct DepositSDKView: UIViewControllerRepresentable {
     @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
+    var onDismiss: () -> Void
     var onConfirmed: () -> Void
     var layoutMetrics: RNSurfaceLayoutMetrics
     var textInputActive: Bool
@@ -304,7 +247,7 @@ struct DepositSDKView: UIViewControllerRepresentable {
                     onConfirmed()
                 case .completed(let amount):
                     state.deposit(amount: amount)
-                    path.removeAll()
+                    onDismiss()
                 case .cancelled, .failed:
                     break
                 }

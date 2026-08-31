@@ -17,32 +17,23 @@ import FightDeckDeposit
 
 struct SlipTabView: View {
     @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        NavigationStack(path: $path) {
-            slipRoot
-                .navigationTitle("Bet Slip")
-                .navigationDestination(for: SlipRoute.self) { route in
-                    if route == .deposit {
-                        #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
-                        DepositBridgeView(state: state, path: $path)
-                            // The deposit flow is a single self-contained task; the tab bar would
-                            // invite the user to abandon it half-way.
-                            .toolbar(.hidden, for: .tabBar)
-                        #else
-                        FeatureUnavailableView(label: "Deposit")
-                        #endif
-                    }
-                }
-        }
+        slipRoot
+            .navigationTitle("Bet Slip")
+            .navigationBarTitleDisplayMode(.inline)
+            .balanceToolbar(state: state)
     }
 
     @ViewBuilder
     private var slipRoot: some View {
         #if FIGHTDECK_BOTH
-        BetslipBridgeView(state: state, path: $path, onBrowseEvents: onBrowseEvents)
+        BetslipBridgeView(
+            state: state,
+            onBrowseEvents: onBrowseEvents,
+            onDeposit: state.presentDeposit
+        )
         #else
         FeatureUnavailableView(label: "Bet slip")
         #endif
@@ -60,18 +51,22 @@ private struct FeatureUnavailableView: View {
 #if FIGHTDECK_BOTH
 struct BetslipBridgeView: View {
     let state: AppState
-    @Binding var path: [SlipRoute]
     let onBrowseEvents: () -> Void
+    let onDeposit: @MainActor @Sendable () -> Void
 
     // Built in `init`, not in `onAppear`. An optional store leaves the `if let` branch empty
     // on first render, and SwiftUI drops lifecycle modifiers attached to an empty view — so
     // the store was never created and the tab stayed blank.
     @State private var store: BetSlipStore
 
-    init(state: AppState, path: Binding<[SlipRoute]>, onBrowseEvents: @escaping () -> Void) {
+    init(
+        state: AppState,
+                onBrowseEvents: @escaping () -> Void,
+        onDeposit: @escaping @MainActor @Sendable () -> Void
+    ) {
         self.state = state
-        _path = path
         self.onBrowseEvents = onBrowseEvents
+        self.onDeposit = onDeposit
         _store = State(initialValue: BetSlipStore(
             fightCore: state.fightCore,
             slip: state.slip,
@@ -84,7 +79,7 @@ struct BetslipBridgeView: View {
             store: store,
             display: HostSlipDisplayContext(state: state),
             theme: BetslipTheme.parse(ThemeLoader.tokensJSON()),
-            onDeposit: { path.append(.deposit) },
+            onDeposit: { onDeposit() },
             onBrowseEvents: onBrowseEvents,
             onHostSync: { slip, balance, message in
                 state.applySdkSlip(slip, balance: balance, betPlacedMessage: message)
@@ -95,6 +90,11 @@ struct BetslipBridgeView: View {
         }
         .onChange(of: state.balance) { _, newBalance in
             store.balance = newBalance
+        }
+        // The host clears the confirmation when the slip changes from another tab; without
+        // pushing that back the SDK keeps showing "bet placed" over an empty slip.
+        .onChange(of: state.betPlacedMessage) { _, message in
+            store.betPlacedMessage = message
         }
     }
 }
@@ -133,36 +133,6 @@ final class HostSlipDisplayContext: SlipDisplayContext {
             return "—"
         }
         return event.name
-    }
-}
-#endif
-
-#if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
-struct DepositBridgeView: View {
-    @Bindable var state: AppState
-    @Binding var path: [SlipRoute]
-
-    var body: some View {
-        DepositFlowView(
-            params: depositParams,
-            theme: ThemeTokens.parse(ThemeLoader.tokensJSON()),
-            onResult: { result in
-                if case .completed(let amount) = result {
-                    state.deposit(amount: amount)
-                    path.removeAll()
-                }
-            }
-        )
-    }
-
-    private var depositParams: DepositParams {
-        DepositParams(
-            accessToken: "demo-token",
-            environment: "demo",
-            locale: Locale.current.identifier,
-            themeJSON: ThemeLoader.tokensJSON(),
-            currentBalance: state.balance
-        )
     }
 }
 #endif

@@ -9,29 +9,30 @@
 import Foundation
 
 enum FightCoreDisplay {
+    private static let exactOddsFormatter = decimalFormatter(minimumFractionDigits: 0, maximumFractionDigits: 12)
+    private static let probabilityFormatter = decimalFormatter(minimumFractionDigits: 4, maximumFractionDigits: 4)
+
+    private static func decimalFormatter(minimumFractionDigits: Int, maximumFractionDigits: Int) -> NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.minimumFractionDigits = minimumFractionDigits
+        formatter.maximumFractionDigits = maximumFractionDigits
+        formatter.groupingSeparator = ""
+        return formatter
+    }
+
     static func formatOdds(_ odds: Decimal) -> String {
         Money.format(odds)
     }
 
     static func formatExactOdds(_ odds: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = 12
-        formatter.groupingSeparator = ""
-        return formatter.string(from: odds as NSDecimalNumber) ?? Money.format(odds)
+        exactOddsFormatter.string(from: odds as NSDecimalNumber) ?? Money.format(odds)
     }
 
     static func formatImpliedProbability(_ odds: Decimal) -> String {
         let probability = OddsEngine.impliedProbability(odds)
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.minimumFractionDigits = 4
-        formatter.maximumFractionDigits = 4
-        formatter.groupingSeparator = ""
-        return formatter.string(from: probability as NSDecimalNumber) ?? "0.0000"
+        return probabilityFormatter.string(from: probability as NSDecimalNumber) ?? "0.0000"
     }
 
     static func slipSummary(state: SlipState) -> [(label: String, value: String)] {

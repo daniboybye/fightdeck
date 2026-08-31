@@ -28,7 +28,13 @@ public enum Money {
     }
 
     public static func parse(_ string: String) -> Decimal {
-        Decimal(string: string, locale: Locale(identifier: "en_US_POSIX")) ?? zero
+        parseOrNil(string) ?? zero
+    }
+
+    /// Text the user is still editing needs the difference between "nothing yet" and "zero".
+    /// `parse` collapses both to zero, which is fine for stored amounts and wrong for input.
+    public static func parseOrNil(_ string: String) -> Decimal? {
+        Decimal(string: string, locale: Locale(identifier: "en_US_POSIX"))
     }
 
     public static func fromInt(_ value: Int) -> Decimal {

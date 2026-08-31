@@ -9,19 +9,18 @@
 import FightCore
 import Foundation
 
-@MainActor
-final class JSONFileRepository: FightRepository {
+final class JSONFileRepository: FightRepository, @unchecked Sendable {
     private let datasetRoot: URL
 
     init(datasetRoot: URL = DatasetLocator.datasetRoot()) {
         self.datasetRoot = datasetRoot
     }
 
-    func loadEvents() async throws(FightCoreError) -> [EventItem] {
+    func loadEvents() async throws(FightCoreError) -> [Event] {
         try await load(file: "events.json", key: "events")
     }
 
-    func loadFighters() async throws(FightCoreError) -> [FighterItem] {
+    func loadFighters() async throws(FightCoreError) -> [Fighter] {
         try await load(file: "fighters.json", key: "fighters")
     }
 
@@ -33,28 +32,38 @@ final class JSONFileRepository: FightRepository {
         try await load(file: "media.json", key: "media")
     }
 
-    func imageURL(for relativePath: String) -> URL {
-        URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(relativePath)")!
+    func imageURL(for relativePath: String) -> URL? {
+        guard LocalAssetServer.port > 0 else { return nil }
+        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(relativePath)")
     }
 
-    private func load<T: Decodable>(file: String, key: String) async throws(FightCoreError) -> [T] {
+    private func load<T: Decodable & Sendable>(file: String, key: String) async throws(FightCoreError) -> [T] {
         let url = datasetRoot.appendingPathComponent(file)
-        let data: Data
-        do {
-            data = try Data(contentsOf: url)
-        } catch {
-            throw FightCoreError.network(retryable: false)
-        }
-        do {
-            let wrapper = try JSONDecoder().decode([String: [T]].self, from: data)
-            guard let items = wrapper[key] else {
-                throw FightCoreError.decoding(field: key)
+        // Every caller is main-actor isolated, and an async function that never suspends runs
+        // on the caller's executor — so without this hop the read and decode block the UI.
+        // The Result round-trip keeps the typed throw a detached task cannot carry.
+        let outcome = await Task.detached(priority: .userInitiated) { () -> Result<[T], FightCoreError> in
+            let data: Data
+            do {
+                data = try Data(contentsOf: url)
+            } catch {
+                return .failure(FightCoreError.network(retryable: false))
             }
+            do {
+                let wrapper = try JSONDecoder().decode([String: [T]].self, from: data)
+                guard let items = wrapper[key] else {
+                    return .failure(FightCoreError.decoding(field: key))
+                }
+                return .success(items)
+            } catch {
+                return .failure(FightCoreError.decoding(field: key))
+            }
+        }.value
+        switch outcome {
+        case .success(let items):
             return items
-        } catch let error as FightCoreError {
+        case .failure(let error):
             throw error
-        } catch {
-            throw FightCoreError.decoding(field: key)
         }
     }
 }

@@ -8,8 +8,7 @@
 
 import Foundation
 
-@MainActor
-final class JSONFileRepository: FightRepository {
+final class JSONFileRepository: FightRepository, @unchecked Sendable {
     private let datasetRoot: URL
     init(datasetRoot: URL = DatasetLocator.datasetRoot()) {
         self.datasetRoot = datasetRoot
@@ -31,28 +30,33 @@ final class JSONFileRepository: FightRepository {
         try await load(file: "media.json", key: "media")
     }
 
-    func imageURL(for relativePath: String) -> URL {
-        URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(relativePath)")!
+    func imageURL(for relativePath: String) -> URL? {
+        guard LocalAssetServer.port > 0 else { return nil }
+        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(relativePath)")
     }
 
-    private func load<T: Decodable>(file: String, key: String) async throws -> [T] {
+    private func load<T: Decodable & Sendable>(file: String, key: String) async throws -> [T] {
         let url = datasetRoot.appendingPathComponent(file)
-        let data: Data
-        do {
-            data = try Data(contentsOf: url)
-        } catch {
-            throw RepositoryError.network(retryable: false)
-        }
-        do {
-            let wrapper = try JSONDecoder().decode([String: [T]].self, from: data)
-            guard let items = wrapper[key] else {
+        // Every caller is main-actor isolated, and an async function that never suspends runs
+        // on the caller's executor — so without this hop the read and decode block the UI.
+        return try await Task.detached(priority: .userInitiated) {
+            let data: Data
+            do {
+                data = try Data(contentsOf: url)
+            } catch {
+                throw RepositoryError.network(retryable: false)
+            }
+            do {
+                let wrapper = try JSONDecoder().decode([String: [T]].self, from: data)
+                guard let items = wrapper[key] else {
+                    throw RepositoryError.decoding(field: key)
+                }
+                return items
+            } catch let error as RepositoryError {
+                throw error
+            } catch {
                 throw RepositoryError.decoding(field: key)
             }
-            return items
-        } catch let error as RepositoryError {
-            throw error
-        } catch {
-            throw RepositoryError.decoding(field: key)
-        }
+        }.value
     }
 }

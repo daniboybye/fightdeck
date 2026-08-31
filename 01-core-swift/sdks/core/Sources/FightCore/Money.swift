@@ -9,6 +9,17 @@
 import Foundation
 
 public enum Money {
+    private static let posix = Locale(identifier: "en_US_POSIX")
+    private static let moneyFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = posix
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        formatter.groupingSeparator = ""
+        return formatter
+    }()
+
     public static func round(_ value: Decimal, scale: Int = 2) -> Decimal {
         var input = value
         var result = Decimal()
@@ -21,18 +32,12 @@ public enum Money {
     }
 
     public static func parse(_ string: String) -> Decimal {
-        Decimal(string: string, locale: Locale(identifier: "en_US_POSIX")) ?? 0
+        Decimal(string: string, locale: posix) ?? 0
     }
 
     public static func format(_ value: Decimal) -> String {
         let rounded = money(value)
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
-        formatter.groupingSeparator = ""
-        return formatter.string(from: rounded as NSDecimalNumber) ?? "0.00"
+        return moneyFormatter.string(from: rounded as NSDecimalNumber) ?? "0.00"
     }
 
     public static func formatCurrency(_ value: Decimal) -> String {

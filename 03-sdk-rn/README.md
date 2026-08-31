@@ -157,6 +157,7 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 5. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
 6. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
 7. **iOS ships both `.hbc` and `.jsbundle`** in local Pods path — Release should prefer `.hbc` only to save ~914 KB.
+8. **Android Fabric layout specs** — `FabricLayoutSpecsBridge` reflects `ReactSurfaceImpl.updateLayoutSpecs$ReactAndroid` because bridgeless RN 0.84 exposes no public pre-start layout API. Coupled to the pinned `react_native.version` in `versions.lock.toml`; upgrade RN only after re-verifying this seam.
 
 ## Architecture sketch
 

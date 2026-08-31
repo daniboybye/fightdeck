@@ -58,15 +58,14 @@ owns its own stack.
 ```
 Events  ──▶ Event card ──▶ Bout detail ──▶ Fighter profile (iOS only)
 News    ──▶ Article ──▶ Video (iOS only)
-Slip    ──▶ Bet slip ──▶ Deposit
+Slip    ──▶ Bet slip
 ```
 
 The bet slip is also reachable from a persistent bar above the tab bar whenever the slip
-is non-empty, showing leg count and potential return. Tapping it pushes the slip.
+is non-empty, showing leg count and potential return. Tapping it switches to the Slip tab.
 
-**Deposit is pushed onto the existing stack**, never presented modally. That matters:
-in the SDK approaches the deposit screen is supplied by the SDK as a
-`UIViewController` or a Compose entry point, and pushing it onto a stack the host
-already owns is the realistic integration and the one that exposes the seams — the
-back gesture, the navigation bar, the theme, the safe area. A modal would hide most of
-them, which would be convenient and dishonest.
+**Deposit is presented as a sheet** from the balance toolbar on every screen. In the SDK
+approaches the deposit UI is supplied by the SDK, but the host still owns presentation:
+`sheet(isPresented:)` on iOS and `ModalBottomSheet` on Android. That keeps one entry path
+and matches how a real host would integrate a black-box deposit module without pushing
+it onto an existing navigation stack.

@@ -1,20 +1,24 @@
 package com.fightdeck.baseline.sdk
 
 import com.fightdeck.baseline.data.BoutItem
+import com.fightdeck.baseline.data.EventItem
+import com.fightdeck.baseline.data.FighterItem
 import com.fightdeck.baseline.ui.LoadState
-import com.fightdeck.baseline.ui.MainViewModel
-import fight.deck.betslip.binary.SlipDisplayContext
+import fight.deck.betslip.SlipDisplayContext
 import fight.deck.core.Selection
 
+/**
+ * Takes the loaded rosters as values rather than reading them off the view model. Holding the
+ * view model let the context return ids for names when the slip opened mid-load, because nothing
+ * in the SDK's Compose tree depended on the flows that later filled in.
+ */
 class HostSlipDisplayContext(
-    private val viewModel: MainViewModel,
+    private val fighters: LoadState<List<FighterItem>>,
+    private val events: LoadState<List<EventItem>>,
 ) : SlipDisplayContext {
     override fun fighterName(id: String): String {
-        val fighters = viewModel.fighters.value
-        if (fighters !is LoadState.Loaded) {
-            return id
-        }
-        return fighters.value.firstOrNull { it.id == id }?.name ?: id
+        val loaded = fighters as? LoadState.Loaded ?: return id
+        return loaded.value.firstOrNull { it.id == id }?.name ?: id
     }
 
     override fun opponentName(for_: Selection): String {
@@ -28,21 +32,15 @@ class HostSlipDisplayContext(
     }
 
     override fun eventName(for_: Selection): String {
-        val events = viewModel.events.value
-        if (events !is LoadState.Loaded) {
-            return "—"
-        }
-        return events.value.firstOrNull { event ->
+        val loaded = events as? LoadState.Loaded ?: return "—"
+        return loaded.value.firstOrNull { event ->
             event.bouts.any { it.id == for_.boutID }
         }?.name ?: "—"
     }
 
     private fun findBout(boutId: String): BoutItem? {
-        val events = viewModel.events.value
-        if (events !is LoadState.Loaded) {
-            return null
-        }
-        for (event in events.value) {
+        val loaded = events as? LoadState.Loaded ?: return null
+        for (event in loaded.value) {
             val bout = event.bouts.firstOrNull { it.id == boutId }
             if (bout != null) {
                 return bout

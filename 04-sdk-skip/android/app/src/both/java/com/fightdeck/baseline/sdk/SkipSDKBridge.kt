@@ -2,20 +2,20 @@ package com.fightdeck.baseline.sdk
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fightdeck.baseline.ui.MainViewModel
-import fight.deck.betslip.binary.BetslipComposeEntry
-import fight.deck.betslip.binary.BetslipTheme
-import fight.deck.betslip.binary.BetSlipStore
-import fight.deck.deposit.binary.DepositComposeEntry
-import fight.deck.deposit.binary.DepositParams
-import fight.deck.deposit.binary.DepositResult
+import fight.deck.betslip.BetslipComposeEntry
+import fight.deck.betslip.BetslipTheme
+import fight.deck.deposit.DepositComposeEntry
+import fight.deck.deposit.DepositParams
+import fight.deck.deposit.DepositResult
 import java.util.Locale
 
 object SkipSDKBridge {
@@ -30,18 +30,28 @@ object SkipSDKBridge {
         val context = LocalContext.current
         val slip by viewModel.slip.collectAsStateWithLifecycle()
         val balance by viewModel.balance.collectAsStateWithLifecycle()
+        val betPlacedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
+        // Collected rather than read off the flow inside the display context: a plain `.value`
+        // read is not a composition input, so selection rows kept showing fighter ids when the
+        // slip opened before the roster finished loading.
+        val fighters by viewModel.fighters.collectAsStateWithLifecycle()
+        val events by viewModel.events.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
             val themeJSON = remember { ThemeLoader.tokensJSON(context) }
-            val fightCore = remember { SdkFightCoreFactory.build(context) }
-            val store = remember(slip, balance) {
-                BetSlipStore(
-                    fightCore = fightCore,
-                    slip = SdkSlipMapper.toSdkSlip(slip),
-                    balance = balance,
-                )
+            val store = SdkBetSlipStoreRegistry.store(viewModel, context)
+            LaunchedEffect(slip) {
+                store.slip = SdkSlipMapper.toSdkSlip(slip)
             }
-            val display = remember(viewModel) { HostSlipDisplayContext(viewModel) }
+            LaunchedEffect(balance) {
+                store.balance = balance
+            }
+            // The host clears the confirmation when the slip changes from another tab; without
+            // pushing that back the SDK keeps showing "bet placed" over an empty slip.
+            LaunchedEffect(betPlacedMessage) {
+                store.betPlacedMessage = betPlacedMessage
+            }
+            val display = remember(fighters, events) { HostSlipDisplayContext(fighters, events) }
             val theme = remember(themeJSON) { BetslipTheme.parse(themeJSON) }
             BetslipComposeEntry(
                 store = store,
@@ -57,7 +67,11 @@ object SkipSDKBridge {
                     )
                 },
             ).Compose()
-            SideEffect { stateHolder.removeState(saveKey) }
+            DisposableEffect(saveKey) {
+                onDispose {
+                    stateHolder.removeState(saveKey)
+                }
+            }
         }
     }
 
@@ -93,7 +107,11 @@ object SkipSDKBridge {
                     onDone()
                 },
             ).Compose()
-            SideEffect { stateHolder.removeState(saveKey) }
+            DisposableEffect(saveKey) {
+                onDispose {
+                    stateHolder.removeState(saveKey)
+                }
+            }
         }
     }
 }

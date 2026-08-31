@@ -2,17 +2,17 @@ package com.fightdeck.baseline.sdk
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fightdeck.baseline.ui.MainViewModel
-import fight.deck.deposit.binary.DepositComposeEntry
-import fight.deck.deposit.binary.DepositParams
-import fight.deck.deposit.binary.DepositResult
+import fight.deck.deposit.DepositComposeEntry
+import fight.deck.deposit.DepositParams
+import fight.deck.deposit.DepositResult
 import java.util.Locale
 
 /** Deposit-only host — bet slip SDK not linked. */
@@ -60,7 +60,11 @@ object SkipSDKBridge {
                     onDone()
                 },
             ).Compose()
-            SideEffect { stateHolder.removeState(saveKey) }
+            DisposableEffect(saveKey) {
+                onDispose {
+                    stateHolder.removeState(saveKey)
+                }
+            }
         }
     }
 

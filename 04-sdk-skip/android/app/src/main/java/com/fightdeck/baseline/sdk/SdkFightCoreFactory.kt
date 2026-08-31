@@ -10,8 +10,10 @@ import kotlinx.serialization.json.Json
 import skip.lib.Array as SkipArray
 
 object SdkFightCoreFactory {
+    private val json = Json { ignoreUnknownKeys = true }
+
     fun build(context: Context): FightCore {
-        val events = Json { ignoreUnknownKeys = true }
+        val events = json
             .decodeFromString<EventsEnvelope>(
                 DatasetLocator.datasetRoot(context).resolve("events.json").readText(),
             )

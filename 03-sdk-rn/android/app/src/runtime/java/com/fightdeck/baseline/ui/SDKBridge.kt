@@ -24,6 +24,7 @@ fun RNBetslipScreen(
     balance: BigDecimal,
     slipJSON: String,
     eventsJSON: String,
+    betPlacedMessage: String,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,
     onUpdated: (String) -> Unit,

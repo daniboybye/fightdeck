@@ -5,10 +5,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.facebook.react.ReactApplication
+import com.facebook.react.ReactHost
+import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler
 import com.fightdeck.baseline.ui.FightDeckApp
 import com.fightdeck.rn.runtime.FightDeckRNRuntime
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), DefaultHardwareBackBtnHandler {
+    private val reactHost: ReactHost
+        get() = requireNotNull((application as ReactApplication).reactHost) {
+            "ReactHost is not configured on the host Application"
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val skip = shouldSkipRNPrewarm(intent)
@@ -27,9 +35,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        reactHost.onHostResume(this, this)
+    }
+
+    override fun onPause() {
+        reactHost.onHostPause(this)
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        reactHost.onHostDestroy(this)
+        super.onDestroy()
+    }
+
+    override fun invokeDefaultOnBackPressed() {
+        onBackPressedDispatcher.onBackPressed()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        reactHost.onNewIntent(intent)
     }
 
     private fun shouldSkipRNPrewarm(launchIntent: Intent?): Boolean {

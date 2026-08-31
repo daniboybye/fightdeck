@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.view.View
 import com.fightdeck.rn.runtime.FightDeckRNRuntime
 import com.fightdeck.rn.runtime.FightDeckRuntimeBridgeNotifier
+import com.fightdeck.rn.runtime.RNSurfaceLayoutSnapshot
+import com.fightdeck.rn.runtime.SurfaceChrome
+import com.fightdeck.rn.runtime.applySurfaceLayout
 import java.math.BigDecimal
 
 data class BetslipParams(
@@ -16,6 +19,10 @@ data class BetslipParams(
     val balance: BigDecimal,
     val slipJSON: String,
     val eventsJSON: String,
+    val betPlacedMessage: String = "",
+    val layout: RNSurfaceLayoutSnapshot? = null,
+    val textInputActive: Boolean = false,
+    val layoutStamp: Double = 0.0,
 )
 
 sealed class BetslipResult {
@@ -47,7 +54,20 @@ class BetslipAdapter {
         FightDeckRuntimeBridgeNotifier.setListener("betslip") { payload ->
             onResult(mapResult(payload))
         }
-        val props = Bundle().apply {
+        return FightDeckRNRuntime.createSurfaceView(
+            context,
+            app,
+            "BetslipFeature",
+            propsBundle(params),
+        )
+    }
+
+    fun updateProps(hostView: View, params: BetslipParams) {
+        FightDeckRNRuntime.updateSurfaceProps(hostView, propsBundle(params))
+    }
+
+    fun propsBundle(params: BetslipParams): Bundle =
+        Bundle().apply {
             putString("accessToken", params.accessToken)
             putString("environment", params.environment)
             putString("locale", params.locale)
@@ -55,9 +75,15 @@ class BetslipAdapter {
             putString("balance", params.balance.toPlainString())
             putString("slipJSON", params.slipJSON)
             putString("eventsJSON", params.eventsJSON)
+            putString("betPlacedMessage", params.betPlacedMessage)
+            val layout = params.layout ?: RNSurfaceLayoutSnapshot(
+                safeAreaTop = 0f,
+                safeAreaBottom = 168f,
+                keyboardBottomInset = 0f,
+                chromeBackground = SurfaceChrome.listBackgroundHex(),
+            )
+            applySurfaceLayout(layout, params.textInputActive, params.layoutStamp)
         }
-        return FightDeckRNRuntime.createSurfaceView(context, app, "BetslipFeature", props)
-    }
 
     private fun mapResult(payload: Map<String, Any?>): BetslipResult =
         when (payload["type"]) {

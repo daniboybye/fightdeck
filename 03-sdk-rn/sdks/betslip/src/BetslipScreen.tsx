@@ -110,7 +110,10 @@ function BetslipScreenContent(props: SlipProps) {
   const layoutFrame = useSurfaceLayout(props, 'BetslipFeature');
 
   const theme = useMemo(() => parseThemeJSON(String(props.themeJSON ?? '{}')), [props.themeJSON]);
-  const styles = makeStyles(theme, layoutFrame.chromeBackground);
+  const styles = useMemo(
+    () => makeStyles(theme, layoutFrame.chromeBackground),
+    [theme, layoutFrame.chromeBackground],
+  );
   const eventsJSON = String(props.eventsJSON ?? '{"events":[]}');
   const slipJSONProp = String(props.slipJSON ?? '{}');
   const core = useMemo(() => {

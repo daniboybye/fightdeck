@@ -1,17 +1,18 @@
 package com.fightdeck.baseline.ui
 
 import android.app.Application
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.fightdeck.baseline.services.DatasetLocator
+import com.fightdeck.rn.runtime.FightDeckRNRuntime
+import com.fightdeck.rn.runtime.toSnapshot
 import com.fightdeck.sdk.deposit.DepositAdapter
 import com.fightdeck.sdk.deposit.DepositParams
 import com.fightdeck.sdk.deposit.DepositResult
@@ -28,6 +29,12 @@ fun RNDepositScreen(
     val app = context.applicationContext as Application
     val adapter = remember { DepositAdapter() }
     val themeJSON = remember { ThemeLoader.tokensJSON(context) }
+    val layoutHandle = rememberRNSurfaceLayout(
+        moduleName = "DepositFeature",
+        includesTabBarClearance = false,
+    )
+    var lastPushed by remember { mutableStateOf<RNSurfacePropsFingerprint?>(null) }
+
     AndroidView(
         modifier = modifier.fillMaxSize(),
         factory = { ctx ->
@@ -40,12 +47,40 @@ fun RNDepositScreen(
                     locale = "en",
                     themeJSON = themeJSON,
                     currentBalance = balance,
+                    layout = layoutHandle.metrics.toSnapshot(),
+                    layoutStamp = 1.0,
                 ),
             ) { result ->
                 if (result is DepositResult.Completed) {
                     onCompleted(result.amount)
                 }
             }
+        },
+        update = { view ->
+            layoutHandle.trackHost(view)
+            val params = DepositParams(
+                accessToken = "demo-token",
+                environment = "demo",
+                locale = "en",
+                themeJSON = themeJSON,
+                currentBalance = balance,
+                layout = layoutHandle.metrics.toSnapshot(),
+                textInputActive = layoutHandle.metrics.textInputActive,
+                layoutStamp = 1.0,
+            )
+            val fingerprint = RNSurfacePropsFingerprint(
+                data = listOf(params.currentBalance.toPlainString(), params.themeJSON),
+                layout = params.layout,
+                textInputActive = params.textInputActive,
+            )
+            if (fingerprint.data != lastPushed?.data) {
+                adapter.updateProps(view, params)
+            }
+            lastPushed = fingerprint
+            view.requestLayout()
+        },
+        onRelease = { view ->
+            FightDeckRNRuntime.stopSurface(view)
         },
     )
 }
@@ -55,6 +90,7 @@ fun RNBetslipScreen(
     balance: BigDecimal,
     slipJSON: String,
     eventsJSON: String,
+    betPlacedMessage: String,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,
     onUpdated: (String) -> Unit,
@@ -66,8 +102,8 @@ fun RNBetslipScreen(
 
 @Composable
 private fun UnavailableFeature(label: String, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    androidx.compose.foundation.layout.Box(modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+        androidx.compose.material3.Text(label, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

@@ -2,12 +2,16 @@
 
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTSurfaceHostingProxyRootView.h>
+#import <React/RCTFabricSurface.h>
 #import "RCTDefaultReactNativeFactoryDelegate.h"
 #import "RCTAppDependencyProvider.h"
 #import "RCTReactNativeFactory.h"
 #import "RCTRootViewFactory.h"
 #import <React/RCTBundleManager.h>
 #import <React/RCTDevMenu.h>
+#import <react/renderer/core/ReactPrimitives.h>
+
+using facebook::react::DisplayMode;
 
 @interface FightDeckRNFactoryDelegate : RCTDefaultReactNativeFactoryDelegate
 @end
@@ -56,6 +60,33 @@
 
 @end
 
+static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mode)
+{
+  if (![surfaceView isKindOfClass:[RCTSurfaceHostingProxyRootView class]]) {
+    return;
+  }
+  RCTSurfaceHostingProxyRootView *hostingView = (RCTSurfaceHostingProxyRootView *)surfaceView;
+  id<RCTSurfaceProtocol> surface = hostingView.surface;
+  if (![surface isKindOfClass:[RCTFabricSurface class]]) {
+    return;
+  }
+  const auto &handler = [(RCTFabricSurface *)surface surfaceHandler];
+  handler.setDisplayMode(mode);
+}
+
+static void FightDeckRNTearDownSurfaceView(UIView *surfaceView)
+{
+  if (surfaceView == nil) {
+    return;
+  }
+  if ([surfaceView isKindOfClass:[RCTSurfaceHostingProxyRootView class]]) {
+    RCTSurfaceHostingProxyRootView *hostingView = (RCTSurfaceHostingProxyRootView *)surfaceView;
+    id<RCTSurfaceProtocol> surface = hostingView.surface;
+    [surface stop];
+  }
+  [surfaceView removeFromSuperview];
+}
+
 @implementation FightDeckRNHost {
   RCTReactNativeFactory *_factory;
   FightDeckRNFactoryDelegate *_delegate;
@@ -63,6 +94,7 @@
   NSTimeInterval _coldStartMs;
   NSTimeInterval _prewarmedStartMs;
   BOOL _prewarmed;
+  BOOL _hostPaused;
 }
 
 + (instancetype)shared
@@ -128,6 +160,9 @@
   controller.surfaceView = surfaceView;
   host->_controllers[moduleName] = controller;
   [self updateProperties:properties forModuleName:moduleName];
+  if (host->_hostPaused) {
+    FightDeckRNSetSurfaceDisplayMode(surfaceView, DisplayMode::Suspended);
+  }
   return controller;
 }
 
@@ -144,7 +179,43 @@
 
 + (void)destroySurface:(NSString *)moduleName
 {
-  [[self shared]->_controllers removeObjectForKey:moduleName];
+  FightDeckRNHost *host = [self shared];
+  FightDeckRNSurfaceController *controller = host->_controllers[moduleName];
+  if (controller == nil) {
+    return;
+  }
+  FightDeckRNTearDownSurfaceView(controller.surfaceView);
+  controller.surfaceView = nil;
+  [host->_controllers removeObjectForKey:moduleName];
+}
+
++ (void)onHostResume
+{
+  FightDeckRNHost *host = [self shared];
+  host->_hostPaused = NO;
+  for (FightDeckRNSurfaceController *controller in host->_controllers.allValues) {
+    FightDeckRNSetSurfaceDisplayMode(controller.surfaceView, DisplayMode::Visible);
+  }
+}
+
++ (void)onHostPause
+{
+  FightDeckRNHost *host = [self shared];
+  host->_hostPaused = YES;
+  for (FightDeckRNSurfaceController *controller in host->_controllers.allValues) {
+    FightDeckRNSetSurfaceDisplayMode(controller.surfaceView, DisplayMode::Suspended);
+  }
+}
+
++ (void)onHostDestroy
+{
+  FightDeckRNHost *host = [self shared];
+  NSArray<NSString *> *moduleNames = host->_controllers.allKeys;
+  for (NSString *moduleName in moduleNames) {
+    [self destroySurface:moduleName];
+  }
+  host->_prewarmed = NO;
+  host->_hostPaused = NO;
 }
 
 + (NSTimeInterval)coldStartMilliseconds

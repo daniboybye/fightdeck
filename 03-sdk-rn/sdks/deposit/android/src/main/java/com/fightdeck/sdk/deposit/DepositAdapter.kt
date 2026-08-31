@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.View
 import com.fightdeck.rn.runtime.FightDeckRNRuntime
 import com.fightdeck.rn.runtime.FightDeckRuntimeBridgeNotifier
+import com.fightdeck.rn.runtime.RNSurfaceLayoutSnapshot
+import com.fightdeck.rn.runtime.applySurfaceLayout
 import java.math.BigDecimal
 
 data class DepositParams(
@@ -14,6 +16,9 @@ data class DepositParams(
     val locale: String,
     val themeJSON: String,
     val currentBalance: BigDecimal,
+    val layout: RNSurfaceLayoutSnapshot? = null,
+    val textInputActive: Boolean = false,
+    val layoutStamp: Double = 0.0,
 )
 
 sealed class DepositResult {
@@ -54,15 +59,29 @@ class DepositAdapter : DepositHosting {
         FightDeckRuntimeBridgeNotifier.setListener("deposit") { payload ->
             onResult(mapResult(payload))
         }
-        val props = Bundle().apply {
+        return FightDeckRNRuntime.createSurfaceView(
+            context,
+            app,
+            "DepositFeature",
+            propsBundle(params),
+        )
+    }
+
+    fun updateProps(hostView: View, params: DepositParams) {
+        FightDeckRNRuntime.updateSurfaceProps(hostView, propsBundle(params))
+    }
+
+    fun propsBundle(params: DepositParams): Bundle =
+        Bundle().apply {
             putString("accessToken", params.accessToken)
             putString("environment", params.environment)
             putString("locale", params.locale)
             putString("themeJSON", params.themeJSON)
             putString("currentBalance", params.currentBalance.toPlainString())
+            params.layout?.let { layout ->
+                applySurfaceLayout(layout, params.textInputActive, params.layoutStamp)
+            }
         }
-        return FightDeckRNRuntime.createSurfaceView(context, app, "DepositFeature", props)
-    }
 
     private fun mapResult(payload: Map<String, Any?>): DepositResult =
         when (payload["type"]) {

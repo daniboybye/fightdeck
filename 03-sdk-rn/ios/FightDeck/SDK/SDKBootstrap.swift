@@ -18,11 +18,7 @@ import BetslipSDK
 
 enum ThemeLoader {
     static func tokensJSON() -> String {
-        let url = DatasetLocator.datasetRoot()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("shared-ui-spec/tokens.json")
-        return (try? String(contentsOf: url, encoding: .utf8)) ?? "{}"
+        DatasetLocator.tokensJSON()
     }
 }
 

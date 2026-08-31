@@ -50,7 +50,10 @@ function DepositScreenContent(props: Record<string, unknown>) {
   const [didSucceed, setDidSucceed] = useState(false);
   const [amountFocused, setAmountFocused] = useState(false);
 
-  const styles = makeStyles(theme, layoutFrame.chromeBackground);
+  const styles = useMemo(
+    () => makeStyles(theme, layoutFrame.chromeBackground),
+    [theme, layoutFrame.chromeBackground],
+  );
   const amount = parseMoney(amountText || '0');
   const method = METHODS.find((m) => m.id === methodId) ?? METHODS[0];
   const fee = money(amount.times(method.rate));

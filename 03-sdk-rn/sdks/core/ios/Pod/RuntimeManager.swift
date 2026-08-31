@@ -70,4 +70,16 @@ public final class FightDeckRNRuntime {
             prewarmedMilliseconds: FightDeckRNHost.prewarmedStartMilliseconds()
         )
     }
+
+    public func onHostResume() {
+        FightDeckRNHost.onHostResume()
+    }
+
+    public func onHostPause() {
+        FightDeckRNHost.onHostPause()
+    }
+
+    public func onHostDestroy() {
+        FightDeckRNHost.onHostDestroy()
+    }
 }

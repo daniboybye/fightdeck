@@ -36,38 +36,54 @@ cd "$REPO_ROOT/$PROJECT_DIR"
 echo "==> Building $MODULE $VARIANT"
 ./gradlew --no-daemon ":$MODULE:assemble$VARIANT_TASK" ":$MODULE:bundle$VARIANT_TASK"
 
-# A flavoured build nests the output one directory deeper, so search rather than assume.
-APK_PATH="$(find "$MODULE/build/outputs/apk" -name '*.apk' -path '*release*' | sort | head -1)"
-AAB_PATH="$(find "$MODULE/build/outputs/bundle" -name '*.aab' | sort | head -1)"
+# The bundle directory is named for the variant, the APK directory splits flavour and build
+# type into separate levels. Both are addressed exactly: a `find | sort | head -1` picked
+# whichever variant sorted first, so once a second flavour had ever been built, every
+# approach reported bothRelease no matter which variant was asked for — which is how the
+# cost of the second feature came out as zero bytes.
+AAB_PATH="$(ls "$MODULE/build/outputs/bundle/$VARIANT"/*.aab 2>/dev/null | head -1)"
+FLAVOUR="${VARIANT%Release}"
+if [[ "$FLAVOUR" == "$VARIANT" ]]; then
+    APK_DIR="$MODULE/build/outputs/apk/release"
+else
+    APK_DIR="$MODULE/build/outputs/apk/$FLAVOUR/release"
+fi
+APK_PATH="$(ls "$APK_DIR"/*.apk 2>/dev/null | head -1)"
 
-APK_BYTES=0
-[[ -n "$APK_PATH" ]] && APK_BYTES="$(stat -f%z "$APK_PATH" 2>/dev/null || stat -c%s "$APK_PATH")"
+if [[ -z "$AAB_PATH" || -z "$APK_PATH" ]]; then
+    echo "::error::no $VARIANT artifacts under $MODULE/build/outputs for $APPROACH"
+    exit 1
+fi
 
-AAB_BYTES=0
-[[ -n "$AAB_PATH" ]] && AAB_BYTES="$(stat -f%z "$AAB_PATH" 2>/dev/null || stat -c%s "$AAB_PATH")"
+APK_BYTES="$(stat -f%z "$APK_PATH" 2>/dev/null || stat -c%s "$APK_PATH")"
+AAB_BYTES="$(stat -f%z "$AAB_PATH" 2>/dev/null || stat -c%s "$AAB_PATH")"
 
 # Per-ABI download size via bundletool. This is what a phone actually pulls, and for
 # anything carrying a native runtime (Swift, Rust, Hermes, Skip) it is dramatically
 # smaller than the universal APK, so quoting the APK would slander every native approach.
 ARM64_BYTES=0
 if [[ -n "$AAB_PATH" ]]; then
-    BUNDLETOOL="$REPO_ROOT/tools/out/bundletool.jar"
+    # Pinned rather than "latest": the release asset is version-stamped, so the /latest/
+    # convenience path 404s and curl happily writes the HTML error body into the jar. That
+    # failed silently and every arm64 figure came out as zero.
+    BUNDLETOOL_VERSION="$("$REPO_ROOT/tools/versions.py" android.bundletool)"
+    BUNDLETOOL="$REPO_ROOT/tools/out/bundletool-${BUNDLETOOL_VERSION}.jar"
     if [[ ! -f "$BUNDLETOOL" ]]; then
-        echo "==> Fetching bundletool"
-        curl -sSL -o "$BUNDLETOOL" \
-            https://github.com/google/bundletool/releases/latest/download/bundletool-all.jar || true
+        echo "==> Fetching bundletool $BUNDLETOOL_VERSION"
+        curl -fsSL -o "$BUNDLETOOL" \
+            "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar"
     fi
-    if [[ -f "$BUNDLETOOL" ]]; then
-        APKS_PATH="$OUT_DIR/$APPROACH.apks"
-        rm -f "$APKS_PATH"
-        java -jar "$BUNDLETOOL" build-apks \
-            --bundle="$AAB_PATH" --output="$APKS_PATH" --mode=default >/dev/null 2>&1 || true
-        if [[ -f "$APKS_PATH" ]]; then
-            ARM64_BYTES="$(java -jar "$BUNDLETOOL" get-size total \
-                --apks="$APKS_PATH" --dimensions=ABI 2>/dev/null \
-                | awk -F',' '/arm64-v8a/ {print $NF; exit}' | tr -d ' \r')"
-            ARM64_BYTES="${ARM64_BYTES:-0}"
-        fi
+
+    APKS_PATH="$OUT_DIR/$APPROACH.apks"
+    rm -f "$APKS_PATH"
+    java -jar "$BUNDLETOOL" build-apks \
+        --bundle="$AAB_PATH" --output="$APKS_PATH" --mode=default >/dev/null
+    ARM64_BYTES="$(java -jar "$BUNDLETOOL" get-size total \
+        --apks="$APKS_PATH" --dimensions=ABI \
+        | awk -F',' '/arm64-v8a/ {print $NF; exit}' | tr -d ' \r')"
+    if [[ -z "$ARM64_BYTES" || "$ARM64_BYTES" == "0" ]]; then
+        echo "::error::bundletool reported no arm64-v8a split for $APPROACH"
+        exit 1
     fi
 fi
 

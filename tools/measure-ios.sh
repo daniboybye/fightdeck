@@ -33,9 +33,21 @@ rm -rf "$ARCHIVE_PATH"
 # its bare project. Skip's SwiftPM plugin is unsigned and Xcode 26 refuses it interactively;
 # both validation opt-outs are inert for the approaches that do not use plugins.
 cd "$REPO_ROOT/$PROJECT_DIR"
-CONTAINER=(-project "$SCHEME.xcodeproj")
-if [[ -d "$SCHEME.xcworkspace" ]]; then
-    CONTAINER=(-workspace "$SCHEME.xcworkspace")
+# The container is whatever is in the directory, not whatever the scheme is called. Deriving
+# it from the scheme name meant the only measurable scheme was the one sharing the project's
+# name, so the single-feature hosts — which is how the cost of the second feature is
+# calculated — could not be archived at all.
+shopt -s nullglob
+WORKSPACES=(./*.xcworkspace)
+PROJECTS=(./*.xcodeproj)
+shopt -u nullglob
+if [[ ${#WORKSPACES[@]} -gt 0 ]]; then
+    CONTAINER=(-workspace "${WORKSPACES[0]}")
+elif [[ ${#PROJECTS[@]} -gt 0 ]]; then
+    CONTAINER=(-project "${PROJECTS[0]}")
+else
+    echo "::error::no .xcworkspace or .xcodeproj in $PROJECT_DIR"
+    exit 1
 fi
 
 ARCHIVE_ARGS=(

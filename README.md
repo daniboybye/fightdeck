@@ -34,7 +34,7 @@ That leaves two questions, and this repo exists to answer them with numbers:
 | `02-core-rust/` | Headless Rust core via UniFFI. |
 | `03-sdk-rn/` | UI-bearing SDK: React Native, one Hermes runtime, two surfaces. |
 | `04-sdk-skip/` | UI-bearing SDK: Skip, Swift that becomes real Jetpack Compose. |
-| `tools/` | Size and cold-start measurement scripts. |
+| `tools/` | Size, build-time, source-count and cold-start measurement scripts. |
 
 Each approach folder holds `ios/`, `android/` and (where relevant) `sdks/`. The
 `03-sdk-rn` and `04-sdk-skip` approaches split their `sdks/` into `core/`, `deposit/`
@@ -54,24 +54,80 @@ HTTPS against a pinned SHA-256 and has access to nothing else.
 
 The full table with methodology is written to `tools/out/receipt.md` by the `measure`
 workflow. It is deliberately not committed, so a stale local run can never be mistaken for
-a fresh one. The headline:
+a fresh one.
 
-| Approach | iOS `.app` | Android arm64 | Cost of the *second* feature |
-| --- | --- | --- | --- |
-| Native baseline | 1.9 MB | 13.2 MB | — |
-| Rust core | 2.6 MB | 13.7 MB | — |
-| Skip SDK | 2.7 MB | 16.0 MB | 76 KB iOS / 49 KB Android |
-| React Native SDK | 22.6 MB | 22.6 MB | 48 KB iOS / **4.8 KB** Android |
+The three tables below are the headline: what each approach costs to ship, what it costs to
+write, and what the *next* feature costs once the first one has paid for the runtime. They
+come from a local `tools/ci-local.sh --skip-tests measure` run on Apple silicon, and the
+`measure` workflow re-derives every one of them on a clean runner.
 
-The last column is the point of the whole repository. React Native costs 9.4 MB on Android
-to get the runtime in the door, and then 4.8 KB for the next screen — a ratio of roughly
-1:2000. The first feature pays for the runtime; the second pays only for itself.
+### What it costs to ship
 
-Three caveats that belong next to every number above: measurements are from simulator and
-emulator rather than physical devices, Android R8 is off everywhere (so Android figures are
-uniformly inflated), and **Swift-on-Android does not build here** — `01-core-swift` runs a
-Kotlin stub on Android and says so in the code. All ten implementations pass all five golden
-fixture suites.
+| Approach | iOS `.app` | Android arm64 | Total overhead | Clean build (iOS / Android) |
+| --- | ---: | ---: | ---: | ---: |
+| `00-native` baseline | 1.96 MB | 12.53 MB | — | 0m16s / 0m24s |
+| `01-core-swift` † | 1.98 MB | 12.52 MB | +0.01 MB | 0m16s / 0m22s |
+| `02-core-rust` | 2.82 MB | 13.07 MB | +1.40 MB | 3m52s / 1m58s |
+| `04-sdk-skip` | 3.11 MB | 22.52 MB | +11.14 MB | 0m29s / 4m18s |
+| `03-sdk-rn` | 22.11 MB | 24.78 MB | +32.40 MB | 0m57s / 1m16s |
+
+*Total overhead* is the iOS and Android growth added together, against the baseline that
+shares nothing. Android figures are per-ABI download size for `arm64-v8a` from the app
+bundle, which is what a phone actually pulls — the universal APK is three to four times
+larger and nobody downloads it.
+
+† Do not read `01-core-swift`'s near-zero overhead as Swift-on-Android being free. Its
+Android app runs a Kotlin stub, so that row prices a Swift core on iOS and a hand-written
+reimplementation on Android. See the caveats.
+
+### What it costs to write
+
+| Approach | iOS | Android | Shared | Config | Total | Shared |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `00-native` baseline | 3,150 | 3,168 | 0 | 160 | 6,478 | 0% |
+| `01-core-swift` † | 2,457 | 3,261 | 1,012 | 188 | 6,918 | 15% |
+| `02-core-rust` | 2,847 | 2,797 | 1,473 | 280 | 7,397 | 20% |
+| `04-sdk-skip` | 2,677 | 3,137 | 2,699 | 566 | 9,079 | 30% |
+| `03-sdk-rn` | 3,243 | 3,489 | 3,714 | 653 | 11,099 | 33% |
+
+Hand-written lines only, from `python3 tools/count-lines.py`. Generated bindings and
+transpiler output are excluded — counting them would credit a code generator for typing.
+
+Read the per-platform columns before the shared one. Every approach that shares logic
+takes work *out* of the hosts, except React Native, which is the only one where the
+platform-specific code goes **up**: 6,732 lines across the two hosts against the
+baseline's 6,318, because embedding a surface, sizing it and feeding it the host's layout
+is code that only exists because the SDK is there. A bigger shared column is not the same
+as a smaller job.
+
+### The cost of the second feature
+
+| Approach | Second feature, iOS | Second feature, Android |
+| --- | ---: | ---: |
+| `04-sdk-skip` | 8 KB | 46.5 KB |
+| `03-sdk-rn` | not yet measurable | 21.6 KB |
+
+This is the point of the whole repository. React Native spends 12.25 MB on Android getting
+the runtime through the door and then 21.6 KB on the next screen — a ratio near 600:1. The
+first feature pays for the runtime; the second pays only for itself. Skip charges 10 MB for
+the same privilege and 46.5 KB per screen after it.
+
+The iOS React Native figure is missing rather than estimated: that host has no
+single-feature target to archive, so there is nothing to subtract. Adding one is the fix,
+and until then the cell stays empty.
+
+### Caveats that belong next to every number
+
+Measurements come from simulator and emulator rather than physical devices, and Android R8
+is off everywhere, so Android figures are uniformly inflated. Build times are clean builds
+with dependencies already fetched — they include each approach's own SDK step, which is why
+Rust pays on iOS (three-target `xcframework`) and Skip pays on Android (transpilation), but
+they exclude package downloads, which measure the network rather than the approach. CI has
+no dependency cache at all, so its numbers will be higher across the board.
+
+**Swift-on-Android does not build here** — `01-core-swift` runs a Kotlin stub on Android and
+says so in the code, which is why its Android column is a native-baseline figure wearing a
+shared-core label. All ten implementations pass all five golden fixture suites.
 
 ## Getting started
 

@@ -7,9 +7,13 @@ export FIGHTDECK_LOCAL_SDK=1
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 OUT="$ROOT/out"
 REPO_ROOT="$(cd "$ROOT/../../.." && pwd)"
+# shellcheck source=../skip-aar-publish.sh
+source "$ROOT/../skip-aar-publish.sh"
+
 CORE_AAR="${FIGHTDECK_CORE_AAR:-$REPO_ROOT/tools/out/release/skip/FightDeckCore-release.aar}"
 SKIPSTONE="$ROOT/.build/plugins/outputs/deposit/FightDeckDepositBinary/destination/skipstone"
 BINARY_MODULE="FightDeckDepositBinary"
+MAVEN_REPO="$REPO_ROOT/04-sdk-skip/sdks/out/maven"
 
 mkdir -p "$OUT"
 rm -f "$OUT"/*.aar
@@ -38,6 +42,11 @@ sed -i '' 's|api(project(":FightDeckCoreBinary"))|compileOnly(files("../FightDec
     "$SKIPSTONE/FightDeckDepositBinary/build.gradle.kts"
 sed -i '' '/include(":FightDeckCoreBinary")/,+1d' "$SKIPSTONE/settings.gradle.kts"
 
+patch_skip_ui_reflect "$SKIPSTONE"
+patch_skip_commonmark_api "$SKIPSTONE"
+prepare_skipstone_for_patch "$SKIPSTONE"
+configure_skipstone_maven_repo "$SKIPSTONE" "$MAVEN_REPO"
+
 (
     cd "$SKIPSTONE"
     gradle ":${BINARY_MODULE}:assembleRelease" --console=plain
@@ -51,13 +60,11 @@ fi
 
 cp "$BUILT" "$OUT/FightDeckDeposit-release.aar"
 
-# A successful `skip export` also drops the raw module AAR and core's here. Both are
-# duplicates of something the host already links, and duplicates collide in the
-# manifest merger and in the release staging directory.
+publish_skipstone_maven "$SKIPSTONE" \
+    SkipFoundation SkipLib SkipModel SkipUI SkipUnit "$BINARY_MODULE"
+
 rm -f "$OUT/${BINARY_MODULE}-release.aar" "$OUT"/FightDeckCore*-release.aar
 
-# Copy Skip runtime AARs from the skipstone build for local Android consumption.
-REPO_ROOT="$(cd "$ROOT/../../.." && pwd)"
 RELEASE_AARS="$REPO_ROOT/tools/out/release/skip"
 for name in SkipFoundation SkipLib SkipModel SkipUI SkipUnit; do
     src=$(find "$SKIPSTONE" -path "*/${name}/build/outputs/aar/${name}-release.aar" 2>/dev/null | head -1)
@@ -79,4 +86,5 @@ done
 
 echo "Wrote AAR artifacts:"
 ls -lh "$OUT"/*.aar
+echo "Maven repo: $MAVEN_REPO"
 du -sh "$OUT"/*.aar

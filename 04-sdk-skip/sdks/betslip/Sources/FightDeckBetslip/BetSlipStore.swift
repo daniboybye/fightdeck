@@ -33,6 +33,11 @@ public final class BetSlipStore {
         fightCore.slipState(slip: slip, balance: balance)
     }
 
+    public func setStake(_ stake: Decimal) {
+        slip.stake = stake
+        betPlacedMessage = nil
+    }
+
     public func removeSelection(id: String) {
         slip.selections.removeAll { $0.id == id }
         syncMode()

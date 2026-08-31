@@ -16,6 +16,7 @@ private enum Layout {
     static let secondaryActionPadding: CGFloat = 24
     static let actionBarGap: CGFloat = 12
     static let tabBarActionGap: CGFloat = 20
+    static let betSlipAccessoryHeight: CGFloat = 44
 }
 
 public struct BetSlipRootView: View {
@@ -27,6 +28,7 @@ public struct BetSlipRootView: View {
     let onHostSync: @Sendable (BetSlip, Decimal, String?) -> Void
 
     @FocusState private var stakeFocused: Bool
+    @State private var stakeText: String = ""
 
     public init(
         store: BetSlipStore,
@@ -55,6 +57,18 @@ public struct BetSlipRootView: View {
             }
         }
         .background(theme.background)
+        .onAppear { stakeText = Money.format(store.slip.stake) }
+        .onChange(of: store.slip.stake) { _, newValue in
+            // Only adopt the model's formatting when the user is not mid-edit.
+            if !stakeFocused {
+                stakeText = Money.format(newValue)
+            }
+        }
+        .onChange(of: stakeFocused) { _, focused in
+            if !focused {
+                stakeText = Money.format(store.slip.stake)
+            }
+        }
         #if !SKIP
         .modifier(SlipPresentationModifier(
             selectionCount: store.slip.selections.count,
@@ -97,17 +111,17 @@ public struct BetSlipRootView: View {
         #if !SKIP
         if #available(iOS 18, *) {
             Image(systemName: "checkmark.seal.fill")
-                .font(Typography.body(48))
+                .font(Typography.body(48.0))
                 .foregroundStyle(theme.positive)
                 .symbolEffect(.bounce, options: .nonRepeating)
         } else {
             Image(systemName: "checkmark.seal.fill")
-                .font(Typography.body(48))
+                .font(Typography.body(48.0))
                 .foregroundStyle(theme.positive)
         }
         #else
         Image(systemName: "checkmark.seal.fill")
-            .font(Typography.body(48))
+            .font(Typography.body(48.0))
             .foregroundStyle(theme.positive)
         #endif
     }
@@ -219,7 +233,9 @@ public struct BetSlipRootView: View {
             store.placeBet()
             onHostSync(store.slip, store.balance, store.betPlacedMessage)
         } label: {
-            Label("Place bet", systemImage: "checkmark.seal")
+            // Text, not a Label: SF Symbol names have no Material equivalent, and SkipUI
+            // substitutes a warning triangle announced as "missing icon".
+            Text("Place bet")
                 .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.onAccent)
                 .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
@@ -288,8 +304,18 @@ public struct BetSlipRootView: View {
                 store.removeSelection(id: selection.id)
                 onHostSync(store.slip, store.balance, nil)
             } label: {
+                #if SKIP
+                // SkipUI has no Material mapping for this symbol and renders a warning triangle
+                // labelled "missing icon", which is both wrong visually and wrong for TalkBack.
+                Text(verbatim: "✕")
+                    .font(Typography.semibold(theme.fontCallout))
+                    .foregroundStyle(theme.textSecondary)
+                    .accessibilityLabel("Remove selection")
+                #else
                 Image(systemName: "xmark.circle.fill")
                     .foregroundStyle(theme.textSecondary)
+                    .accessibilityLabel("Remove selection")
+                #endif
             }
             .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
         }
@@ -392,6 +418,9 @@ public struct BetSlipRootView: View {
             }
         }
         .listStyle(.insetGrouped)
+        // safeAreaBar clears the Place bet button; the tab accessory sits below that bar and
+        // still needs its own scroll margin or the Deposit rows scroll into its glass slot.
+        .contentMargins(.bottom, Layout.betSlipAccessoryHeight, for: .scrollContent)
         .scrollDismissesKeyboard(.interactively)
     }
 
@@ -418,14 +447,43 @@ public struct BetSlipRootView: View {
         store.slip.mode == BetMode.accumulator ? "Accumulator" : "Single"
     }
 
+    /// The field shows what the user typed, not a re-formatted view of the parsed amount.
+    /// Compose renders exactly what the state says, so formatting on every read would round
+    /// "0.007" back to "0.01" and swallow the keystroke. SwiftUI hides this behind its own
+    /// editing buffer, which is why the same binding only misbehaves on Android.
     private var stakeBinding: Binding<String> {
         Binding(
-            get: { Money.format(store.slip.stake) },
+            get: { stakeText },
             set: { newValue in
-                store.slip.stake = Money.parse(newValue)
-                onHostSync(store.slip, store.balance, nil)
+                // Compose emits one last empty change when the field leaves composition, which
+                // is how switching tabs used to wipe the amount the user had just typed. Only a
+                // focused field is being edited, so anything else is teardown noise.
+                stakeText = newValue
+                if newValue.isEmpty {
+                    applyStake(Money.zero)
+                } else if let amount = Money.parseOrNil(newValue) {
+                    applyStake(amount)
+                }
+                // Anything else is text the user is midway through, or the stray separator
+                // Compose sends as the field leaves composition. Treating it as zero is what
+                // used to wipe the amount on a tab switch.
             }
         )
+    }
+
+    private func setStake(_ amount: Decimal) {
+        stakeText = Money.format(amount)
+        applyStake(amount)
+    }
+
+    /// The slip handed to the host is built with the new stake rather than read back from the
+    /// store, because a read inside the text field's change callback can still see the value
+    /// from the composition that produced the callback and push a stale amount.
+    private func applyStake(_ amount: Decimal) {
+        store.setStake(amount)
+        var synced = store.slip
+        synced.stake = amount
+        onHostSync(synced, store.balance, nil)
     }
 
     @ViewBuilder
@@ -434,17 +492,15 @@ public struct BetSlipRootView: View {
         HStack(spacing: theme.spacingSM) {
             ForEach([5, 10, 25, 50], id: \.self) { chip in
                 stakeChip("€\(chip)") {
-                    store.slip.stake = Money.parse(String(chip))
-                    onHostSync(store.slip, store.balance, nil)
+                    setStake(Money.fromInt(chip))
                 }
             }
         }
         #else
-        PresetChipRow(theme: theme) {
+        PresetChipRow(theme: theme.chipTheme) {
             ForEach([5, 10, 25, 50], id: \.self) { chip in
-                PresetChipButton(title: "€\(chip)", theme: theme) {
-                    store.slip.stake = Money.parse(String(chip))
-                    onHostSync(store.slip, store.balance, nil)
+                PresetChipButton(title: "€\(chip)", theme: theme.chipTheme) {
+                    setStake(Money.fromInt(chip))
                 }
             }
         }
@@ -582,7 +638,8 @@ private struct SlipBottomBarModifier: ViewModifier {
             }
         }
         .padding(.horizontal, theme.spacingLG)
-        .padding(.bottom, stakeFocused ? Layout.actionBarGap : Layout.tabBarActionGap)
+        // Host tab accessory now owns tab-bar clearance; tabBarActionGap would double up.
+        .padding(.bottom, Layout.actionBarGap)
         .animation(.snappy(duration: 0.25), value: stakeFocused)
     }
 
@@ -645,57 +702,6 @@ private struct SlipBottomBarModifier: ViewModifier {
             .frame(height: Layout.primaryActionHeight)
             .background(theme.surfaceElevated)
             .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
-        }
-    }
-}
-
-private struct PresetChipRow<Content: View>: View {
-    let theme: BetslipTheme
-    @ViewBuilder var content: () -> Content
-
-    var body: some View {
-        if #available(iOS 26, *) {
-            GlassEffectContainer(spacing: theme.spacingSM) {
-                HStack(spacing: theme.spacingSM) {
-                    content()
-                }
-            }
-        } else {
-            HStack(spacing: theme.spacingSM) {
-                content()
-            }
-        }
-    }
-}
-
-private struct PresetChipButton: View {
-    let title: String
-    let theme: BetslipTheme
-    let action: () -> Void
-
-    var body: some View {
-        if #available(iOS 26, *) {
-            Button(action: action) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(theme.accent)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: Layout.secondaryActionHeight)
-                    .contentShape(.capsule)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .capsule)
-        } else {
-            Button(action: action) {
-                Text(title)
-                    .font(Typography.medium(theme.fontCaption))
-                    .foregroundStyle(theme.accent)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(.rect)
-            }
-            .frame(height: Layout.secondaryActionHeight)
-            .background(theme.surfaceElevated)
-            .clipShape(Capsule())
         }
     }
 }

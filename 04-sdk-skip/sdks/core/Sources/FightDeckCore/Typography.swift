@@ -1,27 +1,27 @@
 //
 // Typography.swift
-// FightDeckBetslip
+// FightDeckCore
 //
-// Created by FightDeck on 20.08.26.
+// Created by FightDeck on 28.08.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
 import SwiftUI
 
-enum Typography {
-    static func body(_ size: CGFloat) -> Font {
+public enum Typography {
+    public static func body(_ size: CGFloat) -> Font {
         Font.system(size: size)
     }
 
-    static func bold(_ size: CGFloat) -> Font {
+    public static func bold(_ size: CGFloat) -> Font {
         Font.system(size: size, weight: Font.Weight.bold)
     }
 
-    static func semibold(_ size: CGFloat) -> Font {
+    public static func semibold(_ size: CGFloat) -> Font {
         Font.system(size: size, weight: Font.Weight.semibold)
     }
 
-    static func medium(_ size: CGFloat) -> Font {
+    public static func medium(_ size: CGFloat) -> Font {
         Font.system(size: size, weight: Font.Weight.medium)
     }
 }

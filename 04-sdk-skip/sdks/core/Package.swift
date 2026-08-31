@@ -1,5 +1,7 @@
 // swift-tools-version: 6.1
-// FightDeck Skip core — headless FightCore, transpiled to Kotlin on Android (Skip Lite).
+// FightDeck Skip core — everything both features share, transpiled to Kotlin on Android
+// (Skip Lite): FightCore business logic plus the design-system pieces (typography, theme
+// colours, preset chips) that deposit and betslip would otherwise each carry a copy of.
 import PackageDescription
 
 let useLocal = Context.environment["FIGHTDECK_LOCAL_SDK"] == "1"
@@ -14,6 +16,7 @@ let coreBinary: Target = useLocal
         name: "FightDeckCoreBinary",
         dependencies: [
             .product(name: "SkipFoundation", package: "skip-foundation"),
+            .product(name: "SkipUI", package: "skip-ui"),
         ],
         path: "Sources/FightDeckCore",
         plugins: [
@@ -51,6 +54,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.6"),
         .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.3"),
+        .package(url: "https://github.com/skiptools/skip-ui.git", exact: "1.59.2"),
     ],
     targets: [
         coreBinary,

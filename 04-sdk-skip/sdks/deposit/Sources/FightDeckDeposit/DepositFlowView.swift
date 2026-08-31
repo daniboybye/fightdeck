@@ -15,6 +15,7 @@ private enum Layout {
     static let secondaryActionHeight: CGFloat = 44
     static let secondaryActionPadding: CGFloat = 24
     static let actionBarGap: CGFloat = 12
+    static let betSlipAccessoryHeight: CGFloat = 44
 }
 
 private enum DepositLimits {
@@ -175,9 +176,9 @@ public struct DepositFlowView: View {
             }
         }
         #else
-        PresetChipRow(theme: theme) {
+        PresetChipRow(theme: theme.chipTheme) {
             ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                PresetChipButton(title: "€\(chip)", theme: theme) { amountText = chip }
+                PresetChipButton(title: "€\(chip)", theme: theme.chipTheme) { amountText = chip }
             }
         }
         #endif
@@ -248,17 +249,17 @@ public struct DepositFlowView: View {
         #if !SKIP
         if #available(iOS 18, *) {
             Image(systemName: "checkmark.circle.fill")
-                .font(Typography.body(64))
+                .font(Typography.body(64.0))
                 .foregroundStyle(theme.positive)
                 .symbolEffect(.bounce, options: .nonRepeating)
         } else {
             Image(systemName: "checkmark.circle.fill")
-                .font(Typography.body(64))
+                .font(Typography.body(64.0))
                 .foregroundStyle(theme.positive)
         }
         #else
         Image(systemName: "checkmark.circle.fill")
-            .font(Typography.body(64))
+            .font(Typography.body(64.0))
             .foregroundStyle(theme.positive)
         #endif
     }
@@ -458,57 +459,6 @@ private struct DepositBottomBarModifier: ViewModifier {
             .frame(height: Layout.primaryActionHeight)
             .background(theme.surfaceElevated)
             .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
-        }
-    }
-}
-
-private struct PresetChipRow<Content: View>: View {
-    let theme: ThemeTokens
-    @ViewBuilder var content: () -> Content
-
-    var body: some View {
-        if #available(iOS 26, *) {
-            GlassEffectContainer(spacing: theme.spacingSM) {
-                HStack(spacing: theme.spacingSM) {
-                    content()
-                }
-            }
-        } else {
-            HStack(spacing: theme.spacingSM) {
-                content()
-            }
-        }
-    }
-}
-
-private struct PresetChipButton: View {
-    let title: String
-    let theme: ThemeTokens
-    let action: () -> Void
-
-    var body: some View {
-        if #available(iOS 26, *) {
-            Button(action: action) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(theme.accent)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: Layout.secondaryActionHeight)
-                    .contentShape(.capsule)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .capsule)
-        } else {
-            Button(action: action) {
-                Text(title)
-                    .font(Typography.medium(theme.fontCaption))
-                    .foregroundStyle(theme.accent)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(.rect)
-            }
-            .frame(height: Layout.secondaryActionHeight)
-            .background(theme.surfaceElevated)
-            .clipShape(Capsule())
         }
     }
 }

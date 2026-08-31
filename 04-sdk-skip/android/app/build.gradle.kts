@@ -9,6 +9,10 @@ val fightdeckLocalSdk =
         ?: (System.getenv("FIGHTDECK_LOCAL_SDK") == "1")
 
 val releaseAarDir = rootProject.file("../../tools/out/release/skip")
+val skipMavenRepo = rootProject.file("../sdks/out/maven")
+val skipSdkVersion = "0.1.0-local"
+val useSkipMaven = fightdeckLocalSdk &&
+    skipMavenRepo.resolve("fightdeck/skip/FightDeckCoreBinary/$skipSdkVersion").isDirectory
 
 fun skipCoreAars(local: Boolean): Array<File> {
     if (local) {
@@ -99,19 +103,41 @@ android {
     }
 }
 
-dependencies {
-    val coreAars = skipCoreAars(fightdeckLocalSdk)
-    val depositAars = skipDepositFeatureAars(fightdeckLocalSdk)
-    val betslipAar = skipBetslipAar(fightdeckLocalSdk)
+val demoAssetsDir = layout.projectDirectory.dir("src/main/assets")
 
-    listOf("runtime", "deposit", "both").forEach { flavor ->
-        "${flavor}Implementation"(files(*coreAars))
-    }
-    listOf("deposit", "both").forEach { flavor ->
-        "${flavor}Implementation"(files(*depositAars))
-    }
-    betslipAar?.let { aar ->
-        "bothImplementation"(files(aar))
+val syncDemoAssets = tasks.register<Copy>("syncDemoAssets") {
+    from(rootProject.file("../../dataset"))
+    from(rootProject.file("../../shared-ui-spec/tokens.json"))
+    into(demoAssetsDir)
+}
+
+tasks.named("preBuild") {
+    dependsOn(syncDemoAssets)
+}
+
+dependencies {
+    if (useSkipMaven) {
+        listOf("runtime", "deposit", "both").forEach { flavor ->
+            "${flavor}Implementation"("fightdeck.skip:FightDeckCoreBinary:$skipSdkVersion")
+        }
+        listOf("deposit", "both").forEach { flavor ->
+            "${flavor}Implementation"("fightdeck.skip:FightDeckDepositBinary:$skipSdkVersion")
+        }
+        "bothImplementation"("fightdeck.skip:FightDeckBetslipBinary:$skipSdkVersion")
+    } else {
+        val coreAars = skipCoreAars(fightdeckLocalSdk)
+        val depositAars = skipDepositFeatureAars(fightdeckLocalSdk)
+        val betslipAar = skipBetslipAar(fightdeckLocalSdk)
+
+        listOf("runtime", "deposit", "both").forEach { flavor ->
+            "${flavor}Implementation"(files(*coreAars))
+        }
+        listOf("deposit", "both").forEach { flavor ->
+            "${flavor}Implementation"(files(*depositAars))
+        }
+        betslipAar?.let { aar ->
+            "bothImplementation"(files(aar))
+        }
     }
 
     val composeBom = platform("androidx.compose:compose-bom:2026.08.00")
@@ -133,8 +159,6 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
 
-    implementation("io.ktor:ktor-client-core:3.3.0")
-    implementation("io.ktor:ktor-client-okhttp:3.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")

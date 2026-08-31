@@ -11,6 +11,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        val skipMaven = file("../sdks/out/maven")
+        if (skipMaven.isDirectory) {
+            maven { url = uri(skipMaven) }
+        }
+        val releaseMaven = file("../../tools/out/release/skip/maven")
+        if (releaseMaven.isDirectory) {
+            maven { url = uri(releaseMaven) }
+        }
     }
 }
 

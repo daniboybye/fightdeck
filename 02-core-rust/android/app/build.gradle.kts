@@ -57,12 +57,16 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
 
-    implementation("io.ktor:ktor-client-core:3.3.0")
-    implementation("io.ktor:ktor-client-okhttp:3.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
-    // UniFFI Kotlin bindings call into libfightcore.so via JNA.
-    implementation("net.java.dev.jna:jna:5.16.0@aar")
+    // UniFFI Kotlin bindings call into libfightcore.so via JNA — must resolve the AAR so
+    // libjnidispatch.so ships for every ABI, not the JVM jar that looks on the classpath.
+    // Version pinned in versions.lock.toml (android.jna): 5.19.1 is 16 KB aligned.
+    implementation("net.java.dev.jna:jna:5.19.1") {
+        artifact {
+            type = "aar"
+        }
+    }
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 

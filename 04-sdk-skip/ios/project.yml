@@ -51,6 +51,8 @@ targetTemplates:
       - path: FightDeck/Features/Fighter
       - path: FightDeck/Features/News
       - path: FightDeck/Features/Video
+    resources:
+      - path: ../../shared-ui-spec/tokens.json
 
 targets:
   FightDeck:

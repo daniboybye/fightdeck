@@ -51,6 +51,7 @@ compose_bom = "2026.08.00"             # resolves to Compose 1.12.0
 compose = "1.12.0"
 compose_multiplatform = "1.11.1"       # bonus measurement only, not a demo target
 ndk = "27.3.13750724"                  # r27d LTS. r29 compatibility with the Swift SDK is UNCONFIRMED.
+jna = "5.19.1"                         # 16 KB page alignment on arm64-v8a/x86_64/armeabi-v7a; 5.16.0 fails dlopen on page_size_16kb AVDs (JNA #1647).
 
 # ---------------------------------------------------------------------------
 # React Native — bare, deliberately not Expo

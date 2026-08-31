@@ -14,6 +14,8 @@
 		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
 		3541578715FFE9CEC805A044 /* FixtureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F09AEF29810752187509740 /* FixtureLoader.swift */; };
 		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
+		4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */; };
+		4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */; };
 		5AC16DDC8278439AC39636B4 /* DisplayFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCE11576590506A00252D6D /* DisplayFormatting.swift */; };
 		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
 		72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
@@ -28,7 +30,6 @@
 		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
 		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
-		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
 		F1060FA2A462524D25A47296 /* FightCoreFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D66837804C3536582216021 /* FightCoreFixtureTests.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = D7285AEB9A4CAF9CCC5C0247 /* FightCore */; };
 		F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D0326034EA5B85604BFA1F /* DepositFlowView.swift */; };
@@ -46,9 +47,9 @@
 
 /* Begin PBXFileReference section */
 		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
-		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
 		2485A43DDAE8181054D5F8C2 /* DepositHosting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositHosting.swift; sourceTree = "<group>"; };
 		3C15AC4F04B3055B51F23702 /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../sdks/core; sourceTree = SOURCE_ROOT; };
+		3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceToolbar.swift; sourceTree = "<group>"; };
 		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
 		42A7D4655065DF81DD8E152C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
@@ -59,6 +60,7 @@
 		61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONFileRepository.swift; sourceTree = "<group>"; };
 		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
+		75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositSheetView.swift; sourceTree = "<group>"; };
 		813BD28F72479374E713963B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		8F09AEF29810752187509740 /* FixtureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureLoader.swift; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 			children = (
 				98D0326034EA5B85604BFA1F /* DepositFlowView.swift */,
 				2485A43DDAE8181054D5F8C2 /* DepositHosting.swift */,
+				75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */,
 			);
 			path = Deposit;
 			sourceTree = "<group>";
@@ -182,6 +185,7 @@
 		AC106BAA8D8C9E35E88A5DB7 /* Design */ = {
 			isa = PBXGroup;
 			children = (
+				3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */,
 				82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */,
 				F35181339B0E2720AE567AEE /* SharedViews.swift */,
 			);
@@ -229,7 +233,6 @@
 			isa = PBXGroup;
 			children = (
 				5CB34A2F61DC158028871445 /* DatasetModels.swift */,
-				15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */,
 				61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */,
 			);
 			path = Data;
@@ -356,15 +359,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				8CC540AE2FD450B9960879BA /* AppState.swift in Sources */,
+				4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */,
 				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
 				6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */,
 				F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */,
 				B875725E961CB5EF230827FD /* DepositHosting.swift in Sources */,
+				4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */,
 				72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */,
 				5AC16DDC8278439AC39636B4 /* DisplayFormatting.swift in Sources */,
 				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
 				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
-				EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */,
 				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
 				3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */,
 				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,

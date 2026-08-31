@@ -90,7 +90,6 @@ jobs:
     # documented path runs on a Mac. Moving it to Linux is an optimisation for later, not
     # something to discover is broken the week of the talk.
     timeout-minutes: 75
-    continue-on-error: true
     env:
       FIGHTDECK_LOCAL_SDK: "1"
     steps:

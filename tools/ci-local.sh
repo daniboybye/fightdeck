@@ -231,8 +231,11 @@ run_contract_rust() {
 
 run_contract_native() {
     guard_ios_app 00-native/ios || return 0
+    # FightDeckUITests is a screenshot helper, not a gate, and the workflow skips it too —
+    # running it here is what made a green pipeline report a red contract check.
     (cd 00-native/ios && xcodebuild test \
         -scheme FightDeck \
+        -skip-testing:FightDeckUITests \
         -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
         CODE_SIGNING_ALLOWED=NO)
 }

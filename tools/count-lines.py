@@ -128,8 +128,8 @@ def main() -> int:
 
     print("Read the bindings column, not the seam column: every approach needs a seam,")
     print("but only some make you hand-write the marshalling. 03-sdk-rn ships its iOS")
-    print("sources in three copies (SwiftPM, CocoaPods, build package), so its figures")
-    print("count the same code more than once — that duplication is itself a real cost.")
+    print("sources twice (SwiftPM and CocoaPods), so its figures count the same code")
+    print("more than once — that duplication is itself a real cost.")
     return 0
 
 

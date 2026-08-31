@@ -70,6 +70,10 @@ final class ScreenshotTour: XCTestCase {
             }
         }
 
+        // At rest the Deposit rows sit behind the Place bet bar, so a tap on "Add funds"
+        // from there is swallowed by the bar instead of opening the sheet.
+        app.swipeUp()
+        sleep(1)
         app.buttons["Add funds"].firstMatch.tap()
         sleep(2)
         shot("08-deposit")
@@ -91,6 +95,9 @@ final class ScreenshotTour: XCTestCase {
             sleep(2)
         }
 
+        // Back to the top of the slip so this shot frames the same rows as 06-slip.
+        app.swipeDown()
+        sleep(1)
         shot("11-slip-after-deposit")
         app.buttons["Place bet"].firstMatch.tap()
         sleep(2)

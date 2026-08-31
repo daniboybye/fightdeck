@@ -18,33 +18,67 @@ actor LocalAssetServer {
     nonisolated(unsafe) static private(set) var port: UInt16 = 0
 
     private var listener: NWListener?
+    private var startTask: Task<Void, Error>?
     private var assetsRoot: URL?
+
+    enum StartError: Error {
+        case noPortAssigned
+        case cancelled
+    }
 
     func start(assetsRoot: URL) async throws {
         guard listener == nil else { return }
+        // The actor releases isolation while the bind below is suspended, so a second bootstrap —
+        // a Retry double-tap, or a `.task` that gets recreated — would otherwise open its own
+        // listener and leave the app advertising a port nothing is serving.
+        if let startTask {
+            return try await startTask.value
+        }
+        let task = Task { try await performStart(assetsRoot: assetsRoot) }
+        startTask = task
+        defer { startTask = nil }
+        try await task.value
+    }
+
+    private func performStart(assetsRoot: URL) async throws {
         self.assetsRoot = assetsRoot
         let listener = try NWListener(using: .tcp, on: .any)
         listener.newConnectionHandler = { [weak self] connection in
             Task { await self?.serve(connection: connection) }
         }
-        self.listener = listener
-        try await withCheckedThrowingContinuation { continuation in
-            let once = OneShotContinuation(continuation)
-            listener.stateUpdateHandler = { state in
-                switch state {
-                case .ready: once.finish(.success(()))
-                case .failed(let error): once.finish(.failure(error))
-                default: break
+        do {
+            try await withCheckedThrowingContinuation { continuation in
+                let once = OneShotContinuation(continuation)
+                listener.stateUpdateHandler = { state in
+                    switch state {
+                    case .ready: once.finish(.success(()))
+                    case .failed(let error): once.finish(.failure(error))
+                    // Without this the await never returns when the listener is torn down
+                    // during bind — bootstrap would sit on the spinner for good.
+                    case .cancelled: once.finish(.failure(StartError.cancelled))
+                    default: break
+                    }
                 }
+                listener.start(queue: .global(qos: .userInitiated))
             }
-            listener.start(queue: .global(qos: .userInitiated))
+        } catch {
+            // Keeping a listener that never came up makes the guard above treat every later
+            // attempt as already running, so Retry would report success with no server behind it.
+            listener.cancel()
+            throw error
         }
-        Self.port = listener.port?.rawValue ?? 0
+        guard let assigned = listener.port?.rawValue, assigned > 0 else {
+            listener.cancel()
+            throw StartError.noPortAssigned
+        }
+        self.listener = listener
+        Self.port = assigned
     }
 
     func stop() {
         listener?.cancel()
         listener = nil
+        Self.port = 0
     }
 
     private func serve(connection: NWConnection) {
@@ -107,7 +141,7 @@ actor LocalAssetServer {
             "HTTP/1.1 \(status) \(reason)",
             "Content-Type: \(contentType)",
             "Content-Length: \(length)",
-            "Connection: close"
+            "Connection: close",
         ]
         // The header block ends in a blank line. A multi-line string literal drops the newline
         // on its own final line, which leaves a bare CR and makes CFNetwork fail with -1017.
@@ -169,7 +203,11 @@ enum DatasetLocator {
         FileManager.default.fileExists(atPath: url.appendingPathComponent("events.json").path)
     }
 
-    static func eventsURL() -> URL {
-        datasetRoot().appendingPathComponent("events.json")
+    /// Design tokens sit next to the dataset, so locating one locates the other.
+    static func tokensJSON() -> String {
+        let url = datasetRoot()
+            .deletingLastPathComponent()
+            .appendingPathComponent("shared-ui-spec/tokens.json")
+        return (try? String(contentsOf: url, encoding: .utf8)) ?? "{}"
     }
 }

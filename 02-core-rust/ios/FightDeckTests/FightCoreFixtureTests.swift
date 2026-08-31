@@ -19,12 +19,12 @@ struct FightCoreFixtureTests {
         let data = try FixtureLoader.loadJSON(named: "odds-conversion")
         let root = try JSONDecoder().decode(OddsConversionRoot.self, from: data)
         for testCase in root.cases {
-            let fractional = decimalToFractional(decimalOdds: testCase.decimal)
+            let fractional = try decimalToFractional(decimalOdds: testCase.decimal)
             let implied = FightCoreDisplay.formatImpliedProbability(testCase.decimal)
             #expect(fractional == testCase.fractional, "Case \(testCase.id): fractional")
             #expect(implied == testCase.impliedProbability, "Case \(testCase.id): implied")
-            let roundTrip = fractionalToDecimal(fractional: testCase.fractional)
-            #expect(formatMoney(amount: roundTrip) == formatMoney(amount: testCase.decimal), "Case \(testCase.id): round-trip")
+            let roundTrip = try fractionalToDecimal(fractional: testCase.fractional)
+            #expect(try formatMoney(amount: roundTrip) == formatMoney(amount: testCase.decimal), "Case \(testCase.id): round-trip")
         }
     }
 
@@ -34,26 +34,26 @@ struct FightCoreFixtureTests {
         let root = try JSONDecoder().decode(SlipMathRoot.self, from: data)
         for testCase in root.cases {
             let slip = testCase.slip
-            let state = core.slipState(slip: slip, balance: "10000")
+            let state = try core.slipState(slip: slip, balance: "10000")
             if let expected = testCase.expect.combinedOddsExact {
                 #expect(
-                    formatExactOdds(amount: state.combinedOddsExact ?? "") == expected,
+                    try formatExactOdds(amount: state.combinedOddsExact ?? "") == expected,
                     "Case \(testCase.id): combinedOddsExact"
                 )
             }
             if let expected = testCase.expect.combinedOddsDisplay {
                 #expect(
-                    formatMoney(amount: state.combinedOddsDisplay ?? "") == expected,
+                    try formatMoney(amount: state.combinedOddsDisplay ?? "") == expected,
                     "Case \(testCase.id): combinedOddsDisplay"
                 )
             }
-            #expect(formatMoney(amount: state.totalStake) == testCase.expect.totalStake, "Case \(testCase.id): totalStake")
+            #expect(try formatMoney(amount: state.totalStake) == testCase.expect.totalStake, "Case \(testCase.id): totalStake")
             #expect(
-                formatMoney(amount: state.potentialReturn) == testCase.expect.potentialReturn,
+                try formatMoney(amount: state.potentialReturn) == testCase.expect.potentialReturn,
                 "Case \(testCase.id): potentialReturn"
             )
             #expect(
-                formatMoney(amount: state.potentialProfit) == testCase.expect.potentialProfit,
+                try formatMoney(amount: state.potentialProfit) == testCase.expect.potentialProfit,
                 "Case \(testCase.id): potentialProfit"
             )
         }
@@ -65,8 +65,8 @@ struct FightCoreFixtureTests {
         let root = try JSONDecoder().decode(SlipValidationRoot.self, from: data)
         for testCase in root.cases {
             let slip = testCase.slip
-            let errors = core.validate(slip: slip, balance: testCase.balance)
-            let codes = errors.map(validationErrorCode)
+            let errors = try core.validate(slip: slip, balance: testCase.balance)
+            let codes = errors.map { validationErrorCode(error: $0) }
             #expect(codes == testCase.expect.errors, "Case \(testCase.id)")
         }
     }
@@ -79,8 +79,8 @@ struct FightCoreFixtureTests {
             let slip = testCase.slip
             let voided = testCase.voidedBouts ?? []
             let result = core.settle(slip: slip, voidedBouts: voided)
-            #expect(formatMoney(amount: result.returned) == testCase.expect.returned, "Case \(testCase.id): returned")
-            #expect(formatMoney(amount: result.profit) == testCase.expect.profit, "Case \(testCase.id): profit")
+            #expect(try formatMoney(amount: result.returned) == testCase.expect.returned, "Case \(testCase.id): returned")
+            #expect(try formatMoney(amount: result.profit) == testCase.expect.profit, "Case \(testCase.id): profit")
             #expect(settlementStatusCode(result.status) == testCase.expect.status, "Case \(testCase.id): status")
             for (leg, expected) in zip(result.legs, testCase.expect.legs) {
                 #expect(leg.boutId == expected.boutId)
@@ -99,7 +99,7 @@ struct FightCoreFixtureTests {
             let settled = testCase.settledBouts
             let offer = core.cashOutOffer(slip: slip, settledBouts: settled)
             #expect(offer.available == testCase.expect.available, "Case \(testCase.id): available")
-            #expect(formatMoney(amount: offer.amount) == testCase.expect.amount, "Case \(testCase.id): amount")
+            #expect(try formatMoney(amount: offer.amount) == testCase.expect.amount, "Case \(testCase.id): amount")
             #expect(offer.reason == testCase.expect.reason, "Case \(testCase.id): reason")
         }
     }
@@ -121,21 +121,6 @@ private func fixtureFightCore() -> FightCoreHandle {
         )
     }
     return FightCoreHandle(bouts: bouts)
-}
-
-private func validationErrorCode(_ error: ValidationErrorRecord) -> String {
-    switch error {
-    case .emptySlip: "empty_slip"
-    case .stakeBelowMinimum: "stake_below_minimum"
-    case .stakeAboveMaximum: "stake_above_maximum"
-    case .insufficientBalance: "insufficient_balance"
-    case .tooManySelections: "too_many_selections"
-    case .accumulatorNeedsTwoLegs: "accumulator_needs_two_legs"
-    case .duplicateBout: "duplicate_bout"
-    case .unknownBout: "unknown_bout"
-    case .fighterNotInBout: "fighter_not_in_bout"
-    case .payoutExceedsLimit: "payout_exceeds_limit"
-    }
 }
 
 private func settlementStatusCode(_ status: SettlementStatusRecord) -> String {

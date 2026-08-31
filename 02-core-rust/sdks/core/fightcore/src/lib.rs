@@ -9,7 +9,7 @@ mod ffi;
 mod wasm;
 
 pub use core::*;
-pub use money::{format, format_currency, format_exact_odds, format_implied_probability, money, parse, round};
+pub use money::{format, format_currency, format_exact_odds, format_implied_probability, money, parse_exact as parse, round, try_parse};
 pub use odds::{decimal_to_fractional, fractional_to_decimal, implied_probability};
 
 #[cfg(not(target_arch = "wasm32"))]

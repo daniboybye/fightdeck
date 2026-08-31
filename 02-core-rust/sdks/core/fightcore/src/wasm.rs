@@ -23,6 +23,7 @@ pub fn acca_seven_fold_return(stake: &str) -> String {
             })
             .collect(),
         stake: parse(stake),
+        stake_raw: stake.to_string(),
     };
     let core = FightCore::new(vec![]);
     format(core.slip_state(&slip, parse("10000")).potential_return)

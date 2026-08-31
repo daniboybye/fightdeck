@@ -47,6 +47,7 @@ pub struct BetSlipRecord {
 #[derive(uniffi::Enum, Clone, Debug, PartialEq, Eq)]
 pub enum ValidationErrorRecord {
     EmptySlip,
+    InvalidStake,
     StakeBelowMinimum,
     StakeAboveMaximum,
     InsufficientBalance,
@@ -184,7 +185,7 @@ impl From<SelectionRecord> for Selection {
         Selection {
             bout_id: value.bout_id,
             fighter_id: value.fighter_id,
-            odds: money::parse(&value.odds),
+            odds: money::try_parse(&value.odds).unwrap_or(Decimal::ZERO),
         }
     }
 }
@@ -204,7 +205,8 @@ impl From<BetSlipRecord> for BetSlip {
         BetSlip {
             mode: value.mode.into(),
             selections: value.selections.into_iter().map(Into::into).collect(),
-            stake: money::parse(&value.stake),
+            stake_raw: value.stake.clone(),
+            stake: money::try_parse(&value.stake).unwrap_or(Decimal::ZERO),
         }
     }
 }
@@ -214,7 +216,7 @@ impl From<BetSlip> for BetSlipRecord {
         BetSlipRecord {
             mode: value.mode.into(),
             selections: value.selections.into_iter().map(Into::into).collect(),
-            stake: money::format(value.stake),
+            stake: value.stake_raw,
         }
     }
 }
@@ -223,6 +225,7 @@ impl From<ValidationError> for ValidationErrorRecord {
     fn from(value: ValidationError) -> Self {
         match value {
             ValidationError::EmptySlip => Self::EmptySlip,
+            ValidationError::InvalidStake => Self::InvalidStake,
             ValidationError::StakeBelowMinimum => Self::StakeBelowMinimum,
             ValidationError::StakeAboveMaximum => Self::StakeAboveMaximum,
             ValidationError::InsufficientBalance => Self::InsufficientBalance,
@@ -330,33 +333,60 @@ pub trait FightRepository: Send + Sync {
 // MARK: - Pure API (no I/O)
 
 #[uniffi::export]
-pub fn decimal_to_fractional(decimal_odds: String) -> String {
-    odds::decimal_to_fractional(money::parse(&decimal_odds))
+pub fn decimal_to_fractional(decimal_odds: String) -> Result<String, FightCoreError> {
+    let odds = money::try_parse(&decimal_odds)
+        .map_err(|_| FightCoreError::Decoding { field: "decimal_odds".into() })?;
+    Ok(odds::decimal_to_fractional(odds))
 }
 
 #[uniffi::export]
-pub fn fractional_to_decimal(fractional: String) -> String {
-    money::format(odds::fractional_to_decimal(&fractional))
+pub fn fractional_to_decimal(fractional: String) -> Result<String, FightCoreError> {
+    Ok(money::format(odds::fractional_to_decimal(&fractional)))
 }
 
 #[uniffi::export]
-pub fn implied_probability(decimal_odds: String) -> String {
-    money::format_implied_probability(odds::implied_probability(money::parse(&decimal_odds)))
+pub fn implied_probability(decimal_odds: String) -> Result<String, FightCoreError> {
+    let odds = money::try_parse(&decimal_odds)
+        .map_err(|_| FightCoreError::Decoding { field: "decimal_odds".into() })?;
+    Ok(money::format_implied_probability(odds::implied_probability(odds)))
 }
 
 #[uniffi::export]
-pub fn format_money(amount: String) -> String {
-    money::format(money::parse(&amount))
+pub fn format_money(amount: String) -> Result<String, FightCoreError> {
+    let value = money::try_parse(&amount)
+        .map_err(|_| FightCoreError::Decoding { field: "amount".into() })?;
+    Ok(money::format(value))
 }
 
 #[uniffi::export]
-pub fn format_currency(amount: String) -> String {
-    money::format_currency(money::parse(&amount))
+pub fn format_currency(amount: String) -> Result<String, FightCoreError> {
+    let value = money::try_parse(&amount)
+        .map_err(|_| FightCoreError::Decoding { field: "amount".into() })?;
+    Ok(money::format_currency(value))
 }
 
 #[uniffi::export]
-pub fn format_exact_odds(amount: String) -> String {
-    money::format_exact_odds(money::parse(&amount))
+pub fn format_exact_odds(amount: String) -> Result<String, FightCoreError> {
+    let value = money::try_parse(&amount)
+        .map_err(|_| FightCoreError::Decoding { field: "amount".into() })?;
+    Ok(money::format_exact_odds(value))
+}
+
+#[uniffi::export]
+pub fn validation_error_code(error: ValidationErrorRecord) -> String {
+    match error {
+        ValidationErrorRecord::EmptySlip => "empty_slip".into(),
+        ValidationErrorRecord::InvalidStake => "invalid_stake".into(),
+        ValidationErrorRecord::StakeBelowMinimum => "stake_below_minimum".into(),
+        ValidationErrorRecord::StakeAboveMaximum => "stake_above_maximum".into(),
+        ValidationErrorRecord::InsufficientBalance => "insufficient_balance".into(),
+        ValidationErrorRecord::TooManySelections => "too_many_selections".into(),
+        ValidationErrorRecord::AccumulatorNeedsTwoLegs => "accumulator_needs_two_legs".into(),
+        ValidationErrorRecord::DuplicateBout => "duplicate_bout".into(),
+        ValidationErrorRecord::UnknownBout => "unknown_bout".into(),
+        ValidationErrorRecord::FighterNotInBout => "fighter_not_in_bout".into(),
+        ValidationErrorRecord::PayoutExceedsLimit => "payout_exceeds_limit".into(),
+    }
 }
 
 #[derive(uniffi::Object)]
@@ -382,18 +412,20 @@ impl FightCoreHandle {
         })
     }
 
-    pub fn slip_state(&self, slip: BetSlipRecord, balance: String) -> SlipStateRecord {
-        self.core
-            .slip_state(&slip.into(), money::parse(&balance))
-            .into()
+    pub fn slip_state(&self, slip: BetSlipRecord, balance: String) -> Result<SlipStateRecord, FightCoreError> {
+        let balance = money::try_parse(&balance)
+            .map_err(|_| FightCoreError::Decoding { field: "balance".into() })?;
+        Ok(self.core.slip_state(&slip.into(), balance).into())
     }
 
-    pub fn validate(&self, slip: BetSlipRecord, balance: String) -> Vec<ValidationErrorRecord> {
-        self.core
-            .validate(&slip.into(), money::parse(&balance))
+    pub fn validate(&self, slip: BetSlipRecord, balance: String) -> Result<Vec<ValidationErrorRecord>, FightCoreError> {
+        let balance = money::try_parse(&balance)
+            .map_err(|_| FightCoreError::Decoding { field: "balance".into() })?;
+        Ok(self.core
+            .validate(&slip.into(), balance)
             .into_iter()
             .map(Into::into)
-            .collect()
+            .collect())
     }
 
     pub fn settle(&self, slip: BetSlipRecord, voided_bouts: Vec<String>) -> SettlementRecord {
@@ -420,6 +452,10 @@ struct BetSlipStoreInner {
     listeners: Vec<Arc<dyn SlipStateListener>>,
 }
 
+fn lock_store(inner: &Mutex<BetSlipStoreInner>) -> std::sync::MutexGuard<'_, BetSlipStoreInner> {
+    inner.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 #[derive(uniffi::Object)]
 pub struct BetSlipStore {
     inner: Mutex<BetSlipStoreInner>,
@@ -428,114 +464,147 @@ pub struct BetSlipStore {
 #[uniffi::export]
 impl BetSlipStore {
     #[uniffi::constructor]
-    pub fn new(core: Arc<FightCoreHandle>, balance: String) -> Arc<Self> {
-        Arc::new(Self {
+    pub fn new(core: Arc<FightCoreHandle>, balance: String) -> Result<Arc<Self>, FightCoreError> {
+        let balance = money::try_parse(&balance)
+            .map_err(|_| FightCoreError::Decoding { field: "balance".into() })?;
+        Ok(Arc::new(Self {
             inner: Mutex::new(BetSlipStoreInner {
                 slip: BetSlip {
                     mode: BetMode::Accumulator,
                     selections: vec![],
-                    stake: money::parse("10.00"),
+                    stake: money::parse_exact("10.00"),
+                    stake_raw: "10.00".to_string(),
                 },
-                balance: money::parse(&balance),
+                balance,
                 core: Arc::clone(&core.core),
                 listeners: vec![],
             }),
-        })
+        }))
     }
 
     pub fn add_listener(&self, listener: Arc<dyn SlipStateListener>) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.listeners.push(listener);
-        Self::notify_listeners(&mut inner);
+        {
+            let mut inner = lock_store(&self.inner);
+            inner.listeners.push(listener);
+        }
+        self.notify_listeners();
     }
 
     pub fn current_state(&self) -> SlipStateRecord {
-        let inner = self.inner.lock().unwrap();
+        let inner = lock_store(&self.inner);
         inner.core.slip_state(&inner.slip, inner.balance).into()
     }
 
     pub fn current_slip(&self) -> BetSlipRecord {
-        let inner = self.inner.lock().unwrap();
+        let inner = lock_store(&self.inner);
         inner.slip.clone().into()
     }
 
     pub fn balance(&self) -> String {
-        money::format(self.inner.lock().unwrap().balance)
+        money::format(lock_store(&self.inner).balance)
     }
 
-    pub fn set_balance(&self, balance: String) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.balance = money::parse(&balance);
-        Self::notify_listeners(&mut inner);
+    pub fn set_balance(&self, balance: String) -> Result<(), FightCoreError> {
+        let parsed = money::try_parse(&balance)
+            .map_err(|_| FightCoreError::Decoding { field: "balance".into() })?;
+        {
+            let mut inner = lock_store(&self.inner);
+            inner.balance = parsed;
+        }
+        self.notify_listeners();
+        Ok(())
     }
 
     pub fn set_mode(&self, mode: BetModeRecord) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.slip.mode = mode.into();
-        Self::notify_listeners(&mut inner);
+        {
+            let mut inner = lock_store(&self.inner);
+            inner.slip.mode = mode.into();
+        }
+        self.notify_listeners();
     }
 
     pub fn set_stake(&self, stake: String) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.slip.stake = money::parse(&stake);
-        Self::notify_listeners(&mut inner);
+        {
+            let mut inner = lock_store(&self.inner);
+            inner.slip.stake_raw = stake.clone();
+            // Keep the last parsed stake when the text is garbage; validation reads stake_raw.
+            if let Ok(parsed) = money::try_parse(&stake) {
+                inner.slip.stake = parsed;
+            }
+        }
+        self.notify_listeners();
     }
 
     pub fn toggle_selection(&self, bout_id: String, fighter_id: String, odds: String) {
-        let mut inner = self.inner.lock().unwrap();
-        let parsed_odds = money::parse(&odds);
-        if let Some(index) = inner
-            .slip
-            .selections
-            .iter()
-            .position(|s| s.bout_id == bout_id)
         {
-            let existing = &inner.slip.selections[index];
-            if existing.fighter_id == fighter_id {
-                inner.slip.selections.remove(index);
+            let mut inner = lock_store(&self.inner);
+            let parsed_odds = money::try_parse(&odds).unwrap_or(Decimal::ZERO);
+            if let Some(index) = inner
+                .slip
+                .selections
+                .iter()
+                .position(|s| s.bout_id == bout_id)
+            {
+                let existing = &inner.slip.selections[index];
+                if existing.fighter_id == fighter_id {
+                    inner.slip.selections.remove(index);
+                } else {
+                    inner.slip.selections[index] = Selection {
+                        bout_id,
+                        fighter_id,
+                        odds: parsed_odds,
+                    };
+                }
             } else {
-                inner.slip.selections[index] = Selection {
+                inner.slip.selections.push(Selection {
                     bout_id,
                     fighter_id,
                     odds: parsed_odds,
-                };
+                });
             }
-        } else {
-            inner.slip.selections.push(Selection {
-                bout_id,
-                fighter_id,
-                odds: parsed_odds,
-            });
         }
-        Self::notify_listeners(&mut inner);
+        self.notify_listeners();
     }
 
     pub fn remove_selection(&self, bout_id: String, fighter_id: String) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.slip.selections.retain(|s| {
-            !(s.bout_id == bout_id && s.fighter_id == fighter_id)
-        });
-        Self::notify_listeners(&mut inner);
+        {
+            let mut inner = lock_store(&self.inner);
+            inner.slip.selections.retain(|s| {
+                !(s.bout_id == bout_id && s.fighter_id == fighter_id)
+            });
+        }
+        self.notify_listeners();
     }
 
     pub fn is_selected(&self, bout_id: String, fighter_id: String) -> bool {
-        let inner = self.inner.lock().unwrap();
+        let inner = lock_store(&self.inner);
         inner.slip.selections.iter().any(|s| {
             s.bout_id == bout_id && s.fighter_id == fighter_id
         })
     }
 
-    pub fn deposit(&self, amount: String) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.balance += money::parse(&amount);
-        Self::notify_listeners(&mut inner);
+    pub fn deposit(&self, amount: String) -> Result<(), FightCoreError> {
+        let parsed = money::try_parse(&amount)
+            .map_err(|_| FightCoreError::Decoding { field: "amount".into() })?;
+        {
+            let mut inner = lock_store(&self.inner);
+            inner.balance += parsed;
+        }
+        self.notify_listeners();
+        Ok(())
     }
 }
 
 impl BetSlipStore {
-    fn notify_listeners(inner: &mut BetSlipStoreInner) {
-        let state: SlipStateRecord = inner.core.slip_state(&inner.slip, inner.balance).into();
-        for listener in &inner.listeners {
+    /// Listener callbacks may re-enter Kotlin and call back into the store; never invoke
+    /// them while the mutex is held.
+    fn notify_listeners(&self) {
+        let (state, listeners): (SlipStateRecord, Vec<Arc<dyn SlipStateListener>>) = {
+            let inner = lock_store(&self.inner);
+            let state: SlipStateRecord = inner.core.slip_state(&inner.slip, inner.balance).into();
+            (state, inner.listeners.clone())
+        };
+        for listener in listeners {
             listener.on_slip_state_changed(state.clone());
         }
     }

@@ -33,72 +33,61 @@ final class ObservableBetSlipStore {
 
     func setStake(_ stake: String) {
         store.setStake(stake: stake)
-        syncReadModel()
     }
 
     func toggleSelection(boutId: String, fighterId: String, odds: String) {
         store.toggleSelection(boutId: boutId, fighterId: fighterId, odds: odds)
-        syncReadModel()
         syncMode()
     }
 
     func removeSelection(boutId: String, fighterId: String) {
         store.removeSelection(boutId: boutId, fighterId: fighterId)
-        syncReadModel()
         syncMode()
     }
 
     func isSelected(boutId: String, fighterId: String) -> Bool {
-        slip.selections.contains { $0.boutId == boutId && $0.fighterId == fighterId }
+        store.isSelected(boutId: boutId, fighterId: fighterId)
     }
 
     func deposit(amount: String) {
-        store.deposit(amount: amount)
-        syncReadModel()
+        try? store.deposit(amount: amount)
     }
 
     func setBalance(_ balance: String) {
-        store.setBalance(balance: balance)
-        syncReadModel()
+        try? store.setBalance(balance: balance)
     }
 
     /// Deducts stake, clears selections. Returns the pre-clear slip state when successful.
     func placeBet() -> SlipStateRecord? {
-        let state = slipState
+        let state = store.currentState()
         guard state.errors.isEmpty else { return nil }
-        let currentBalance = Decimal(string: balance) ?? 0
+        let currentBalance = Decimal(string: store.balance()) ?? 0
         let stake = Decimal(string: state.totalStake) ?? 0
         let newBalance = currentBalance - stake
-        store.setBalance(balance: formatMoney(amount: NSDecimalNumber(decimal: newBalance).stringValue))
-        let selections = Array(slip.selections)
-        for selection in selections {
+        try? store.setBalance(balance: FightCoreDisplay.formatMoneyAmount(NSDecimalNumber(decimal: newBalance).stringValue))
+        for selection in store.currentSlip().selections {
             store.removeSelection(boutId: selection.boutId, fighterId: selection.fighterId)
         }
-        syncReadModel()
         syncMode()
         return state
     }
 
     /// The mode follows the number of legs instead of a picker: one selection is a single,
     /// two or more is an accumulator. Both modes stay covered by the golden fixtures.
+    ///
+    /// The leg count comes from the store rather than the published copy: listener updates
+    /// arrive on a later main-actor hop, so right after a mutation the copy is one edit behind.
     private func syncMode() {
-        let mode: BetModeRecord = slip.selections.count >= FightCoreDisplay.minAccaLegs
+        let mode: BetModeRecord = store.currentSlip().selections.count >= FightCoreDisplay.minAccaLegs
             ? .accumulator
             : .single
         store.setMode(mode: mode)
-        syncReadModel()
     }
 
     private func applyListenerUpdate(_ state: SlipStateRecord) {
         slipState = state
         slip = store.currentSlip()
         balance = store.balance()
-    }
-
-    private func syncReadModel() {
-        slip = store.currentSlip()
-        balance = store.balance()
-        slipState = store.currentState()
     }
 }
 
@@ -115,16 +104,24 @@ private final class SlipStateListenerBridge: SlipStateListener, @unchecked Senda
 enum FightCoreDisplay {
     static let minAccaLegs = 2
 
-    static func formatOdds(_ odds: String) -> String { formatMoney(amount: odds) }
-    static func formatCurrencyAmount(_ amount: String) -> String { formatCurrency(amount: amount) }
-    static func formatImpliedProbability(_ odds: String) -> String { impliedProbability(decimalOdds: odds) }
+    static func formatMoneyAmount(_ amount: String) -> String {
+        (try? formatMoney(amount: amount)) ?? amount
+    }
+
+    static func formatOdds(_ odds: String) -> String { formatMoneyAmount(odds) }
+    static func formatCurrencyAmount(_ amount: String) -> String {
+        (try? formatCurrency(amount: amount)) ?? amount
+    }
+    static func formatImpliedProbability(_ odds: String) -> String {
+        (try? impliedProbability(decimalOdds: odds)) ?? odds
+    }
 
     static func slipSummary(state: SlipStateRecord) -> [(label: String, value: String)] {
         var rows: [(String, String)] = [
             ("Total stake", formatCurrencyAmount(state.totalStake)),
         ]
         if let combined = state.combinedOddsDisplay {
-            rows.append(("Combined odds", formatMoney(amount: combined)))
+            rows.append(("Combined odds", formatMoneyAmount(combined)))
         }
         rows.append(("Potential return", formatCurrencyAmount(state.potentialReturn)))
         rows.append(("Potential profit", formatCurrencyAmount(state.potentialProfit)))

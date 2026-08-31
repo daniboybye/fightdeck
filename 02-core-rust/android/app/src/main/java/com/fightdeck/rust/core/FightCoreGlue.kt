@@ -12,6 +12,7 @@ import uniffi.fightcore.SlipStateRecord
 import uniffi.fightcore.formatCurrency
 import uniffi.fightcore.formatMoney
 import uniffi.fightcore.impliedProbability
+import uniffi.fightcore.validationErrorCode
 
 /**
  * Hand-written glue: UniFFI exposes [BetSlipStore]; Compose needs a [StateFlow].
@@ -19,23 +20,36 @@ import uniffi.fightcore.impliedProbability
 class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
     private val store = store
     private val listener = SlipStateListenerBridge()
-    private val _slipState = MutableStateFlow(store.currentState())
-    val slipState: StateFlow<SlipStateRecord> = _slipState.asStateFlow()
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
-    private val _slip = MutableStateFlow(store.currentSlip())
-    val slip: StateFlow<BetSlipRecord> = _slip.asStateFlow()
+    private val _slipState: MutableStateFlow<SlipStateRecord>
+    val slipState: StateFlow<SlipStateRecord>
 
-    private val _balance = MutableStateFlow(store.balance())
-    val balance: StateFlow<String> = _balance.asStateFlow()
+    private val _slip: MutableStateFlow<BetSlipRecord>
+    val slip: StateFlow<BetSlipRecord>
+
+    private val _balance: MutableStateFlow<String>
+    val balance: StateFlow<String>
 
     init {
         store.setMode(BetModeRecord.SINGLE)
-        listener.onUpdate = { state ->
-            _slipState.value = state
-            _slip.value = store.currentSlip()
-            _balance.value = store.balance()
-        }
+        _slipState = MutableStateFlow(store.currentState())
+        slipState = _slipState.asStateFlow()
+        _slip = MutableStateFlow(store.currentSlip())
+        slip = _slip.asStateFlow()
+        _balance = MutableStateFlow(store.balance())
+        balance = _balance.asStateFlow()
+        // Last, and deliberately so: adding a listener replays the current state, and the bridge
+        // hands that to the main thread. Registering first meant the replay could reach
+        // applyListenerUpdate while these flows were still null, killing the app on launch.
+        listener.onUpdate = { state -> applyListenerUpdate(state) }
         store.addListener(listener)
+    }
+
+    private fun applyListenerUpdate(state: SlipStateRecord) {
+        _slipState.value = state
+        _slip.value = store.currentSlip()
+        _balance.value = store.balance()
     }
 
     fun setStake(stake: String) = store.setStake(stake)
@@ -57,7 +71,9 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
     fun setBalance(balance: String) = store.setBalance(balance)
 
     fun placeBet(): SlipStateRecord? {
-        val state = _slipState.value
+        // Straight from the store, not the mirror: listener updates arrive on a later main-thread
+        // post, so right after a stake edit the published copy is one edit behind.
+        val state = store.currentState()
         if (state.errors.isNotEmpty()) return null
         val balance = java.math.BigDecimal(store.balance())
         val stake = java.math.BigDecimal(state.totalStake)
@@ -70,8 +86,6 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
         return state
     }
 
-    // The mode follows the number of legs instead of a picker: one selection is a single,
-    // two or more is an accumulator. Both modes stay covered by the golden fixtures.
     private fun syncMode() {
         val count = store.currentSlip().selections.size
         val mode = if (count >= FightCoreDisplay.MIN_ACCA_LEGS) {
@@ -86,11 +100,12 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
         store.close()
     }
 
-    private class SlipStateListenerBridge : SlipStateListener {
+    private inner class SlipStateListenerBridge : SlipStateListener {
         var onUpdate: ((SlipStateRecord) -> Unit)? = null
 
         override fun onSlipStateChanged(state: SlipStateRecord) {
-            onUpdate?.invoke(state)
+            val callback = onUpdate ?: return
+            mainHandler.post { callback(state) }
         }
     }
 }
@@ -120,17 +135,3 @@ class SharedPreferencesStore(
         preferences.edit().putString(key, value).apply()
     }
 }
-
-fun validationErrorCode(error: uniffi.fightcore.ValidationErrorRecord): String =
-    when (error) {
-        uniffi.fightcore.ValidationErrorRecord.EMPTY_SLIP -> "empty_slip"
-        uniffi.fightcore.ValidationErrorRecord.STAKE_BELOW_MINIMUM -> "stake_below_minimum"
-        uniffi.fightcore.ValidationErrorRecord.STAKE_ABOVE_MAXIMUM -> "stake_above_maximum"
-        uniffi.fightcore.ValidationErrorRecord.INSUFFICIENT_BALANCE -> "insufficient_balance"
-        uniffi.fightcore.ValidationErrorRecord.TOO_MANY_SELECTIONS -> "too_many_selections"
-        uniffi.fightcore.ValidationErrorRecord.ACCUMULATOR_NEEDS_TWO_LEGS -> "accumulator_needs_two_legs"
-        uniffi.fightcore.ValidationErrorRecord.DUPLICATE_BOUT -> "duplicate_bout"
-        uniffi.fightcore.ValidationErrorRecord.UNKNOWN_BOUT -> "unknown_bout"
-        uniffi.fightcore.ValidationErrorRecord.FIGHTER_NOT_IN_BOUT -> "fighter_not_in_bout"
-        uniffi.fightcore.ValidationErrorRecord.PAYOUT_EXCEEDS_LIMIT -> "payout_exceeds_limit"
-    }

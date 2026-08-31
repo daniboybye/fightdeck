@@ -38,11 +38,14 @@ pub struct BetSlip {
     pub mode: BetMode,
     pub selections: Vec<Selection>,
     pub stake: Decimal,
+    /// Raw stake text from the host; [stake] mirrors it when parsing succeeds.
+    pub stake_raw: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ValidationError {
     EmptySlip,
+    InvalidStake,
     StakeBelowMinimum,
     StakeAboveMaximum,
     InsufficientBalance,
@@ -55,8 +58,9 @@ pub enum ValidationError {
 }
 
 impl ValidationError {
-    pub const ORDER: [ValidationError; 10] = [
+    pub const ORDER: [ValidationError; 11] = [
         Self::EmptySlip,
+        Self::InvalidStake,
         Self::StakeBelowMinimum,
         Self::StakeAboveMaximum,
         Self::InsufficientBalance,
@@ -71,6 +75,7 @@ impl ValidationError {
     pub fn code(&self) -> &'static str {
         match self {
             Self::EmptySlip => "empty_slip",
+            Self::InvalidStake => "invalid_stake",
             Self::StakeBelowMinimum => "stake_below_minimum",
             Self::StakeAboveMaximum => "stake_above_maximum",
             Self::InsufficientBalance => "insufficient_balance",
@@ -180,10 +185,10 @@ impl FightCore {
     pub fn new(bouts: Vec<BoutIndex>) -> Self {
         Self {
             bouts: bouts.into_iter().map(|b| (b.id.clone(), b)).collect(),
-            min_stake: money::parse(MIN_STAKE),
-            max_stake: money::parse(MAX_STAKE),
-            max_payout: money::parse(MAX_PAYOUT),
-            cash_out_margin: money::parse(CASH_OUT_MARGIN),
+            min_stake: money::parse_exact(MIN_STAKE),
+            max_stake: money::parse_exact(MAX_STAKE),
+            max_payout: money::parse_exact(MAX_PAYOUT),
+            cash_out_margin: money::parse_exact(CASH_OUT_MARGIN),
         }
     }
 
@@ -211,6 +216,9 @@ impl FightCore {
 
         if slip.selections.is_empty() {
             found.insert(ValidationError::EmptySlip);
+        }
+        if money::try_parse(&slip.stake_raw).is_err() {
+            found.insert(ValidationError::InvalidStake);
         }
         if slip.stake < self.min_stake {
             found.insert(ValidationError::StakeBelowMinimum);

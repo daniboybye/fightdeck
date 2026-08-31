@@ -202,6 +202,7 @@ impl SlipMathCase {
             mode: BetMode::from_str(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
+            stake_raw: self.stake.clone(),
         }
     }
 }
@@ -241,6 +242,7 @@ impl SlipValidationCase {
             mode: BetMode::from_str(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
+            stake_raw: self.stake.clone(),
         }
     }
 }
@@ -272,6 +274,7 @@ impl SettlementCase {
             mode: BetMode::from_str(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
+            stake_raw: self.stake.clone(),
         }
     }
 
@@ -319,6 +322,7 @@ impl CashOutCase {
             mode: BetMode::from_str(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
+            stake_raw: self.stake.clone(),
         }
     }
 }

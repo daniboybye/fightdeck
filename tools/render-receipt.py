@@ -34,6 +34,12 @@ def mib(value: Any) -> str:
     return f"{value / 1024 / 1024:.1f} MB"
 
 
+def kib(value: Any) -> str:
+    if not isinstance(value, (int, float)) or value <= 0:
+        return DASH
+    return f"{value / 1024:.1f} KB"
+
+
 def millis(value: Any) -> str:
     if not isinstance(value, (int, float)) or value <= 0:
         return DASH
@@ -99,17 +105,23 @@ def second_feature_section() -> str:
     One runtime with one surface against the same runtime with two. Everything else in
     this file can be found in somebody else's benchmark; this one cannot, because nobody
     else builds two features over a shared runtime just to weigh the difference.
+
+    Split by platform because the two do not agree: the same TypeScript ships as Hermes
+    bytecode on iOS and as minified JavaScript on Android, and each feature drags a
+    different amount of native code behind it.
     """
     rows = []
     for key, label in (("03-sdk-rn", "React Native SDK"), ("04-sdk-skip", "Skip SDK")):
         data = load(f"second-feature-{key}.json")
-        rows.append([
-            label,
-            mib(data.get("runtime_only_bytes")),
-            mib(data.get("runtime_plus_one_bytes")),
-            mib(data.get("runtime_plus_two_bytes")),
-            mib(data.get("second_feature_delta_bytes")),
-        ])
+        for platform, platform_label in (("ios", "iOS"), ("android", "Android")):
+            stage = data.get(platform, {})
+            rows.append([
+                f"{label} · {platform_label}",
+                mib(stage.get("runtime_only_bytes")),
+                mib(stage.get("runtime_plus_one_bytes")),
+                mib(stage.get("runtime_plus_two_bytes")),
+                kib(stage.get("second_feature_delta_bytes")),
+            ])
     return table(
         ["Approach", "Runtime only", "+ deposit", "+ betslip", "Cost of feature 2"],
         rows,

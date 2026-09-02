@@ -22,7 +22,10 @@ Two feature screens (**deposit**, **bet slip**) ship as a black box over **one s
 cd sdks/core && npm install && npm test
 
 # 2. JS bundle + Hermes bytecode (also run automatically by pod build)
-cd sdks/core && ./build-xcframework.sh   # emits Resources/fightdeck.{jsbundle,hbc}
+cd sdks/core && ./build-xcframework.sh   # emits Resources/fightdeck.hbc
+
+# Bundle only, for a different feature set — no need to rebuild three architecture slices
+cd sdks/core && FIGHTDECK_FEATURES=deposit ./build-jsbundle.sh
 
 # 3. iOS host (CocoaPods — real RN linkage)
 cd ios && pod install
@@ -104,10 +107,12 @@ Skip core stack: `SkipFoundation` 1.22 MB + `SkipLib` 1.54 MB + `SkipUnit` 12 KB
 
 ### JS / Hermes payload (RN only)
 
-| Artifact | Size |
-| --- | --- |
-| Metro `fightdeck.jsbundle` | 914 KB |
-| Hermes `fightdeck.hbc` | 1.30 MB (embedded in iOS zip + runtime AAR assets) |
+All-surfaces bundle; the deposit-only entry is roughly 16 KB smaller.
+
+| Artifact | Size | Shipped |
+| --- | --- | --- |
+| Metro `fightdeck.jsbundle` | 924 KB | no — staged under `ios/.jsbundle-staging/`, input to hermesc |
+| Hermes `fightdeck.hbc` | 1.28 MB | yes — iOS zip and runtime AAR assets |
 
 ## Verification — RN is real, not a placeholder
 
@@ -156,7 +161,7 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 4. **Fabric badge + Turbo `PreferencesStore`** — TypeScript specs and native stub files exist; codegen + ObjC++ Fabric wrapper not linked.
 5. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
 6. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
-7. **iOS ships both `.hbc` and `.jsbundle`** in local Pods path — Release should prefer `.hbc` only to save ~914 KB.
+7. **iOS feature gating spans two steps** — `FIGHTDECK_FEATURES` picks the bundle's entry point when the SDK is built and the pod set when CocoaPods resolves. Nothing ties the two together, so the Podfile compares the host's value against the `ios/.fightdeck-features` stamp and refuses a mismatch rather than producing an app whose size means nothing.
 8. **Android Fabric layout specs** — `FabricLayoutSpecsBridge` reflects `ReactSurfaceImpl.updateLayoutSpecs$ReactAndroid` because bridgeless RN 0.84 exposes no public pre-start layout API. Coupled to the pinned `react_native.version` in `versions.lock.toml`; upgrade RN only after re-verifying this seam.
 
 ## Architecture sketch

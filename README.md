@@ -69,7 +69,7 @@ come from a local `tools/ci-local.sh --skip-tests measure` run on Apple silicon,
 | `01-core-swift` † | 1.98 MB | 12.52 MB | +0.01 MB | 0m16s / 0m22s |
 | `02-core-rust` | 2.82 MB | 13.07 MB | +1.40 MB | 3m52s / 1m58s |
 | `04-sdk-skip` | 3.11 MB | 22.52 MB | +11.14 MB | 0m29s / 4m18s |
-| `03-sdk-rn` | 22.11 MB | 24.78 MB | +32.40 MB | 0m57s / 1m16s |
+| `03-sdk-rn` | 21.21 MB | 24.78 MB | +31.50 MB | 0m57s / 1m16s |
 
 *Total overhead* is the iOS and Android growth added together, against the baseline that
 shares nothing. Android figures are per-ABI download size for `arm64-v8a` from the app
@@ -102,19 +102,32 @@ as a smaller job.
 
 ### The cost of the second feature
 
-| Approach | Second feature, iOS | Second feature, Android |
-| --- | ---: | ---: |
-| `04-sdk-skip` | 8 KB | 46.5 KB |
-| `03-sdk-rn` | not yet measurable | 21.6 KB |
+| Approach | Runtime alone | + deposit | + bet slip | Second feature |
+| --- | ---: | ---: | ---: | ---: |
+| `03-sdk-rn` iOS | 21.05 MB | 21.17 MB | 21.21 MB | 40.0 KB |
+| `03-sdk-rn` Android | 24.72 MB | 24.76 MB | 24.78 MB | 21.6 KB |
+| `04-sdk-skip` iOS | 1.88 MB | 3.10 MB | 3.11 MB | 8.0 KB |
+| `04-sdk-skip` Android | 22.42 MB | 22.47 MB | 22.52 MB | 46.5 KB |
 
-This is the point of the whole repository. React Native spends 12.25 MB on Android getting
-the runtime through the door and then 21.6 KB on the next screen — a ratio near 600:1. The
-first feature pays for the runtime; the second pays only for itself. Skip charges 10 MB for
-the same privilege and 46.5 KB per screen after it.
+Produced by `./tools/measure-second-feature.sh`, which builds each host three times — a
+host that only starts the runtime, then one with the deposit screen, then one with both
+screens — and subtracts. Only the two UI-bearing SDKs appear: the headless cores ship no
+UI, so a second feature there is ordinary application code.
 
-The iOS React Native figure is missing rather than estimated: that host has no
-single-feature target to archive, so there is nothing to subtract. Adding one is the fix,
-and until then the cell stays empty.
+This is the point of the whole repository. React Native's iOS host is 21.05 MB before a
+single feature screen exists, and the two screens together add 168 KB — the runtime is
+over a hundred times the code it carries. Android tells the same story with different
+digits: 24.72 MB standing still, 59 KB for both screens.
+
+Skip splits the bill differently. Its runtime-only iOS host is 1.88 MB, *below* the
+1.96 MB native baseline, because a host with no feature screens links no SkipUI. The first
+feature pulls the transpiled UI layer in and costs 1.22 MB; the second costs 8 KB. Same
+shape as React Native — pay once, then nearly nothing — but the once is fifteen times
+smaller on iOS.
+
+React Native's second feature costs more on iOS than on Android for a boring reason: the
+iOS bundle ships as Hermes bytecode, which is larger than the minified JavaScript Android
+loads, and the bet slip also brings a native pod with it.
 
 ### Caveats that belong next to every number
 

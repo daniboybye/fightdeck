@@ -87,10 +87,18 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Native baseline not written yet"
           fi
+      # FightDeckUITests is the screenshot tour: it drives a simulator for minutes to
+      # produce images a human looks at. FightDeckTests is what holds the fixtures, so
+      # running the tour here only buys flakes on the runner that bills at ten times Linux.
       - name: Run fixtures against the hand-written Swift implementation
         if: steps.guard.outputs.exists == 'true'
         working-directory: 00-native/ios
-        run: xcodebuild test -scheme FightDeck -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO
+        run: |
+          xcodebuild test \
+            -scheme FightDeck \
+            -skip-testing:FightDeckUITests \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            CODE_SIGNING_ALLOWED=NO
 
   summarise:
     name: Summary

@@ -2,21 +2,23 @@
 #
 # What does the *next* screen cost, once the first one has paid for the runtime?
 #
-#   ./tools/measure-second-feature.sh            # both SDK approaches, both platforms
-#   ./tools/measure-second-feature.sh 03-sdk-rn  # one approach
+#   ./tools/measure-second-feature.sh                    # both SDKs, both platforms
+#   ./tools/measure-second-feature.sh 03-sdk-rn          # one approach
+#   FIGHTDECK_PLATFORM=android ./tools/measure-second-feature.sh 03-sdk-rn
 #
 # Builds each UI-bearing SDK's host three times — runtime alone, runtime plus deposit,
-# runtime plus deposit plus bet slip — and subtracts. Only the two SDK approaches have
-# anything to measure: the headless cores ship no UI, so their second feature is ordinary
-# application code.
+# runtime plus deposit plus bet slip — leaving one measurement file per stage. Only the two
+# SDK approaches have anything to measure: the headless cores ship no UI, so a second
+# feature there is ordinary application code.
 #
-# The three stages are selected differently on each platform, which is itself part of the
+# The stages are selected differently on each platform, which is itself part of the
 # comparison. Skip's iOS host has a scheme per stage. Both Android hosts use product
 # flavours. React Native's iOS host has neither: the feature set is decided once when the
 # SDK's JS bundle is built and again when CocoaPods resolves, so both steps run per stage
 # and the Podfile refuses a mismatch between them.
 #
-# Writes tools/out/second-feature-<approach>.json, which tools/render-receipt.py reads.
+# FIGHTDECK_PLATFORM exists so CI can put each half on the cheapest runner that can build
+# it. tools/render-receipt.py reads the per-stage files, so the halves never have to meet.
 
 set -euo pipefail
 
@@ -27,8 +29,18 @@ cd "$REPO_ROOT"
 
 export FIGHTDECK_LOCAL_SDK=1
 
-APPROACHES=("${@:-}")
-if [[ -z "${APPROACHES[0]}" ]]; then
+PLATFORM="${FIGHTDECK_PLATFORM:-both}"
+case "$PLATFORM" in
+    ios|android|both) ;;
+    *)
+        echo "error: FIGHTDECK_PLATFORM must be ios, android or both (got '$PLATFORM')" >&2
+        exit 1
+        ;;
+esac
+
+if [[ $# -gt 0 ]]; then
+    APPROACHES=("$@")
+else
     APPROACHES=(03-sdk-rn 04-sdk-skip)
 fi
 
@@ -63,60 +75,44 @@ measure_ios() {
 }
 
 for approach in "${APPROACHES[@]}"; do
-    if [[ "$approach" == "03-sdk-rn" ]]; then
+    if [[ "$approach" == "03-sdk-rn" && "$PLATFORM" != "android" ]]; then
         trap restore_rn EXIT
     fi
 
     for stage in "${STAGES[@]}"; do
-        echo "==> ${approach} iOS — ${stage}"
-        measure_ios "$approach" "$stage" "${approach}-${stage}"
+        if [[ "$PLATFORM" != "android" ]]; then
+            echo "==> ${approach} iOS — ${stage}"
+            measure_ios "$approach" "$stage" "${approach}-${stage}"
+        fi
 
-        echo "==> ${approach} Android — ${stage}"
-        ./tools/measure-android.sh "${approach}-${stage}" "${approach}/android" app \
-            "${stage}Release" >/dev/null
+        if [[ "$PLATFORM" != "ios" ]]; then
+            echo "==> ${approach} Android — ${stage}"
+            ./tools/measure-android.sh "${approach}-${stage}" "${approach}/android" app \
+                "${stage}Release" >/dev/null
+        fi
     done
 
-    python3 - "$OUT_DIR" "$approach" <<'PY'
+    python3 - "$OUT_DIR" "$approach" "$PLATFORM" <<'PY'
 import json
 import pathlib
 import sys
 
-out, approach = pathlib.Path(sys.argv[1]), sys.argv[2]
+out, approach, platform = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 
+WANTED = {"ios": ("ios", "app_bytes"), "android": ("android", "arm64_download_bytes")}
+targets = WANTED if platform == "both" else {platform: WANTED[platform]}
 
-def stages(prefix, key):
-    return [json.load(open(out / f"{prefix}-{approach}-{s}.json"))[key]
-            for s in ("runtime", "deposit", "both")]
-
-
-def block(prefix, key):
-    runtime, one, two = stages(prefix, key)
-    return {
-        "runtime_only_bytes": runtime,
-        "runtime_plus_one_bytes": one,
-        "runtime_plus_two_bytes": two,
-        "first_feature_delta_bytes": one - runtime,
-        "second_feature_delta_bytes": two - one,
-    }
-
-
-payload = {
-    "approach": approach,
-    "ios": block("ios", "app_bytes"),
-    "android": block("android", "arm64_download_bytes"),
-}
-path = out / f"second-feature-{approach}.json"
-path.write_text(json.dumps(payload, indent=2) + "\n")
-
-for platform in ("ios", "android"):
-    data = payload[platform]
-    print(f"  {platform:<8} runtime {data['runtime_only_bytes'] / 1048576:6.2f} MB"
-          f" · 1st feature {data['first_feature_delta_bytes'] / 1024:8.1f} KB"
-          f" · 2nd feature {data['second_feature_delta_bytes'] / 1024:8.1f} KB")
-print(f"  wrote {path}")
+for label, (prefix, key) in targets.items():
+    runtime, one, two = (
+        json.load(open(out / f"{prefix}-{approach}-{stage}.json"))[key]
+        for stage in ("runtime", "deposit", "both")
+    )
+    print(f"  {label:<8} runtime {runtime / 1048576:6.2f} MB"
+          f" · 1st feature {(one - runtime) / 1024:8.1f} KB"
+          f" · 2nd feature {(two - one) / 1024:8.1f} KB")
 PY
 
-    if [[ "$approach" == "03-sdk-rn" ]]; then
+    if [[ "$approach" == "03-sdk-rn" && "$PLATFORM" != "android" ]]; then
         restore_rn
         trap - EXIT
     fi

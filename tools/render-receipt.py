@@ -112,15 +112,25 @@ def second_feature_section() -> str:
     """
     rows = []
     for key, label in (("03-sdk-rn", "React Native SDK"), ("04-sdk-skip", "Skip SDK")):
-        data = load(f"second-feature-{key}.json")
-        for platform, platform_label in (("ios", "iOS"), ("android", "Android")):
-            stage = data.get(platform, {})
+        for prefix, platform_label, field in (
+            ("ios", "iOS", "app_bytes"),
+            ("android", "Android", "arm64_download_bytes"),
+        ):
+            # Read the per-stage files the measurement script leaves behind rather than an
+            # aggregate, so the two platforms can be measured in separate CI jobs on
+            # separate runners and still land in one table.
+            sizes = [
+                load(f"{prefix}-{key}-{stage}.json").get(field)
+                for stage in ("runtime", "deposit", "both")
+            ]
+            runtime, one, two = sizes
+            delta = two - one if isinstance(one, int) and isinstance(two, int) else None
             rows.append([
                 f"{label} · {platform_label}",
-                mib(stage.get("runtime_only_bytes")),
-                mib(stage.get("runtime_plus_one_bytes")),
-                mib(stage.get("runtime_plus_two_bytes")),
-                kib(stage.get("second_feature_delta_bytes")),
+                mib(runtime),
+                mib(one),
+                mib(two),
+                kib(delta),
             ])
     return table(
         ["Approach", "Runtime only", "+ deposit", "+ betslip", "Cost of feature 2"],

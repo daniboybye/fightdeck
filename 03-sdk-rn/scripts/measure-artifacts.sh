@@ -10,10 +10,11 @@ bytes() { stat -f%z "$1" 2>/dev/null || stat -c%s "$1"; }
 kb() { echo "scale=1; $1 / 1024" | bc; }
 mb() { echo "scale=2; $1 / 1024 / 1024" | bc; }
 
-echo "=== JS bundle (sdks/core/ios/Resources) ==="
-JSB="$ROOT/sdks/core/ios/Resources/fightdeck.jsbundle"
+echo "=== JS bundle ==="
+# Only the bytecode ships; the text bundle is hermesc's input and stays out of Resources/.
+JSB="$ROOT/sdks/core/ios/.jsbundle-staging/fightdeck.jsbundle"
 HBC="$ROOT/sdks/core/ios/Resources/fightdeck.hbc"
-echo "Metro .jsbundle: $(bytes "$JSB") bytes ($(kb "$(bytes "$JSB")") KB)"
+echo "Metro .jsbundle: $(bytes "$JSB") bytes ($(kb "$(bytes "$JSB")") KB, not shipped)"
 echo "Hermes .hbc:     $(bytes "$HBC") bytes ($(kb "$(bytes "$HBC")") KB)"
 
 if [[ -d "$IOS_ARCHIVE/Products/Applications/FightDeck.app" ]]; then

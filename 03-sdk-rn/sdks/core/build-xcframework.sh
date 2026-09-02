@@ -16,40 +16,7 @@ source "$SCRIPTS/ios-rn-bundle.sh"
 rm -rf "$OUT" "$BUILD"
 mkdir -p "$OUT" "$BUILD" "$HEADERS" "$ROOT/ios/Resources"
 
-echo "Bundling JS runtime…"
-if ! command -v npx >/dev/null 2>&1; then
-    echo "error: npx not found — install Node.js" >&2
-    exit 1
-fi
-
-(cd "$ROOT" && npm install --silent)
-(cd "$ROOT" && npx react-native bundle \
-    --platform ios \
-    --dev false \
-    --entry-file src/runtime/index.js \
-    --bundle-output ios/Resources/fightdeck.jsbundle \
-    --assets-dest ios/Resources)
-
-HERMESC=""
-for candidate in \
-    "$ROOT/node_modules/hermes-compiler/hermesc/osx-bin/hermesc" \
-    "$ROOT/node_modules/react-native/sdks/hermesc/osx-bin/hermesc" \
-    "$(command -v hermesc 2>/dev/null)"; do
-    if [[ -n "$candidate" && -x "$candidate" ]]; then
-        HERMESC="$candidate"
-        break
-    fi
-done
-
-if [[ -z "$HERMESC" || ! -f "$ROOT/ios/Resources/fightdeck.jsbundle" ]]; then
-    echo "error: hermesc or jsbundle missing — cannot produce Hermes bytecode" >&2
-    exit 1
-fi
-
-"$HERMESC" -O -emit-binary \
-    -out "$ROOT/ios/Resources/fightdeck.hbc" \
-    "$ROOT/ios/Resources/fightdeck.jsbundle"
-echo "Hermes bytecode: $(stat -f%z "$ROOT/ios/Resources/fightdeck.hbc" 2>/dev/null || stat -c%s "$ROOT/ios/Resources/fightdeck.hbc") bytes"
+"$ROOT/build-jsbundle.sh"
 
 PODS_ROOT="$ROOT/../../ios/Pods"
 if [[ ! -d "$PODS_ROOT/React-Core-prebuilt" ]]; then

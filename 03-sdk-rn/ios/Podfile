@@ -52,6 +52,19 @@ target 'FightDeck' do
       )
     end
 
+    # The JS bundle is baked into the runtime pod's resources, so the feature set is decided
+    # when the SDK is built, not here. Selecting deposit-only pods on top of an all-surfaces
+    # bundle links less native code but still ships the bet slip's JavaScript — an app that
+    # runs fine and reports a size that means nothing.
+    stamp = File.join(__dir__, '..', 'sdks', 'core', 'ios', '.fightdeck-features')
+    if File.exist?(stamp)
+      built = File.read(stamp).strip
+      unless built == $FIGHTDECK_FEATURES
+        raise "SDK bundle was built for '#{built}' but the host wants '#{$FIGHTDECK_FEATURES}'. " \
+              "Rebuild it: FIGHTDECK_FEATURES=#{$FIGHTDECK_FEATURES} ./sdks/core/build-xcframework.sh"
+      end
+    end
+
     feature_flag = case $FIGHTDECK_FEATURES
                    when 'runtime' then 'FIGHTDECK_RUNTIME'
                    when 'deposit' then 'FIGHTDECK_DEPOSIT'

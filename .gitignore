@@ -103,5 +103,12 @@ tools/.commons-cache.json
 # live next door only ever ends up stale.
 03-sdk-rn/sdks/core/ios/BuildPackage/
 
+# Records which feature set the last SDK build bundled, so the Podfile can catch a mismatch.
+03-sdk-rn/sdks/core/ios/.fightdeck-features
+
+# Metro's text bundle, kept out of Resources/ so the podspec does not ship it next to the
+# Hermes bytecode that actually gets loaded.
+03-sdk-rn/sdks/core/ios/.jsbundle-staging/
+
 # JVM heap dumps from Gradle OOMs
 *.hprof

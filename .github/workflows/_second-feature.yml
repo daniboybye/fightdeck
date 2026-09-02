@@ -1,0 +1,111 @@
+# Reusable: weigh one SDK approach at three feature stages, on one platform.
+#
+# Not dispatchable on its own; measure.yml fans this out. Split by platform rather than
+# building both halves in one job so React Native's Android stages can run on Linux —
+# only Skip's Android build genuinely needs macOS, and the macOS billing multiplier is
+# not worth paying for a Gradle build that does not need it.
+#
+# The halves never have to meet: each writes its own per-stage measurement files and
+# render-receipt.py assembles the table from whatever arrives.
+
+name: _second-feature
+
+on:
+  workflow_call:
+    inputs:
+      approach:
+        description: Approach folder — 03-sdk-rn or 04-sdk-skip
+        required: true
+        type: string
+      platform:
+        description: ios or android
+        required: true
+        type: string
+      runner:
+        description: Runner label
+        required: true
+        type: string
+
+jobs:
+  measure:
+    name: ${{ inputs.approach }} (${{ inputs.platform }})
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 120
+
+    # No release has been published from this repository yet, so the UI-bearing SDKs are
+    # resolved from source. The pinned-artifact path is exercised by release-sdk.yml.
+    env:
+      FIGHTDECK_LOCAL_SDK: "1"
+      FIGHTDECK_PLATFORM: ${{ inputs.platform }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read pinned versions
+        run: |
+          ./tools/versions.py react_native.node --github-env PINNED_NODE
+          ./tools/versions.py android.jdk --github-env PINNED_JDK
+          ./tools/versions.py android.ndk --github-env PINNED_NDK
+
+      - name: Pin Xcode from versions.lock.toml
+        if: inputs.platform == 'ios' || inputs.approach == '04-sdk-skip'
+        run: |
+          XCODE_VERSION="$(./tools/versions.py apple.xcode)"
+          echo "Pinned Xcode: $XCODE_VERSION"
+          sudo xcode-select -switch "/Applications/Xcode_${XCODE_VERSION}.app" 2>/dev/null \
+            || echo "::warning::Xcode ${XCODE_VERSION} not found at the expected path; using runner default"
+          xcodebuild -version
+
+      - uses: actions/setup-java@v5
+        if: inputs.platform == 'android'
+        with:
+          distribution: temurin
+          java-version: ${{ env.PINNED_JDK }}
+
+      - name: Install pinned NDK
+        if: inputs.platform == 'android'
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$PINNED_NDK" \
+            || echo "::warning::NDK $PINNED_NDK unavailable on this runner; falling back to preinstalled"
+
+      # Both platforms read react-native out of node_modules — the Podfile to generate the
+      # pod set, Gradle to configure autolinking — and the bundle script needs it to run
+      # Metro at all.
+      - uses: actions/setup-node@v7
+        if: inputs.approach == '03-sdk-rn'
+        with:
+          node-version: ${{ env.PINNED_NODE }}
+
+      - name: Install JS dependencies
+        if: inputs.approach == '03-sdk-rn'
+        working-directory: 03-sdk-rn/sdks/core
+        run: npm ci
+
+      - name: Ensure CocoaPods
+        if: inputs.approach == '03-sdk-rn' && inputs.platform == 'ios'
+        run: pod --version || sudo gem install cocoapods --no-document
+
+      # Skip's AARs are transpiler output rather than a checked-in dependency, so the host
+      # has nothing to link until skipstone has run over the three modules.
+      - name: Install Skip
+        if: inputs.approach == '04-sdk-skip' && inputs.platform == 'android'
+        run: |
+          SKIP_VERSION="$(./tools/versions.py skip.skipstone)"
+          curl -fsSL -o "$RUNNER_TEMP/skip.zip" \
+            "https://github.com/skiptools/skip/releases/download/${SKIP_VERSION}/skip-macos.zip"
+          unzip -q "$RUNNER_TEMP/skip.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
+          echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
+
+      - name: Export the Skip AARs
+        if: inputs.approach == '04-sdk-skip' && inputs.platform == 'android'
+        run: ./04-sdk-skip/sdks/build-aars.sh
+
+      - name: Measure all three feature stages
+        run: ./tools/measure-second-feature.sh "${{ inputs.approach }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: second-feature-${{ inputs.platform }}-${{ inputs.approach }}
+          path: tools/out/${{ inputs.platform }}-${{ inputs.approach }}-*.json
+          if-no-files-found: error

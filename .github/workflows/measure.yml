@@ -52,10 +52,25 @@ jobs:
     name: Contract
     uses: ./.github/workflows/contract.yml
 
+  # The headline number: what the second screen costs once the first has paid for the
+  # runtime. Only the UI-bearing SDKs have a runtime to amortise.
+  second-feature:
+    name: Second feature
+    strategy:
+      fail-fast: false
+      matrix:
+        approach: [03-sdk-rn, 04-sdk-skip]
+        platform: [ios, android]
+    uses: ./.github/workflows/_second-feature.yml
+    with:
+      approach: ${{ matrix.approach }}
+      platform: ${{ matrix.platform }}
+      runner: ${{ (matrix.platform == 'ios' || matrix.approach == '04-sdk-skip') && 'macos-26' || 'ubuntu-24.04' }}
+
   receipt:
     name: Render receipt
     runs-on: ubuntu-24.04
-    needs: [ios, android, contract]
+    needs: [ios, android, contract, second-feature]
     if: always()
     timeout-minutes: 15
 

@@ -1,0 +1,40 @@
+# Restore the two expensive things SwiftPM produces: the dependency clones it fetches over
+# the network, and the compiled products under .build.
+#
+# This lives in one file because nine jobs want it. Five copies of a cache key drift, and a
+# drifted key is worse than no cache: a .build tree restored under a toolchain it was not
+# built by fails deep inside the compiler, in ways that read like source errors.
+
+name: SwiftPM cache
+description: Cache SwiftPM dependency clones and compiled build products.
+
+inputs:
+  key:
+    description: Discriminator so each package gets its own entry, e.g. sdk-skip-core.
+    required: true
+  build-path:
+    description: >
+      Newline-separated .build directories to cache alongside the shared clones. Leave
+      unset to cache only the clones, which is the right choice for Xcode-driven builds
+      where the build products live in DerivedData instead.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v6
+      with:
+        # The shared clone cache sits under a different root on each OS. Naming a path that
+        # does not exist is only a warning, so both are listed rather than branched on.
+        path: |
+          ~/Library/Caches/org.swift.swiftpm
+          ~/.cache/org.swift.swiftpm
+          ${{ inputs.build-path }}
+        # versions.lock.toml is part of the key because build products are toolchain
+        # specific: reusing them across a Swift or Xcode bump is how a cache becomes a bug.
+        key: swiftpm-${{ runner.os }}-${{ inputs.key }}-${{ hashFiles('**/Package.resolved', 'versions.lock.toml') }}
+        # A partial hit still saves the downloads even when a manifest moved, and SwiftPM
+        # revalidates what it restores rather than trusting it blindly.
+        restore-keys: |
+          swiftpm-${{ runner.os }}-${{ inputs.key }}-

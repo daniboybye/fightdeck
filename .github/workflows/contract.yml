@@ -28,6 +28,11 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Swift core not written yet"
           fi
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: core-swift
+          build-path: 01-core-swift/sdks/core/.build
       - name: Run fixtures
         if: steps.guard.outputs.exists == 'true'
         working-directory: 01-core-swift/sdks/core
@@ -61,6 +66,12 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           toolchain: ${{ env.PINNED_RUST }}
+      # Keys itself on the resolved toolchain and Cargo.lock, so a pin bump in
+      # versions.lock.toml gets a fresh entry rather than a subtly mixed target/ tree.
+      - uses: Swatinem/rust-cache@v2
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          workspaces: 02-core-rust/sdks/core
       - name: Run fixtures
         if: steps.guard.outputs.exists == 'true'
         working-directory: 02-core-rust/sdks/core
@@ -87,6 +98,12 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Native baseline not written yet"
           fi
+      # No build-path: Xcode keeps its products in DerivedData, so only the package clones
+      # are worth carrying between runs here.
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: native-ios
       # FightDeckUITests is the screenshot tour: it drives a simulator for minutes to
       # produce images a human looks at. FightDeckTests is what holds the fixtures, so
       # running the tour here only buys flakes on the runner that bills at ten times Linux.

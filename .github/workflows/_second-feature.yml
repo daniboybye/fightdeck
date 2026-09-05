@@ -46,6 +46,7 @@ jobs:
           ./tools/versions.py react_native.node --github-env PINNED_NODE
           ./tools/versions.py android.jdk --github-env PINNED_JDK
           ./tools/versions.py android.ndk --github-env PINNED_NDK
+          ./tools/versions.py android.bundletool --github-env PINNED_BUNDLETOOL
 
       - name: Pin Xcode from versions.lock.toml
         if: inputs.platform == 'ios' || inputs.approach == '04-sdk-skip'
@@ -62,6 +63,20 @@ jobs:
           distribution: temurin
           java-version: ${{ env.PINNED_JDK }}
 
+      # This job assembles the same host three times over, so a cold Gradle here is paid for
+      # three times rather than once — the caches below matter more in this workflow than
+      # anywhere else in the repository.
+      - uses: gradle/actions/setup-gradle@v6
+        if: inputs.platform == 'android'
+        with:
+          build-root-directory: ${{ inputs.approach }}/android
+
+      - uses: actions/cache@v6
+        if: inputs.platform == 'android'
+        with:
+          path: tools/out/bundletool-*.jar
+          key: bundletool-${{ env.PINNED_BUNDLETOOL }}
+
       - name: Install pinned NDK
         if: inputs.platform == 'android'
         run: |
@@ -75,6 +90,8 @@ jobs:
         if: inputs.approach == '03-sdk-rn'
         with:
           node-version: ${{ env.PINNED_NODE }}
+          cache: npm
+          cache-dependency-path: 03-sdk-rn/sdks/core/package-lock.json
 
       - name: Install JS dependencies
         if: inputs.approach == '03-sdk-rn'
@@ -85,17 +102,40 @@ jobs:
         if: inputs.approach == '03-sdk-rn' && inputs.platform == 'ios'
         run: pod --version || sudo gem install cocoapods --no-document
 
+      # The download cache and nothing else. measure-second-feature.sh re-runs `pod install`
+      # for each of the three feature sets, and the Podfile is written to reject a pod set
+      # that disagrees with the JS bundle — so a restored Pods/ would break the measurement
+      # it is meant to speed up. Caching only the downloads keeps all three installs offline.
+      - uses: actions/cache@v6
+        if: inputs.approach == '03-sdk-rn' && inputs.platform == 'ios'
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('03-sdk-rn/ios/Podfile.lock') }}
+          restore-keys: |
+            cocoapods-${{ runner.os }}-
+
+      # Split by approach rather than naming both sets of paths in one step: the two SDKs
+      # keep their build products in different places, and a cache entry that lists
+      # directories the job can never create just logs warnings on every run.
+      - uses: ./.github/actions/swiftpm-cache
+        if: inputs.approach == '04-sdk-skip'
+        with:
+          key: second-feature-skip-${{ inputs.platform }}
+          build-path: |
+            04-sdk-skip/sdks/core/.build
+            04-sdk-skip/sdks/deposit/.build
+            04-sdk-skip/sdks/betslip/.build
+
+      - uses: ./.github/actions/swiftpm-cache
+        if: inputs.approach == '03-sdk-rn' && inputs.platform == 'ios'
+        with:
+          key: second-feature-rn-ios
+          build-path: 03-sdk-rn/sdks/core/ios/BuildPackage/.build
+
       # Skip's AARs are transpiler output rather than a checked-in dependency, so the host
       # has nothing to link until skipstone has run over the three modules.
-      - name: Install Skip
+      - uses: ./.github/actions/install-skip
         if: inputs.approach == '04-sdk-skip' && inputs.platform == 'android'
-        run: |
-          SKIP_VERSION="$(./tools/versions.py skip.skipstone)"
-          curl -fsSL -o "$RUNNER_TEMP/skip.zip" \
-            "https://github.com/skiptools/skip/releases/download/${SKIP_VERSION}/skip-macos.zip"
-          unzip -q "$RUNNER_TEMP/skip.zip" -d "$RUNNER_TEMP"
-          chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
-          echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
 
       - name: Export the Skip AARs
         if: inputs.approach == '04-sdk-skip' && inputs.platform == 'android'

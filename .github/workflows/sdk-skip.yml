@@ -60,6 +60,12 @@ jobs:
           sudo xcode-select -switch "/Applications/Xcode_${XCODE_VERSION}.app" 2>/dev/null \
             || echo "::warning::Xcode ${XCODE_VERSION} not found; using runner default"
 
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: sdk-skip-${{ matrix.module }}
+          build-path: 04-sdk-skip/sdks/${{ matrix.module }}/.build
+
       # Only the headless module. `swift test` builds for the host, and the two feature
       # modules are SwiftUI over UIKit, which does not exist on macOS; their behaviour is
       # covered by the host app's own suite against the framework this job produces.
@@ -106,9 +112,7 @@ jobs:
 
       - name: Read pinned versions
         if: steps.guard.outputs.exists == 'true'
-        run: |
-          ./tools/versions.py android.jdk --github-env PINNED_JDK
-          ./tools/versions.py skip.skipstone --github-env PINNED_SKIPSTONE
+        run: ./tools/versions.py android.jdk --github-env PINNED_JDK
 
       - uses: actions/setup-java@v5
         if: steps.guard.outputs.exists == 'true'
@@ -119,14 +123,23 @@ jobs:
       # The release archive rather than the tap: brew installs whatever is newest, and a
       # CLI newer than the skipstone the packages pin generates Gradle projects this
       # build's patches no longer recognise. The lock file is only a pin if it is used.
-      - name: Install Skip ${{ env.PINNED_SKIPSTONE }}
+      - uses: ./.github/actions/install-skip
         if: steps.guard.outputs.exists == 'true'
-        run: |
-          curl -fsSL -o "$RUNNER_TEMP/skip.zip" \
-            "https://github.com/skiptools/skip/releases/download/${PINNED_SKIPSTONE}/skip-macos.zip"
-          unzip -q "$RUNNER_TEMP/skip.zip" -d "$RUNNER_TEMP"
-          chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
-          echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
+
+      # skipstone drives Gradle three times over, serially, because the feature modules link
+      # against core's AAR instead of re-transpiling it. At 16 macOS minutes this was the
+      # single most expensive job in the repository, and most of it was Gradle starting cold.
+      - uses: gradle/actions/setup-gradle@v6
+        if: steps.guard.outputs.exists == 'true'
+
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: sdk-skip-android
+          build-path: |
+            04-sdk-skip/sdks/core/.build
+            04-sdk-skip/sdks/deposit/.build
+            04-sdk-skip/sdks/betslip/.build
 
       - name: Skip checkup
         if: steps.guard.outputs.exists == 'true'

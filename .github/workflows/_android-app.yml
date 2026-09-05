@@ -57,6 +57,7 @@ jobs:
           ./tools/versions.py android.compile_sdk --github-env PINNED_COMPILE_SDK
           ./tools/versions.py android.ndk --github-env PINNED_NDK
           ./tools/versions.py react_native.node --github-env PINNED_NODE
+          ./tools/versions.py android.bundletool --github-env PINNED_BUNDLETOOL
 
       - uses: actions/setup-java@v5
         with:
@@ -73,6 +74,23 @@ jobs:
             echo "::notice::${{ inputs.project-dir }} has no gradlew yet — nothing to do"
           fi
 
+      # Keeps both the wrapper distribution and the module cache, which between them are
+      # most of a cold Gradle run. The NDK below is deliberately left uncached: it is around
+      # three gigabytes and the repository only gets ten, so caching it once would evict
+      # every entry that actually pays for itself.
+      - uses: gradle/actions/setup-gradle@v6
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          build-root-directory: ${{ inputs.project-dir }}
+
+      # bundletool is a fixed, version-stamped 32 MB jar that measure-android.sh fetches
+      # into tools/out, and every one of the five approaches fetches the same one.
+      - uses: actions/cache@v6
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          path: tools/out/bundletool-*.jar
+          key: bundletool-${{ env.PINNED_BUNDLETOOL }}
+
       - name: Install pinned NDK
         if: steps.guard.outputs.exists == 'true'
         run: |
@@ -85,6 +103,8 @@ jobs:
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
         with:
           node-version: ${{ env.PINNED_NODE }}
+          cache: npm
+          cache-dependency-path: 03-sdk-rn/sdks/core/package-lock.json
 
       - name: Install JS dependencies
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
@@ -95,16 +115,17 @@ jobs:
       # has nothing to link until skipstone has run over the three modules. Pinned to the
       # lock file: a CLI newer than the packages' skipstone emits Gradle projects the AAR
       # scripts no longer recognise, and the failure surfaces as unresolved Kotlin symbols.
-      - name: Install Skip
+      - uses: ./.github/actions/install-skip
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
-        run: |
-          ./tools/versions.py skip.skipstone --github-env PINNED_SKIPSTONE
-          SKIP_VERSION="$(./tools/versions.py skip.skipstone)"
-          curl -fsSL -o "$RUNNER_TEMP/skip.zip" \
-            "https://github.com/skiptools/skip/releases/download/${SKIP_VERSION}/skip-macos.zip"
-          unzip -q "$RUNNER_TEMP/skip.zip" -d "$RUNNER_TEMP"
-          chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
-          echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
+
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
+        with:
+          key: sdk-skip-android
+          build-path: |
+            04-sdk-skip/sdks/core/.build
+            04-sdk-skip/sdks/deposit/.build
+            04-sdk-skip/sdks/betslip/.build
 
       - name: Export the Skip AARs
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
@@ -124,6 +145,14 @@ jobs:
         with:
           toolchain: ${{ env.PINNED_RUST }}
           targets: aarch64-linux-android,x86_64-linux-android
+
+      # Same "android" entry as sdk-core-rust.yml: identical crate, identical triples, so
+      # whichever workflow runs first warms the other.
+      - uses: Swatinem/rust-cache@v2
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        with:
+          workspaces: 02-core-rust/sdks/core
+          key: android
 
       - name: Install cargo-ndk
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'

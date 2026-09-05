@@ -1,0 +1,42 @@
+# Put the pinned skipstone CLI on PATH, from cache when the runner has seen it before.
+#
+# Three workflows needed this and each had grown its own copy of the same six lines, one of
+# which read the lock file twice to do it. The pin is the point: a CLI newer than the
+# skipstone the packages expect emits Gradle projects the AAR scripts no longer recognise,
+# and that surfaces as unresolved Kotlin symbols rather than as a version complaint.
+
+name: Install Skip
+description: Install the pinned skipstone CLI, restoring the release archive from cache.
+
+runs:
+  using: composite
+  steps:
+    - name: Read the pinned Skip version
+      shell: bash
+      run: ./tools/versions.py skip.skipstone --github-env PINNED_SKIPSTONE
+
+    # The archive is version-stamped, so the pin alone is a complete key — there is no
+    # "latest" to invalidate against and nothing else in the repo can change its contents.
+    - id: cache
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/skip.artifactbundle
+        key: skip-cli-${{ runner.os }}-${{ env.PINNED_SKIPSTONE }}
+
+    - name: Download Skip ${{ env.PINNED_SKIPSTONE }}
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        curl -fsSL -o "$RUNNER_TEMP/skip.zip" \
+          "https://github.com/skiptools/skip/releases/download/${PINNED_SKIPSTONE}/skip-macos.zip"
+        unzip -q "$RUNNER_TEMP/skip.zip" -d "$RUNNER_TEMP"
+
+    # Outside the cache-miss branch: the executable bit does not survive a cache round trip,
+    # so a restored bundle needs chmod just as much as a freshly unzipped one.
+    - name: Put Skip on PATH
+      shell: bash
+      run: |
+        chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" \
+                 "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
+        echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
+        skip version

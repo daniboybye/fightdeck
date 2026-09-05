@@ -63,7 +63,15 @@ jobs:
 
       - name: Install xcbeautify
         if: steps.guard.outputs.exists == 'true'
-        run: brew install xcbeautify
+        run: command -v xcbeautify >/dev/null || brew install xcbeautify
+
+      # Package clones only. Xcode builds into DerivedData, whose absolute paths and module
+      # caches do not survive a move between runners, so carrying it over is a good way to
+      # trade a slow clean build for a fast confusing one.
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: host-${{ inputs.approach }}
 
       # The React Native host links its SDKs through CocoaPods, and the Podfile resolves
       # react-native out of node_modules before it can generate anything.
@@ -75,11 +83,21 @@ jobs:
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
         with:
           node-version: ${{ env.PINNED_NODE }}
+          cache: npm
+          cache-dependency-path: 03-sdk-rn/sdks/core/package-lock.json
 
       - name: Install JS dependencies
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
         working-directory: 03-sdk-rn/sdks/core
         run: npm ci
+
+      - uses: actions/cache@v6
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('03-sdk-rn/ios/Podfile.lock') }}
+          restore-keys: |
+            cocoapods-${{ runner.os }}-
 
       - name: Install Pods
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
@@ -100,6 +118,14 @@ jobs:
         with:
           toolchain: ${{ env.PINNED_RUST }}
           targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      # Shares the "apple" entry with sdk-core-rust.yml on purpose: it is the same crate
+      # built for the same three triples, so the two workflows should warm each other.
+      - uses: Swatinem/rust-cache@v2
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        with:
+          workspaces: 02-core-rust/sdks/core
+          key: apple
 
       - name: Package the Rust core
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'

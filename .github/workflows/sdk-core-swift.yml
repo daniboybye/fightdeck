@@ -51,6 +51,12 @@ jobs:
             || echo "::warning::Xcode ${XCODE_VERSION} not found; using runner default"
           swift --version
 
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: core-swift-apple
+          build-path: 01-core-swift/sdks/core/.build
+
       - name: Test
         if: steps.guard.outputs.exists == 'true'
         working-directory: 01-core-swift/sdks/core
@@ -142,6 +148,16 @@ jobs:
             "$BUNDLE/swift-android/scripts/setup-android-sdk.sh"
 
           swift sdk list
+
+      # Deliberately not caching the toolchain or the Swift SDK bundle above: together they
+      # run to gigabytes, and this whole job finishes in about two Linux minutes. Spending
+      # a quarter of the repository's 10 GB cache budget to save two of the cheapest minutes
+      # on the board would evict the Gradle and Cargo entries that save ten times as much.
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: core-swift-android
+          build-path: 01-core-swift/sdks/core/.build
 
       - name: Cross-compile for aarch64-unknown-linux-android
         if: steps.guard.outputs.exists == 'true'

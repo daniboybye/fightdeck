@@ -52,10 +52,33 @@ jobs:
           ./tools/versions.py react_native.node --github-env PINNED_NODE
           ./tools/versions.py apple.xcode --github-env PINNED_XCODE
 
+      # cache: npm points ~/.npm at a restored store, which is where nearly all of the
+      # install time goes — react-native and its transitive tree are the bulk of it.
       - uses: actions/setup-node@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           node-version: ${{ env.PINNED_NODE }}
+          cache: npm
+          cache-dependency-path: 03-sdk-rn/sdks/core/package-lock.json
+
+      # Only the download cache, never Pods/ itself: the pod set is generated per feature
+      # set, and a restored Pods/ from a different one is exactly the mismatch the Podfile
+      # is written to refuse.
+      - uses: actions/cache@v6
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          path: ~/Library/Caches/CocoaPods
+          key: cocoapods-${{ runner.os }}-${{ hashFiles('03-sdk-rn/ios/Podfile.lock') }}
+          restore-keys: |
+            cocoapods-${{ runner.os }}-
+
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          key: sdk-rn-${{ matrix.module }}
+          build-path: |
+            03-sdk-rn/sdks/${{ matrix.module }}/.build
+            03-sdk-rn/sdks/core/ios/BuildPackage/.build
 
       - name: Pin Xcode
         if: steps.guard.outputs.exists == 'true'
@@ -123,12 +146,25 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           node-version: ${{ env.PINNED_NODE }}
+          cache: npm
+          cache-dependency-path: 03-sdk-rn/sdks/core/package-lock.json
 
       - uses: actions/setup-java@v5
         if: steps.guard.outputs.exists == 'true'
         with:
           distribution: temurin
           java-version: ${{ env.PINNED_JDK }}
+
+      # All three modules assemble out of 03-sdk-rn/android, so one Gradle cache serves the
+      # whole matrix. It also ends the failure that took this workflow down on 4 Sep: the
+      # wrapper fetches a ~130 MB distribution from services.gradle.org with a 10 s timeout
+      # and, as its own log says, "Attempt 1/1" — one connection reset and the job is over.
+      # setup-gradle keeps the distribution and the module cache between runs, so the common
+      # path stops touching the network at all.
+      - uses: gradle/actions/setup-gradle@v6
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          build-root-directory: 03-sdk-rn/android
 
       # Every module's Gradle build pulls the React Native Gradle plugin out of the app-level
       # node_modules, so the runtime's install is a prerequisite even for a feature AAR.

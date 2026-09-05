@@ -135,8 +135,11 @@ Measurements come from simulator and emulator rather than physical devices, and 
 is off everywhere, so Android figures are uniformly inflated. Build times are clean builds
 with dependencies already fetched — they include each approach's own SDK step, which is why
 Rust pays on iOS (three-target `xcframework`) and Skip pays on Android (transpilation), but
-they exclude package downloads, which measure the network rather than the approach. CI has
-no dependency cache at all, so its numbers will be higher across the board.
+they exclude package downloads, which measure the network rather than the approach. CI now
+caches those downloads, which brings it closer to this methodology, but it still publishes
+only sizes: nothing in the receipt is a duration, so the cache cannot flatter a build time.
+Gradle's task-output cache stays off for the same reason — a size on a slide has to come
+from a build that actually happened.
 
 **Swift-on-Android does not build here** — `01-core-swift` runs a Kotlin stub on Android and
 says so in the code, which is why its Android column is a native-baseline figure wearing a

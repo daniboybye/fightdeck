@@ -1,0 +1,39 @@
+# Cache what `cargo build` refetches and recompiles: the registry, the git database of
+# dependencies, and the crate's own target directory.
+#
+# Swatinem/rust-cache is the usual answer here and does this better — it prunes target/ so
+# the entry does not grow without bound. It is also not GitHub-owned, not from a verified
+# creator, and not one of the two patterns this repository allows, so a workflow that names
+# it is refused before a single job starts. Rather than widen that allow-list for a build
+# cache, this does the same job with the first-party action.
+
+name: Cargo cache
+description: Cache Cargo's registry, git database and target directory.
+
+inputs:
+  key:
+    description: Discriminator so each platform gets its own entry, e.g. apple.
+    required: true
+  workspace:
+    description: Crate directory holding Cargo.lock and target/.
+    required: false
+    default: 02-core-rust/sdks/core
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v6
+      with:
+        # ~/.cargo/bin is deliberately absent: rustup keeps its shims there, and restoring
+        # a stale bin/ over them replaces the toolchain the job just installed. The one
+        # binary worth keeping, cargo-ndk, is cached on its own where it is used.
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+          ${{ inputs.workspace }}/target
+        # versions.lock.toml joins Cargo.lock in the key because target/ holds objects built
+        # by one specific rustc, and mixing them across a toolchain bump fails at link time.
+        key: cargo-${{ runner.os }}-${{ inputs.key }}-${{ hashFiles(format('{0}/Cargo.lock', inputs.workspace), 'versions.lock.toml') }}
+        restore-keys: |
+          cargo-${{ runner.os }}-${{ inputs.key }}-

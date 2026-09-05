@@ -121,10 +121,9 @@ jobs:
 
       # Shares the "apple" entry with sdk-core-rust.yml on purpose: it is the same crate
       # built for the same three triples, so the two workflows should warm each other.
-      - uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
         with:
-          workspaces: 02-core-rust/sdks/core
           key: apple
 
       - name: Package the Rust core

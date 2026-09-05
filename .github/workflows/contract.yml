@@ -66,12 +66,10 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           toolchain: ${{ env.PINNED_RUST }}
-      # Keys itself on the resolved toolchain and Cargo.lock, so a pin bump in
-      # versions.lock.toml gets a fresh entry rather than a subtly mixed target/ tree.
-      - uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true'
         with:
-          workspaces: 02-core-rust/sdks/core
+          key: contract
       - name: Run fixtures
         if: steps.guard.outputs.exists == 'true'
         working-directory: 02-core-rust/sdks/core

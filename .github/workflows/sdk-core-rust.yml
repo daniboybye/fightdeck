@@ -55,10 +55,9 @@ jobs:
 
       # The most valuable cache in the repository: this job builds fightcore for three
       # Apple triples from scratch and was the slowest macOS job outside Skip's AARs.
-      - uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true'
         with:
-          workspaces: 02-core-rust/sdks/core
           key: apple
 
       - name: Build and package
@@ -111,18 +110,26 @@ jobs:
           toolchain: ${{ env.PINNED_RUST }}
           targets: aarch64-linux-android,x86_64-linux-android
 
-      # Restores ~/.cargo/bin too, which is what makes the cargo-ndk step below a no-op on a
-      # warm runner: `cargo install` at the same version reports "already installed" and
-      # exits 0 rather than spending minutes rebuilding it.
-      - uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true'
         with:
-          workspaces: 02-core-rust/sdks/core
           key: android
 
+      # Its own entry, with no restore-keys: the pinned version is the whole key, so bumping
+      # the pin misses cleanly and rebuilds rather than restoring the previous binary under
+      # the new version's name.
+      - uses: actions/cache@v6
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          path: ~/.cargo/bin/cargo-ndk
+          key: cargo-ndk-${{ runner.os }}-${{ env.PINNED_CARGO_NDK }}
+
+      # Guarded on the binary rather than run unconditionally: `cargo install` decides what
+      # is already installed from ~/.cargo/.crates.toml, which is not cached, so on a warm
+      # runner it would rebuild a cargo-ndk that is sitting right there.
       - name: Install cargo-ndk
         if: steps.guard.outputs.exists == 'true'
-        run: cargo install cargo-ndk --version "$PINNED_CARGO_NDK" --locked
+        run: command -v cargo-ndk >/dev/null || cargo install cargo-ndk --version "$PINNED_CARGO_NDK" --locked
 
       - name: Build and package
         if: steps.guard.outputs.exists == 'true'
@@ -161,10 +168,9 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true'
         with:
-          workspaces: 02-core-rust/sdks/core
           key: wasm
 
       - name: Build

@@ -148,15 +148,22 @@ jobs:
 
       # Same "android" entry as sdk-core-rust.yml: identical crate, identical triples, so
       # whichever workflow runs first warms the other.
-      - uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
         with:
-          workspaces: 02-core-rust/sdks/core
           key: android
 
+      - uses: actions/cache@v6
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
+        with:
+          path: ~/.cargo/bin/cargo-ndk
+          key: cargo-ndk-${{ runner.os }}-${{ env.PINNED_CARGO_NDK }}
+
+      # See sdk-core-rust.yml: .crates.toml is not cached, so cargo cannot tell that a
+      # restored cargo-ndk is already installed and would rebuild it.
       - name: Install cargo-ndk
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
-        run: cargo install cargo-ndk --version "$PINNED_CARGO_NDK" --locked
+        run: command -v cargo-ndk >/dev/null || cargo install cargo-ndk --version "$PINNED_CARGO_NDK" --locked
 
       - name: Package the Rust core
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'

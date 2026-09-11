@@ -160,6 +160,23 @@ Swift enums are the nicest surprise: `SlipValidationError` arrives as a Java cla
 nested `Discriminator` enum **and** a `sealed interface Case` of records, so Kotlin can
 `when` over it exhaustively instead of comparing strings.
 
+### What the tool writes, and what you still write
+
+| | Lines | Who maintains it |
+| --- | ---: | --- |
+| Generated Java classes | 1,300 | nobody |
+| Generated JNI thunks (Swift) | 2,378 | nobody |
+| `FightCoreGlue.swift` — the facade jextract reads | 195 | us |
+| `FightCoreGlue.kt` — marshalling and read-back | 109 | us |
+| `SwiftCoreBridge.kt` — loads the `.so` | 15 | us |
+
+Three quarters of the boundary is written by a tool, and none of the part that is left is
+JNI. What survives is the part no generator can decide: which API crosses, what happens to
+a type the tool cannot represent, and how a mutation becomes a Compose recomposition. The
+three constraints below are exactly those three decisions, and `02-core-rust` pays the same
+three with a different tool — UniFFI generates 12,354 lines there and still leaves 971
+hand-written, because three SDKs mean three export surfaces.
+
 ### Four constraints that shaped the code
 
 **1. jextract has no `Decimal`.** The supported Foundation types are `Data`, `Date`,

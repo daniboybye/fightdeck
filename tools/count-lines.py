@@ -39,12 +39,46 @@ LOGIC_STEMS = {
     "FightCore", "FightCoreTypes", "FightCoreDisplay", "FightCoreGlue", "Money",
     "OddsEngine", "BetSlipStore", "fightcore", "money", "odds", "types", "core",
 }
-# Files that marshal values across a language or process boundary.
-BINDING_MARKERS = ("ffi", "bridge", "glue", "jni", "uniffi")
+# Files that marshal values across a language or process boundary. These are
+# hand-written: they declare what crosses, adapt types the generator cannot carry,
+# and reconnect reactivity on the far side. Not to be confused with the bindings
+# themselves, which are counted separately below and which nobody writes.
+GLUE_MARKERS = ("ffi", "bridge", "glue", "jni", "uniffi")
 # Files that form the SDK's public seam, or wire the host to it. Every approach
 # needs these, so they are not a differentiator — they are listed to keep the
 # bindings figure honest.
 SEAM_MARKERS = ("hosting", "adapter", "runtime", "launcher", "mapper", "holder")
+
+# What the binding tool writes so nobody has to. The ratio between this and the glue
+# column is the whole argument for using a generator, so it belongs on the same screen.
+# These files are build output: they exist only after the approach has been packaged,
+# and the report says so rather than printing a zero that reads like "none needed".
+GENERATED_GLOBS = {
+    "01-core-swift": (
+        "swift-java jextract",
+        [
+            "sdks/core/.build/plugins/outputs/**/JExtractSwiftPlugin/**/*.java",
+            "sdks/core/.build/plugins/outputs/**/JExtractSwiftPlugin/**/*.swift",
+        ],
+    ),
+    "02-core-rust": (
+        "UniFFI",
+        [
+            "sdks/*/Sources/Fight*/*.swift",
+            "sdks/*/Sources/*FFI/include/*.h",
+            "android/app/src/main/java/uniffi/*/*.kt",
+        ],
+    ),
+    # Scoped to this repository's own modules. skipstone also transpiles the Skip
+    # frameworks it depends on — SkipUI, SkipFoundation, SkipLib — which is another
+    # 280k lines of Kotlin through the same compiler, and the reason the Android build
+    # is slow. Counting it here would compare our transpiled screens against somebody
+    # else's UI framework.
+    "04-sdk-skip": (
+        "skipstone",
+        ["sdks/*/.build/plugins/outputs/**/skipstone/FightDeck*/**/*.kt"],
+    ),
+}
 
 
 def repo_files() -> list[pathlib.Path]:
@@ -61,6 +95,22 @@ def lines(path: pathlib.Path) -> int:
     except (OSError, UnicodeDecodeError):
         return 0
     return sum(1 for line in text.splitlines() if line.strip())
+
+
+def generated_lines(approach: str) -> int | None:
+    """Non-blank lines the binding tool produced, or None when nothing is built yet."""
+    spec = GENERATED_GLOBS.get(approach)
+    if spec is None:
+        return None
+    # A module can be emitted more than once — skipstone re-transpiles a dependency
+    # into every package that consumes it — so identify output by where it lands
+    # inside the tool's tree, not by which build produced it.
+    unique: dict[str, pathlib.Path] = {}
+    for pattern in spec[1]:
+        for path in (ROOT / approach).glob(pattern):
+            if path.is_file():
+                unique.setdefault(str(path).rpartition("skipstone/")[2] or str(path), path)
+    return sum(lines(p.relative_to(ROOT)) for p in unique.values()) or None
 
 
 def bucket(path: pathlib.Path) -> str | None:
@@ -107,29 +157,44 @@ def main() -> int:
         print(f"  {approach:<16}{summary}")
 
     print("\n\nBoundary code — listed per file, because one total would hide the difference\n")
-    print("  bindings  marshal values across a language or process boundary")
-    print("  seam      the SDK's public interface and the host wiring behind it\n")
+    print("  glue       hand-written: declares what crosses, adapts types the tool cannot")
+    print("             carry, and reconnects reactivity on the far side")
+    print("  seam       the SDK's public interface and the host wiring behind it")
+    print("  generated  what the binding tool wrote instead of you; build output\n")
     for approach in APPROACHES:
         found: list[tuple[str, str, int]] = []
         for path in files:
             if path.parts[0] != approach or path.suffix not in CODE_SUFFIXES:
                 continue
             stem = path.stem.lower()
-            if any(marker in stem for marker in BINDING_MARKERS):
-                found.append(("bindings", str(pathlib.Path(*path.parts[1:])), lines(path)))
+            if any(marker in stem for marker in GLUE_MARKERS):
+                found.append(("glue", str(pathlib.Path(*path.parts[1:])), lines(path)))
             elif any(marker in stem for marker in SEAM_MARKERS):
                 found.append(("seam", str(pathlib.Path(*path.parts[1:])), lines(path)))
-        bindings = sum(n for kind, _, n in found if kind == "bindings")
+        glue = sum(n for kind, _, n in found if kind == "glue")
         seam = sum(n for kind, _, n in found if kind == "seam")
-        print(f"  {approach}   bindings {bindings} · seam {seam}")
+        headline = f"  {approach}   glue {glue} · seam {seam}"
+        if approach in GENERATED_GLOBS:
+            tool = GENERATED_GLOBS[approach][0]
+            count = generated_lines(approach)
+            headline += (f" · generated {count} by {tool}" if count
+                         else f" · generated — ({tool}; nothing built here yet)")
+        print(headline)
         for kind, name, count in sorted(found):
             print(f"      {kind:<9}{count:>5}  {name}")
         print()
 
-    print("Read the bindings column, not the seam column: every approach needs a seam,")
-    print("but only some make you hand-write the marshalling. 03-sdk-rn ships its iOS")
-    print("sources twice (SwiftPM and CocoaPods), so its figures count the same code")
-    print("more than once — that duplication is itself a real cost.")
+    print("Read glue against generated. The bindings themselves — JNI thunks, UniFFI's")
+    print("Swift and Kotlin, skipstone's transpiled output — are written by a tool in")
+    print("every approach that has them; nobody maintains a line of it. What survives in")
+    print("the glue column is the part no generator can decide: which API crosses, what")
+    print("happens to a type it cannot represent (both cores pass money as decimal")
+    print("strings), and how a change notification becomes @Observable or StateFlow.")
+    print()
+    print("Read glue against seam, too: every approach needs a seam, but only some make")
+    print("you hand-write the marshalling. 03-sdk-rn ships its iOS sources twice (SwiftPM")
+    print("and CocoaPods), so its figures count the same code more than once — that")
+    print("duplication is itself a real cost.")
     return 0
 
 

@@ -100,6 +100,9 @@ two Android ABIs. The app itself builds in 25 seconds.
 
 Hand-written lines only, from `python3 tools/count-lines.py`. Generated bindings and
 transpiler output are excluded — counting them would credit a code generator for typing.
+The same script reports them separately, next to the hand-written boundary code, because
+the ratio between the two is the case for using a generator at all: jextract writes 3,678
+lines and leaves 319, UniFFI writes 12,354 and leaves 971.
 
 Read the per-platform columns before the shared one. Every approach that shares logic
 takes work *out* of the hosts, except React Native, which is the only one where the

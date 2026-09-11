@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightEvents
 import Foundation
 
 /// Both parsers are reused: building one per cell shows up while scrolling long lists. They are
@@ -34,16 +35,13 @@ extension String {
         return date.formatted(.relative(presentation: .named))
     }
 
-    /// `split_decision` reads as a database column; `Split decision` reads as a result.
     var displayMethod: String {
-        replacingOccurrences(of: "_", with: " ").localizedCapitalized
+        humaniseCode(raw: self)
     }
 }
 
 extension Int {
-    /// Clock style rather than `.units`, which rounds a 3:24 clip to "3 min" and drops the
-    /// seconds every media player shows.
     var formattedDuration: String {
-        Duration.seconds(self).formatted(.time(pattern: .minuteSecond))
+        formatDuration(totalSeconds: UInt32(Swift.max(0, self)))
     }
 }

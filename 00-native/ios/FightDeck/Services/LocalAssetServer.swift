@@ -13,8 +13,8 @@ import Network
 actor LocalAssetServer {
     static let shared = LocalAssetServer()
 
-    /// The kernel assigns the port. The five demo apps share one simulator, and a hard-coded
-    /// port goes to whichever app launches first — the rest then show no images at all.
+    /// Kernel-assigned. The five demo apps share one simulator, so a hard-coded port would go
+    /// to whichever launches first and leave the rest with no images at all.
     nonisolated(unsafe) static private(set) var port: UInt16 = 0
 
     private var listener: NWListener?
@@ -28,9 +28,8 @@ actor LocalAssetServer {
 
     func start(assetsRoot: URL) async throws {
         guard listener == nil else { return }
-        // The actor releases isolation while the bind below is suspended, so a second bootstrap —
-        // a Retry double-tap, or a `.task` that gets recreated — would otherwise open its own
-        // listener and leave the app advertising a port nothing is serving.
+        // The actor releases isolation while the bind below is suspended, so without this a
+        // second bootstrap would open its own listener and leave a port nothing is serving.
         if let startTask {
             return try await startTask.value
         }
@@ -53,8 +52,8 @@ actor LocalAssetServer {
                     switch state {
                     case .ready: once.finish(.success(()))
                     case .failed(let error): once.finish(.failure(error))
-                    // Without this the await never returns when the listener is torn down
-                    // during bind — bootstrap would sit on the spinner for good.
+                    // Without this a listener torn down mid-bind never resumes the await and
+                    // bootstrap sits on the spinner for good.
                     case .cancelled: once.finish(.failure(StartError.cancelled))
                     default: break
                     }
@@ -63,7 +62,7 @@ actor LocalAssetServer {
             }
         } catch {
             // Keeping a listener that never came up makes the guard above treat every later
-            // attempt as already running, so Retry would report success with no server behind it.
+            // attempt as already running, so Retry reports success with no server behind it.
             listener.cancel()
             throw error
         }
@@ -111,7 +110,7 @@ actor LocalAssetServer {
             return errorResponse(status: 400, message: "Bad Request")
         }
 
-        let relative = String(pathPart).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let relative = String(pathPart).trimmingCharacters(in: .init(charactersIn: "/"))
         let fileURL = assetsRoot.appendingPathComponent(relative)
         guard fileURL.standardizedFileURL.path.hasPrefix(assetsRoot.standardizedFileURL.path),
               let body = try? Data(contentsOf: fileURL) else {
@@ -119,21 +118,19 @@ actor LocalAssetServer {
         }
 
         let contentType = mimeType(for: fileURL.pathExtension)
-        return HTTPResponse(headers: header(status: 200,
-                                            reason: "OK",
-                                            contentType: contentType,
-                                            length: body.count),
-                            body: body)
+        return .init(
+            headers: header(status: 200, reason: "OK", contentType: contentType, length: body.count),
+            body: body
+        )
     }
 
     private func errorResponse(status: Int, message: String) -> HTTPResponse {
         let body = Data(message.utf8)
         let statusText = status == 404 ? "Not Found" : "Bad Request"
-        return HTTPResponse(headers: header(status: status,
-                                            reason: statusText,
-                                            contentType: "text/plain",
-                                            length: body.count),
-                            body: body)
+        return .init(
+            headers: header(status: status, reason: statusText, contentType: "text/plain", length: body.count),
+            body: body
+        )
     }
 
     private func header(status: Int, reason: String, contentType: String, length: Int) -> Data {
@@ -143,9 +140,9 @@ actor LocalAssetServer {
             "Content-Length: \(length)",
             "Connection: close",
         ]
-        // The header block ends in a blank line. A multi-line string literal drops the newline
-        // on its own final line, which leaves a bare CR and makes CFNetwork fail with -1017.
-        return Data((lines.joined(separator: "\r\n") + "\r\n\r\n").utf8)
+        // The block ends in a blank line. A multi-line string literal drops the newline on its
+        // own final line, which leaves a bare CR and makes CFNetwork fail with -1017.
+        return .init((lines.joined(separator: "\r\n") + "\r\n\r\n").utf8)
     }
 
     private func mimeType(for ext: String) -> String {
@@ -157,8 +154,7 @@ actor LocalAssetServer {
     }
 }
 
-/// `stateUpdateHandler` reports every transition, and a checked continuation may only be
-/// resumed once.
+/// `stateUpdateHandler` reports every transition; a checked continuation may only be resumed once.
 private final class OneShotContinuation: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: CheckedContinuation<Void, Error>?
@@ -180,14 +176,14 @@ enum DatasetLocator {
     static func datasetRoot() -> URL {
         if let env = ProcessInfo.processInfo.environment["FIGHTDECK_DATASET_ROOT"],
            !env.isEmpty {
-            return URL(fileURLWithPath: env, isDirectory: true)
+            return .init(fileURLWithPath: env, isDirectory: true)
         }
         if let bundled = Bundle.main.resourceURL?.appendingPathComponent("Dataset"),
            holdsDataset(bundled) {
             return bundled
         }
-        // Development fallback. Walking up beats a fixed number of parent hops, which
-        // resolves to a plausible-but-wrong directory the moment this file moves.
+        // Development fallback. Walking up beats a fixed number of parent hops, which resolves
+        // to a plausible-but-wrong directory the moment this file moves.
         var directory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         while directory.path != "/" {
             let candidate = directory.appendingPathComponent("dataset")
@@ -196,7 +192,7 @@ enum DatasetLocator {
             }
             directory = directory.deletingLastPathComponent()
         }
-        return URL(fileURLWithPath: "/tmp/fightdeck-dataset")
+        return .init(fileURLWithPath: "/tmp/fightdeck-dataset")
     }
 
     private static func holdsDataset(_ url: URL) -> Bool {

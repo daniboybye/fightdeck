@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-cd "$ROOT/fightcore"
+cd "$ROOT/core/fightcore"
 export PATH="${HOME}/.cargo/bin:${PATH}"
 
 rustup target add wasm32-unknown-unknown >/dev/null 2>&1 || true
@@ -18,4 +18,4 @@ wasm-pack build \
   -- \
   --no-default-features
 
-echo "Wasm demo: open sdks/core/wasm/index.html via a static server (pkg/ must be co-located)."
+echo "Wasm demo: open sdks/wasm/index.html via a static server (pkg/ must be co-located)."

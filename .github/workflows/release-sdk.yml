@@ -20,6 +20,7 @@ on:
         options:
           - rn
           - skip
+          - rust
       version:
         description: Version to tag, e.g. 0.1.0
         required: true
@@ -42,12 +43,16 @@ jobs:
     if: inputs.sdk == 'skip'
     uses: ./.github/workflows/sdk-skip.yml
 
+  build-rust:
+    if: inputs.sdk == 'rust'
+    uses: ./.github/workflows/sdk-core-rust.yml
+
   publish:
     name: Checksum and publish
     runs-on: macos-26
-    needs: [build-rn, build-skip]
-    # Exactly one of the two build jobs runs; the other is skipped. Without always()
-    # the skipped one would block this job forever.
+    needs: [build-rn, build-skip, build-rust]
+    # Exactly one of the build jobs runs; the others are skipped. Without always()
+    # a skipped one would block this job forever.
     if: always() && !cancelled() && !failure()
     timeout-minutes: 20
 

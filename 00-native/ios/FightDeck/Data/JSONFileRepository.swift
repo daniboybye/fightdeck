@@ -33,17 +33,17 @@ final class JSONFileRepository: FightRepository, @unchecked Sendable {
 
     func imageURL(for relativePath: String) -> URL? {
         guard LocalAssetServer.port > 0 else { return nil }
-        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(relativePath)")
+        return .init(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(relativePath)")
     }
 
     private func load<T: Decodable & Sendable>(file: String, key: String) async throws -> [T] {
         let url = datasetRoot.appendingPathComponent(file)
         // Every caller is main-actor isolated, and an async function that never suspends runs
-        // on the caller's executor — so without this hop the read and decode block the UI.
+        // on the caller's executor — without this hop the read and decode block the UI.
         return try await Task.detached(priority: .userInitiated) {
             let data: Data
             do {
-                data = try Data(contentsOf: url)
+                data = try .init(contentsOf: url)
             } catch {
                 throw RepositoryError.network(retryable: false)
             }

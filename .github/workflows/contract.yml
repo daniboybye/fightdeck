@@ -53,7 +53,7 @@ jobs:
       - name: Guard
         id: guard
         run: |
-          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+          if [[ -f 02-core-rust/sdks/Cargo.toml ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -72,13 +72,13 @@ jobs:
           key: contract
       - name: Run fixtures
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 02-core-rust/sdks/core
-        run: cargo test --release
+        working-directory: 02-core-rust/sdks
+        run: cargo test --workspace --release
       - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true' && always()
         with:
           name: contract-rust
-          path: 02-core-rust/sdks/core/out/contract-*.json
+          path: 02-core-rust/sdks/out/contract-*.json
           if-no-files-found: ignore
 
   native-baseline:

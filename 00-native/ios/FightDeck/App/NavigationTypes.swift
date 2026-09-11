@@ -8,9 +8,8 @@
 
 import Foundation
 
-/// Both event tabs render the same two events. The mode decides which half of the data is
-/// relevant: betting needs odds and must not spoil the result, browsing history needs the
-/// result and has nothing to bet on.
+/// Both event tabs render the same two events; the mode decides which half of the data is
+/// relevant. Betting must not spoil the result, and history has nothing to bet on.
 enum EventMode: Hashable {
     case upcoming
     case past
@@ -27,8 +26,6 @@ enum EventMode: Hashable {
     var showsResults: Bool { self == .past }
 }
 
-/// Shared by both event tabs. The article and video cases are only ever pushed from the past
-/// tab, since news and press conferences are reporting on fights that already happened.
 enum EventsRoute: Hashable {
     case event(String)
     case bout(eventID: String, boutID: String)

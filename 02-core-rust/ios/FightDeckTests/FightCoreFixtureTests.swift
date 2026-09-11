@@ -6,13 +6,16 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
+import FightEvents
+import FightSlip
 import Foundation
 import Testing
 @testable import FightDeck
 
 @Suite("FightCore fixtures")
 struct FightCoreFixtureTests {
-    private var core: FightCoreHandle { fixtureFightCore() }
+    private var core: SlipHandle { fixtureSlipHandle() }
 
     @Test("odds-conversion.json")
     func oddsConversion() throws {
@@ -105,22 +108,24 @@ struct FightCoreFixtureTests {
     }
 }
 
-private func fixtureFightCore() -> FightCoreHandle {
-    let datasetURL = FixtureLoader.fixturesDirectory
+/// FightEvents parses the dataset and FightSlip validates against it: the fixtures only pass
+/// when both SDKs agree on the same bout index.
+private func fixtureSlipHandle() -> SlipHandle {
+    let datasetRoot = FixtureLoader.fixturesDirectory
         .deletingLastPathComponent()
         .deletingLastPathComponent()
-        .appendingPathComponent("dataset/events.json")
-    let data = try! Data(contentsOf: datasetURL)
-    let events = try! JSONDecoder().decode(EventsFile.self, from: data)
-    let bouts = events.events.flatMap(\.bouts).map { bout in
+        .appendingPathComponent("dataset")
+    let events = try! String(contentsOf: datasetRoot.appendingPathComponent("events.json"), encoding: .utf8)
+    let fighters = try! String(contentsOf: datasetRoot.appendingPathComponent("fighters.json"), encoding: .utf8)
+    let catalog = try! EventCatalog.parse(eventsJson: events, fightersJson: fighters)
+    return SlipHandle(bouts: catalog.boutIndex().map {
         BoutIndexRecord(
-            id: bout.id,
-            redFighterId: bout.redCorner.fighterId,
-            blueFighterId: bout.blueCorner.fighterId,
-            winnerId: bout.result.winnerId
+            id: $0.id,
+            redFighterId: $0.redFighterId,
+            blueFighterId: $0.blueFighterId,
+            winnerId: $0.winnerId
         )
-    }
-    return FightCoreHandle(bouts: bouts)
+    })
 }
 
 private func settlementStatusCode(_ status: SettlementStatusRecord) -> String {
@@ -259,29 +264,6 @@ private struct SelectionFixture: Decodable {
     var record: SelectionRecord {
         SelectionRecord(boutId: boutId, fighterId: fighterId, odds: odds)
     }
-}
-
-private struct EventsFile: Decodable {
-    let events: [EventDTO]
-}
-
-private struct EventDTO: Decodable {
-    let bouts: [BoutDTO]
-}
-
-private struct BoutDTO: Decodable {
-    let id: String
-    let redCorner: CornerDTO
-    let blueCorner: CornerDTO
-    let result: ResultDTO
-}
-
-private struct CornerDTO: Decodable {
-    let fighterId: String
-}
-
-private struct ResultDTO: Decodable {
-    let winnerId: String
 }
 
 private func betMode(_ raw: String) -> BetModeRecord {

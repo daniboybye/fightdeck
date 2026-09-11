@@ -8,6 +8,7 @@
 
 import XCTest
 
+@MainActor
 final class ScreenshotTour: XCTestCase {
     func testTour() {
         let app = XCUIApplication()

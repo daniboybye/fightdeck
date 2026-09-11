@@ -94,44 +94,37 @@ struct BoutDetailView: View {
     /// `Grid` sizes every column to its widest cell and centres the whole block, which leaves
     /// both fighters floating in the middle of the card.
     private var taleOfTheTape: some View {
-        Grid(horizontalSpacing: DesignTokens.Spacing.md, verticalSpacing: DesignTokens.Spacing.md) {
-            ForEach(tapeRows, id: \.label) { row in
-                GridRow {
-                    Text(row.red)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(row.label)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .gridColumnAlignment(.center)
-                    Text(row.blue)
-                        .multilineTextAlignment(.trailing)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+        let tape = try? state.catalog.taleOfTheTape(boutId: bout.id)
+        return VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+            Grid(horizontalSpacing: DesignTokens.Spacing.md, verticalSpacing: DesignTokens.Spacing.md) {
+                ForEach(tape?.rows ?? [], id: \.label) { row in
+                    GridRow {
+                        Text(row.red)
+                            .fontWeight(row.advantage == .red ? .semibold : .regular)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(row.label)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .gridColumnAlignment(.center)
+                        Text(row.blue)
+                            .fontWeight(row.advantage == .blue ? .semibold : .regular)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                    .font(.callout)
+                    // A long country name is worth two lines. Without this the grid hands the
+                    // cell its one-line ideal width and truncates instead.
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .font(.callout)
-                // A long country name is worth two lines. Without this the grid hands the
-                // cell its one-line ideal width and truncates instead.
-                .fixedSize(horizontal: false, vertical: true)
+            }
+            if let edge = tape?.edgeSummary {
+                Text(edge)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, DesignTokens.Spacing.xs)
-    }
-
-    private var tapeRows: [(label: String, red: String, blue: String)] {
-        let red = state.fighter(bout.redCorner.fighterId)
-        let blue = state.fighter(bout.blueCorner.fighterId)
-        return [
-            ("RECORD", red?.recordDisplay ?? "—", blue?.recordDisplay ?? "—"),
-            ("HEIGHT", format(red?.heightCm, unit: "cm"), format(blue?.heightCm, unit: "cm")),
-            ("REACH", format(red?.reachIn, unit: "in"), format(blue?.reachIn, unit: "in")),
-            ("STANCE", red?.stance?.localizedCapitalized ?? "—", blue?.stance?.localizedCapitalized ?? "—"),
-            ("COUNTRY", red?.country ?? "—", blue?.country ?? "—"),
-        ]
-    }
-
-    private func format(_ value: Int?, unit: String) -> String {
-        guard let value else { return "—" }
-        return "\(value) \(unit)"
     }
 
     /// An `HStack` rather than `LabeledContent`: an avatar plus two lines of text is enough to

@@ -84,9 +84,9 @@ Committed `.xcodeproj` files exist for convenience, but stale projects are a com
 UniFFI bindings and native libraries are **build output**, not committed. Package once:
 
 ```bash
-cd "$REPO/02-core-rust/sdks/core"
-./build-xcframework.sh    # → out/FightCore.xcframework (+ syncs ios/FightDeck/Generated/)
-./build-aar.sh            # → out/fightcore.aar (+ syncs android jniLibs/)
+cd "$REPO/02-core-rust/sdks"
+./build-apple.sh          # → {core,slip,events}/out/*.xcframework, bindings into each package
+./build-android.sh        # → {core,slip,events}/out/android/*.aar (+ syncs jniLibs/ and uniffi/)
 ```
 
 ### 4. SDK approaches (`03-sdk-rn`, `04-sdk-skip`)
@@ -306,7 +306,7 @@ done
 | Core | Command |
 | --- | --- |
 | Swift (`01-core-swift/sdks/core`) | `cd 01-core-swift/sdks/core && swift test` |
-| Rust (`02-core-rust/sdks/core`) | `cd 02-core-rust/sdks/core && cargo test --release` |
+| Rust (`02-core-rust/sdks`) | `cd 02-core-rust/sdks && cargo test --workspace --release` |
 | TypeScript RN (`03-sdk-rn/sdks/core`) | `cd 03-sdk-rn/sdks/core && npm test` |
 | Skip Swift (`04-sdk-skip/sdks/core`) | `cd 04-sdk-skip/sdks/core && FIGHTDECK_FIXTURES_ROOT="$REPO/contract/fixtures" swift test` |
 
@@ -360,7 +360,7 @@ cd "$REPO/03-sdk-rn/android"
 | Xcode project out of date / missing files | `project.yml` changed but `.xcodeproj` not regenerated | `cd <approach>/ios && xcodegen generate` |
 | `Validate plug-in "skipstone" in package "skip"` | Skip SPM plugin not trusted in Xcode 26 | Add `-skipPackagePluginValidation -skipMacroValidation` to every `04-sdk-skip` `xcodebuild` invocation |
 | RN iOS link errors / missing React | Built `.xcodeproj` instead of workspace | Use `-workspace FightDeck.xcworkspace` after `pod install` in `03-sdk-rn/ios` |
-| `02-core-rust` iOS: missing `FightCore.xcframework` or `Generated/` | Rust artifacts not built | `cd 02-core-rust/sdks/core && ./build-xcframework.sh` |
+| `02-core-rust` iOS: missing `FightCore`/`FightSlip`/`FightEvents.xcframework` or `Generated/` | Rust artifacts not built | `cd 02-core-rust/sdks && ./build-apple.sh` |
 | App shows empty events / 404 images | Dataset env/path wrong | **iOS:** set `FIGHTDECK_DATASET_ROOT` or `SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT`. **Android:** push to `/data/local/tmp/fightdeck/dataset` |
 | Updated dataset but UI unchanged | `adb push` nested into `.../dataset/dataset/` | `adb shell rm -rf /data/local/tmp/fightdeck/dataset` then push again |
 | Regenerated art, images still old | Coil / Kingfisher cache by URL | `adb shell pm clear <applicationId>`; iOS: `xcrun simctl uninstall booted <bundleId>` then reinstall |

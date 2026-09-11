@@ -116,11 +116,12 @@ import com.fightdeck.rust.data.NewsItem
 import com.fightdeck.rust.design.BalanceMenuAction
 import com.fightdeck.rust.design.Tokens
 import com.fightdeck.rust.core.FightCoreDisplay
-import uniffi.fightcore.validationErrorCode
+import uniffi.fightslip.betTypeTitle
+import uniffi.fightslip.validationErrorCode
 import java.math.RoundingMode
-import uniffi.fightcore.BetModeRecord
-import uniffi.fightcore.BetSlipRecord
-import uniffi.fightcore.SlipStateRecord
+import uniffi.fightevents.EventCatalog
+import uniffi.fightslip.BetSlipRecord
+import uniffi.fightslip.SlipStateRecord
 
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -514,8 +515,6 @@ private fun SlipNavHost(
                 slip = slip,
                 slipState = slipState,
                 balance = balance,
-                fighters = (fighters as? LoadState.Loaded)?.value.orEmpty(),
-                events = (events as? LoadState.Loaded)?.value.orEmpty(),
                 placedMessage = placedMessage,
                 onBrowseEvents = onBrowseEvents,
                 onDeposit = onDeposit,
@@ -1236,7 +1235,7 @@ private fun BoutDetailScreen(
                 }
             }
             item { SectionHeader("Tale of the tape") }
-            item { TaleOfTheTape(bout, fighters) }
+            item { TaleOfTheTape(bout, viewModel.requireCatalog()) }
             if (mode.showsOdds) {
                 item { SectionHeader("Outright winner") }
                 item {
@@ -1325,10 +1324,8 @@ private fun FighterHero(
 }
 
 @Composable
-private fun TaleOfTheTape(bout: BoutItem, fighters: List<FighterItem>) {
-    fun of(id: String): FighterItem? = fighters.firstOrNull { it.id == id }
-    val red = of(bout.redCorner.fighterId)
-    val blue = of(bout.blueCorner.fighterId)
+private fun TaleOfTheTape(bout: BoutItem, catalog: EventCatalog) {
+    val tape = runCatching { catalog.taleOfTheTape(bout.id) }.getOrNull()
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -1338,11 +1335,14 @@ private fun TaleOfTheTape(bout: BoutItem, fighters: List<FighterItem>) {
             Modifier.padding(Tokens.spacingLg),
             verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
         ) {
-            TapeRow(red?.record?.display, "RECORD", blue?.record?.display)
-            TapeRow(red?.heightCm?.let { "$it cm" }, "HEIGHT", blue?.heightCm?.let { "$it cm" })
-            TapeRow(red?.reachIn?.let { "$it in" }, "REACH", blue?.reachIn?.let { "$it in" })
-            TapeRow(red?.stance?.replaceFirstChar { it.uppercase() }, "STANCE", blue?.stance?.replaceFirstChar { it.uppercase() })
-            TapeRow(red?.country, "COUNTRY", blue?.country)
+            tape?.rows?.forEach { TapeRow(it.red, it.label, it.blue) }
+            tape?.edgeSummary?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -1655,8 +1655,6 @@ private fun BetSlipScreen(
     slip: BetSlipRecord,
     slipState: SlipStateRecord,
     balance: String,
-    fighters: List<FighterItem>,
-    events: List<EventItem>,
     placedMessage: String?,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,
@@ -1737,22 +1735,10 @@ private fun BetSlipScreen(
                     verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                 ) {
                     item {
-                        SectionHeader(if (slip.mode == BetModeRecord.ACCUMULATOR) "Accumulator" else "Single")
+                        SectionHeader(betTypeTitle(slip.mode))
                     }
                     items(slip.selections, key = { "${it.boutId}-${it.fighterId}" }) { selection ->
-                        val name = fighters.firstOrNull { it.id == selection.fighterId }?.name
-                            ?: selection.fighterId
-                        val event = events.firstOrNull { event ->
-                            event.bouts.any { it.id == selection.boutId }
-                        }
-                        val opponentBout = event?.bouts?.firstOrNull { it.id == selection.boutId }
-                        val opponentName = opponentBout?.let { bout ->
-                            when (selection.fighterId) {
-                                bout.redCorner.fighterId -> bout.blueCorner.name
-                                bout.blueCorner.fighterId -> bout.redCorner.name
-                                else -> "—"
-                            }
-                        } ?: "—"
+                        val leg = viewModel.requireCatalog().legContext(selection.boutId, selection.fighterId)
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -1766,9 +1752,9 @@ private fun BetSlipScreen(
                                 verticalAlignment = Alignment.Top,
                             ) {
                                 Column(Modifier.weight(1f)) {
-                                    Text(name, style = MaterialTheme.typography.bodyLarge)
+                                    Text(leg.fighterName, style = MaterialTheme.typography.bodyLarge)
                                     Text(
-                                        "vs $opponentName · ${event?.name ?: "—"}",
+                                        leg.subtitle,
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -1870,10 +1856,7 @@ private fun SummaryBlock(state: SlipStateRecord) {
             Modifier.padding(Tokens.spacingLg),
             verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
         ) {
-            DetailRow("Total stake", FightCoreDisplay.formatCurrencyAmount(state.totalStake))
-            state.combinedOddsDisplay?.let { DetailRow("Combined odds", FightCoreDisplay.formatOdds(it)) }
-            DetailRow("Potential return", FightCoreDisplay.formatCurrencyAmount(state.potentialReturn))
-            DetailRow("Potential profit", FightCoreDisplay.formatCurrencyAmount(state.potentialProfit))
+            state.summaryRows.forEach { DetailRow(it.label, it.value) }
         }
     }
 }
@@ -2142,9 +2125,8 @@ private fun Modifier.fixedActionHeight(height: Dp = Tokens.primaryActionHeight):
         .heightIn(max = height)
         .height(height)
 
-/** `split_decision` reads as a database column; `Split decision` reads as a result. */
 private val String.displayMethod: String
-    get() = replace('_', ' ').replaceFirstChar { it.uppercase() }
+    get() = uniffi.fightevents.humaniseCode(this)
 
 /** Dataset dates are plain `yyyy-MM-dd`; the raw form reads as a database column. */
 private val String.displayDate: String

@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Builds one Rust crate into one SPM package: an xcframework carrying the staticlib, plus the
+# UniFFI bindings written into the package's Sources.
+#
+# Each SDK ships separately, as its own SwiftPM package with its own binary target. The feature
+# crates statically link fightcore; the app-level linker keeps a single copy, which is why three
+# packages do not cost three copies of the kernel.
+#
+# usage: build-xcframework.sh <crate> <uniffi-namespace> <FrameworkName> <package-dir>
+set -euo pipefail
+
+CRATE="${1:?usage: build-xcframework.sh <crate> <namespace> <FrameworkName> <package-dir>}"
+NAMESPACE="${2:?missing uniffi namespace}"
+FRAMEWORK="${3:?missing framework name}"
+PKG="$(cd "${4:?missing package dir}" && pwd)"
+
+SDKS="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$SDKS"
+export PATH="${HOME}/.cargo/bin:${PATH}"
+
+DEVICE=aarch64-apple-ios
+SIM_ARM=aarch64-apple-ios-sim
+SIM_X86=x86_64-apple-ios
+
+for target in "$DEVICE" "$SIM_ARM" "$SIM_X86"; do
+  rustup target add "$target" >/dev/null 2>&1 || true
+  cargo build --release -p "$CRATE" --target "$target"
+done
+
+OUT="$PKG/out"
+SWIFT_SRC="$PKG/Sources/$FRAMEWORK"
+FFI_INCLUDE="$PKG/Sources/${NAMESPACE}FFI/include"
+# Targeted rather than `rm -rf "$OUT"`, which would take build-aar.sh's output with it.
+rm -rf "$OUT/$FRAMEWORK.xcframework" "$OUT/$FRAMEWORK.xcframework.zip" "$SWIFT_SRC" "$FFI_INCLUDE"
+mkdir -p "$OUT" "$SWIFT_SRC" "$FFI_INCLUDE"
+
+# Library mode also reports the metadata of statically linked dependencies, so generate into
+# a scratch directory and keep only this SDK's module.
+SCRATCH="$(mktemp -d)"
+trap 'rm -rf "$SCRATCH"' EXIT
+cargo run --release -p fightcore --bin uniffi-bindgen --features uniffi-bindgen -- \
+  generate \
+  --library "$SDKS/target/$DEVICE/release/lib${CRATE}.a" \
+  --language swift \
+  --out-dir "$SCRATCH"
+
+for file in "$NAMESPACE.swift" "${NAMESPACE}FFI.h"; do
+  [ -f "$SCRATCH/$file" ] || { echo "build-xcframework: $NAMESPACE did not produce $file" >&2; exit 1; }
+done
+
+cp "$SCRATCH/$NAMESPACE.swift" "$SWIFT_SRC/$NAMESPACE.swift"
+cp "$SCRATCH/${NAMESPACE}FFI.h" "$FFI_INCLUDE/${NAMESPACE}FFI.h"
+
+# UniFFI's own modulemap carries `use` declarations for Darwin submodules that SwiftPM does not
+# put on the include path. SwiftPM only needs the umbrella, and it has to be named
+# module.modulemap for a C target to pick it up.
+cat > "$FFI_INCLUDE/module.modulemap" <<EOF
+module ${NAMESPACE}FFI {
+    header "${NAMESPACE}FFI.h"
+    export *
+}
+EOF
+
+# One simulator slice covering both architectures, or a Release build that is not restricted
+# to the active arch fails to link on the x86_64 simulator.
+FAT_SIM="$SCRATCH/lib${CRATE}-sim.a"
+lipo -create \
+  "$SDKS/target/$SIM_ARM/release/lib${CRATE}.a" \
+  "$SDKS/target/$SIM_X86/release/lib${CRATE}.a" \
+  -output "$FAT_SIM"
+
+# No `-headers`: the C header ships as a SwiftPM target above, where each package gets its own
+# include directory. Folding it into the xcframework would make Xcode copy all three module maps
+# into one include/, and they collide on the filename.
+xcodebuild -create-xcframework \
+  -library "$SDKS/target/$DEVICE/release/lib${CRATE}.a" \
+  -library "$FAT_SIM" \
+  -output "$OUT/$FRAMEWORK.xcframework" >/dev/null
+
+# A binary target's zip has to hold the xcframework and nothing else.
+(
+  cd "$OUT"
+  zip -rq "$FRAMEWORK.xcframework.zip" "$FRAMEWORK.xcframework"
+)
+
+SIZE=$(du -sh "$OUT/$FRAMEWORK.xcframework" | cut -f1)
+echo "  $FRAMEWORK.xcframework  ($SIZE)  namespace=$NAMESPACE  package=$(basename "$PKG")"

@@ -228,10 +228,10 @@ run_contract_swift() {
 }
 
 run_contract_rust() {
-    guard_file 02-core-rust/sdks/core/Cargo.toml "Rust core not written yet" \
+    guard_file 02-core-rust/sdks/Cargo.toml "Rust core not written yet" \
         || return 0
     ensure_rust
-    (cd 02-core-rust/sdks/core && cargo test --release)
+    (cd 02-core-rust/sdks && cargo test --workspace --release)
 }
 
 run_contract_native() {
@@ -339,26 +339,26 @@ run_sdk_core_swift() {
 # --- sdk-core-rust.yml --------------------------------------------------------------
 
 run_sdk_core_rust_apple() {
-    guard_file 02-core-rust/sdks/core/Cargo.toml || return 0
+    guard_file 02-core-rust/sdks/Cargo.toml || return 0
     ensure_rust
     rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios 2>/dev/null || true
-    (cd 02-core-rust/sdks/core && ./build-xcframework.sh)
+    (cd 02-core-rust/sdks && ./build-apple.sh)
 }
 
 run_sdk_core_rust_android() {
-    guard_file 02-core-rust/sdks/core/Cargo.toml || return 0
+    guard_file 02-core-rust/sdks/Cargo.toml || return 0
     ensure_rust
     rustup target add aarch64-linux-android x86_64-linux-android 2>/dev/null || true
     ensure_cargo_ndk
-    (cd 02-core-rust/sdks/core && ./build-aar.sh)
+    (cd 02-core-rust/sdks && ./build-android.sh)
 }
 
 run_sdk_core_rust_wasm() {
-    guard_file 02-core-rust/sdks/core/Cargo.toml || return 0
+    guard_file 02-core-rust/sdks/Cargo.toml || return 0
     ensure_rust
     rustup target add wasm32-unknown-unknown 2>/dev/null || true
     (
-        cd 02-core-rust/sdks/core
+        cd 02-core-rust/sdks
         cargo build --release --target wasm32-unknown-unknown
         ls -la target/wasm32-unknown-unknown/release/*.wasm
     )
@@ -510,7 +510,7 @@ run_ios_app() {
     if [[ "$approach" == "02-core-rust" ]]; then
         ensure_rust
         rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios 2>/dev/null || true
-        (cd 02-core-rust/sdks/core && ./build-xcframework.sh)
+        (cd 02-core-rust/sdks && ./build-apple.sh)
     fi
 
     if [[ "$SKIP_TESTS" -eq 0 ]]; then
@@ -594,7 +594,7 @@ run_android_app() {
         ensure_rust
         rustup target add aarch64-linux-android x86_64-linux-android 2>/dev/null || true
         ensure_cargo_ndk
-        (cd 02-core-rust/sdks/core && ./build-aar.sh)
+        (cd 02-core-rust/sdks && ./build-android.sh)
     fi
 
     if [[ "$SKIP_TESTS" -eq 0 ]]; then

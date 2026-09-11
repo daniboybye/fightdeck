@@ -5,6 +5,7 @@
 // Deposit UI formatting — not part of FightCore; uses Decimal locally.
 //
 
+import FightCore
 import Foundation
 
 enum DepositMoney {

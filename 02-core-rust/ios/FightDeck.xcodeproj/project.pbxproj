@@ -7,37 +7,40 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0FE2600B8D971FE1ED1E412B /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = 78720776C9C05B178D7B6255 /* FightCore */; };
 		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
 		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
 		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
 		3541578715FFE9CEC805A044 /* FixtureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F09AEF29810752187509740 /* FixtureLoader.swift */; };
 		44956BE7C18423477D63E033 /* DepositMoney.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC8B8A3FD5357CE48E71737 /* DepositMoney.swift */; };
-		4CA0A3975F16693A10482D1D /* FightCore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA88C8DDE8D08AB01162FE23 /* FightCore.xcframework */; };
+		4C5FF29EC91AFACA71BA6224 /* FightEvents in Frameworks */ = {isa = PBXBuildFile; productRef = 4A3B9251D60ABA4CD4FB54AE /* FightEvents */; };
 		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
 		4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */; };
 		4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */; };
-		522DBE610A93E3D90C429077 /* fightcore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494941573AFA03DA57E29891 /* fightcore.swift */; };
 		5AC16DDC8278439AC39636B4 /* DisplayFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCE11576590506A00252D6D /* DisplayFormatting.swift */; };
-		6144D2CBC687417AEC64B1C3 /* FightCore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA88C8DDE8D08AB01162FE23 /* FightCore.xcframework */; };
 		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
+		6F762FE5E19155F1C7F4C06C /* DepositContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = EABF49CC023575873495AFCA /* DepositContract.swift */; };
 		72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
 		8CC540AE2FD450B9960879BA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
+		8D9D6F3D5C283BE96968F992 /* FightSlip in Frameworks */ = {isa = PBXBuildFile; productRef = 7D8400068086060F932DA052 /* FightSlip */; };
+		9FAE979935271512DD91DA3D /* FightEvents in Frameworks */ = {isa = PBXBuildFile; productRef = FF71178CBCAEEB96110B61BD /* FightEvents */; };
 		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
 		B32901AFEBA37B42E2A4E949 /* ScreenshotTour.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */; };
 		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
 		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
 		B6D9AD2AAC514D4E6A09798F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42A7D4655065DF81DD8E152C /* Assets.xcassets */; };
-		B875725E961CB5EF230827FD /* DepositHosting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2485A43DDAE8181054D5F8C2 /* DepositHosting.swift */; };
 		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
 		CC9E2892245D2DFFE2340F88 /* FightCoreGlue.swift in Sources */ = {isa = PBXBuildFile; fileRef = B446C2F8B801B69265FA3752 /* FightCoreGlue.swift */; };
 		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
 		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
+		EC46CD279D0EE48925A18279 /* FightSlip in Frameworks */ = {isa = PBXBuildFile; productRef = 0E46BC8018B687513AC57860 /* FightSlip */; };
 		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
 		F1060FA2A462524D25A47296 /* FightCoreFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D66837804C3536582216021 /* FightCoreFixtureTests.swift */; };
-		F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
+		F2145FE5DA42059AA6E8A9DD /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = D7285AEB9A4CAF9CCC5C0247 /* FightCore */; };
 		F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D0326034EA5B85604BFA1F /* DepositFlowView.swift */; };
+		F502F17CC36E3303471CFBD6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,15 +61,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		03266C4159887301449E7C43 /* fightcoreFFI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fightcoreFFI.h; sourceTree = "<group>"; };
+		082B9B33D487907D6F872D68 /* slip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = slip; path = ../sdks/slip; sourceTree = SOURCE_ROOT; };
 		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
 		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
 		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2485A43DDAE8181054D5F8C2 /* DepositHosting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositHosting.swift; sourceTree = "<group>"; };
+		2085E9D24DAD8A41FD78BA17 /* events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = events; path = ../sdks/events; sourceTree = SOURCE_ROOT; };
+		3C15AC4F04B3055B51F23702 /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../sdks/core; sourceTree = SOURCE_ROOT; };
 		3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceToolbar.swift; sourceTree = "<group>"; };
 		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
 		42A7D4655065DF81DD8E152C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		494941573AFA03DA57E29891 /* fightcore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = fightcore.swift; sourceTree = "<group>"; };
 		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
 		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
 		5CB34A2F61DC158028871445 /* DatasetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetModels.swift; sourceTree = "<group>"; };
@@ -74,7 +77,6 @@
 		5D66837804C3536582216021 /* FightCoreFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreFixtureTests.swift; sourceTree = "<group>"; };
 		61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONFileRepository.swift; sourceTree = "<group>"; };
 		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		6873D3AC06DE9AA39B0F36B0 /* fightcoreFFI.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = fightcoreFFI.modulemap; sourceTree = "<group>"; };
 		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
 		75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositSheetView.swift; sourceTree = "<group>"; };
 		7CC8B8A3FD5357CE48E71737 /* DepositMoney.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositMoney.swift; sourceTree = "<group>"; };
@@ -84,13 +86,13 @@
 		98D0326034EA5B85604BFA1F /* DepositFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositFlowView.swift; sourceTree = "<group>"; };
 		992440A70F2E2DCD051FFF1F /* FightDeck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScreenView.swift; sourceTree = "<group>"; };
-		AA88C8DDE8D08AB01162FE23 /* FightCore.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = FightCore.xcframework; path = ../sdks/core/out/FightCore.xcframework; sourceTree = "<group>"; };
 		AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoutDetailView.swift; sourceTree = "<group>"; };
 		B446C2F8B801B69265FA3752 /* FightCoreGlue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreGlue.swift; sourceTree = "<group>"; };
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
 		C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTour.swift; sourceTree = "<group>"; };
 		D83B2FF9D94616387CC70FFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
+		EABF49CC023575873495AFCA /* DepositContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositContract.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 		FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -100,7 +102,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6144D2CBC687417AEC64B1C3 /* FightCore.xcframework in Frameworks */,
+				0FE2600B8D971FE1ED1E412B /* FightCore in Frameworks */,
+				EC46CD279D0EE48925A18279 /* FightSlip in Frameworks */,
+				4C5FF29EC91AFACA71BA6224 /* FightEvents in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,8 +112,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4CA0A3975F16693A10482D1D /* FightCore.xcframework in Frameworks */,
-				F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */,
+				F2145FE5DA42059AA6E8A9DD /* FightCore in Frameworks */,
+				8D9D6F3D5C283BE96968F992 /* FightSlip in Frameworks */,
+				9FAE979935271512DD91DA3D /* FightEvents in Frameworks */,
+				F502F17CC36E3303471CFBD6 /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -151,7 +157,6 @@
 				597885188A52341204C88A1C /* Deposit */,
 				AC106BAA8D8C9E35E88A5DB7 /* Design */,
 				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
-				9DB30B02F6D5FF14A9B89E9A /* Generated */,
 				FE9EE388C310ED4AB6AE0712 /* Services */,
 				42A7D4655065DF81DD8E152C /* Assets.xcassets */,
 				D83B2FF9D94616387CC70FFE /* Info.plist */,
@@ -170,8 +175,8 @@
 		597885188A52341204C88A1C /* Deposit */ = {
 			isa = PBXGroup;
 			children = (
+				EABF49CC023575873495AFCA /* DepositContract.swift */,
 				98D0326034EA5B85604BFA1F /* DepositFlowView.swift */,
-				2485A43DDAE8181054D5F8C2 /* DepositHosting.swift */,
 				7CC8B8A3FD5357CE48E71737 /* DepositMoney.swift */,
 				75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */,
 			);
@@ -186,31 +191,13 @@
 			path = News;
 			sourceTree = "<group>";
 		};
-		82C37178834349B1B81A4370 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				AA88C8DDE8D08AB01162FE23 /* FightCore.xcframework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		9DB30B02F6D5FF14A9B89E9A /* Generated */ = {
-			isa = PBXGroup;
-			children = (
-				494941573AFA03DA57E29891 /* fightcore.swift */,
-				03266C4159887301449E7C43 /* fightcoreFFI.h */,
-				6873D3AC06DE9AA39B0F36B0 /* fightcoreFFI.modulemap */,
-			);
-			path = Generated;
-			sourceTree = "<group>";
-		};
 		9F8C945A0C8FB47D84AF102F = {
 			isa = PBXGroup;
 			children = (
 				1A992D0B696BC9CBBD148621 /* FightDeck */,
 				0AF51DEFCBAE2066E68C8B5A /* FightDeckTests */,
 				E3612764317CDA593DFB745F /* FightDeckUITests */,
-				82C37178834349B1B81A4370 /* Frameworks */,
+				C9BD2751AFE81497FA442198 /* Packages */,
 				A1088A6E4DD381B5E286242F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -253,6 +240,16 @@
 				B3841DF99C502708B47473FF /* Video */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		C9BD2751AFE81497FA442198 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				3C15AC4F04B3055B51F23702 /* core */,
+				2085E9D24DAD8A41FD78BA17 /* events */,
+				082B9B33D487907D6F872D68 /* slip */,
+			);
+			name = Packages;
 			sourceTree = "<group>";
 		};
 		D683F966B6BF1040B731A301 /* Events */ = {
@@ -336,6 +333,9 @@
 			);
 			name = FightDeck;
 			packageProductDependencies = (
+				D7285AEB9A4CAF9CCC5C0247 /* FightCore */,
+				7D8400068086060F932DA052 /* FightSlip */,
+				FF71178CBCAEEB96110B61BD /* FightEvents */,
 				EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */,
 			);
 			productName = FightDeck;
@@ -356,6 +356,9 @@
 			);
 			name = FightDeckTests;
 			packageProductDependencies = (
+				78720776C9C05B178D7B6255 /* FightCore */,
+				0E46BC8018B687513AC57860 /* FightSlip */,
+				4A3B9251D60ABA4CD4FB54AE /* FightEvents */,
 			);
 			productName = FightDeckTests;
 			productReference = FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */;
@@ -393,6 +396,9 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */,
+				7B3A75B74CE49E3D34A5C416 /* XCLocalSwiftPackageReference "../sdks/events" */,
+				A9C115EDC86C9FEC12420479 /* XCLocalSwiftPackageReference "../sdks/slip" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A1088A6E4DD381B5E286242F /* Products */;
@@ -426,8 +432,8 @@
 				4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */,
 				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
 				6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */,
+				6F762FE5E19155F1C7F4C06C /* DepositContract.swift in Sources */,
 				F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */,
-				B875725E961CB5EF230827FD /* DepositHosting.swift in Sources */,
 				44956BE7C18423477D63E033 /* DepositMoney.swift in Sources */,
 				4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */,
 				72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */,
@@ -445,7 +451,6 @@
 				4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */,
 				CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */,
 				D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */,
-				522DBE610A93E3D90C429077 /* fightcore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -486,34 +491,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SRCROOT)/../sdks/core/out",
-					"\"../sdks/core/out\"",
-				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				OTHER_CFLAGS = (
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				OTHER_LDFLAGS = (
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = (
-					"-Xcc",
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.rust.tests;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FightDeck.app/FightDeck";
 			};
@@ -574,7 +562,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
@@ -584,14 +572,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SRCROOT)/../sdks/core/out",
-					"\"../sdks/core/out\"",
-				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 2 Rust";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
@@ -601,21 +582,11 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_CFLAGS = (
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				OTHER_LDFLAGS = (
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = (
-					"-Xcc",
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.rust;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -641,34 +612,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SRCROOT)/../sdks/core/out",
-					"\"../sdks/core/out\"",
-				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				OTHER_CFLAGS = (
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				OTHER_LDFLAGS = (
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = (
-					"-Xcc",
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.rust.tests;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FightDeck.app/FightDeck";
 			};
@@ -679,14 +633,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SRCROOT)/../sdks/core/out",
-					"\"../sdks/core/out\"",
-				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				INFOPLIST_FILE = FightDeck/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "FD 2 Rust";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
@@ -696,21 +643,11 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_CFLAGS = (
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				OTHER_LDFLAGS = (
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = (
-					"-Xcc",
-					"-fmodule-map-file=$(SRCROOT)/FightDeck/Generated/fightcoreFFI.modulemap",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.rust;
 				SDKROOT = iphoneos;
-				SWIFT_INCLUDE_PATHS = (
-					"$(SRCROOT)/FightDeck/Generated",
-				);
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -777,7 +714,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
@@ -840,6 +777,21 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		7B3A75B74CE49E3D34A5C416 /* XCLocalSwiftPackageReference "../sdks/events" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/events;
+		};
+		826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/core;
+		};
+		A9C115EDC86C9FEC12420479 /* XCLocalSwiftPackageReference "../sdks/slip" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/slip;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -852,10 +804,34 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0E46BC8018B687513AC57860 /* FightSlip */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightSlip;
+		};
+		4A3B9251D60ABA4CD4FB54AE /* FightEvents */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightEvents;
+		};
+		78720776C9C05B178D7B6255 /* FightCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightCore;
+		};
+		7D8400068086060F932DA052 /* FightSlip */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightSlip;
+		};
+		D7285AEB9A4CAF9CCC5C0247 /* FightCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightCore;
+		};
 		EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		FF71178CBCAEEB96110B61BD /* FightEvents */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightEvents;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

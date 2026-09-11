@@ -1,7 +1,8 @@
 use fightcore::{
-    decimal_to_fractional, fractional_to_decimal, implied_probability, BetMode, BetSlip,
-    BoutIndex, FightCore, Selection, format, format_exact_odds, parse,
+    decimal_to_fractional, format, format_exact_odds, fractional_to_decimal, implied_probability,
+    parse, BetMode, BetSlip, BoutIndex, Selection,
 };
+use fightslip::SlipEngine;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::fs;
@@ -19,7 +20,7 @@ fn dataset_events_path() -> PathBuf {
         .join("dataset/events.json")
 }
 
-fn fixture_core() -> FightCore {
+fn fixture_core() -> SlipEngine {
     let data = fs::read_to_string(dataset_events_path()).expect("events.json");
     let events: EventsFile = serde_json::from_str(&data).expect("parse events");
     let bouts = events
@@ -33,7 +34,7 @@ fn fixture_core() -> FightCore {
             winner_id: b.result.winner_id,
         })
         .collect();
-    FightCore::new(bouts)
+    SlipEngine::new(bouts)
 }
 
 #[test]
@@ -135,11 +136,11 @@ fn settlement_fixtures() {
         let result = core.settle(&slip, &voided);
         assert_eq!(format(result.returned), case.expect.returned, "case {} returned", case.id);
         assert_eq!(format(result.profit), case.expect.profit, "case {} profit", case.id);
-        assert_eq!(result.status.as_str(), case.expect.status, "case {} status", case.id);
+        assert_eq!(result.status.code(), case.expect.status, "case {} status", case.id);
         for (leg, expected) in result.legs.iter().zip(case.expect.legs.iter()) {
             assert_eq!(leg.bout_id, expected.bout_id);
             assert_eq!(leg.fighter_id, expected.fighter_id);
-            assert_eq!(leg.outcome.as_str(), expected.outcome);
+            assert_eq!(leg.outcome.code(), expected.outcome);
         }
     }
     assert_eq!(root.cases.len(), 7);
@@ -199,7 +200,7 @@ struct SlipMathCase {
 impl SlipMathCase {
     fn slip(&self) -> BetSlip {
         BetSlip {
-            mode: BetMode::from_str(&self.mode),
+            mode: BetMode::parse(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
             stake_raw: self.stake.clone(),
@@ -239,7 +240,7 @@ struct SlipValidationCase {
 impl SlipValidationCase {
     fn slip(&self) -> BetSlip {
         BetSlip {
-            mode: BetMode::from_str(&self.mode),
+            mode: BetMode::parse(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
             stake_raw: self.stake.clone(),
@@ -271,7 +272,7 @@ struct SettlementCase {
 impl SettlementCase {
     fn slip(&self) -> BetSlip {
         BetSlip {
-            mode: BetMode::from_str(&self.mode),
+            mode: BetMode::parse(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
             stake_raw: self.stake.clone(),
@@ -319,7 +320,7 @@ struct CashOutCase {
 impl CashOutCase {
     fn slip(&self) -> BetSlip {
         BetSlip {
-            mode: BetMode::from_str(&self.mode),
+            mode: BetMode::parse(&self.mode),
             selections: self.selections.iter().map(|s| s.to_selection()).collect(),
             stake: parse(&self.stake),
             stake_raw: self.stake.clone(),

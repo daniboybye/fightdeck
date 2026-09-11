@@ -8,9 +8,8 @@
 
 import SwiftUI
 
-/// Only the values the system cannot supply live here. Type sizes come from `Font` so the
-/// app scales with Dynamic Type, and surfaces come from the grouped-list backgrounds so
-/// Liquid Glass has something real to sample.
+/// Only the values the system cannot supply. Type sizes come from `Font` so the app scales
+/// with Dynamic Type, and surfaces come from the grouped-list backgrounds.
 enum DesignTokens {
     enum ColorToken {
         static let accent = Color(hex: "#E8B33C")
@@ -35,23 +34,14 @@ enum DesignTokens {
         static let lg: CGFloat = 16
     }
 
+    /// 44pt is the Human Interface Guidelines floor for anything tappable, and also the
+    /// ceiling for a button: taller reads as a banner.
     enum Layout {
-        /// The floor the Human Interface Guidelines put on any control you can tap. Button
-        /// styles size to their label, which lands well under it for a one-line title.
         static let minTapTarget: CGFloat = 44
-        /// A full-width call to action. The tap-target floor is also the ceiling: anything
-        /// taller reads as a banner rather than a button.
         static let primaryActionHeight: CGFloat = 44
-        /// Chips, keyboard dismissal and the confirmation acknowledgement — present enough to
-        /// hit, quiet enough not to compete with the primary action.
         static let secondaryActionHeight: CGFloat = 44
-        /// Horizontal breathing room for a button that hugs its label instead of filling a bar.
         static let secondaryActionPadding: CGFloat = 24
-        /// Keeps a pinned action bar off whatever sits below it — tab bar or keyboard.
         static let actionBarGap: CGFloat = 12
-        /// The floating tab bar's capsule rises above the safe area it reports, so a bar
-        /// sitting on it needs more than `actionBarGap` to read as separate.
-        static let tabBarActionGap: CGFloat = 20
         /// What an odds pill asks for before the bordered style pads it out to the tap target.
         static let oddsLabelHeight: CGFloat = 30
         static let mediaTileAspectRatio: CGFloat = 16 / 9
@@ -59,17 +49,9 @@ enum DesignTokens {
     }
 }
 
-extension View {
-    /// Grows a control to the 44pt tap-target floor without changing how it looks.
-    func minimumTapTarget() -> some View {
-        frame(minHeight: DesignTokens.Layout.minTapTarget)
-            .contentShape(.rect)
-    }
-}
-
 private extension Color {
     init(hex: String) {
-        let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        let cleaned = hex.trimmingCharacters(in: .alphanumerics.inverted)
         var value: UInt64 = 0
         Scanner(string: cleaned).scanHexInt64(&value)
         let red = Double((value >> 16) & 0xFF) / 255

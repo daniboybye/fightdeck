@@ -165,10 +165,10 @@ jobs:
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
         run: command -v cargo-ndk >/dev/null || cargo install cargo-ndk --version "$PINNED_CARGO_NDK" --locked
 
-      - name: Package the Rust core
+      - name: Package the Rust SDKs
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
-        working-directory: 02-core-rust/sdks/core
-        run: ./build-aar.sh
+        working-directory: 02-core-rust/sdks
+        run: ./build-android.sh
 
       # `test` rather than a named variant: AGP only wires unit tests to the test build
       # type, and the flavoured hosts would need a different task name than the rest.

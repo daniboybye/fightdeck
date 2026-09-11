@@ -54,7 +54,7 @@ struct SkeletonListView: View {
                 Text("Placeholder venue and city")
                     .font(.subheadline)
             }
-            .listRowInsets(EdgeInsets())
+            .listRowInsets(.init())
         }
         .listStyle(.insetGrouped)
         .redacted(reason: .placeholder)
@@ -77,10 +77,6 @@ struct RemoteImage: View {
     }
 }
 
-/// The one action a screen exists for. `.glassProminent` sizes itself around its label and
-/// lands near 60pt for a headline title, which reads as a banner; the glass goes on a plain
-/// button instead so the capsule is exactly as tall as the tap target and no taller. The
-/// label carries the frame so every point of that capsule is inside the button.
 struct PrimaryActionButton: View {
     let title: String
     var systemImage: String?
@@ -116,8 +112,6 @@ struct PrimaryActionButton: View {
     }
 }
 
-/// A confirmation or a way out — sized to its label, not to the screen, so it does not read
-/// as the primary action of the view it closes.
 struct SecondaryActionButton: View {
     let title: String
     var isProminent = true
@@ -142,8 +136,6 @@ struct SecondaryActionButton: View {
     }
 }
 
-/// Sits next to the primary action while a number pad is up. The keyboard toolbar placement
-/// would draw this on top of the action bar instead of beside it.
 struct KeyboardDoneButton: View {
     let action: () -> Void
 
@@ -161,8 +153,6 @@ struct KeyboardDoneButton: View {
     }
 }
 
-/// A chip in a row of preset values. Same reason as `PrimaryActionButton` for putting the
-/// frame on the label: the capsule has to grow, not just the space around it.
 struct PresetChipButton: View {
     let title: String
     let action: () -> Void
@@ -181,8 +171,8 @@ struct PresetChipButton: View {
     }
 }
 
-/// Preset chips read as one control broken into parts; the container lets their glass merge
-/// at the edges instead of stacking four separate highlights.
+/// A `GlassEffectContainer` so the chips' glass merges at the edges instead of stacking four
+/// separate highlights.
 struct PresetChipRow<Content: View>: View {
     @ViewBuilder var content: () -> Content
 

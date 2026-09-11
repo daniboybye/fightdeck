@@ -1,0 +1,21 @@
+[package]
+name = "fightslip"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FightSlip — bet slip feature SDK: slip math, validation, settlement, cash-out"
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+name = "fightslip"
+
+[dependencies]
+fightcore.workspace = true
+rust_decimal.workspace = true
+thiserror.workspace = true
+uniffi.workspace = true
+
+
+[dev-dependencies]
+serde = { workspace = true }
+serde_json.workspace = true

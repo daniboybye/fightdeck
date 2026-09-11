@@ -6,11 +6,12 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
 import SwiftUI
 
 struct DepositFlowView: View {
     let params: DepositParams
-    let onResult: @Sendable (DepositResult) -> Void
+    let onResult: DepositResultHandler
 
     @State private var amountText = ""
     @State private var method = DepositMethod.card

@@ -1,24 +1,23 @@
 package com.fightdeck.rust.core
 
-import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import uniffi.fightcore.BetModeRecord
-import uniffi.fightcore.BetSlipRecord
-import uniffi.fightcore.BetSlipStore
-import uniffi.fightcore.SlipStateListener
-import uniffi.fightcore.SlipStateRecord
 import uniffi.fightcore.formatCurrency
 import uniffi.fightcore.formatMoney
 import uniffi.fightcore.impliedProbability
-import uniffi.fightcore.validationErrorCode
+import uniffi.fightslip.BetSlipRecord
+import uniffi.fightslip.BetSlipStore
+import uniffi.fightslip.PlaceBetOutcome
+import uniffi.fightslip.SlipStateListener
+import uniffi.fightslip.SlipStateRecord
 
 /**
- * Hand-written glue: UniFFI exposes [BetSlipStore]; Compose needs a [StateFlow].
+ * The whole hand-written cost of the Rust boundary: UniFFI exposes a listener-based
+ * [BetSlipStore], Compose wants a [StateFlow]. Mode selection, validation and the place-bet
+ * workflow all stay in FightSlip, so this file has no betting rules left in it.
  */
-class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
-    private val store = store
+class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
     private val listener = SlipStateListenerBridge()
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
@@ -32,7 +31,6 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
     val balance: StateFlow<String>
 
     init {
-        store.setMode(BetModeRecord.SINGLE)
         _slipState = MutableStateFlow(store.currentState())
         slipState = _slipState.asStateFlow()
         _slip = MutableStateFlow(store.currentSlip())
@@ -53,48 +51,21 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
     }
 
     fun setStake(stake: String) = store.setStake(stake)
-    fun toggleSelection(boutId: String, fighterId: String, odds: String) {
-        store.toggleSelection(boutId, fighterId, odds)
-        syncMode()
-    }
 
-    fun removeSelection(boutId: String, fighterId: String) {
+    fun toggleSelection(boutId: String, fighterId: String, odds: String) =
+        store.toggleSelection(boutId, fighterId, odds)
+
+    fun removeSelection(boutId: String, fighterId: String) =
         store.removeSelection(boutId, fighterId)
-        syncMode()
-    }
 
     fun isSelected(boutId: String, fighterId: String): Boolean =
         store.isSelected(boutId, fighterId)
 
-    fun deposit(amount: String) = store.deposit(amount)
-
-    fun setBalance(balance: String) = store.setBalance(balance)
-
-    fun placeBet(): SlipStateRecord? {
-        // Straight from the store, not the mirror: listener updates arrive on a later main-thread
-        // post, so right after a stake edit the published copy is one edit behind.
-        val state = store.currentState()
-        if (state.errors.isNotEmpty()) return null
-        val balance = java.math.BigDecimal(store.balance())
-        val stake = java.math.BigDecimal(state.totalStake)
-        store.setBalance((balance - stake).toPlainString())
-        val selections = store.currentSlip().selections.toList()
-        selections.forEach { selection ->
-            store.removeSelection(selection.boutId, selection.fighterId)
-        }
-        syncMode()
-        return state
+    fun deposit(amount: String) {
+        store.deposit(amount)
     }
 
-    private fun syncMode() {
-        val count = store.currentSlip().selections.size
-        val mode = if (count >= FightCoreDisplay.MIN_ACCA_LEGS) {
-            BetModeRecord.ACCUMULATOR
-        } else {
-            BetModeRecord.SINGLE
-        }
-        store.setMode(mode)
-    }
+    fun placeBet(): PlaceBetOutcome = store.placeBet()
 
     override fun close() {
         store.close()
@@ -110,28 +81,9 @@ class StateFlowBetSlipStore(store: BetSlipStore) : AutoCloseable {
     }
 }
 
+/** Thin wrappers over FightCore, so a label never formats money itself. */
 object FightCoreDisplay {
-    const val MIN_ACCA_LEGS = 2
-
     fun formatOdds(odds: String): String = formatMoney(odds)
     fun formatCurrencyAmount(amount: String): String = formatCurrency(amount)
     fun formatImpliedProbability(odds: String): String = impliedProbability(odds)
-
-    fun slipSummary(state: SlipStateRecord): List<Pair<String, String>> = buildList {
-        add("Total stake" to formatCurrencyAmount(state.totalStake))
-        state.combinedOddsDisplay?.let { add("Combined odds" to formatMoney(it)) }
-        add("Potential return" to formatCurrencyAmount(state.potentialReturn))
-        add("Potential profit" to formatCurrencyAmount(state.potentialProfit))
-    }
-}
-
-/** Platform port: [uniffi.fightcore.PreferencesStore] → SharedPreferences. */
-class SharedPreferencesStore(
-    private val preferences: SharedPreferences,
-) : uniffi.fightcore.PreferencesStore {
-    override fun read(key: String): String? = preferences.getString(key, null)
-
-    override fun write(key: String, value: String) {
-        preferences.edit().putString(key, value).apply()
-    }
 }

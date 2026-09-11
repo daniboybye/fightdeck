@@ -2,21 +2,17 @@
 # Local release orchestrator — builds SDK artifacts, checksums them, stages for file://
 # or http://localhost consumption, and prints Package.swift binary-target snippets.
 #
-# Usage: tools/release-sdk-local.sh {rn|skip}
+# Usage: tools/release-sdk-local.sh {rn|skip|rust}
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APPROACH="${1:-}"
 
-if [[ "$APPROACH" != "rn" && "$APPROACH" != "skip" ]]; then
-    echo "usage: $0 {rn|skip}" >&2
-    exit 1
-fi
-
 case "$APPROACH" in
-    rn) APPROACH_DIR="$ROOT/03-sdk-rn" ;;
-    skip) APPROACH_DIR="$ROOT/04-sdk-skip" ;;
-    *) echo "usage: $0 {rn|skip}" >&2; exit 1 ;;
+    rn) APPROACH_DIR="$ROOT/03-sdk-rn"; MODULES=(core deposit betslip) ;;
+    skip) APPROACH_DIR="$ROOT/04-sdk-skip"; MODULES=(core deposit betslip) ;;
+    rust) APPROACH_DIR="$ROOT/02-core-rust"; MODULES=(core slip events) ;;
+    *) echo "usage: $0 {rn|skip|rust}" >&2; exit 1 ;;
 esac
 
 STAGING="$ROOT/tools/out/release/$APPROACH"
@@ -29,7 +25,7 @@ mkdir -p "$STAGING" "$(dirname "$MANIFEST")"
 
 echo "=== Building $APPROACH SDK artifacts ==="
 export FIGHTDECK_LOCAL_SDK=1
-for module in core deposit betslip; do
+for module in "${MODULES[@]}"; do
     mod_dir="$APPROACH_DIR/sdks/$module"
     echo "--- $module: xcframework ---"
     (cd "$mod_dir" && chmod +x ./build-xcframework.sh && ./build-xcframework.sh)
@@ -47,6 +43,10 @@ elif [[ "$APPROACH" == "rn" ]]; then
     cp "$APPROACH_DIR/sdks/core/out/"*.aar "$STAGING/"
     cp "$APPROACH_DIR/sdks/deposit/out/DepositSDK.aar" "$STAGING/"
     cp "$APPROACH_DIR/sdks/betslip/out/BetslipSDK.aar" "$STAGING/"
+elif [[ "$APPROACH" == "rust" ]]; then
+    for module in "${MODULES[@]}"; do
+        cp "$APPROACH_DIR/sdks/$module/out/android/"*.aar "$STAGING/"
+    done
 fi
 
 if [[ "$APPROACH" == "rn" ]]; then

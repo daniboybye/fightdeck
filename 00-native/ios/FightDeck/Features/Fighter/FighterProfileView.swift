@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct FighterProfileView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let fighterID: String
 
     var body: some View {
@@ -28,7 +28,7 @@ struct FighterProfileView: View {
         List {
             Section {
                 hero(fighter)
-                    .listRowInsets(EdgeInsets())
+                    .listRowInsets(.init())
                     .listRowBackground(Color.clear)
             }
             Section("Profile") {
@@ -57,8 +57,6 @@ struct FighterProfileView: View {
         .listStyle(.insetGrouped)
     }
 
-    /// The portrait carries the screen the way it does in Photos: full bleed, with the name
-    /// sitting on a scrim over the image instead of in a caption below it.
     private func hero(_ fighter: FighterItem) -> some View {
         RemoteImage(url: state.imageURL(fighter.portrait))
             .frame(height: 320)

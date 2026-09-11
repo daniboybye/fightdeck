@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct BoutDetailView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let event: EventItem
     let bout: BoutItem
     @Binding var path: [EventsRoute]
@@ -20,28 +20,17 @@ struct BoutDetailView: View {
         List {
             Section {
                 matchup
-                    .listRowInsets(EdgeInsets())
+                    .listRowInsets(.init())
                     .listRowBackground(Color.clear)
             }
             Section("Tale of the tape") {
                 taleOfTheTape
             }
             if mode.showsOdds {
-                Section("Outright winner") {
-                    marketRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
-                    marketRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
-                }
+                marketSection
             }
             if mode.showsResults {
-                Section("Result") {
-                    LabeledContent("Winner") {
-                        Text(bout.result.winnerName)
-                            .foregroundStyle(DesignTokens.ColorToken.positive)
-                    }
-                    LabeledContent("Method", value: bout.result.method.displayMethod)
-                    LabeledContent("Detail", value: bout.result.detail)
-                    LabeledContent("Ended", value: "Round \(bout.result.endRound) · \(bout.result.endTime)")
-                }
+                resultSection
             }
         }
         .listStyle(.insetGrouped)
@@ -92,9 +81,6 @@ struct BoutDetailView: View {
         .buttonStyle(.plain)
     }
 
-    /// The outer columns take the leftover width so the values sit on the row's edges. A bare
-    /// `Grid` sizes every column to its widest cell and centres the whole block, which leaves
-    /// both fighters floating in the middle of the card.
     private var taleOfTheTape: some View {
         Grid(horizontalSpacing: DesignTokens.Spacing.md, verticalSpacing: DesignTokens.Spacing.md) {
             ForEach(tapeRows, id: \.label) { row in
@@ -111,8 +97,8 @@ struct BoutDetailView: View {
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .font(.callout)
-                // A long country name is worth two lines. Without this the grid hands the
-                // cell its one-line ideal width and truncates instead.
+                // Without this the grid hands each cell its one-line ideal width and truncates
+                // a long country name instead of wrapping it.
                 .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -124,21 +110,25 @@ struct BoutDetailView: View {
         let blue = state.fighter(bout.blueCorner.fighterId)
         return [
             ("RECORD", red?.recordDisplay ?? "—", blue?.recordDisplay ?? "—"),
-            ("HEIGHT", format(red?.heightCm, unit: "cm"), format(blue?.heightCm, unit: "cm")),
-            ("REACH", format(red?.reachIn, unit: "in"), format(blue?.reachIn, unit: "in")),
+            ("HEIGHT", Self.format(red?.heightCm, unit: "cm"), Self.format(blue?.heightCm, unit: "cm")),
+            ("REACH", Self.format(red?.reachIn, unit: "in"), Self.format(blue?.reachIn, unit: "in")),
             ("STANCE", red?.stance?.localizedCapitalized ?? "—", blue?.stance?.localizedCapitalized ?? "—"),
             ("COUNTRY", red?.country ?? "—", blue?.country ?? "—"),
         ]
     }
 
-    private func format(_ value: Int?, unit: String) -> String {
+    private static func format(_ value: Int?, unit: String) -> String {
         guard let value else { return "—" }
         return "\(value) \(unit)"
     }
 
-    /// An `HStack` rather than `LabeledContent`: an avatar plus two lines of text is enough to
-    /// tip that layout into stacking, which would drop the odds under the name on some rows
-    /// and leave them at the trailing edge on others.
+    private var marketSection: some View {
+        Section("Outright winner") {
+            marketRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
+            marketRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
+        }
+    }
+
     private func marketRow(_ corner: CornerItem, ring: Color) -> some View {
         HStack(spacing: DesignTokens.Spacing.md) {
             FighterAvatar(
@@ -160,6 +150,18 @@ struct BoutDetailView: View {
             ) {
                 state.toggleSelection(bout: bout, fighterID: corner.fighterId, odds: corner.closingOdds.decimal)
             }
+        }
+    }
+
+    private var resultSection: some View {
+        Section("Result") {
+            LabeledContent("Winner") {
+                Text(bout.result.winnerName)
+                    .foregroundStyle(DesignTokens.ColorToken.positive)
+            }
+            LabeledContent("Method", value: bout.result.method.displayMethod)
+            LabeledContent("Detail", value: bout.result.detail)
+            LabeledContent("Ended", value: "Round \(bout.result.endRound) · \(bout.result.endTime)")
         }
     }
 }

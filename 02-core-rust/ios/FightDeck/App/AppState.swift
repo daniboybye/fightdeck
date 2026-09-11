@@ -6,6 +6,9 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
+import FightEvents
+import FightSlip
 import Foundation
 import Observation
 
@@ -34,8 +37,10 @@ final class AppState {
     var bootstrapState: AppBootstrapState = .loading
 
     let slipStore: ObservableBetSlipStore
-    let core: FightCoreHandle
-    let preferences: UserDefaultsPreferencesStore
+
+    /// FightEvents parses the dataset and hands FightSlip its bout index. The two feature SDKs
+    /// never reference each other — the app is the only place they meet.
+    let catalog: EventCatalog
 
     var betPlacedMessage: String?
 
@@ -48,9 +53,9 @@ final class AppState {
 
     init(repository: JSONFileRepository = JSONFileRepository()) {
         self.repository = repository
-        self.preferences = UserDefaultsPreferencesStore()
-        self.core = AppState.makeCore()
-        let store = try! BetSlipStore(core: core, balance: "500.00")
+        self.catalog = AppState.makeCatalog()
+        let handle = SlipHandle(bouts: catalog.boutIndex().map(BoutIndexRecord.init))
+        let store = try! BetSlipStore(handle: handle, balance: "500.00")
         self.slipStore = ObservableBetSlipStore(store: store)
     }
 
@@ -134,8 +139,7 @@ final class AppState {
     }
 
     func placeBet() {
-        guard let state = slipStore.placeBet() else { return }
-        betPlacedMessage = "\(FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)) returns if it lands"
+        betPlacedMessage = slipStore.placeBet().message
     }
 
     func presentDeposit() {
@@ -145,7 +149,7 @@ final class AppState {
     func deposit(amount: Decimal) {
         let raw = NSDecimalNumber(decimal: amount).stringValue
         guard let formatted = try? formatMoney(amount: raw) else { return }
-        try? slipStore.deposit(amount: formatted)
+        slipStore.deposit(amount: formatted)
     }
 
     func imageURL(_ path: String) -> URL? {
@@ -161,48 +165,37 @@ final class AppState {
         fighter(id)?.recordDisplay ?? "—"
     }
 
-    private static func makeCore() -> FightCoreHandle {
-        let url = DatasetLocator.datasetRoot().appendingPathComponent("events.json")
-        guard let data = try? Data(contentsOf: url),
-              let file = try? JSONDecoder().decode(EventsEnvelope.self, from: data) else {
-            return FightCoreHandle(bouts: [])
+    /// The dataset is read as text and parsed inside FightEvents, so the app declares no
+    /// `Codable` mirror of the JSON and neither does the Android host.
+    private static func makeCatalog() -> EventCatalog {
+        let root = DatasetLocator.datasetRoot()
+        func read(_ name: String, empty: String) -> String {
+            (try? String(contentsOf: root.appendingPathComponent(name), encoding: .utf8)) ?? empty
         }
-        let bouts = file.events.flatMap(\.bouts).map { bout in
-            BoutIndexRecord(
-                id: bout.id,
-                redFighterId: bout.redCorner.fighterId,
-                blueFighterId: bout.blueCorner.fighterId,
-                winnerId: bout.result.winnerId
-            )
-        }
-        return FightCoreHandle(bouts: bouts)
+        let events = read("events.json", empty: #"{"events":[]}"#)
+        let fighters = read("fighters.json", empty: #"{"fighters":[]}"#)
+        return (try? EventCatalog.parse(eventsJson: events, fightersJson: fighters))
+            ?? (try! EventCatalog.parse(eventsJson: #"{"events":[]}"#, fightersJson: #"{"fighters":[]}"#))
     }
 }
 
-private struct EventsEnvelope: Decodable {
-    let events: [EventEnvelope]
+private extension BoutIndexRecord {
+    /// FightEvents produces the index, FightSlip consumes it. Independent SDKs mean
+    /// independent types, and the app pays four lines for that independence.
+    init(_ entry: BoutIndexEntry) {
+        self.init(
+            id: entry.id,
+            redFighterId: entry.redFighterId,
+            blueFighterId: entry.blueFighterId,
+            winnerId: entry.winnerId
+        )
+    }
 }
 
-private struct EventEnvelope: Decodable {
-    let bouts: [BoutEnvelope]
-}
-
-private struct BoutEnvelope: Decodable {
-    let id: String
-    let redCorner: CornerEnvelope
-    let blueCorner: CornerEnvelope
-    let result: ResultEnvelope
-}
-
-private struct CornerEnvelope: Decodable {
-    let fighterId: String
-}
-
-private struct ResultEnvelope: Decodable {
-    let winnerId: String
-}
-
-extension ValidationErrorRecord: Identifiable {
+// Retroactive because the record is FightSlip's and Identifiable is the standard library's.
+// UniFFI will not emit the conformance, so the app has to own it and accept that a future
+// version of the SDK could add its own.
+extension ValidationErrorRecord: @retroactive Identifiable {
     public var id: String { validationErrorCode(error: self) }
 }
 

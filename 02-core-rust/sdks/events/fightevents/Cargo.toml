@@ -1,0 +1,19 @@
+[package]
+name = "fightevents"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "FightEvents — catalogue feature SDK: dataset parsing, card grouping, tale of the tape, search"
+
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+name = "fightevents"
+
+[dependencies]
+fightcore.workspace = true
+rust_decimal.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+uniffi.workspace = true
+

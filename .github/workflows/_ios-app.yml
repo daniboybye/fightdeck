@@ -126,10 +126,10 @@ jobs:
         with:
           key: apple
 
-      - name: Package the Rust core
+      - name: Package the Rust SDKs
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
-        working-directory: 02-core-rust/sdks/core
-        run: ./build-xcframework.sh
+        working-directory: 02-core-rust/sdks
+        run: ./build-apple.sh
 
       - name: Test
         if: steps.guard.outputs.exists == 'true' && inputs.run-tests

@@ -36,7 +36,7 @@ jobs:
       - name: Guard
         id: guard
         run: |
-          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+          if [[ -f 02-core-rust/sdks/Cargo.toml ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -62,14 +62,14 @@ jobs:
 
       - name: Build and package
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 02-core-rust/sdks/core
-        run: ./build-xcframework.sh
+        working-directory: 02-core-rust/sdks
+        run: ./build-apple.sh
 
       - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
-          name: rust-core-xcframework
-          path: 02-core-rust/sdks/core/out/*.xcframework.zip
+          name: rust-sdk-xcframeworks
+          path: 02-core-rust/sdks/*/out/*.xcframework.zip
           if-no-files-found: warn
 
   android:
@@ -83,7 +83,7 @@ jobs:
       - name: Guard
         id: guard
         run: |
-          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+          if [[ -f 02-core-rust/sdks/Cargo.toml ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -133,14 +133,14 @@ jobs:
 
       - name: Build and package
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 02-core-rust/sdks/core
-        run: ./build-aar.sh
+        working-directory: 02-core-rust/sdks
+        run: ./build-android.sh
 
       - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
-          name: rust-core-aar
-          path: 02-core-rust/sdks/core/out/*.aar
+          name: rust-sdk-aars
+          path: 02-core-rust/sdks/*/out/android/*.aar
           if-no-files-found: warn
 
   wasm:
@@ -157,7 +157,7 @@ jobs:
       - name: Guard
         id: guard
         run: |
-          if [[ -f 02-core-rust/sdks/core/Cargo.toml ]]; then
+          if [[ -f 02-core-rust/sdks/Cargo.toml ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
@@ -175,7 +175,7 @@ jobs:
 
       - name: Build
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 02-core-rust/sdks/core
+        working-directory: 02-core-rust/sdks
         run: |
-          cargo build --release --target wasm32-unknown-unknown
+          cargo build --release -p fightcore --target wasm32-unknown-unknown
           ls -la target/wasm32-unknown-unknown/release/*.wasm

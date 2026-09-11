@@ -19,8 +19,8 @@ struct VideoScreenView: View {
         List {
             Section {
                 VideoPlayerContainer(item: item, posterURL: posterURL)
-                    .aspectRatio(16 / 9, contentMode: .fit)
-                    .listRowInsets(EdgeInsets())
+                    .aspectRatio(DesignTokens.Layout.mediaTileAspectRatio, contentMode: .fit)
+                    .listRowInsets(.init())
                     .listRowBackground(Color.clear)
             }
             Section {
@@ -71,10 +71,10 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         coordinator.teardown(stopPlayback: true)
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    func makeCoordinator() -> Coordinator { .init() }
 
-    /// Main-actor isolated so the notification closures below, which are `@Sendable`, may capture
-    /// it and touch the player. Everything here already runs on the main thread.
+    /// Main-actor isolated so the `@Sendable` notification closures below may capture it and
+    /// touch the player. Everything here already runs on the main thread.
     @MainActor
     final class Coordinator {
         private weak var controller: AVPlayerViewController?
@@ -91,8 +91,8 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                // `queue: .main` already guarantees main-thread delivery; the compiler cannot
-                // see that through NotificationCenter's `@Sendable` closure.
+                // `queue: .main` guarantees main-thread delivery; the compiler cannot see that
+                // through NotificationCenter's `@Sendable` closure.
                 MainActor.assumeIsolated { self?.detachForBackground() }
             })
             observers.append(center.addObserver(
@@ -143,9 +143,8 @@ struct VideoPlayerContainer: UIViewControllerRepresentable {
         try? session.setActive(true)
     }
 
-    // nonisolated on purpose. UIViewControllerRepresentable is @MainActor, so a closure
-    // created here would inherit that isolation — and MediaPlayer invokes the artwork
-    // handler on its own queue, which trips the Swift 6 executor check and traps.
+    // nonisolated on purpose: MediaPlayer invokes the artwork handler on its own queue, and a
+    // closure created in this @MainActor type would trip the Swift 6 executor check and trap.
     private nonisolated func updateNowPlaying(item: MediaItem) {
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: item.title,

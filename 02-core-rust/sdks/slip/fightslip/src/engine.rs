@@ -1,169 +1,15 @@
-//! Domain types and pure FightCore logic.
+//! Pure slip logic: combined odds, validation, settlement, cash-out.
+//!
+//! Every number here is checked against `contract/fixtures/`.
 
-use crate::money;
+use fightcore::money;
+use fightcore::types::{
+    BetMode, BetSlip, BoutIndex, CashOutOffer, LegOutcome, LegResult, Selection, Settlement,
+    SettlementStatus, SlipState, ValidationError, CASH_OUT_MARGIN, MAX_PAYOUT, MAX_SELECTIONS,
+    MAX_STAKE, MIN_ACCA_LEGS, MIN_STAKE,
+};
 use rust_decimal::Decimal;
 use std::collections::{HashMap, HashSet};
-
-pub const MIN_STAKE: &str = "1.00";
-pub const MAX_STAKE: &str = "5000.00";
-pub const MAX_SELECTIONS: usize = 12;
-pub const MIN_ACCA_LEGS: usize = 2;
-pub const MAX_PAYOUT: &str = "100000.00";
-pub const CASH_OUT_MARGIN: &str = "0.05";
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BetMode {
-    Single,
-    Accumulator,
-}
-
-impl BetMode {
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "accumulator" => Self::Accumulator,
-            _ => Self::Single,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Selection {
-    pub bout_id: String,
-    pub fighter_id: String,
-    pub odds: Decimal,
-}
-
-#[derive(Debug, Clone)]
-pub struct BetSlip {
-    pub mode: BetMode,
-    pub selections: Vec<Selection>,
-    pub stake: Decimal,
-    /// Raw stake text from the host; [stake] mirrors it when parsing succeeds.
-    pub stake_raw: String,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ValidationError {
-    EmptySlip,
-    InvalidStake,
-    StakeBelowMinimum,
-    StakeAboveMaximum,
-    InsufficientBalance,
-    TooManySelections,
-    AccumulatorNeedsTwoLegs,
-    DuplicateBout,
-    UnknownBout,
-    FighterNotInBout,
-    PayoutExceedsLimit,
-}
-
-impl ValidationError {
-    pub const ORDER: [ValidationError; 11] = [
-        Self::EmptySlip,
-        Self::InvalidStake,
-        Self::StakeBelowMinimum,
-        Self::StakeAboveMaximum,
-        Self::InsufficientBalance,
-        Self::TooManySelections,
-        Self::AccumulatorNeedsTwoLegs,
-        Self::DuplicateBout,
-        Self::UnknownBout,
-        Self::FighterNotInBout,
-        Self::PayoutExceedsLimit,
-    ];
-
-    pub fn code(&self) -> &'static str {
-        match self {
-            Self::EmptySlip => "empty_slip",
-            Self::InvalidStake => "invalid_stake",
-            Self::StakeBelowMinimum => "stake_below_minimum",
-            Self::StakeAboveMaximum => "stake_above_maximum",
-            Self::InsufficientBalance => "insufficient_balance",
-            Self::TooManySelections => "too_many_selections",
-            Self::AccumulatorNeedsTwoLegs => "accumulator_needs_two_legs",
-            Self::DuplicateBout => "duplicate_bout",
-            Self::UnknownBout => "unknown_bout",
-            Self::FighterNotInBout => "fighter_not_in_bout",
-            Self::PayoutExceedsLimit => "payout_exceeds_limit",
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct SlipState {
-    pub combined_odds_exact: Option<Decimal>,
-    pub combined_odds_display: Option<Decimal>,
-    pub total_stake: Decimal,
-    pub potential_return: Decimal,
-    pub potential_profit: Decimal,
-    pub errors: Vec<ValidationError>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LegOutcome {
-    Won,
-    Lost,
-    Void,
-}
-
-impl LegOutcome {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Won => "won",
-            Self::Lost => "lost",
-            Self::Void => "void",
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct LegResult {
-    pub bout_id: String,
-    pub fighter_id: String,
-    pub outcome: LegOutcome,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SettlementStatus {
-    Won,
-    Lost,
-    Void,
-    PartiallyWon,
-}
-
-impl SettlementStatus {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Won => "won",
-            Self::Lost => "lost",
-            Self::Void => "void",
-            Self::PartiallyWon => "partially_won",
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Settlement {
-    pub legs: Vec<LegResult>,
-    pub returned: Decimal,
-    pub profit: Decimal,
-    pub status: SettlementStatus,
-}
-
-#[derive(Debug, Clone)]
-pub struct CashOutOffer {
-    pub available: bool,
-    pub amount: Decimal,
-    pub reason: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-pub struct BoutIndex {
-    pub id: String,
-    pub red_fighter_id: String,
-    pub blue_fighter_id: String,
-    pub winner_id: String,
-}
 
 struct SlipMath {
     combined_exact: Option<Decimal>,
@@ -173,7 +19,7 @@ struct SlipMath {
     potential_profit: Decimal,
 }
 
-pub struct FightCore {
+pub struct SlipEngine {
     bouts: HashMap<String, BoutIndex>,
     min_stake: Decimal,
     max_stake: Decimal,
@@ -181,7 +27,7 @@ pub struct FightCore {
     cash_out_margin: Decimal,
 }
 
-impl FightCore {
+impl SlipEngine {
     pub fn new(bouts: Vec<BoutIndex>) -> Self {
         Self {
             bouts: bouts.into_iter().map(|b| (b.id.clone(), b)).collect(),
@@ -193,9 +39,7 @@ impl FightCore {
     }
 
     pub fn combined_odds_exact(&self, selections: &[Selection]) -> Decimal {
-        selections
-            .iter()
-            .fold(Decimal::ONE, |acc, sel| acc * sel.odds)
+        selections.iter().fold(Decimal::ONE, |acc, sel| acc * sel.odds)
     }
 
     pub fn slip_state(&self, slip: &BetSlip, balance: Decimal) -> SlipState {
@@ -208,6 +52,16 @@ impl FightCore {
             potential_return: math.potential_return,
             potential_profit: math.potential_profit,
             errors,
+        }
+    }
+
+    /// The slip mode is derived, never picked: one leg is a single, two or more an accumulator.
+    /// Both hosts used to carry a copy of this rule.
+    pub fn mode_for(selection_count: usize) -> BetMode {
+        if selection_count >= MIN_ACCA_LEGS {
+            BetMode::Accumulator
+        } else {
+            BetMode::Single
         }
     }
 
@@ -284,7 +138,13 @@ impl FightCore {
             BetMode::Accumulator => {
                 let total_stake = slip.stake;
                 if outcomes.contains(&LegOutcome::Lost) {
-                    return self.make_settlement(slip, &outcomes, Decimal::ZERO, total_stake, SettlementStatus::Lost);
+                    return self.make_settlement(
+                        slip,
+                        &outcomes,
+                        Decimal::ZERO,
+                        total_stake,
+                        SettlementStatus::Lost,
+                    );
                 }
                 let product = slip
                     .selections
@@ -373,19 +233,10 @@ impl FightCore {
         }
 
         let amount = money::money(fair_value * (Decimal::ONE - self.cash_out_margin));
-        CashOutOffer {
-            available: true,
-            amount,
-            reason: None,
-        }
+        CashOutOffer { available: true, amount, reason: None }
     }
 
-    fn compute_math(
-        &self,
-        mode: BetMode,
-        selections: &[Selection],
-        stake: Decimal,
-    ) -> SlipMath {
+    fn compute_math(&self, mode: BetMode, selections: &[Selection], stake: Decimal) -> SlipMath {
         match mode {
             BetMode::Accumulator => {
                 let exact = self.combined_odds_exact(selections);
@@ -401,9 +252,9 @@ impl FightCore {
             }
             BetMode::Single => {
                 let total_stake = stake * Decimal::from(selections.len());
-                let potential_return = selections.iter().fold(Decimal::ZERO, |acc, sel| {
-                    acc + money::money(stake * sel.odds)
-                });
+                let potential_return = selections
+                    .iter()
+                    .fold(Decimal::ZERO, |acc, sel| acc + money::money(stake * sel.odds));
                 SlipMath {
                     combined_exact: None,
                     combined_display: None,
@@ -454,5 +305,35 @@ impl FightCore {
             profit: money::money(rounded_return - total_stake),
             status,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn invalid_stake_raw_flags_validation_not_zero_stake() {
+        let slip = BetSlip {
+            mode: BetMode::Single,
+            selections: vec![Selection {
+                bout_id: "bout-1".into(),
+                fighter_id: "fighter-1".into(),
+                odds: money::parse_exact("2.00"),
+            }],
+            stake: money::parse_exact("10.00"),
+            stake_raw: "10..00".into(),
+        };
+        let engine = SlipEngine::new(vec![]);
+        let errors = engine.validate(&slip, money::parse_exact("500.00"));
+        assert!(errors.contains(&ValidationError::InvalidStake));
+        assert!(!errors.contains(&ValidationError::StakeBelowMinimum));
+    }
+
+    #[test]
+    fn mode_follows_leg_count() {
+        assert_eq!(SlipEngine::mode_for(0), BetMode::Single);
+        assert_eq!(SlipEngine::mode_for(1), BetMode::Single);
+        assert_eq!(SlipEngine::mode_for(2), BetMode::Accumulator);
     }
 }

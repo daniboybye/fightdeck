@@ -13,7 +13,7 @@ struct BalanceToolbarModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.toolbar {
-            // Every screen in the stack declares this item again, so without a stable id each
+            // Every screen in the stack declares this item again; without a stable id each
             // push reads as a remove plus an insert and the balance fades out and back in.
             ToolbarItem(id: "balance", placement: .topBarTrailing) {
                 Menu {

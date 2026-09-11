@@ -17,7 +17,7 @@ inputs:
   workspace:
     description: Crate directory holding Cargo.lock and target/.
     required: false
-    default: 02-core-rust/sdks/core
+    default: 02-core-rust/sdks
 
 runs:
   using: composite

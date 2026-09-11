@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.core.StateFlowBetSlipStore
-import uniffi.fightcore.validationErrorCode
 import com.fightdeck.rust.data.BoutItem
 import com.fightdeck.rust.data.EventItem
 import com.fightdeck.rust.data.FighterItem
@@ -21,13 +20,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import uniffi.fightcore.BetSlipRecord
-import uniffi.fightcore.BoutIndexRecord
-import uniffi.fightcore.FightCoreHandle
-import uniffi.fightcore.SlipStateRecord
+import uniffi.fightevents.EventCatalog
+import uniffi.fightslip.BetSlipRecord
+import uniffi.fightslip.BoutIndexRecord
+import uniffi.fightslip.SlipHandle
+import uniffi.fightslip.SlipStateRecord
+import uniffi.fightslip.validationErrorCode
 
 sealed interface LoadState<out T> {
     data object Loading : LoadState<Nothing>
@@ -42,9 +40,10 @@ sealed interface BootstrapState {
     data object Ready : BootstrapState
 }
 
-/** Rust core + slip store; available after background bootstrap completes. */
+/** The three Rust SDKs, available after background bootstrap completes. */
 data class RustEngine(
-    val core: FightCoreHandle,
+    val catalog: EventCatalog,
+    val slip: SlipHandle,
     val slipStore: StateFlowBetSlipStore,
 )
 
@@ -85,7 +84,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun bootstrap() {
         viewModelScope.launch {
             _engine.value?.slipStore?.close()
-            _engine.value?.core?.close()
+            _engine.value?.slip?.close()
+            _engine.value?.catalog?.close()
             _engine.value = null
             _bootstrapState.value = BootstrapState.Loading("Loading fight core…")
             val booted = withContext(Dispatchers.Default) {
@@ -115,6 +115,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun requireSlipStore(): StateFlowBetSlipStore =
         requireNotNull(_engine.value?.slipStore) { "Rust engine not ready" }
+
+    fun requireCatalog(): EventCatalog =
+        requireNotNull(_engine.value?.catalog) { "Rust engine not ready" }
 
     val slip: StateFlow<BetSlipRecord>
         get() = requireSlipStore().slip
@@ -189,24 +192,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun placeBet() {
-        val state = requireSlipStore().placeBet() ?: return
-        _betPlacedMessage.value =
-            "${FightCoreDisplay.formatCurrencyAmount(state.potentialReturn)} returns if it lands"
+        _betPlacedMessage.value = requireSlipStore().placeBet().message
     }
 
     fun deposit(amount: String) {
         requireSlipStore().deposit(amount)
     }
 
-    fun slipSummary(state: SlipStateRecord) = FightCoreDisplay.slipSummary(state)
-
     fun formatOdds(odds: String) = FightCoreDisplay.formatOdds(odds)
     fun formatCurrency(amount: String) = FightCoreDisplay.formatCurrencyAmount(amount)
-    fun errorCode(error: uniffi.fightcore.ValidationErrorRecord) = validationErrorCode(error)
+    fun errorCode(error: uniffi.fightslip.ValidationErrorRecord) = validationErrorCode(error)
 
     override fun onCleared() {
         _engine.value?.slipStore?.close()
-        _engine.value?.core?.close()
+        _engine.value?.slip?.close()
+        _engine.value?.catalog?.close()
         super.onCleared()
     }
 
@@ -223,54 +223,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             onStep: (String) -> Unit,
         ): BootstrapResult {
             Log.i(TAG, "bootstrapRustEngine start")
-            onStep("Loading fight core…")
+            onStep("Loading fight catalogue…")
             val root = DatasetLocator.datasetRoot(application)
             LocalAssetServer.start(root)
-            val core = buildFightCore(root)
-            Log.i(TAG, "FightCoreHandle ready")
-            onStep("Starting bet slip…")
-            val slipBacking = uniffi.fightcore.BetSlipStore(core, "500.00")
-            Log.i(TAG, "BetSlipStore ready")
-            onStep("Preparing UI…")
-            val slipStore = StateFlowBetSlipStore(slipBacking)
-            Log.i(TAG, "StateFlowBetSlipStore ready")
-            return BootstrapResult(root, RustEngine(core, slipStore))
-        }
+            // FightEvents parses the dataset; the app declares no Kotlin mirror of the JSON.
+            val catalog = EventCatalog.parse(
+                root.resolve("events.json").readText(),
+                root.resolve("fighters.json").readText(),
+            )
+            Log.i(TAG, "EventCatalog ready")
 
-        private fun buildFightCore(root: java.io.File): FightCoreHandle {
-            Log.i(TAG, "buildFightCore dataset=$root")
-            val eventsJson = root.resolve("events.json").readText()
-            val events = Json { ignoreUnknownKeys = true }
-                .decodeFromString<EventsEnvelope>(eventsJson)
-            val bouts = events.events.flatMap { it.bouts }.map {
-                BoutIndexRecord(
-                    id = it.id,
-                    redFighterId = it.redCorner.fighterId,
-                    blueFighterId = it.blueCorner.fighterId,
-                    winnerId = it.result.winnerId,
-                )
-            }
-            return FightCoreHandle(bouts)
+            onStep("Starting bet slip…")
+            // FightEvents produces the index, FightSlip consumes it; the app is the only place
+            // the two feature SDKs meet.
+            val slip = SlipHandle(
+                catalog.boutIndex().map {
+                    BoutIndexRecord(it.id, it.redFighterId, it.blueFighterId, it.winnerId)
+                },
+            )
+            val slipStore = StateFlowBetSlipStore(uniffi.fightslip.BetSlipStore(slip, "500.00"))
+            Log.i(TAG, "BetSlipStore ready")
+
+            onStep("Preparing UI…")
+            return BootstrapResult(root, RustEngine(catalog, slip, slipStore))
         }
     }
 }
 
-@Serializable
-private data class EventsEnvelope(val events: List<EventEnvelope>)
-
-@Serializable
-private data class EventEnvelope(val bouts: List<BoutEnvelope>)
-
-@Serializable
-private data class BoutEnvelope(
-    val id: String,
-    val redCorner: CornerEnvelope,
-    val blueCorner: CornerEnvelope,
-    val result: ResultEnvelope,
-)
-
-@Serializable
-private data class CornerEnvelope(@SerialName("fighterId") val fighterId: String)
-
-@Serializable
-private data class ResultEnvelope(@SerialName("winnerId") val winnerId: String)

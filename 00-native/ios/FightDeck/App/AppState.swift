@@ -33,15 +33,14 @@ final class AppState {
 
     var bootstrapState: AppBootstrapState = .loading
 
-    /// The mode follows the number of legs instead of a picker: one selection is a single,
-    /// two or more is an accumulator. Both modes stay covered by the golden fixtures.
-    var slip = BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
+    /// The mode follows the number of legs rather than a picker: one selection is a single,
+    /// two or more is an accumulator.
+    var slip = BetSlip(mode: .single, selections: [], stake: .init(string: "10.00")!)
     var balance = Decimal(string: "500.00")!
     var betPlacedMessage: String?
 
-    /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
-    /// toolbars depend on observable state rather than on a closure handed down through the
-    /// environment, which is a new value on every `RootView` body pass.
+    /// The balance toolbar on every screen opens deposit. The flag lives here so those
+    /// toolbars observe state instead of a closure that is new on every `RootView` body pass.
     var isPresentingDeposit = false
 
     let repository: JSONFileRepository
@@ -68,10 +67,6 @@ final class AppState {
         }
     }
 
-    func retryBootstrap() async {
-        await bootstrap()
-    }
-
     func refreshAll() async {
         await loadEvents()
         await loadFighters()
@@ -81,41 +76,33 @@ final class AppState {
 
     func loadEvents() async {
         eventsState = .loading
-        do {
-            let events = try await repository.loadEvents()
-            eventsState = events.isEmpty ? .empty : .loaded(events)
-        } catch {
-            eventsState = .error("Could not load events")
-        }
+        eventsState = await load("events", repository.loadEvents)
     }
 
     func loadFighters() async {
         fightersState = .loading
-        do {
-            let fighters = try await repository.loadFighters()
-            fightersState = fighters.isEmpty ? .empty : .loaded(fighters)
-        } catch {
-            fightersState = .error("Could not load fighters")
-        }
+        fightersState = await load("fighters", repository.loadFighters)
     }
 
     func loadNews() async {
         newsState = .loading
-        do {
-            let news = try await repository.loadNews()
-            newsState = news.isEmpty ? .empty : .loaded(news)
-        } catch {
-            newsState = .error("Could not load news")
-        }
+        newsState = await load("news", repository.loadNews)
     }
 
     func loadMedia() async {
         mediaState = .loading
+        mediaState = await load("media", repository.loadMedia)
+    }
+
+    private func load<Value: Sendable>(
+        _ subject: String,
+        _ fetch: () async throws -> [Value]
+    ) async -> LoadState<[Value]> {
         do {
-            let media = try await repository.loadMedia()
-            mediaState = media.isEmpty ? .empty : .loaded(media)
+            let items = try await fetch()
+            return items.isEmpty ? .empty : .loaded(items)
         } catch {
-            mediaState = .error("Could not load media")
+            return .error("Could not load \(subject)")
         }
     }
 
@@ -125,7 +112,7 @@ final class AppState {
             if existing.fighterID == fighterID {
                 slip.selections.remove(at: index)
             } else {
-                slip.selections[index] = Selection(
+                slip.selections[index] = .init(
                     boutID: bout.id,
                     fighterID: fighterID,
                     odds: Money.parse(odds)
@@ -133,7 +120,7 @@ final class AppState {
             }
         } else {
             slip.selections.append(
-                Selection(boutID: bout.id, fighterID: fighterID, odds: Money.parse(odds))
+                .init(boutID: bout.id, fighterID: fighterID, odds: Money.parse(odds))
             )
         }
         syncMode()
@@ -189,17 +176,17 @@ final class AppState {
         let url = datasetRoot.appendingPathComponent("events.json")
         guard let data = try? Data(contentsOf: url),
               let file = try? JSONDecoder().decode(EventsEnvelope.self, from: data) else {
-            return FightCore(bouts: [])
+            return .init(bouts: [])
         }
-        let bouts = file.events.flatMap(\.bouts).map { bout in
-            BoutIndex(
+        let bouts: [BoutIndex] = file.events.flatMap(\.bouts).map { bout in
+            .init(
                 id: bout.id,
                 redFighterID: bout.redCorner.fighterId,
                 blueFighterID: bout.blueCorner.fighterId,
                 winnerID: bout.result.winnerId
             )
         }
-        return FightCore(bouts: bouts)
+        return .init(bouts: bouts)
     }
 }
 

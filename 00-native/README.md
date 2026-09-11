@@ -6,7 +6,7 @@ Two apps, zero shared code. SwiftUI on iOS 26 and Jetpack Compose on Android 17,
 
 - **Fair comparison.** The product, data, screens and golden fixtures are identical. Only the sharing mechanism differs in the other four folders.
 - **Real native quality.** Not a straw man: `@Observable` and strict concurrency on iOS, Material 3 + edge-to-edge + predictive back on Android, Kingfisher and Coil for real HTTP image loads, PiP/AirPlay/Now Playing on the iOS-only video screen.
-- **Duplication cost.** FightCore — odds, slip math, validation, settlement, cash-out — is implemented twice (~600 lines Swift, ~550 lines Kotlin). Deposit is hand-written twice behind the same `DepositHosting` boundary the SDK approaches use.
+- **Duplication cost.** FightCore — odds, slip math, validation, settlement, cash-out — is implemented twice (~600 lines Swift, ~550 lines Kotlin). Deposit is hand-written twice behind the same `DepositParams`/`DepositResult` contract the SDK approaches carry across their runtime boundary.
 
 ## Build commands
 

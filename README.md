@@ -31,7 +31,7 @@ That leaves two questions, and this repo exists to answer them with numbers:
 | `shared-ui-spec/` | Screen-by-screen spec so all five pairs look identical. |
 | `00-native/` | Baseline. Zero shared code. SwiftUI and Compose, written twice. |
 | `01-core-swift/` | Headless Swift core, cross-compiled for Android via the Swift SDK. |
-| `02-core-rust/` | Headless Rust core via UniFFI. |
+| `02-core-rust/` | Headless Rust via UniFFI: a `fightcore` kernel plus `fightslip` and `fightevents` feature SDKs, three binaries per platform. |
 | `03-sdk-rn/` | UI-bearing SDK: React Native, one Hermes runtime, two surfaces. |
 | `04-sdk-skip/` | UI-bearing SDK: Skip, Swift that becomes real Jetpack Compose. |
 | `tools/` | Size, build-time, source-count and cold-start measurement scripts. |
@@ -67,7 +67,7 @@ come from a local `tools/ci-local.sh --skip-tests measure` run on Apple silicon,
 | --- | ---: | ---: | ---: | ---: |
 | `00-native` baseline | 1.96 MB | 12.53 MB | — | 0m16s / 0m24s |
 | `01-core-swift` † | 1.98 MB | 12.52 MB | +0.01 MB | 0m16s / 0m22s |
-| `02-core-rust` | 2.82 MB | 13.07 MB | +1.40 MB | 3m52s / 1m58s |
+| `02-core-rust` ‡ | 2.89 MB | 13.70 MB | +2.10 MB | 3m34s / 2m00s |
 | `04-sdk-skip` | 3.11 MB | 22.52 MB | +11.14 MB | 0m29s / 4m18s |
 | `03-sdk-rn` | 21.21 MB | 24.78 MB | +31.50 MB | 0m57s / 1m16s |
 
@@ -80,15 +80,20 @@ larger and nobody downloads it.
 Android app runs a Kotlin stub, so that row prices a Swift core on iOS and a hand-written
 reimplementation on Android. See the caveats.
 
+‡ `02-core-rust` ships three separate Rust binaries per platform, not one, and its build
+column is dominated by Rust packaging rather than by the app: 3m09s of the iOS 3m34s and
+1m39s of the Android 2m00s is `cargo` compiling three crates for three Apple targets and
+two Android ABIs. The app itself builds in 25 seconds.
+
 ### What it costs to write
 
 | Approach | iOS | Android | Shared | Config | Total | Shared |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 3,150 | 3,168 | 0 | 160 | 6,478 | 0% |
+| `00-native` baseline | 3,111 | 3,168 | 0 | 160 | 6,439 | 0% |
 | `01-core-swift` † | 2,457 | 3,261 | 1,012 | 188 | 6,918 | 15% |
-| `02-core-rust` | 2,847 | 2,797 | 1,473 | 280 | 7,397 | 20% |
+| `02-core-rust` | 2,725 | 2,715 | 2,438 | 294 | 8,172 | 30% |
 | `04-sdk-skip` | 2,677 | 3,137 | 2,699 | 566 | 9,079 | 30% |
-| `03-sdk-rn` | 3,243 | 3,489 | 3,714 | 653 | 11,099 | 33% |
+| `03-sdk-rn` | 3,243 | 3,489 | 3,714 | 665 | 11,111 | 33% |
 
 Hand-written lines only, from `python3 tools/count-lines.py`. Generated bindings and
 transpiler output are excluded — counting them would credit a code generator for typing.
@@ -96,7 +101,7 @@ transpiler output are excluded — counting them would credit a code generator f
 Read the per-platform columns before the shared one. Every approach that shares logic
 takes work *out* of the hosts, except React Native, which is the only one where the
 platform-specific code goes **up**: 6,732 lines across the two hosts against the
-baseline's 6,318, because embedding a surface, sizing it and feeding it the host's layout
+baseline's 6,279, because embedding a surface, sizing it and feeding it the host's layout
 is code that only exists because the SDK is there. A bigger shared column is not the same
 as a smaller job.
 
@@ -113,6 +118,24 @@ Produced by `./tools/measure-second-feature.sh`, which builds each host three ti
 host that only starts the runtime, then one with the deposit screen, then one with both
 screens — and subtracts. Only the two UI-bearing SDKs appear: the headless cores ship no
 UI, so a second feature there is ordinary application code.
+
+`02-core-rust` splits along the same axis but below the UI, into three separately built
+binaries — a `fightcore` kernel plus `fightslip` and `fightevents` feature SDKs — so the
+same question has an answer there too:
+
+| `02-core-rust` | Kernel alone | + `fightslip` | + `fightevents` | Second feature |
+| --- | ---: | ---: | ---: | ---: |
+| iOS (static, linker-deduped) | 0.60 MB | 0.89 MB | 1.30 MB | 410 KB |
+| Android (three `.so`, no dedup) | 437 KB | 1,119 KB | 2,167 KB | 1,048 KB |
+
+Different measurement, so read it on its own: the iOS row links against every exported
+entrypoint with `-dead_strip`, the Android row is the `lib/arm64-v8a/` payload in the APK.
+The gap between the rows is the finding. On iOS each feature crate statically links the
+kernel and the linker keeps one copy, so the second feature costs only its own logic. On
+Android each AAR is a real shared object that carries its own kernel and its own Rust
+`std`, so the same split costs 2.2 MB instead of 0.7 MB. Splitting a Rust SDK into feature
+binaries is close to free on one platform and very much not on the other — which is a
+thing you can only find out by shipping more than one.
 
 This is the point of the whole repository. React Native's iOS host is 21.05 MB before a
 single feature screen exists, and the two screens together add 168 KB — the runtime is
@@ -156,7 +179,7 @@ Gradle resolve pinned release artifacts over HTTPS.
 rather than committed files, so run its packaging script once after cloning:
 
 ```bash
-cd 02-core-rust/sdks/core && ./build-xcframework.sh && ./build-aar.sh
+cd 02-core-rust/sdks && ./build-apple.sh && ./build-android.sh
 ```
 
 To work on an SDK itself, flip to locally built artifacts:

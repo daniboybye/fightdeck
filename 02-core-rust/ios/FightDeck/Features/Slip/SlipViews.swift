@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightSlip
 import SwiftUI
 
 struct SlipTabView: View {
@@ -70,7 +71,7 @@ struct BetSlipView: View {
 
     private var slipContent: some View {
         List {
-            Section(betTypeTitle) {
+            Section(betTypeTitle(mode: state.slipState.mode)) {
                 ForEach(state.slipStore.slip.selections, id: \.self) { selection in
                     selectionRow(selection)
                 }
@@ -86,7 +87,7 @@ struct BetSlipView: View {
                 stakeChips
             }
             Section {
-                ForEach(Array(FightCoreDisplay.slipSummary(state: state.slipState).enumerated()), id: \.offset) { _, row in
+                ForEach(state.slipState.summaryRows, id: \.label) { row in
                     LabeledContent(row.label, value: row.value)
                 }
             }
@@ -121,19 +122,14 @@ struct BetSlipView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
-    /// One leg is a single, two or more is an accumulator. The user never picks — the slip
-    /// just says which one it currently is.
-    private var betTypeTitle: String {
-        state.slipStore.slip.mode == .accumulator ? "Accumulator" : "Single"
-    }
-
     /// An `HStack` rather than `LabeledContent`: the two-line label pushes that layout into
     /// its stacked form, which drops the odds under the fighter instead of out to the edge.
     private func selectionRow(_ selection: SelectionRecord) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
+        let leg = state.catalog.legContext(boutId: selection.boutId, fighterId: selection.fighterId)
+        return HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
             VStack(alignment: .leading) {
-                Text(fighterName(selection.fighterId))
-                Text("vs \(opponentName(for: selection)) · \(eventName(for: selection))")
+                Text(leg.fighterName)
+                Text(leg.subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -189,29 +185,5 @@ struct BetSlipView: View {
         // extra breathing room — tabBarActionGap would double up with the accessory slot.
         .padding(.bottom, DesignTokens.Layout.actionBarGap)
         .animation(.snappy(duration: 0.25), value: stakeFocused)
-    }
-
-    private func fighterName(_ id: String) -> String {
-        state.fighter(id)?.name ?? id
-    }
-
-    private func opponentName(for selection: SelectionRecord) -> String {
-        guard case .loaded(let events) = state.eventsState else { return "—" }
-        for event in events {
-            if let bout = event.bouts.first(where: { $0.id == selection.boutId }) {
-                let opponentID = bout.redCorner.fighterId == selection.fighterId
-                    ? bout.blueCorner.fighterId : bout.redCorner.fighterId
-                return fighterName(opponentID)
-            }
-        }
-        return "—"
-    }
-
-    private func eventName(for selection: SelectionRecord) -> String {
-        guard case .loaded(let events) = state.eventsState,
-              let event = events.first(where: { $0.bouts.contains { $0.id == selection.boutId } }) else {
-            return "—"
-        }
-        return event.name
     }
 }

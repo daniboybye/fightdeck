@@ -31,7 +31,7 @@ struct RootView: View {
                 bootstrapView(message: "Starting…", showsProgress: true)
             case .failed(let message):
                 bootstrapView(message: message, showsProgress: false) {
-                    Task { await state.retryBootstrap() }
+                    Task { await state.bootstrap() }
                 }
             case .ready:
                 mainTabs
@@ -56,8 +56,6 @@ struct RootView: View {
         }
         .tint(DesignTokens.ColorToken.accent)
         .tabBarMinimizeBehavior(.never)
-        // Detach when empty so the tab bar stays a plain capsule; attach app-wide once the
-        // slip has legs, the way Music keeps now-playing on every tab.
         .tabViewBottomAccessory(isEnabled: showsBetSlipAccessory) {
             BetSlipAccessory(
                 legCount: state.slip.selections.count,
@@ -112,8 +110,6 @@ private struct BetSlipAccessory: View {
             }
             .font(.subheadline)
             .padding(.horizontal, DesignTokens.Spacing.lg)
-            // The label only covers the two runs of text, so without a shape to hit, taps
-            // anywhere else in the accessory fall through to the tab bar behind it.
             .frame(maxWidth: .infinity)
             .frame(height: DesignTokens.Layout.betSlipAccessoryHeight)
             .contentShape(.rect)

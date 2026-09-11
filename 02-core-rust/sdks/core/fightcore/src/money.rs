@@ -63,23 +63,4 @@ mod tests {
         assert!(try_parse("10..00").is_err());
         assert!(try_parse("abc").is_err());
     }
-
-    #[test]
-    fn invalid_stake_raw_flags_validation_not_zero_stake() {
-        use crate::{BetMode, BetSlip, FightCore, Selection, ValidationError};
-        let slip = BetSlip {
-            mode: BetMode::Single,
-            selections: vec![Selection {
-                bout_id: "bout-1".into(),
-                fighter_id: "fighter-1".into(),
-                odds: parse_exact("2.00"),
-            }],
-            stake: parse_exact("10.00"),
-            stake_raw: "10..00".into(),
-        };
-        let core = FightCore::new(vec![]);
-        let errors = core.validate(&slip, parse_exact("500.00"));
-        assert!(errors.contains(&ValidationError::InvalidStake));
-        assert!(!errors.contains(&ValidationError::StakeBelowMinimum));
-    }
 }

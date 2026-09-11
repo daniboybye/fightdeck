@@ -2,6 +2,9 @@ package com.fightdeck.swiftcore.core
 
 import java.math.BigDecimal
 
+// Immutable snapshots that Compose can diff, filled from the Swift core after every
+// mutation. No rule, rounding or ordering is decided here — see SwiftSlipStore.
+
 enum class BetMode {
     single,
     accumulator,
@@ -44,38 +47,6 @@ data class SlipState(
     val potentialReturn: BigDecimal,
     val potentialProfit: BigDecimal,
     val errors: List<ValidationError>,
-)
-
-enum class LegOutcome {
-    won,
-    lost,
-    void,
-}
-
-data class LegResult(
-    val boutId: String,
-    val fighterId: String,
-    val outcome: LegOutcome,
-)
-
-enum class SettlementStatus {
-    won,
-    lost,
-    void,
-    partially_won,
-}
-
-data class Settlement(
-    val legs: List<LegResult>,
-    val returned: BigDecimal,
-    val profit: BigDecimal,
-    val status: SettlementStatus,
-)
-
-data class CashOutOffer(
-    val available: Boolean,
-    val amount: BigDecimal,
-    val reason: String?,
 )
 
 data class BoutIndex(

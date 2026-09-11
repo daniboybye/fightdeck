@@ -9,84 +9,68 @@
 import Foundation
 import Observation
 
+/// SwiftUI's view of a `SlipSession`. The mutations live in the session; this type adds
+/// only observation and main-actor isolation, neither of which crosses to Android.
 @Observable
 @MainActor
 public final class BetSlipStore {
-    public var slip: BetSlip
-    public var balance: Decimal
-    public var settlement: Settlement?
+    private var session: SlipSession
 
-    public let fightCore: FightCore
+    public var slip: BetSlip {
+        get { session.slip }
+        set { session.slip = newValue }
+    }
+
+    public var balance: Decimal {
+        get { session.balance }
+        set { session.balance = newValue }
+    }
+
+    public var settlement: Settlement? {
+        get { session.settlement }
+        set { session.settlement = newValue }
+    }
+
+    public var fightCore: FightCore { session.fightCore }
 
     public init(
         fightCore: FightCore,
         slip: BetSlip = BetSlip(mode: .accumulator, selections: [], stake: Decimal(string: "10.00")!),
         balance: Decimal = Decimal(string: "500.00")!
     ) {
-        self.fightCore = fightCore
-        self.slip = slip
-        self.balance = balance
+        session = SlipSession(fightCore: fightCore, slip: slip, balance: balance)
     }
 
-    public var slipState: SlipState {
-        fightCore.slipState(slip: slip, balance: balance)
-    }
+    public var slipState: SlipState { session.slipState }
 
-    public var cashOutOffer: CashOutOffer {
-        fightCore.cashOutOffer(slip: slip, settledBouts: [])
-    }
+    public var cashOutOffer: CashOutOffer { session.cashOutOffer }
 
     public func toggleSelection(boutID: String, fighterID: String, odds: Decimal) {
-        if let index = slip.selections.firstIndex(where: { $0.boutID == boutID }) {
-            let existing = slip.selections[index]
-            if existing.fighterID == fighterID {
-                slip.selections.remove(at: index)
-            } else {
-                slip.selections[index] = Selection(boutID: boutID, fighterID: fighterID, odds: odds)
-            }
-        } else {
-            slip.selections.append(Selection(boutID: boutID, fighterID: fighterID, odds: odds))
-        }
-        settlement = nil
-        syncMode()
+        session.toggleSelection(boutID: boutID, fighterID: fighterID, odds: odds)
     }
 
     public func isSelected(boutID: String, fighterID: String) -> Bool {
-        slip.selections.contains { $0.boutID == boutID && $0.fighterID == fighterID }
+        session.isSelected(boutID: boutID, fighterID: fighterID)
     }
 
     public func removeSelection(boutID: String, fighterID: String) {
-        slip.selections.removeAll { $0.boutID == boutID && $0.fighterID == fighterID }
-        settlement = nil
-        syncMode()
+        session.removeSelection(boutID: boutID, fighterID: fighterID)
     }
 
     public func removeSelection(id: String) {
-        slip.selections.removeAll { $0.id == id }
-        settlement = nil
-        syncMode()
+        session.removeSelection(id: id)
     }
 
     /// Validates, deducts stake, clears selections. Returns the pre-clear slip state when successful.
     public func placeBet() -> SlipState? {
-        let state = slipState
-        guard state.errors.isEmpty else { return nil }
-        balance -= state.totalStake
-        slip.selections.removeAll()
-        syncMode()
-        settlement = nil
-        return state
-    }
-
-    private func syncMode() {
-        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
+        session.placeBet()
     }
 
     public func settleSlip() {
-        settlement = fightCore.settle(slip: slip)
+        session.settleSlip()
     }
 
     public func deposit(amount: Decimal) {
-        balance += amount
+        session.deposit(amount: amount)
     }
 }

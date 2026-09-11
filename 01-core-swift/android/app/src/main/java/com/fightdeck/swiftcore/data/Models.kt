@@ -137,8 +137,9 @@ class JsonFileRepository(
     }
 }
 
-fun com.fightdeck.swiftcore.core.FightCore.Companion.fromEvents(events: List<Event>): com.fightdeck.swiftcore.core.FightCore {
-    val bouts = events.flatMap { it.bouts }.map {
+/** The bout index the Swift core validates selections against, one entry per bout. */
+fun boutIndex(events: List<Event>): List<com.fightdeck.swiftcore.core.BoutIndex> =
+    events.flatMap { it.bouts }.map {
         com.fightdeck.swiftcore.core.BoutIndex(
             it.id,
             it.redCorner.fighterId,
@@ -146,5 +147,3 @@ fun com.fightdeck.swiftcore.core.FightCore.Companion.fromEvents(events: List<Eve
             it.result.winnerId,
         )
     }
-    return com.fightdeck.swiftcore.core.FightCore(bouts.associateBy { bout -> bout.id })
-}

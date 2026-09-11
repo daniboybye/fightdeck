@@ -32,7 +32,12 @@ android_checksum = "d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69d
 wasm = "swift-6.3.3-RELEASE_wasm"
 
 [apple.packages]
-swift_java = "0.4.2"                   # pre-1.0: no API stability guarantee, expect churn
+# pre-1.0: no API stability guarantee, expect churn. The 0.4.2 written here in June was two
+# minor versions stale by September — 0.5.0, 0.5.1 and 0.6.0 shipped in ten weeks, most of
+# the changes in the JNI generator this approach depends on.
+swift_java = "0.6.0"
+swiftkit_core = "0.6.0"                # the Java runtime the generated bindings compile against
+
 
 # ---------------------------------------------------------------------------
 # Android

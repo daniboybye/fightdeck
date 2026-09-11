@@ -331,6 +331,15 @@ cd "$REPO/00-native/android" && ./gradlew :app:testDebugUnitTest
 
 CI uses `:app:testReleaseUnitTest` (same tests, Release variant).
 
+`01-core-swift`'s fixture suite is an **instrumented** test — a JVM on macOS cannot load an
+Android `.so`, so the Swift core has to run on a device or emulator:
+
+```bash
+adb push "$REPO/contract/fixtures" /data/local/tmp/fightdeck/fixtures
+adb push "$REPO/dataset/events.json" /data/local/tmp/fightdeck/dataset/events.json
+cd "$REPO/01-core-swift/android" && ./gradlew :app:connectedDebugAndroidTest
+```
+
 SDK apps — run per flavour or all three:
 
 ```bash
@@ -366,7 +375,9 @@ cd "$REPO/03-sdk-rn/android"
 | Regenerated art, images still old | Coil / Kingfisher cache by URL | `adb shell pm clear <applicationId>`; iOS: `xcrun simctl uninstall booted <bundleId>` then reinstall |
 | `03-sdk-rn` / `04-sdk-skip` Gradle: missing AARs | No release artifacts and `FIGHTDECK_LOCAL_SDK` unset | `export FIGHTDECK_LOCAL_SDK=1` or run `./tools/release-sdk-local.sh {rn\|skip}` |
 | CocoaPods: pinned RN vendor missing | `FIGHTDECK_LOCAL_SDK` unset and no local release tree | `tools/release-sdk-local.sh rn` or build with `FIGHTDECK_LOCAL_SDK=1` |
-| `01-core-swift` Android: Kotlin stub, not Swift | Swift-on-Android cross-compile fails by design on Apple Xcode Swift | Expected — see `01-core-swift/README.md` |
+| `01-core-swift` Gradle: missing `fightcore.aar` | The Android app has no Kotlin fallback; it needs the cross-compiled core | `cd 01-core-swift/sdks/core && swiftly run ./build-aar.sh +6.3.3` |
+| `01-core-swift` Android: `compiled module was created by an older version of the compiler` | Xcode's Swift cannot read the Android SDK's Foundation | Prefix with `swiftly run … +6.3.3` so the open-source toolchain builds it |
+| `01-core-swift` Android: `dlopen failed: library "libc++_shared.so" not found` | AAR packaged without the NDK's C++ runtime | Rebuild with the current `build-aar.sh`, which copies it out of the NDK sysroot |
 | Gradle / AGP JDK errors | Wrong Java version | `export JAVA_HOME="$(/usr/libexec/java_home -v 17)"` |
 | `am start` → `Error type 3 … does not exist` | `applicationId` differs from the Kotlin package | Use the full component from the table above, or `adb shell monkey -p <applicationId> -c android.intent.category.LAUNCHER 1` |
 | `04-sdk-skip` iOS shows "Bet slip not included" | Target settings not applied, so `FIGHTDECK_BOTH` is undefined | Settings must be nested under `settings.base` in `project.yml` when the target also uses a template; then `xcodegen generate` |

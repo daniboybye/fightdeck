@@ -1,21 +1,18 @@
 package com.fightdeck.swiftcore.bridge
 
+import com.fightdeck.fightcore.FightCoreJava
+
 /**
- * **STUB — NOT THE SWIFT CORE**
+ * The Compose host runs the cross-compiled Swift core, reached through the JNI bindings
+ * that `swift-java jextract --mode=jni` generated from `Sources/FightCoreJava`.
  *
- * Android cross-compilation of the Swift FightCore failed on this machine (see
- * `01-core-swift/README.md`). This object exists so the Compose host app builds and
- * demonstrates the UI contract. It delegates to the Kotlin port of FightCore in
- * `com.fightdeck.swiftcore.core`, which mirrors the contract fixtures but is **not**
- * cross-compiled Swift.
- *
- * When `fightcore.aar` from `./build-aar.sh` is available, replace calls here with
- * swift-java generated bindings.
+ * Loading is implicit: every generated class has a static initialiser that calls
+ * `System.loadLibrary` for `libSwiftJava.so` and `libfightcore.so`, both shipped in
+ * `fightcore.aar`. This object only exists to make that fact assertable at startup.
  */
 object SwiftCoreBridge {
-    val isStub: Boolean = true
+    val isStub: Boolean = false
 
-    const val STUB_REASON: String =
-        "Swift SDK for Android requires the open-source Swift 6.3.3 toolchain; " +
-            "Apple Xcode Swift 6.3.3 cannot deserialize the Android Foundation module."
+    /** Forces the class initialiser, so a packaging mistake fails here and not mid-screen. */
+    fun verifyNativeCore(): String = FightCoreJava.formatCurrency("361.11")
 }

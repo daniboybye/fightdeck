@@ -38,6 +38,16 @@ android {
 }
 
 dependencies {
+    // The cross-compiled Swift core: jni/<abi>/libfightcore.so plus libSwiftJava.so and the
+    // Swift runtime closure, classes.jar with the jextract JNI bindings, and the
+    // org.swift.swiftkit.core runtime in libs/. Build it with
+    // `swiftly run ./build-aar.sh +6.3.3` in sdks/core; it is not a committed artifact.
+    val fightCoreAar = rootProject.file("../sdks/core/out/fightcore.aar")
+    require(fightCoreAar.exists()) {
+        "Missing $fightCoreAar — run `swiftly run ./build-aar.sh +6.3.3` in 01-core-swift/sdks/core"
+    }
+    implementation(files(fightCoreAar))
+
     val composeBom = platform("androidx.compose:compose-bom:2026.08.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -64,6 +74,13 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.4.10")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+
+    // The fixtures moved from unit tests to instrumented tests when the Kotlin port was
+    // deleted: a JVM on macOS cannot dlopen an Android ELF, so the only place the Swift
+    // core can be asserted against the contract is a device or emulator.
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.4.10")
 }
 
 tasks.withType<Test>().configureEach {

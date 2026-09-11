@@ -6,15 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.fightdeck.swiftcore.bridge.SharedPreferencesStore
 import com.fightdeck.swiftcore.bridge.SwiftCoreBridge
 import com.fightdeck.swiftcore.core.BetSlip
-import com.fightdeck.swiftcore.core.BetSlipStore
 import com.fightdeck.swiftcore.core.BetMode
-import com.fightdeck.swiftcore.core.FightCore
+import com.fightdeck.swiftcore.core.BoutIndex
 import com.fightdeck.swiftcore.core.Money
 import com.fightdeck.swiftcore.core.SlipState
+import com.fightdeck.swiftcore.core.SwiftSlipStore
 import com.fightdeck.swiftcore.data.Bout
 import com.fightdeck.swiftcore.data.Event
 import com.fightdeck.swiftcore.data.Fighter
-import com.fightdeck.swiftcore.data.fromEvents
+import com.fightdeck.swiftcore.data.boutIndex
 import com.fightdeck.swiftcore.data.JsonFileRepository
 import com.fightdeck.swiftcore.data.MediaItem
 import com.fightdeck.swiftcore.data.NewsItem
@@ -45,7 +45,6 @@ sealed interface BootstrapState {
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = SharedPreferencesStore(application)
     private var repository: JsonFileRepository? = null
-    private var fightCore: FightCore? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
         BootstrapState.Loading("Loading fight core…"),
@@ -53,10 +52,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val bootstrapState: StateFlow<BootstrapState> = _bootstrapState.asStateFlow()
 
     init {
-        check(SwiftCoreBridge.isStub) {
-            "Expected SwiftCoreBridge stub until fightcore.aar is wired"
+        check(!SwiftCoreBridge.isStub) { "Expected the cross-compiled Swift core, not a stub" }
+        check(SwiftCoreBridge.verifyNativeCore() == "€361.11") {
+            "libfightcore.so did not answer through JNI"
         }
-        preferences.write("swift_core_mode", if (SwiftCoreBridge.isStub) "kotlin_stub" else "swift")
+        preferences.write("swift_core_mode", "swift")
         bootstrap()
     }
 
@@ -66,7 +66,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _fighters = MutableStateFlow<LoadState<List<Fighter>>>(LoadState.Loading)
     val fighters: StateFlow<LoadState<List<Fighter>>> = _fighters.asStateFlow()
 
-    private var slipStore: BetSlipStore? = null
+    private var slipStore: SwiftSlipStore? = null
 
     private val _slip = MutableStateFlow(
         BetSlip(BetMode.single, emptyList(), BigDecimal("10.00")),
@@ -107,8 +107,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             booted.fold(
                 onSuccess = { engine ->
                     repository = engine.repository
-                    fightCore = engine.fightCore
-                    slipStore = BetSlipStore(engine.fightCore)
+                    slipStore = SwiftSlipStore(engine.bouts)
                     publishSlipState()
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
@@ -127,13 +126,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private data class Engine(
         val repository: JsonFileRepository,
-        val fightCore: FightCore,
+        val bouts: List<BoutIndex>,
     )
 
     private fun bootstrapEngine(application: Application): Engine {
         val root = DatasetLocator.datasetRoot(application)
         LocalAssetServer.start(root)
-        return Engine(JsonFileRepository(root), buildFightCore(root))
+        return Engine(JsonFileRepository(root), loadBoutIndex(root))
     }
 
     fun refreshEvents() {
@@ -211,12 +210,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         publishSlipState()
     }
 
-    private fun buildFightCore(root: java.io.File): FightCore {
+    private fun loadBoutIndex(root: java.io.File): List<BoutIndex> {
         val events = Json { ignoreUnknownKeys = true }
             .decodeFromString<EventsEnvelope>(
                 root.resolve("events.json").readText(),
             )
-        return FightCore.fromEvents(events.events)
+        return boutIndex(events.events)
     }
 }
 

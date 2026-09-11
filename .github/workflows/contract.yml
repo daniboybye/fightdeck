@@ -1,10 +1,16 @@
-# Run the frozen golden fixtures against every FightCore implementation.
+# Run the frozen golden fixtures against the cores a hosted runner can execute:
+# the Swift package, the Rust workspace, and the hand-written iOS baseline.
 #
 # This is the guard rail for the whole repository. Five apps built by five separate
 # agents will drift; the contract suite is what catches the drift before an audience
 # does. If the Swift core and the Rust core disagree about what a four-leg accumulator
 # pays out, that shows up here as a red cell rather than as two phones displaying
 # different numbers on a projector.
+#
+# Not covered here, and deliberately so: 01-core-swift's Android path runs the same
+# fixtures through JNI against a cross-compiled .so, which needs a device or emulator
+# (SwiftCoreFixtureTests), and the RN and Skip cores are exercised by their own SDK
+# workflows. A green run here means the cores agree, not that every host was tested.
 
 name: Contract tests
 
@@ -37,12 +43,6 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         working-directory: 01-core-swift/sdks/core
         run: swift test --parallel
-      - uses: actions/upload-artifact@v7
-        if: steps.guard.outputs.exists == 'true' && always()
-        with:
-          name: contract-swift
-          path: 01-core-swift/sdks/core/out/contract-*.json
-          if-no-files-found: ignore
 
   rust:
     name: Rust core
@@ -74,12 +74,6 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         working-directory: 02-core-rust/sdks
         run: cargo test --workspace --release
-      - uses: actions/upload-artifact@v7
-        if: steps.guard.outputs.exists == 'true' && always()
-        with:
-          name: contract-rust
-          path: 02-core-rust/sdks/out/contract-*.json
-          if-no-files-found: ignore
 
   native-baseline:
     name: Native baseline (written twice)
@@ -121,12 +115,6 @@ jobs:
     needs: [swift, rust, native-baseline]
     if: always()
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: contract-*
-          path: tools/out
-          merge-multiple: true
       - name: Which core failed where
         run: |
           {

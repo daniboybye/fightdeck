@@ -214,6 +214,11 @@ without the SDK importing a single one of the host's types.
 SDK depends on. It sees `DepositHosting` and nothing else, and it must remain unit
 testable with that protocol mocked and no runtime present.
 
+The protocol only earns its keep where an SDK supplies the screen. The approaches that
+build the screen in-app — `00-native` and `02-core-rust` on iOS — keep `DepositParams`
+and `DepositResult` in a `DepositContract.swift` and present the view directly, since
+there is no runtime to hide behind an adapter.
+
 ---
 
 ## 6. Fighter profile — iOS only

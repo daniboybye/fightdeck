@@ -31,7 +31,7 @@ CONFIG_NAMES = {
     "project.yml", "Package.swift", "Cargo.toml", "package.json", "Podfile",
     "settings.gradle.kts", "build.gradle.kts", "gradle.properties",
 }
-CONFIG_SUFFIXES = {".podspec", ".udl"}
+CONFIG_SUFFIXES = {".podspec"}
 
 # Files implementing the FightCore contract: odds, money, slip math, validation,
 # settlement, cash-out.

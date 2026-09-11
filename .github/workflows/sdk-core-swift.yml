@@ -1,10 +1,12 @@
 # Build the Swift FightCore for Apple and, the interesting half, for Android.
 #
-# The Android job is the riskiest thing in this repository. Swift 6.3 shipped an official
-# Android SDK, but the toolchain is young: swift-java is pre-1.0, and NDK compatibility
-# past r27d is unconfirmed. The job is allowed to fail without taking the workflow down,
-# because "we tried it and here is exactly where it broke" is itself a result worth having
-# on a slide — a talk that only shows the paths that worked is a sales pitch.
+# The Android job is the most fragile thing in this repository, and it now passes: the core
+# cross-compiles against the official Swift 6.3 Android SDK and swift-java jextract emits
+# the JNI bindings the Compose app calls. What keeps it fragile is the toolchain's age —
+# swift-java is pre-1.0 and changed API twice in a month, NDK compatibility past r27d is
+# unconfirmed, and the Swift SDK must match the compiler build exactly, not just the
+# version number. It stays non-blocking so a toolchain release cannot redden the whole
+# workflow, and because "here is exactly where it broke" is itself a result worth a slide.
 
 name: SDK — Swift core
 
@@ -79,6 +81,9 @@ jobs:
     if: inputs.job != 'apple'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    # Green since the jextract bridge landed, but kept non-blocking: every dependency here
+    # is pre-1.0 or version-locked to a specific compiler build, so this job reports on the
+    # toolchain rather than on the change under review.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v7

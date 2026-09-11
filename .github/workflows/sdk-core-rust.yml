@@ -1,4 +1,5 @@
-# Build the Rust FightCore into an XCFramework and an AAR.
+# Build the three Rust SDKs — fightcore, fightslip, fightevents — into an xcframework
+# and an AAR apiece.
 #
 # Rust is the most predictable of the three cores: one cargo workspace, UniFFI generates
 # the Swift and Kotlin bindings, and the artifacts drop out the other end. It is
@@ -53,8 +54,8 @@ jobs:
           toolchain: ${{ env.PINNED_RUST }}
           targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
-      # The most valuable cache in the repository: this job builds fightcore for three
-      # Apple triples from scratch and was the slowest macOS job outside Skip's AARs.
+      # The most valuable cache in the repository: this job builds all three crates for
+      # three Apple triples from scratch, and was the slowest macOS job outside Skip's AARs.
       - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true'
         with:

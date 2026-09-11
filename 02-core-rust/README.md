@@ -15,6 +15,9 @@ Both feature crates depend on `fightcore` as an ordinary Rust dependency and **n
 ```
 sdks/
 ├── Cargo.toml            # workspace: three members
+├── build-apple.sh        # packages all three SwiftPM packages
+├── build-android.sh      # packages all three AARs, syncs the host's jniLibs/
+├── build-wasm.sh         # fightcore only → wasm/pkg/
 ├── core/                 # SwiftPM package FightCore
 │   ├── Package.swift     #   binary target + the C header target + the bindings target
 │   ├── fightcore/        #   the kernel crate
@@ -34,6 +37,9 @@ pinned SHA-256, the same shape `03-sdk-rn` and `04-sdk-skip` use:
 | `FIGHTDECK_LOCAL_SDK=1` | `out/FightCore.xcframework` from a local build |
 | `FIGHTDECK_RELEASE_PATH=1` | `out/FightCore.xcframework.zip`, pinned but offline |
 | neither | `$FIGHTDECK_RELEASE_BASE_URL/FightCore.xcframework.zip` + checksum |
+
+`FightSlip` and `FightEvents` read the same three variables; each package's `Package.swift`
+resolves its own artifact.
 
 The xcframework carries the Rust staticlib and nothing else. UniFFI's C header goes into a
 C target and the generated Swift into a Swift target, both inside the package, so the host
@@ -80,7 +86,7 @@ Hand-written glue shrank accordingly:
 
 | File | Before | After |
 | --- | ---: | ---: |
-| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | **76** |
+| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | **78** |
 | `android/.../core/FightCoreGlue.kt` | 115 | **72** |
 
 What is left in those files is the part UniFFI genuinely cannot generate: a listener bridge republished as `@Observable` on iOS and `StateFlow` on Android. No betting rule survives in either.
@@ -89,8 +95,8 @@ What is left in those files is the part UniFFI genuinely cannot generate: a list
 
 | Crate | Rust | Generated Swift | Generated Kotlin |
 | --- | ---: | ---: | ---: |
-| `fightcore` | 380 | 776 | 1219 |
-| `fightslip` | 1258 | 1986 | 2739 |
+| `fightcore` | 383 | 776 | 1219 |
+| `fightslip` | 1255 | 1986 | 2739 |
 | `fightevents` | 797 | 1563 | 2110 |
 | **Total** | **2435** | **4325** | **6068** |
 

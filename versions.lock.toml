@@ -1,14 +1,15 @@
 # fightdeck — pinned toolchain
 #
 # Rule: latest stable everywhere. Nothing here is a beta or a release candidate.
-# Verified 20 August 2026. Every workflow in .github/workflows reads from this file
-# so that a version bump happens in exactly one place.
+# Verified 20 August 2026, and the Apple/Android sections again on 11 September 2026
+# when 01-core-swift moved to a swift-java JNI bridge. Every workflow in
+# .github/workflows reads from this file so a version bump happens in one place.
 #
 # When a value changes, note WHY in the comment on the line. A version with no
 # reason attached is a version nobody can audit later.
 
 [meta]
-verified = "2026-08-20"
+verified = "2026-09-11"
 rule = "latest stable everywhere"
 
 # ---------------------------------------------------------------------------

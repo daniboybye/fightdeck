@@ -1,6 +1,6 @@
 # fightdeck runbook
 
-Get all **five iOS host apps** on one simulator and all **five Android host apps** on one emulator, side by side. Every command below was run successfully against this repository on 22 August 2026.
+Get all **five iOS host apps** on one simulator and all **five Android host apps** on one emulator, side by side. Every command below was run successfully against this repository on 22 August 2026, and the `01-core-swift` and `02-core-rust` sections were re-verified on 11 September 2026 after those approaches changed shape.
 
 Toolchain pins live in [`versions.lock.toml`](versions.lock.toml). Read values with `./tools/versions.py <dotted.key>` (for example `./tools/versions.py apple.xcode` → `26.6`).
 
@@ -19,6 +19,9 @@ Install the pinned toolchain, then run the **Verify** column before continuing.
 | **Android SDK** | `[android] compile_sdk = 37`, `platform_version = 17` | Android Studio **Quail 3 (2026.1.3 Patch 1)** → SDK Manager → API 37 | `adb version` and `$ANDROID_HOME/platforms/android-37` exists |
 | **Android NDK** | `[android] ndk = 27.3.13750724` | SDK Manager → NDK **27.3.13750724** (Side by side) | `ls "$ANDROID_HOME/ndk/27.3.13750724"` |
 | **Gradle / AGP** | `[android] gradle = 9.7.1`, `agp = 9.3.1` | Committed `./gradlew` in each `*/android/` | `./gradlew --version` |
+| **swiftly** | (not pinned; 1.2.0 worked) | `curl -L https://swiftlang.github.io/swiftly/swiftly-install.sh \| bash` | `swiftly --version` |
+| **Open-source Swift** | `[apple] swift = 6.3.3` | `swiftly install 6.3.3` — Xcode's own Swift **cannot** cross-compile for Android | `swiftly run swift +6.3.3 --version` |
+| **Swift SDK for Android** | `[apple.swift_sdks] android` | `swiftly run swift +6.3.3 sdk install <url> --checksum <sha>` | `swiftly run swift +6.3.3 sdk list` |
 | **Rust** | `[rust] toolchain = 1.97.1` | `rustup toolchain install 1.97.1` | `rustc --version` |
 | **Rust Apple targets** | `[rust.targets] apple` | `rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios` | `rustup target list --installed \| grep apple` |
 | **Rust Android targets** | `[rust.targets] android` | `rustup target add aarch64-linux-android x86_64-linux-android` | `rustup target list --installed \| grep android` |
@@ -88,6 +91,22 @@ cd "$REPO/02-core-rust/sdks"
 ./build-apple.sh          # → {core,slip,events}/out/*.xcframework, bindings into each package
 ./build-android.sh        # → {core,slip,events}/out/android/*.aar (+ syncs jniLibs/ and uniffi/)
 ```
+
+### 3b. Swift core for Android (`01-core-swift`)
+
+The Compose host has no Kotlin fallback — it links the cross-compiled Swift core, and
+`app/build.gradle.kts` fails the configuration phase if `sdks/core/out/fightcore.aar` is
+missing. The AAR is build output, not committed. Package once:
+
+```bash
+cd "$REPO/01-core-swift/sdks/core"
+swiftly run ./build-aar.sh +6.3.3    # ~12 min: both ABIs, jextract, SwiftKitCore jar
+```
+
+`swiftly run … +6.3.3` is not optional. Xcode's Swift cannot read the Android SDK's
+prebuilt Foundation even at the same version number; see `01-core-swift/README.md`.
+
+The iOS host needs nothing here — it consumes the package through SPM.
 
 ### 4. SDK approaches (`03-sdk-rn`, `04-sdk-skip`)
 
@@ -211,6 +230,8 @@ done
 
 Use the **`both`** product flavour for `03-sdk-rn` and `04-sdk-skip` — that is the default demo configuration (deposit + bet slip SDK screens). Flavours `runtime` and `deposit` exist only for size measurements.
 
+`01-core-swift` needs its AAR built first (§3b) and `02-core-rust` needs its AARs (§3); both fail at configuration time otherwise.
+
 ```bash
 export REPO="$(git rev-parse --show-toplevel)"
 export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
@@ -322,17 +343,19 @@ done
 
 ### Android host unit tests
 
-Plain apps (`00-native`, `01-core-swift`, `02-core-rust`):
+Plain apps (`00-native`, `02-core-rust`):
 
 ```bash
 cd "$REPO/00-native/android" && ./gradlew :app:testDebugUnitTest
-# repeat for 01-core-swift/android and 02-core-rust/android
+# repeat for 02-core-rust/android
 ```
 
 CI uses `:app:testReleaseUnitTest` (same tests, Release variant).
 
-`01-core-swift`'s fixture suite is an **instrumented** test — a JVM on macOS cannot load an
-Android `.so`, so the Swift core has to run on a device or emulator:
+**`01-core-swift` has no JVM unit tests at all** — `app/src/test/` is empty, so
+`:app:testDebugUnitTest` passes without asserting anything. Its fixture suite is an
+**instrumented** test, because a JVM on macOS cannot load an Android `.so` and only a
+device can run the Swift core:
 
 ```bash
 adb push "$REPO/contract/fixtures" /data/local/tmp/fightdeck/fixtures
@@ -369,7 +392,7 @@ cd "$REPO/03-sdk-rn/android"
 | Xcode project out of date / missing files | `project.yml` changed but `.xcodeproj` not regenerated | `cd <approach>/ios && xcodegen generate` |
 | `Validate plug-in "skipstone" in package "skip"` | Skip SPM plugin not trusted in Xcode 26 | Add `-skipPackagePluginValidation -skipMacroValidation` to every `04-sdk-skip` `xcodebuild` invocation |
 | RN iOS link errors / missing React | Built `.xcodeproj` instead of workspace | Use `-workspace FightDeck.xcworkspace` after `pod install` in `03-sdk-rn/ios` |
-| `02-core-rust` iOS: missing `FightCore`/`FightSlip`/`FightEvents.xcframework` or `Generated/` | Rust artifacts not built | `cd 02-core-rust/sdks && ./build-apple.sh` |
+| `02-core-rust` iOS: missing `FightCore`/`FightSlip`/`FightEvents.xcframework`, or no generated Swift under `sdks/{core,slip,events}/Sources/` | Rust artifacts not built | `cd 02-core-rust/sdks && ./build-apple.sh` |
 | App shows empty events / 404 images | Dataset env/path wrong | **iOS:** set `FIGHTDECK_DATASET_ROOT` or `SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT`. **Android:** push to `/data/local/tmp/fightdeck/dataset` |
 | Updated dataset but UI unchanged | `adb push` nested into `.../dataset/dataset/` | `adb shell rm -rf /data/local/tmp/fightdeck/dataset` then push again |
 | Regenerated art, images still old | Coil / Kingfisher cache by URL | `adb shell pm clear <applicationId>`; iOS: `xcrun simctl uninstall booted <bundleId>` then reinstall |

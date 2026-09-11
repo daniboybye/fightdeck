@@ -119,8 +119,8 @@ jobs:
           toolchain: ${{ env.PINNED_RUST }}
           targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
-      # Shares the "apple" entry with sdk-core-rust.yml on purpose: it is the same crate
-      # built for the same three triples, so the two workflows should warm each other.
+      # Shares the "apple" entry with sdk-core-rust.yml on purpose: it is the same
+      # workspace built for the same three triples, so the two workflows warm each other.
       - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
         with:

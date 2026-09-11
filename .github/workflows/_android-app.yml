@@ -146,8 +146,8 @@ jobs:
           toolchain: ${{ env.PINNED_RUST }}
           targets: aarch64-linux-android,x86_64-linux-android
 
-      # Same "android" entry as sdk-core-rust.yml: identical crate, identical triples, so
-      # whichever workflow runs first warms the other.
+      # Same "android" entry as sdk-core-rust.yml: identical workspace, identical triples,
+      # so whichever workflow runs first warms the other.
       - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
         with:

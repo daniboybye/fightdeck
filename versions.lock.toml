@@ -30,7 +30,6 @@ android = "swift-6.3.3-RELEASE_android"
 # swift sdk install refuses a remote bundle without one. Published alongside the
 # bundle on swift.org/documentation/articles/swift-sdk-for-android-getting-started.
 android_checksum = "d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
-wasm = "swift-6.3.3-RELEASE_wasm"
 
 [apple.packages]
 # pre-1.0: no API stability guarantee, expect churn. The 0.4.2 written here in June was two
@@ -104,7 +103,6 @@ apple = [
   "aarch64-apple-ios-sim",
   "x86_64-apple-ios",
 ]
-wasm = ["wasm32-unknown-unknown"]
 
 # ---------------------------------------------------------------------------
 # Skip

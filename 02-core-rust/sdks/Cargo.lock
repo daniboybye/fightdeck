@@ -289,7 +289,6 @@ dependencies = [
  "serde",
  "thiserror",
  "uniffi",
- "wasm-bindgen",
 ]
 
 [[package]]

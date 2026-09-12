@@ -17,7 +17,6 @@ sdks/
 ├── Cargo.toml            # workspace: three members
 ├── build-apple.sh        # packages all three SwiftPM packages
 ├── build-android.sh      # packages all three AARs, syncs the host's jniLibs/
-├── build-wasm.sh         # fightcore only → wasm/pkg/
 ├── core/                 # SwiftPM package FightCore
 │   ├── Package.swift     #   binary target + the C header target + the bindings target
 │   ├── fightcore/        #   the kernel crate
@@ -127,8 +126,6 @@ cargo test --workspace          # 16 tests: fixtures + unit
 ./core/build-xcframework.sh     # or one SDK at a time
 ./slip/build-aar.sh
 ```
-
-Browser demo of the kernel (`fightcore` only): `./build-wasm.sh`, then serve `wasm/`.
 
 ### Hosts
 

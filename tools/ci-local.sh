@@ -43,7 +43,7 @@ options:
 targets:
   contract                contract.yml (Swift + Rust + native baseline)
   sdk-core-swift [part]   sdk-core-swift.yml — apple | android | all (default all)
-  sdk-core-rust [part]    sdk-core-rust.yml — apple | android | wasm | all
+  sdk-core-rust [part]    sdk-core-rust.yml — apple | android | all
   sdk-rn [part]           sdk-rn.yml — apple | android | all
   sdk-skip [part]         sdk-skip.yml — apple | android | all
   ios APPROACH            _ios-app.yml for one approach (00-native … 04-sdk-skip)
@@ -353,27 +353,14 @@ run_sdk_core_rust_android() {
     (cd 02-core-rust/sdks && ./build-android.sh)
 }
 
-run_sdk_core_rust_wasm() {
-    guard_file 02-core-rust/sdks/Cargo.toml || return 0
-    ensure_rust
-    rustup target add wasm32-unknown-unknown 2>/dev/null || true
-    (
-        cd 02-core-rust/sdks
-        cargo build --release --target wasm32-unknown-unknown
-        ls -la target/wasm32-unknown-unknown/release/*.wasm
-    )
-}
-
 run_sdk_core_rust() {
     local part="${1:-all}"
     case "$part" in
         apple) run_step "sdk-core-rust/apple" run_sdk_core_rust_apple || true ;;
         android) run_step "sdk-core-rust/android" run_sdk_core_rust_android || true ;;
-        wasm) run_step "sdk-core-rust/wasm" run_sdk_core_rust_wasm || true ;;
         all)
             run_step "sdk-core-rust/apple" run_sdk_core_rust_apple || true
             run_step "sdk-core-rust/android" run_sdk_core_rust_android || true
-            run_step "sdk-core-rust/wasm" run_sdk_core_rust_wasm || true
             ;;
         *)
             echo "unknown sdk-core-rust part: $part" >&2

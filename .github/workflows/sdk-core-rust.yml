@@ -22,13 +22,12 @@ on:
           - both
           - apple
           - android
-          - wasm
   workflow_call:
 
 jobs:
   apple:
     name: XCFramework
-    if: inputs.job != 'android' && inputs.job != 'wasm'
+    if: inputs.job != 'android'
     runs-on: macos-26
     timeout-minutes: 45
     steps:
@@ -75,7 +74,7 @@ jobs:
 
   android:
     name: AAR
-    if: inputs.job != 'apple' && inputs.job != 'wasm'
+    if: inputs.job != 'apple'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -143,40 +142,3 @@ jobs:
           name: rust-sdk-aars
           path: 02-core-rust/sdks/*/out/android/*.aar
           if-no-files-found: warn
-
-  wasm:
-    # The bonus slide: the same core, compiled to WebAssembly. Element and Crux both do
-    # this in production, so it is worth one measured data point rather than a claim.
-    name: Wasm (bonus)
-    if: inputs.job != 'apple' && inputs.job != 'android'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Guard
-        id: guard
-        run: |
-          if [[ -f 02-core-rust/sdks/Cargo.toml ]]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - uses: dtolnay/rust-toolchain@stable
-        if: steps.guard.outputs.exists == 'true'
-        with:
-          targets: wasm32-unknown-unknown
-
-      - uses: ./.github/actions/cargo-cache
-        if: steps.guard.outputs.exists == 'true'
-        with:
-          key: wasm
-
-      - name: Build
-        if: steps.guard.outputs.exists == 'true'
-        working-directory: 02-core-rust/sdks
-        run: |
-          cargo build --release -p fightcore --target wasm32-unknown-unknown
-          ls -la target/wasm32-unknown-unknown/release/*.wasm

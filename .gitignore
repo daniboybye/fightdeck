@@ -69,7 +69,6 @@ Cargo.lock.local
 # 02-core-rust/sdks/build-android.sh and build-apple.sh.
 02-core-rust/android/app/src/main/jniLibs/
 02-core-rust/android/app/src/main/java/uniffi/
-02-core-rust/sdks/wasm/pkg/
 
 # The generated Swift and the C header land inside the SPM packages. Only each package's
 # hand-written shim.c is committed; the xcframeworks are covered by the **/sdks/**/out/ rule.

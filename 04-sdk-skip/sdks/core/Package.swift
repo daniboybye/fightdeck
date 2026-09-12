@@ -52,9 +52,9 @@ let package = Package(
         coreLibrary,
     ],
     dependencies: [
-        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.6"),
-        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.3"),
-        .package(url: "https://github.com/skiptools/skip-ui.git", exact: "1.59.2"),
+        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.8"),
+        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.4"),
+        .package(url: "https://github.com/skiptools/skip-ui.git", exact: "1.59.3"),
     ],
     targets: [
         coreBinary,

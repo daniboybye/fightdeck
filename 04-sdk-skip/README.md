@@ -86,26 +86,26 @@ export FIGHTDECK_RELEASE_PATH=1       # pinned iOS xcframework zips (see SPM not
 
 **Second-feature zip delta:** **+18 KB** (2,271,963 − 2,253,282 B).
 
-### Android — `.aar` (deduped set under `tools/out/release/skip/`)
+### Android — `.aar` (deduped set under `tools/out/release/skip/`, re-measured 12 Sep 2026 on Skip 1.9.8)
 
 | Stack | Total |
 | --- | --- |
-| **Runtime / core alone** | **2.83 MB** |
-| **+ Deposit** | **8.93 MB** |
-| **+ Both features** | **9.03 MB** |
+| **Runtime / core alone** | **2.84 MB** |
+| **+ Deposit** | **8.94 MB** |
+| **+ Both features** | **9.07 MB** |
 
 | Component | Size |
 | --- | --- |
-| `FightDeckCore-release.aar` | 116 KB |
+| `FightDeckCore-release.aar` | 123 KB |
 | `SkipFoundation-release.aar` | 1.22 MB |
 | `SkipLib-release.aar` | 1.54 MB |
 | `SkipUnit-release.aar` | 12 KB |
-| `SkipUI-release.aar` | 5.91 MB |
+| `SkipUI-release.aar` | 5.93 MB |
 | `SkipModel-release.aar` | 84 KB |
-| `FightDeckDeposit-release.aar` | 99 KB |
-| `FightDeckBetslip-release.aar` | 94 KB |
+| `FightDeckDeposit-release.aar` | 96 KB |
+| `FightDeckBetslip-release.aar` | 129 KB |
 
-**Second-feature module cost:** **94 KB** (`FightDeckBetslip-release.aar`).
+**Second-feature module cost:** **129 KB** (`FightDeckBetslip-release.aar`).
 
 ## Fixture coverage (Swift FightCore)
 
@@ -154,7 +154,11 @@ Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/main/java/com/fi
 | Bet slip | **FightDeckBetslip** SDK | **SkipSDKBridge** → `BetslipComposeEntry(...).Compose()` |
 | Deposit | **FightDeckDeposit** SDK | **SkipSDKBridge** → `DepositComposeEntry(...).Compose()` |
 
-## `skip checkup` (verbatim summary, 20 Aug 2026)
+## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
+
+The pin has since moved to 1.9.8; this block is the original capture and has not been
+re-run, so read the version lines as historical. What *was* re-verified on 12 Sep 2026 is
+the thing that matters here — all three AARs export cleanly on 1.9.8 from a clean `.build`.
 
 ```
 [✓] Skip version 1.9.6 (= 1.9.6)

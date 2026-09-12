@@ -27,7 +27,7 @@ Install the pinned toolchain, then run the **Verify** column before continuing.
 | **Rust Android targets** | `[rust.targets] android` | `rustup target add aarch64-linux-android x86_64-linux-android` | `rustup target list --installed \| grep android` |
 | **cargo-ndk** | `[rust] cargo_ndk = 4.1.2` | `cargo install cargo-ndk --version 4.1.2 --locked` | `cargo ndk --version` |
 | **Node.js** | `[react_native] node = 24.19.0` | `nvm install 24.19.0` / `mise install` | `node --version` |
-| **Skip (skipstone)** | `[skip] skipstone = 1.9.6` | `brew install skiptools/skip/skip` | `skip version` |
+| **Skip (skipstone)** | `[skip] skipstone = 1.9.8` | `brew install skiptools/skip/skip` | `skip version` |
 | **CocoaPods** | (RN host only) | `gem install cocoapods` or `brew install cocoapods` | `pod --version` |
 
 Set these once per shell session:

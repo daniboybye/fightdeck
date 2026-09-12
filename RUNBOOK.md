@@ -403,7 +403,7 @@ cd "$REPO/03-sdk-rn/android"
 | `01-core-swift` Android: `dlopen failed: library "libc++_shared.so" not found` | AAR packaged without the NDK's C++ runtime | Rebuild with the current `build-aar.sh`, which copies it out of the NDK sysroot |
 | Gradle / AGP JDK errors | Wrong Java version | `export JAVA_HOME="$(/usr/libexec/java_home -v 17)"` |
 | `am start` → `Error type 3 … does not exist` | `applicationId` differs from the Kotlin package | Use the full component from the table above, or `adb shell monkey -p <applicationId> -c android.intent.category.LAUNCHER 1` |
-| `04-sdk-skip` iOS shows "Bet slip not included" | Target settings not applied, so `FIGHTDECK_BOTH` is undefined | Settings must be nested under `settings.base` in `project.yml` when the target also uses a template; then `xcodegen generate` |
+| `03-sdk-rn` harness: `Undefined symbols: std::terminate` | A Swift-only target links the ObjC++ runtime pod, and nothing on that link line pulls in libc++ | Add `OTHER_LDFLAGS: $(inherited) -lc++` to the target in `ios/project.yml`, then `xcodegen generate` |
 
 ---
 

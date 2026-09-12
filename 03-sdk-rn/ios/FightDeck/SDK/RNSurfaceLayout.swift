@@ -10,13 +10,13 @@ import FightDeckRNRuntime
 import SwiftUI
 import UIKit
 
+/// The Compose host carries an `includesTabBarClearance` flag; this one does not need it,
+/// because `SurfaceChrome.resolve` measures the overhang instead of being told about it.
 struct RNSurfaceLayoutMetrics: Equatable {
     var safeAreaTop: CGFloat = 0
     var safeAreaBottom: CGFloat = 0
     var keyboardFrameInWindow: CGRect = .zero
     var keyboardVisible: Bool = false
-    /// Deposit hides the tab bar; slip keeps clearance for the floating bar.
-    var includesTabBarClearance: Bool = true
 }
 
 struct RNSurfaceLayoutSnapshot: Equatable {
@@ -195,6 +195,30 @@ struct RNSurfaceLayoutReader<Content: View>: View {
         next.keyboardVisible = keyboardVisible
         next.keyboardFrameInWindow = keyboardVisible ? keyboardFrame : .zero
         metrics = next
+    }
+}
+
+/// Both RN surfaces need to know when a text field is being edited, and both were watching
+/// the same four notifications. UIKit reports the field and the keyboard separately, and
+/// either one is enough — the field notification arrives for an external keyboard where the
+/// on-screen one never appears, and the keyboard notification covers RN's own inputs, which
+/// are not `UITextField`s.
+extension View {
+    func tracksTextInput(_ active: Binding<Bool>) -> some View {
+        onTextInputNotification(UITextField.textDidBeginEditingNotification, set: active, to: true)
+            .onTextInputNotification(UITextField.textDidEndEditingNotification, set: active, to: false)
+            .onTextInputNotification(UIResponder.keyboardWillShowNotification, set: active, to: true)
+            .onTextInputNotification(UIResponder.keyboardWillHideNotification, set: active, to: false)
+    }
+
+    private func onTextInputNotification(
+        _ name: Notification.Name,
+        set active: Binding<Bool>,
+        to value: Bool
+    ) -> some View {
+        onReceive(NotificationCenter.default.publisher(for: name)) { _ in
+            active.wrappedValue = value
+        }
     }
 }
 

@@ -54,17 +54,24 @@ targetTemplates:
     resources:
       - path: ../../shared-ui-spec/tokens.json
 
+  # No app sources, no resources, no Kingfisher — a harness that carried the demo app's
+  # code would put it on both sides of the subtraction and measure nothing about the SDK.
+  FightDeckHarness:
+    type: application
+    platform: iOS
+    settings:
+      groups:
+        - fightdeck_app
+
 targets:
   FightDeck:
     templates: [FightDeckHost]
     # Must be nested under `base`. A flat mapping here is silently dropped when the
-    # target also inherits structured settings from a template, which is how this
-    # host shipped without its compilation conditions.
+    # target also inherits structured settings from a template.
     settings:
       base:
         INFOPLIST_KEY_CFBundleDisplayName: FD 4 Skip
         PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip
-        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_BOTH
     dependencies:
       - package: Kingfisher
       - package: FightDeckCore
@@ -74,31 +81,54 @@ targets:
       - package: FightDeckBetslip
         product: FightDeckBetslip
 
-  FightDeckRuntime:
-    templates: [FightDeckHost]
+  # The three size-measurement hosts. They share Harness/Shared and take exactly one
+  # Harness/<stage> directory each, so no source file needs an #if to compile against a
+  # link set that is missing a feature SDK. tools/measure-second-feature.sh builds all
+  # three and subtracts; nothing else references them.
+  FightDeckHarnessRuntime:
+    templates: [FightDeckHarness]
     settings:
       base:
-        INFOPLIST_KEY_CFBundleDisplayName: FD4 Runtime
-        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.runtime
-        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_RUNTIME
+        INFOPLIST_KEY_CFBundleDisplayName: FD4 H-Runtime
+        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.harness.runtime
+    sources:
+      - path: Harness/Shared
+      - path: Harness/Runtime
     dependencies:
-      - package: Kingfisher
       - package: FightDeckCore
         product: FightDeckCore
 
-  FightDeckSkipDeposit:
-    templates: [FightDeckHost]
+  FightDeckHarnessDeposit:
+    templates: [FightDeckHarness]
     settings:
       base:
-        INFOPLIST_KEY_CFBundleDisplayName: FD4 Deposit
-        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.deposit
-        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_DEPOSIT
+        INFOPLIST_KEY_CFBundleDisplayName: FD4 H-Deposit
+        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.harness.deposit
+    sources:
+      - path: Harness/Shared
+      - path: Harness/Deposit
     dependencies:
-      - package: Kingfisher
       - package: FightDeckCore
         product: FightDeckCore
       - package: FightDeckDeposit
         product: FightDeckDeposit
+
+  FightDeckHarnessBoth:
+    templates: [FightDeckHarness]
+    settings:
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: FD4 H-Both
+        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.harness.both
+    sources:
+      - path: Harness/Shared
+      - path: Harness/Both
+    dependencies:
+      - package: FightDeckCore
+        product: FightDeckCore
+      - package: FightDeckDeposit
+        product: FightDeckDeposit
+      - package: FightDeckBetslip
+        product: FightDeckBetslip
 
   FightDeckUITests:
     type: bundle.ui-testing
@@ -124,20 +154,26 @@ schemes:
         FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
         FIGHTDECK_LOCAL_SDK: "1"
 
-  FightDeckRuntime:
+  FightDeckHarnessRuntime:
     build:
       targets:
-        FightDeckRuntime: all
+        FightDeckHarnessRuntime: all
     run:
       environmentVariables:
-        FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
         FIGHTDECK_LOCAL_SDK: "1"
 
-  FightDeckSkipDeposit:
+  FightDeckHarnessDeposit:
     build:
       targets:
-        FightDeckSkipDeposit: all
+        FightDeckHarnessDeposit: all
     run:
       environmentVariables:
-        FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckHarnessBoth:
+    build:
+      targets:
+        FightDeckHarnessBoth: all
+    run:
+      environmentVariables:
         FIGHTDECK_LOCAL_SDK: "1"

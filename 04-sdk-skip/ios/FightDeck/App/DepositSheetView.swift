@@ -7,10 +7,8 @@
 //
 
 import FightDeckCore
-import SwiftUI
-#if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
 import FightDeckDeposit
-#endif
+import SwiftUI
 
 struct DepositSheetView: View {
     @Bindable var state: AppState
@@ -18,7 +16,6 @@ struct DepositSheetView: View {
 
     var body: some View {
         NavigationStack {
-            #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
             DepositFlowView(
                 params: depositParams,
                 theme: ThemeTokens.parse(ThemeLoader.tokensJSON()),
@@ -29,13 +26,9 @@ struct DepositSheetView: View {
                     onDismiss()
                 }
             )
-            #else
-            ContentUnavailableView("Deposit not included", systemImage: "puzzlepiece.extension")
-            #endif
         }
     }
 
-    #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
     private var depositParams: DepositParams {
         DepositParams(
             accessToken: "demo-token",
@@ -45,5 +38,4 @@ struct DepositSheetView: View {
             currentBalance: state.balance
         )
     }
-    #endif
 }

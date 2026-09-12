@@ -92,10 +92,13 @@ ASSETS_BYTES=0
 [[ -f "$APP_PATH/Assets.car" ]] && ASSETS_BYTES="$(stat -f%z "$APP_PATH/Assets.car")"
 
 # React Native and Skip both ship a payload that is neither executable nor asset catalog.
+# `.hbc` is the one that actually matters here: this repo's RN host ships Hermes bytecode,
+# not a text bundle, and leaving it out of the glob reported 0 for the largest single
+# non-executable payload in the app while still counting it in app_bytes.
 JSBUNDLE_BYTES=0
 while IFS= read -r bundle; do
     JSBUNDLE_BYTES=$((JSBUNDLE_BYTES + $(stat -f%z "$bundle")))
-done < <(find "$APP_PATH" -name '*.jsbundle' -o -name '*.ios.bundle' 2>/dev/null)
+done < <(find "$APP_PATH" \( -name '*.jsbundle' -o -name '*.ios.bundle' -o -name '*.hbc' \) 2>/dev/null)
 
 cat > "$OUT_DIR/ios-$APPROACH.json" <<JSON
 {

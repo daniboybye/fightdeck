@@ -115,15 +115,26 @@ as a smaller job.
 
 | Approach | Runtime alone | + deposit | + bet slip | Second feature |
 | --- | ---: | ---: | ---: | ---: |
-| `03-sdk-rn` iOS | 21.05 MB | 21.17 MB | 21.21 MB | 40.0 KB |
+| `03-sdk-rn` iOS | 19.26 MB | 19.34 MB | 19.36 MB | 20.0 KB |
 | `03-sdk-rn` Android | 24.72 MB | 24.76 MB | 24.78 MB | 21.6 KB |
-| `04-sdk-skip` iOS | 1.88 MB | 3.10 MB | 3.11 MB | 8.0 KB |
+| `04-sdk-skip` iOS | 0.15 MB | 1.37 MB | 1.38 MB | 12.0 KB |
 | `04-sdk-skip` Android | 22.42 MB | 22.47 MB | 22.52 MB | 46.5 KB |
 
-Produced by `./tools/measure-second-feature.sh`, which builds each host three times — a
-host that only starts the runtime, then one with the deposit screen, then one with both
-screens — and subtracts. Only the two UI-bearing SDKs appear: the headless cores ship no
-UI, so a second feature there is ordinary application code.
+Produced by `./tools/measure-second-feature.sh`, which builds three hosts — one that only
+starts the runtime, one that also mounts the deposit screen, one that mounts both — and
+subtracts. Only the two UI-bearing SDKs appear: the headless cores ship no UI, so a second
+feature there is ordinary application code.
+
+On iOS those three hosts are a dedicated measurement harness (`ios/Harness/`), not the demo
+app with features switched off. That distinction is the whole reason the demo apps contain
+no conditional compilation: a host that has to compile both with and without a feature SDK
+needs `#if` around every import and every call site, and placeholder views to stand in for
+the screens that are missing. Measuring a separate host instead means the app reads as an
+app. It also changes what the numbers mean: none of the three iOS rows is the shipping app,
+so the "+ bet slip" column does not match the `.app` sizes in the table above and is not
+supposed to. Read the deltas, not the absolute sizes. Android needs none
+of this: Kotlin has no preprocessor, so the flavours swap whole source directories, and the
+demo app itself is what gets measured.
 
 `02-core-rust` splits along the same axis but below the UI, into three separately built
 binaries — a `fightcore` kernel plus `fightslip` and `fightevents` feature SDKs — so the
@@ -143,20 +154,25 @@ Android each AAR is a real shared object that carries its own kernel and its own
 binaries is close to free on one platform and very much not on the other — which is a
 thing you can only find out by shipping more than one.
 
-This is the point of the whole repository. React Native's iOS host is 21.05 MB before a
-single feature screen exists, and the two screens together add 168 KB — the runtime is
-over a hundred times the code it carries. Android tells the same story with different
+This is the point of the whole repository. React Native's iOS host is 19.26 MB before a
+single feature screen exists, and the two screens together add 100 KB — the runtime is
+roughly two hundred times the code it carries. Android tells the same story with different
 digits: 24.72 MB standing still, 59 KB for both screens.
 
-Skip splits the bill differently. Its runtime-only iOS host is 1.88 MB, *below* the
-1.96 MB native baseline, because a host with no feature screens links no SkipUI. The first
-feature pulls the transpiled UI layer in and costs 1.22 MB; the second costs 8 KB. Same
-shape as React Native — pay once, then nearly nothing — but the once is fifteen times
-smaller on iOS.
+Skip splits the bill differently. A host that mounts no feature screen is 0.15 MB, because
+it links no SkipUI at all: the transpiled UI layer arrives with the first feature and costs
+1.22 MB. The second then costs 12 KB. Same shape as React Native — pay once, then nearly
+nothing — but a Skip host carrying one feature is fourteen times smaller than the React
+Native equivalent, and it pays nothing at all until a feature needs a UI.
 
-React Native's second feature costs more on iOS than on Android for a boring reason: the
-iOS bundle ships as Hermes bytecode, which is larger than the minified JavaScript Android
-loads, and the bet slip also brings a native pod with it.
+React Native's two platforms now agree on what the second feature costs — 20.0 KB on iOS
+against 21.6 KB on Android. Skip does not: 12 KB on iOS against 46.5 KB on Android, where
+the feature's Kotlin is transpiled rather than compiled from the same Swift the iOS side
+links.
+
+Do not read the iOS kilobyte figures too closely. Every iOS number is the archived `.app`
+measured with `du`, so all of them are multiples of 4 KB — a 12 KB delta is three disk
+blocks, not a byte count. The Android figures are APK download sizes and are exact.
 
 ### Caveats that belong next to every number
 

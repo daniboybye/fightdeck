@@ -6,68 +6,27 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import BetslipSDK
+import DepositSDK
 import FightDeckRNRuntime
 import SwiftUI
-#if FIGHTDECK_BOTH
-import BetslipSDK
-#endif
-#if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
-import DepositSDK
-#endif
 
 struct SlipTabView: View {
     @Bindable var state: AppState
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        slipRoot
-            .navigationTitle("Bet Slip")
-            .navigationBarTitleDisplayMode(.inline)
-            .balanceToolbar(state: state)
-    }
-
-    @ViewBuilder
-    private var slipRoot: some View {
-        #if FIGHTDECK_BOTH
         BetslipBridgeView(
             state: state,
             onBrowseEvents: onBrowseEvents,
             onDeposit: state.presentDeposit
         )
-        #else
-        SlipPlaceholderView(onBrowseEvents: onBrowseEvents)
-        #endif
+        .navigationTitle("Bet Slip")
+        .navigationBarTitleDisplayMode(.inline)
+        .balanceToolbar(state: state)
     }
 }
 
-private struct SlipPlaceholderView: View {
-    let onBrowseEvents: () -> Void
-
-    var body: some View {
-        ContentUnavailableView {
-            Label("No selections yet", systemImage: "ticket")
-        } description: {
-            Text("Pick a winner on any upcoming bout and it lands here.")
-        } actions: {
-            Button("Browse Events", action: onBrowseEvents)
-                .buttonStyle(.glassProminent)
-        }
-    }
-}
-
-private struct FeatureUnavailableView: View {
-    let label: String
-
-    var body: some View {
-        ContentUnavailableView {
-            Label("\(label) not included", systemImage: "exclamationmark.triangle")
-        } description: {
-            Text("This build variant does not ship the \(label.lowercased()) SDK.")
-        }
-    }
-}
-
-#if FIGHTDECK_BOTH
 struct BetslipBridgeView: View {
     @Bindable var state: AppState
     let onBrowseEvents: () -> Void
@@ -85,21 +44,7 @@ struct BetslipBridgeView: View {
                 textInputActive: textInputActive
             )
         }
-        .onAppear {
-            layoutMetrics.includesTabBarClearance = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UITextField.textDidBeginEditingNotification)) { _ in
-            textInputActive = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UITextField.textDidEndEditingNotification)) { _ in
-            textInputActive = false
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            textInputActive = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            textInputActive = false
-        }
+        .tracksTextInput($textInputActive)
     }
 }
 
@@ -222,9 +167,7 @@ struct BetslipSDKView: UIViewControllerRepresentable {
         }
     }
 }
-#endif
 
-#if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
 struct DepositSDKView: UIViewControllerRepresentable {
     @Bindable var state: AppState
     var onDismiss: () -> Void
@@ -333,4 +276,3 @@ struct DepositSDKView: UIViewControllerRepresentable {
         }
     }
 }
-#endif

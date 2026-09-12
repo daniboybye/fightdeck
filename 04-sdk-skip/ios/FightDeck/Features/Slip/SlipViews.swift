@@ -6,49 +6,26 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightDeckBetslip
 import FightDeckCore
 import SwiftUI
-#if FIGHTDECK_BOTH
-import FightDeckBetslip
-#endif
-#if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
-import FightDeckDeposit
-#endif
 
 struct SlipTabView: View {
     @Bindable var state: AppState
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        slipRoot
-            .navigationTitle("Bet Slip")
-            .navigationBarTitleDisplayMode(.inline)
-            .balanceToolbar(state: state)
-    }
-
-    @ViewBuilder
-    private var slipRoot: some View {
-        #if FIGHTDECK_BOTH
         BetslipBridgeView(
             state: state,
             onBrowseEvents: onBrowseEvents,
             onDeposit: state.presentDeposit
         )
-        #else
-        FeatureUnavailableView(label: "Bet slip")
-        #endif
+        .navigationTitle("Bet Slip")
+        .navigationBarTitleDisplayMode(.inline)
+        .balanceToolbar(state: state)
     }
 }
 
-private struct FeatureUnavailableView: View {
-    let label: String
-
-    var body: some View {
-        ContentUnavailableView("\(label) not included", systemImage: "puzzlepiece.extension")
-    }
-}
-
-#if FIGHTDECK_BOTH
 struct BetslipBridgeView: View {
     let state: AppState
     let onBrowseEvents: () -> Void
@@ -135,4 +112,3 @@ final class HostSlipDisplayContext: SlipDisplayContext {
         return event.name
     }
 }
-#endif

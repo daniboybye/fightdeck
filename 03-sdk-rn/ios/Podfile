@@ -13,15 +13,33 @@ $FIGHTDECK_USE_LOCAL_SDK = ENV['FIGHTDECK_LOCAL_SDK'] == '1'
 $FIGHTDECK_RELEASE_VENDOR = File.expand_path('../../tools/out/release/rn/ios-vendor', __dir__)
 $FIGHTDECK_FEATURES = ENV.fetch('FIGHTDECK_FEATURES', 'both')
 
-def fightdeck_include_deposit?
-  %w[deposit both].include?($FIGHTDECK_FEATURES)
+# The demo app links both features. The three harness targets exist only so
+# tools/measure-second-feature.sh can weigh a runtime with no feature screens against one
+# with one and one with two — see ios/Harness/Shared/HarnessApp.swift.
+#
+# Each target's pod set is fixed by its name rather than by an environment variable, which
+# is what lets the app's Swift compile without a single #if: a source file is only ever
+# built by a target that links the SDKs it imports.
+FIGHTDECK_TARGET_FEATURES = {
+  'FightDeck' => %i[deposit betslip],
+  'FightDeckHarnessRuntime' => [],
+  'FightDeckHarnessDeposit' => %i[deposit],
+  'FightDeckHarnessBoth' => %i[deposit betslip],
+}.freeze
+
+def fightdeck_feature_pods(features)
+  if $FIGHTDECK_USE_LOCAL_SDK
+    pod 'DepositSDK', :path => '../sdks/deposit/ios' if features.include?(:deposit)
+    pod 'BetslipSDK', :path => '../sdks/betslip/ios' if features.include?(:betslip)
+  else
+    pod 'DepositSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:deposit)
+    pod 'BetslipSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:betslip)
+  end
 end
 
-def fightdeck_include_betslip?
-  $FIGHTDECK_FEATURES == 'both'
-end
-
-target 'FightDeck' do
+# React Native, Hermes and the runtime pod are shared by every target; only the feature pods
+# differ. use_react_native! has to be inside the abstract target so all four inherit it.
+abstract_target 'FightDeckHosts' do
   if $FIGHTDECK_USE_LOCAL_SDK
     config = use_native_modules!
 
@@ -31,16 +49,18 @@ target 'FightDeck' do
     )
 
     pod 'FightDeckRNRuntime', :path => '../sdks/core/ios'
-    pod 'DepositSDK', :path => '../sdks/deposit/ios' if fightdeck_include_deposit?
-    pod 'BetslipSDK', :path => '../sdks/betslip/ios' if fightdeck_include_betslip?
   else
     unless File.directory?($FIGHTDECK_RELEASE_VENDOR)
       raise "Pinned RN iOS vendor missing at #{$FIGHTDECK_RELEASE_VENDOR}. Run tools/release-sdk-local.sh rn"
     end
 
     pod 'FightDeckRNVendor', :path => $FIGHTDECK_RELEASE_VENDOR
-    pod 'DepositSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if fightdeck_include_deposit?
-    pod 'BetslipSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if fightdeck_include_betslip?
+  end
+
+  FIGHTDECK_TARGET_FEATURES.each do |target_name, features|
+    target target_name do
+      fightdeck_feature_pods(features)
+    end
   end
 
   post_install do |installer|
@@ -52,35 +72,17 @@ target 'FightDeck' do
       )
     end
 
-    # The JS bundle is baked into the runtime pod's resources, so the feature set is decided
-    # when the SDK is built, not here. Selecting deposit-only pods on top of an all-surfaces
-    # bundle links less native code but still ships the bet slip's JavaScript — an app that
-    # runs fine and reports a size that means nothing.
+    # The JS bundle is baked into the runtime pod's resources, so which feature screens
+    # exist in JavaScript is decided when the SDK is built, not here. A deposit-only harness
+    # linked against an all-surfaces bundle runs fine and reports a size that means nothing,
+    # which is why the stage being measured has to agree with the bundle on disk.
     stamp = File.join(__dir__, '..', 'sdks', 'core', 'ios', '.fightdeck-features')
     if File.exist?(stamp)
       built = File.read(stamp).strip
       unless built == $FIGHTDECK_FEATURES
-        raise "SDK bundle was built for '#{built}' but the host wants '#{$FIGHTDECK_FEATURES}'. " \
-              "Rebuild it: FIGHTDECK_FEATURES=#{$FIGHTDECK_FEATURES} ./sdks/core/build-xcframework.sh"
+        raise "SDK bundle was built for '#{built}' but FIGHTDECK_FEATURES is '#{$FIGHTDECK_FEATURES}'. " \
+              "Rebuild it: FIGHTDECK_FEATURES=#{$FIGHTDECK_FEATURES} ./sdks/core/build-jsbundle.sh"
       end
     end
-
-    feature_flag = case $FIGHTDECK_FEATURES
-                   when 'runtime' then 'FIGHTDECK_RUNTIME'
-                   when 'deposit' then 'FIGHTDECK_DEPOSIT'
-                   else 'FIGHTDECK_BOTH'
-                   end
-    fightdeck_project_path = File.join(__dir__, 'FightDeck.xcodeproj')
-    fightdeck_project = Xcodeproj::Project.open(fightdeck_project_path)
-    fightdeck_project.targets.each do |target|
-      next unless target.name == 'FightDeck'
-
-      target.build_configurations.each do |config|
-        existing = config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] || '$(inherited)'
-        cleaned = existing.split.reject { |c| c.start_with?('FIGHTDECK_') }.join(' ')
-        config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = "#{cleaned} #{feature_flag}".strip
-      end
-    end
-    fightdeck_project.save
   end
 end

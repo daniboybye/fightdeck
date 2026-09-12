@@ -19,6 +19,22 @@ settings:
     CODE_SIGN_IDENTITY: ""
     CODE_SIGNING_ALLOWED: NO
 
+targetTemplates:
+  # No app sources, no Kingfisher, no dataset — a harness that carried the demo app's code
+  # would put it on both sides of the subtraction and measure nothing about the SDK.
+  FightDeckHarness:
+    type: application
+    platform: iOS
+    settings:
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+      GENERATE_INFOPLIST_FILE: YES
+      ENABLE_USER_SCRIPT_SANDBOXING: NO
+      # The runtime pod and React's codegen are ObjC++, so the link pulls in std::terminate
+      # and the C++ personality routine. A Swift-only target gets no libc++ from the clang
+      # driver and none of these pods autolink it, so it has to be named here.
+      OTHER_LDFLAGS: $(inherited) -lc++
+
 targets:
   FightDeck:
     type: application
@@ -36,13 +52,43 @@ targets:
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       INFOPLIST_KEY_CFBundleDisplayName: FD 3 RN
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn
-      SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) FIGHTDECK_BOTH
       INFOPLIST_KEY_UILaunchScreen_Generation: YES
       INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
       INFOPLIST_KEY_NSLocalNetworkUsageDescription: Serves dataset images over localhost for demo image loading.
       INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
       GENERATE_INFOPLIST_FILE: YES
       ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+  # The three size-measurement hosts. They share Harness/Shared and take exactly one
+  # Harness/<stage> directory each, so no source file needs an #if to compile against a
+  # link set that is missing a feature SDK. Which pods each one links is decided in the
+  # Podfile by target name; tools/measure-second-feature.sh builds all three and subtracts.
+  FightDeckHarnessRuntime:
+    templates: [FightDeckHarness]
+    sources:
+      - path: Harness/Shared
+      - path: Harness/Runtime
+    settings:
+      INFOPLIST_KEY_CFBundleDisplayName: FD3 H-Runtime
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn.harness.runtime
+
+  FightDeckHarnessDeposit:
+    templates: [FightDeckHarness]
+    sources:
+      - path: Harness/Shared
+      - path: Harness/Deposit
+    settings:
+      INFOPLIST_KEY_CFBundleDisplayName: FD3 H-Deposit
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn.harness.deposit
+
+  FightDeckHarnessBoth:
+    templates: [FightDeckHarness]
+    sources:
+      - path: Harness/Shared
+      - path: Harness/Both
+    settings:
+      INFOPLIST_KEY_CFBundleDisplayName: FD3 H-Both
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn.harness.both
 
   FightDeckUITests:
     type: bundle.ui-testing
@@ -67,4 +113,28 @@ schemes:
     run:
       environmentVariables:
         FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckHarnessRuntime:
+    build:
+      targets:
+        FightDeckHarnessRuntime: all
+    run:
+      environmentVariables:
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckHarnessDeposit:
+    build:
+      targets:
+        FightDeckHarnessDeposit: all
+    run:
+      environmentVariables:
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckHarnessBoth:
+    build:
+      targets:
+        FightDeckHarnessBoth: all
+    run:
+      environmentVariables:
         FIGHTDECK_LOCAL_SDK: "1"

@@ -12,10 +12,11 @@
 # feature there is ordinary application code.
 #
 # The stages are selected differently on each platform, which is itself part of the
-# comparison. Skip's iOS host has a scheme per stage. Both Android hosts use product
-# flavours. React Native's iOS host has neither: the feature set is decided once when the
-# SDK's JS bundle is built and again when CocoaPods resolves, so both steps run per stage
-# and the Podfile refuses a mismatch between them.
+# comparison. Both iOS hosts build a small measurement harness per stage, so neither demo
+# app carries conditional compilation for the sake of being weighed. Both Android hosts use
+# product flavours. React Native needs one step the others do not: its feature set is also
+# decided when the SDK's JS bundle is built, so that runs per stage too and the Podfile
+# refuses a bundle that disagrees with the stage being measured.
 #
 # FIGHTDECK_PLATFORM exists so CI can put each half on the cheapest runner that can build
 # it. tools/render-receipt.py reads the per-stage files, so the halves never have to meet.
@@ -54,24 +55,29 @@ restore_rn() {
     (cd 03-sdk-rn/ios && FIGHTDECK_FEATURES=both pod install >/dev/null 2>&1) || true
 }
 
+# Both iOS hosts name their harnesses the same way, so the stage maps straight to a scheme.
+# The demo apps are deliberately never measured here: each links every feature, so it could
+# only ever produce the "both" number.
+harness_scheme() {
+    case "$1" in
+        runtime) echo "FightDeckHarnessRuntime" ;;
+        deposit) echo "FightDeckHarnessDeposit" ;;
+        both)    echo "FightDeckHarnessBoth" ;;
+    esac
+}
+
 measure_ios() {
     local approach="$1" stage="$2" tag="$3"
-    case "$approach" in
-        03-sdk-rn)
-            FIGHTDECK_FEATURES="$stage" ./03-sdk-rn/sdks/core/build-jsbundle.sh >/dev/null
-            (cd 03-sdk-rn/ios && FIGHTDECK_FEATURES="$stage" pod install >/dev/null)
-            ./tools/measure-ios.sh "$tag" "03-sdk-rn/ios" "FightDeck" >/dev/null
-            ;;
-        04-sdk-skip)
-            local scheme
-            case "$stage" in
-                runtime) scheme="FightDeckRuntime" ;;
-                deposit) scheme="FightDeckSkipDeposit" ;;
-                both)    scheme="FightDeck" ;;
-            esac
-            ./tools/measure-ios.sh "$tag" "04-sdk-skip/ios" "$scheme" >/dev/null
-            ;;
-    esac
+
+    # The feature screens live in the JS bundle, and CocoaPods expands the bundle's resource
+    # glob when it installs, so a stage that adds an image needs both steps redone before
+    # its harness is archived.
+    if [[ "$approach" == "03-sdk-rn" ]]; then
+        FIGHTDECK_FEATURES="$stage" ./03-sdk-rn/sdks/core/build-jsbundle.sh >/dev/null
+        (cd 03-sdk-rn/ios && FIGHTDECK_FEATURES="$stage" pod install >/dev/null)
+    fi
+
+    ./tools/measure-ios.sh "$tag" "$approach/ios" "$(harness_scheme "$stage")" >/dev/null
 }
 
 for approach in "${APPROACHES[@]}"; do

@@ -6,15 +6,11 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import BetslipSDK
+import DepositSDK
 import FightDeckRNRuntime
 import Foundation
 import UIKit
-#if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
-import DepositSDK
-#endif
-#if FIGHTDECK_BOTH
-import BetslipSDK
-#endif
 
 enum ThemeLoader {
     static func tokensJSON() -> String {
@@ -29,7 +25,6 @@ enum AccessTokenService {
     }
 }
 
-#if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
 @MainActor
 enum DepositLauncherHost {
     static func launch(
@@ -55,18 +50,13 @@ enum DepositLauncherHost {
         )
     }
 }
-#endif
 
 @MainActor
 final class SDKBootstrap {
     static let shared = SDKBootstrap()
 
-    #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
     let depositHosting: DepositHosting = DepositAdapter()
-    #endif
-    #if FIGHTDECK_BOTH
     let betslipHosting: BetslipHosting = BetslipAdapter()
-    #endif
 
     private var didConfigure = false
 
@@ -77,12 +67,8 @@ final class SDKBootstrap {
 
     func configureOnce() {
         guard !didConfigure else { return }
-        #if FIGHTDECK_DEPOSIT || FIGHTDECK_BOTH
         depositHosting.configure()
-        #endif
-        #if FIGHTDECK_BOTH
         betslipHosting.configure()
-        #endif
         if !Self.shouldSkipRNPrewarm {
             FightDeckRNRuntime.shared.prewarm()
         }

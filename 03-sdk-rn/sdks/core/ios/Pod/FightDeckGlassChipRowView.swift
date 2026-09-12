@@ -55,20 +55,10 @@ struct FightDeckGlassChipRowView: View {
     }
 
     var body: some View {
-        if #available(iOS 26, *) {
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    ForEach(model.values, id: \.self) { value in
-                        chipButton(value)
-                    }
-                }
-            }
-        } else {
+        GlassEffectContainer(spacing: 8) {
             HStack(spacing: 8) {
                 ForEach(model.values, id: \.self) { value in
                     chipButton(value)
-                        .background(Color(red: 0.11, green: 0.13, blue: 0.19))
-                        .clipShape(Capsule())
                 }
             }
         }
@@ -87,19 +77,7 @@ struct FightDeckGlassChipRowView: View {
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
-        .modifier(GlassChipModifier(accent: accent))
-    }
-}
-
-private struct GlassChipModifier: ViewModifier {
-    let accent: Color
-
-    func body(content: Content) -> some View {
-        if #available(iOS 26, *) {
-            content.glassEffect(.regular.interactive(), in: .capsule)
-        } else {
-            content
-        }
+        .glassEffect(.regular.interactive(), in: .capsule)
     }
 }
 

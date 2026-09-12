@@ -97,7 +97,7 @@ struct FightCore: Sendable {
             found.insert(.insufficientBalance)
         }
 
-        return ValidationError.order.filter { found.contains($0) }
+        return ValidationError.allCases.filter { found.contains($0) }
     }
 
     func settle(slip: BetSlip, voidedBouts: Set<String> = []) -> Settlement {

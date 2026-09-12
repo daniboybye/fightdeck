@@ -42,9 +42,6 @@ fun RNDepositScreen(
                 ctx,
                 app,
                 DepositParams(
-                    accessToken = "demo-token",
-                    environment = "demo",
-                    locale = "en",
                     themeJSON = themeJSON,
                     currentBalance = balance,
                     layout = layoutHandle.metrics.toSnapshot(),
@@ -59,9 +56,6 @@ fun RNDepositScreen(
         update = { view ->
             layoutHandle.trackHost(view)
             val params = DepositParams(
-                accessToken = "demo-token",
-                environment = "demo",
-                locale = "en",
                 themeJSON = themeJSON,
                 currentBalance = balance,
                 layout = layoutHandle.metrics.toSnapshot(),

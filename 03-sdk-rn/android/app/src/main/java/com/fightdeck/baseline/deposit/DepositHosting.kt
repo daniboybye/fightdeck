@@ -3,9 +3,6 @@ package com.fightdeck.baseline.deposit
 import java.math.BigDecimal
 
 data class DepositParams(
-    val accessToken: String,
-    val environment: String,
-    val locale: String,
     val themeJSON: String,
     val currentBalance: BigDecimal,
 )

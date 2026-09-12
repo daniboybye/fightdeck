@@ -43,9 +43,6 @@ public final class BetslipAdapter: BetslipHosting {
 
     nonisolated private static func properties(from params: BetslipParams) -> [String: Any] {
         [
-            "accessToken": params.accessToken,
-            "environment": params.environment,
-            "locale": params.locale,
             "themeJSON": params.themeJSON,
             "balance": NSDecimalNumber(decimal: params.balance).stringValue,
             "slipJSON": params.slipJSON,

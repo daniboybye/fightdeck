@@ -83,7 +83,7 @@ public struct BetSlipRootView: View {
                 .foregroundStyle(theme.textSecondary)
             secondaryBrowseButton(action: onBrowseEvents)
         }
-        .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// Placing a bet empties the slip, so the confirmation has to live where the slip was.
@@ -100,7 +100,7 @@ public struct BetSlipRootView: View {
             secondaryBrowseButton(action: onBrowseEvents)
         }
         .padding(theme.spacingXL)
-        .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         #if !SKIP
         .transition(.scale(scale: 0.92).combined(with: .opacity))
         #endif
@@ -109,16 +109,10 @@ public struct BetSlipRootView: View {
     @ViewBuilder
     private var placedIcon: some View {
         #if !SKIP
-        if #available(iOS 18, *) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(Typography.body(48.0))
-                .foregroundStyle(theme.positive)
-                .symbolEffect(.bounce, options: .nonRepeating)
-        } else {
-            Image(systemName: "checkmark.seal.fill")
-                .font(Typography.body(48.0))
-                .foregroundStyle(theme.positive)
-        }
+        Image(systemName: "checkmark.seal.fill")
+            .font(Typography.body(48.0))
+            .foregroundStyle(theme.positive)
+            .symbolEffect(.bounce, options: .nonRepeating)
         #else
         Image(systemName: "checkmark.seal.fill")
             .font(Typography.body(48.0))
@@ -146,9 +140,9 @@ public struct BetSlipRootView: View {
 
     #if SKIP
     private var skipSlipScroll: some View {
-        ZStack(alignment: Alignment.bottom) {
+        ZStack(alignment: .bottom) {
             ScrollView {
-                VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingLG) {
+                VStack(alignment: .leading, spacing: theme.spacingLG) {
                     skipGroupedSection(title: betTypeTitle) {
                         ForEach(store.slip.selections) { selection in
                             SkipGroupedRow(
@@ -187,7 +181,7 @@ public struct BetSlipRootView: View {
                                     Text(skipErrorMessages[index])
                                         .foregroundStyle(theme.negative)
                                         .font(Typography.body(theme.fontCaption))
-                                        .frame(maxWidth: CGFloat.infinity, alignment: .leading)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             }
                         }
@@ -207,7 +201,7 @@ public struct BetSlipRootView: View {
             skipPlaceBetBar
         }
         .toolbar {
-            ToolbarItemGroup(placement: ToolbarItemPlacement.keyboard) {
+            ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") { stakeFocused = false }
             }
@@ -238,7 +232,7 @@ public struct BetSlipRootView: View {
             Text("Place bet")
                 .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.onAccent)
-                .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: Layout.primaryActionHeight)
         .background(theme.accent)
@@ -250,7 +244,7 @@ public struct BetSlipRootView: View {
         title: String?,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: HorizontalAlignment.leading, spacing: theme.spacingSM) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
             if let title {
                 Text(title)
                     .font(Typography.body(theme.fontCallout))
@@ -287,8 +281,8 @@ public struct BetSlipRootView: View {
     }
 
     private func skipSelectionRow(_ selection: Selection) -> some View {
-        HStack(alignment: VerticalAlignment.top, spacing: theme.spacingMD) {
-            VStack(alignment: HorizontalAlignment.leading) {
+        HStack(alignment: .top, spacing: theme.spacingMD) {
+            VStack(alignment: .leading) {
                 Text(display.fighterName(id: selection.fighterID))
                     .font(Typography.body(theme.fontCallout))
                     .foregroundStyle(theme.textPrimary)
@@ -296,7 +290,7 @@ public struct BetSlipRootView: View {
                     .font(Typography.body(theme.fontCaption))
                     .foregroundStyle(theme.textSecondary)
             }
-            .frame(maxWidth: CGFloat.infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
             Text(FightCoreDisplay.formatOdds(selection.odds))
                 .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.accent)
@@ -328,7 +322,7 @@ public struct BetSlipRootView: View {
                 .foregroundStyle(theme.textPrimary)
             Spacer()
             TextField("Stake", text: stakeBinding)
-                .keyboardType(UIKeyboardType.decimalPad)
+                .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
                 .focused($stakeFocused)
                 .foregroundStyle(theme.textPrimary)
@@ -363,7 +357,7 @@ public struct BetSlipRootView: View {
             Text("Add funds")
                 .font(Typography.body(theme.fontBody))
                 .foregroundStyle(theme.accent)
-                .frame(maxWidth: CGFloat.infinity, minHeight: Layout.minTapTarget, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
         }
         .buttonStyle(.plain)
     }
@@ -515,38 +509,22 @@ public struct BetSlipRootView: View {
                 .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.onAccent)
                 .padding(.horizontal, Layout.secondaryActionPadding)
-                .frame(maxHeight: CGFloat.infinity)
+                .frame(maxHeight: .infinity)
         }
         .frame(height: Layout.secondaryActionHeight)
         .background(theme.accent)
         .clipShape(Capsule())
         #else
-        Group {
-            if #available(iOS 26, *) {
-                Button(action: action) {
-                    Text("Browse Events")
-                        .font(.headline)
-                        .foregroundStyle(theme.onAccent)
-                        .padding(.horizontal, Layout.secondaryActionPadding)
-                        .frame(height: Layout.secondaryActionHeight)
-                        .contentShape(.capsule)
-                }
-                .buttonStyle(.plain)
-                .glassEffect(.regular.tint(theme.accent).interactive(), in: .capsule)
-            } else {
-                Button(action: action) {
-                    Text("Browse Events")
-                        .font(Typography.semibold(theme.fontCallout))
-                        .foregroundStyle(theme.onAccent)
-                        .padding(.horizontal, Layout.secondaryActionPadding)
-                        .frame(maxHeight: .infinity)
-                        .contentShape(.rect)
-                }
+        Button(action: action) {
+            Text("Browse Events")
+                .font(.headline)
+                .foregroundStyle(theme.onAccent)
+                .padding(.horizontal, Layout.secondaryActionPadding)
                 .frame(height: Layout.secondaryActionHeight)
-                .background(theme.accent)
-                .clipShape(Capsule())
-            }
+                .contentShape(.capsule)
         }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.tint(theme.accent).interactive(), in: .capsule)
         #endif
     }
 
@@ -557,7 +535,7 @@ public struct BetSlipRootView: View {
             Text(title)
                 .font(Typography.medium(theme.fontCaption))
                 .foregroundStyle(theme.accent)
-                .frame(maxWidth: CGFloat.infinity, maxHeight: CGFloat.infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: Layout.secondaryActionHeight)
         .background(theme.surface)
@@ -586,14 +564,10 @@ private struct SlipPresentationModifier: ViewModifier {
     let betPlacedMessage: String?
 
     func body(content: Content) -> some View {
-        if #available(iOS 17, *) {
-            content
-                .animation(.smooth(duration: 0.35), value: selectionCount)
-                .animation(.smooth(duration: 0.35), value: betPlacedMessage)
-                .sensoryFeedback(.success, trigger: betPlacedMessage) { _, new in new != nil }
-        } else {
-            content
-        }
+        content
+            .animation(.smooth(duration: 0.35), value: selectionCount)
+            .animation(.smooth(duration: 0.35), value: betPlacedMessage)
+            .sensoryFeedback(.success, trigger: betPlacedMessage) { _, new in new != nil }
     }
 }
 
@@ -605,28 +579,9 @@ private struct SlipBottomBarModifier: ViewModifier {
     let onDismissKeyboard: () -> Void
 
     func body(content: Content) -> some View {
-        if #available(iOS 26, *) {
-            content
-                .safeAreaBar(edge: .bottom) { barContent }
-                .scrollDismissesKeyboard(.interactively)
-        } else {
-            legacyBottomBar(content)
-        }
-    }
-
-    private func legacyBottomBar(_ content: Content) -> some View {
         content
-            .safeAreaInset(edge: .bottom) {
-                barContent
-                    .padding(theme.spacingLG)
-                    .background(.bar)
-            }
-            .toolbar {
-                ToolbarItemGroup(placement: ToolbarItemPlacement.keyboard) {
-                    Spacer()
-                    Button("Done", action: onDismissKeyboard)
-                }
-            }
+            .safeAreaBar(edge: .bottom) { barContent }
+            .scrollDismissesKeyboard(.interactively)
     }
 
     private var barContent: some View {
@@ -643,66 +598,36 @@ private struct SlipBottomBarModifier: ViewModifier {
         .animation(.snappy(duration: 0.25), value: stakeFocused)
     }
 
-    @ViewBuilder
     private var placeBetButton: some View {
-        if #available(iOS 26, *) {
-            Button(action: onPlaceBet) {
-                Label("Place bet", systemImage: "checkmark.seal")
-                    .font(.headline)
-                    .foregroundStyle(isEnabled ? theme.onAccent : Color.secondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: Layout.primaryActionHeight)
-                    .contentShape(.capsule)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(
-                .regular
-                    .tint(isEnabled ? theme.accent : nil)
-                    .interactive(isEnabled),
-                in: .capsule
-            )
-            .disabled(!isEnabled)
-        } else {
-            Button(action: onPlaceBet) {
-                Label("Place bet", systemImage: "checkmark.seal")
-                    .font(Typography.semibold(theme.fontCallout))
-                    .foregroundStyle(theme.onAccent)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(.rect)
-            }
-            .frame(height: Layout.primaryActionHeight)
-            .background(theme.accent)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
-            .disabled(!isEnabled)
+        Button(action: onPlaceBet) {
+            Label("Place bet", systemImage: "checkmark.seal")
+                .font(.headline)
+                .foregroundStyle(isEnabled ? theme.onAccent : Color.secondary)
+                .frame(maxWidth: .infinity)
+                .frame(height: Layout.primaryActionHeight)
+                .contentShape(.capsule)
         }
+        .buttonStyle(.plain)
+        .glassEffect(
+            .regular
+                .tint(isEnabled ? theme.accent : nil)
+                .interactive(isEnabled),
+            in: .capsule
+        )
+        .disabled(!isEnabled)
     }
 
-    @ViewBuilder
     private var keyboardDoneButton: some View {
-        if #available(iOS 26, *) {
-            Button(action: onDismissKeyboard) {
-                Text("Done")
-                    .font(.headline)
-                    .foregroundStyle(theme.accent)
-                    .padding(.horizontal, theme.spacingLG)
-                    .frame(height: Layout.primaryActionHeight)
-                    .contentShape(.capsule)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .capsule)
-        } else {
-            Button(action: onDismissKeyboard) {
-                Text("Done")
-                    .font(Typography.semibold(theme.fontCallout))
-                    .foregroundStyle(theme.accent)
-                    .padding(.horizontal, theme.spacingMD)
-                    .frame(maxHeight: .infinity)
-                    .contentShape(.rect)
-            }
-            .frame(height: Layout.primaryActionHeight)
-            .background(theme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+        Button(action: onDismissKeyboard) {
+            Text("Done")
+                .font(.headline)
+                .foregroundStyle(theme.accent)
+                .padding(.horizontal, theme.spacingLG)
+                .frame(height: Layout.primaryActionHeight)
+                .contentShape(.capsule)
         }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
     }
 }
 #endif

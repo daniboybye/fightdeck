@@ -41,13 +41,7 @@ public struct PresetChipRow<Content: View>: View {
     }
 
     public var body: some View {
-        if #available(iOS 26, *) {
-            GlassEffectContainer(spacing: theme.spacingSM) {
-                HStack(spacing: theme.spacingSM) {
-                    content()
-                }
-            }
-        } else {
+        GlassEffectContainer(spacing: theme.spacingSM) {
             HStack(spacing: theme.spacingSM) {
                 content()
             }
@@ -67,29 +61,16 @@ public struct PresetChipButton: View {
     }
 
     public var body: some View {
-        if #available(iOS 26, *) {
-            Button(action: action) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(theme.accent)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: theme.secondaryActionHeight)
-                    .contentShape(.capsule)
-            }
-            .buttonStyle(.plain)
-            .glassEffect(.regular.interactive(), in: .capsule)
-        } else {
-            Button(action: action) {
-                Text(title)
-                    .font(Typography.medium(theme.fontCaption))
-                    .foregroundStyle(theme.accent)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(Rectangle())
-            }
-            .frame(height: theme.secondaryActionHeight)
-            .background(theme.surfaceElevated)
-            .clipShape(Capsule())
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(theme.accent)
+                .frame(maxWidth: .infinity)
+                .frame(height: theme.secondaryActionHeight)
+                .contentShape(.capsule)
         }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
     }
 }
 #endif

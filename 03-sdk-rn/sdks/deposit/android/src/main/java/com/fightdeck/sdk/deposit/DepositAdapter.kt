@@ -11,9 +11,6 @@ import com.fightdeck.rn.runtime.applySurfaceLayout
 import java.math.BigDecimal
 
 data class DepositParams(
-    val accessToken: String,
-    val environment: String,
-    val locale: String,
     val themeJSON: String,
     val currentBalance: BigDecimal,
     val layout: RNSurfaceLayoutSnapshot? = null,
@@ -73,9 +70,6 @@ class DepositAdapter : DepositHosting {
 
     fun propsBundle(params: DepositParams): Bundle =
         Bundle().apply {
-            putString("accessToken", params.accessToken)
-            putString("environment", params.environment)
-            putString("locale", params.locale)
             putString("themeJSON", params.themeJSON)
             putString("currentBalance", params.currentBalance.toPlainString())
             params.layout?.let { layout ->

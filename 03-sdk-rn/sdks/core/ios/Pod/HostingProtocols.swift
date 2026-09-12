@@ -3,9 +3,6 @@ import UIKit
 
 /// Host-visible deposit boundary — no React Native types cross this line.
 public struct DepositParams: Sendable {
-    public let accessToken: String
-    public let environment: String
-    public let locale: String
     public let themeJSON: String
     public let currentBalance: Decimal
     public let safeAreaTop: CGFloat
@@ -16,9 +13,6 @@ public struct DepositParams: Sendable {
     public let layoutStamp: Double
 
     public init(
-        accessToken: String,
-        environment: String,
-        locale: String,
         themeJSON: String,
         currentBalance: Decimal,
         safeAreaTop: CGFloat = 0,
@@ -28,9 +22,6 @@ public struct DepositParams: Sendable {
         textInputActive: Bool = false,
         layoutStamp: Double = 0
     ) {
-        self.accessToken = accessToken
-        self.environment = environment
-        self.locale = locale
         self.themeJSON = themeJSON
         self.currentBalance = currentBalance
         self.safeAreaTop = safeAreaTop
@@ -60,9 +51,6 @@ public protocol DepositHosting: AnyObject {
 }
 
 public struct BetslipParams: Sendable {
-    public let accessToken: String
-    public let environment: String
-    public let locale: String
     public let themeJSON: String
     public let balance: Decimal
     public let slipJSON: String
@@ -78,9 +66,6 @@ public struct BetslipParams: Sendable {
     public let layoutStamp: Double
 
     public init(
-        accessToken: String,
-        environment: String,
-        locale: String,
         themeJSON: String,
         balance: Decimal,
         slipJSON: String,
@@ -93,9 +78,6 @@ public struct BetslipParams: Sendable {
         textInputActive: Bool = false,
         layoutStamp: Double = 0
     ) {
-        self.accessToken = accessToken
-        self.environment = environment
-        self.locale = locale
         self.themeJSON = themeJSON
         self.balance = balance
         self.slipJSON = slipJSON

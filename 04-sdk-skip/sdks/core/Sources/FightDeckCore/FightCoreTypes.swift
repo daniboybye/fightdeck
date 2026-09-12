@@ -70,19 +70,6 @@ public enum ValidationError: String, Codable, Sendable, CaseIterable {
     case unknownBout = "unknown_bout"
     case fighterNotInBout = "fighter_not_in_bout"
     case payoutExceedsLimit = "payout_exceeds_limit"
-
-    public static let order: [ValidationError] = [
-        .emptySlip,
-        .stakeBelowMinimum,
-        .stakeAboveMaximum,
-        .insufficientBalance,
-        .tooManySelections,
-        .accumulatorNeedsTwoLegs,
-        .duplicateBout,
-        .unknownBout,
-        .fighterNotInBout,
-        .payoutExceedsLimit,
-    ]
 }
 
 public struct SlipState: Sendable {

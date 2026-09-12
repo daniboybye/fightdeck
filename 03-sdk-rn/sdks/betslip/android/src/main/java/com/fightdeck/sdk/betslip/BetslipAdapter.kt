@@ -12,9 +12,6 @@ import com.fightdeck.rn.runtime.applySurfaceLayout
 import java.math.BigDecimal
 
 data class BetslipParams(
-    val accessToken: String,
-    val environment: String,
-    val locale: String,
     val themeJSON: String,
     val balance: BigDecimal,
     val slipJSON: String,
@@ -68,9 +65,6 @@ class BetslipAdapter {
 
     fun propsBundle(params: BetslipParams): Bundle =
         Bundle().apply {
-            putString("accessToken", params.accessToken)
-            putString("environment", params.environment)
-            putString("locale", params.locale)
             putString("themeJSON", params.themeJSON)
             putString("balance", params.balance.toPlainString())
             putString("slipJSON", params.slipJSON)

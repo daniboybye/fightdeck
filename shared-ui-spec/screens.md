@@ -201,9 +201,13 @@ protocol DepositHosting {
 ```
 
 ```
-DepositParams  { accessToken, environment, locale, themeJSON, currentBalance }
+DepositParams  { themeJSON, currentBalance }
 DepositResult  = completed(amount) | cancelled | failed(reason)
 ```
+
+The params carry only what the screen reads. An earlier draft also passed `accessToken`,
+`environment` and `locale`, which looked like a realistic SDK boundary and were never read
+by a single line of the screens behind it.
 
 `themeJSON` is `tokens.json` serialised and handed across the boundary. That is not
 incidental: it is the "share tokens, not components" argument applied to an entire

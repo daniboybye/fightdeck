@@ -18,13 +18,6 @@ enum ThemeLoader {
     }
 }
 
-enum AccessTokenService {
-    static func fetchToken(environment: String) async throws -> String {
-        try await Task.sleep(for: .milliseconds(120))
-        return environment == "fail" ? "fail" : "demo-token"
-    }
-}
-
 @MainActor
 enum DepositLauncherHost {
     static func launch(
@@ -36,16 +29,10 @@ enum DepositLauncherHost {
         DepositLauncher.launch(
             from: navigationController,
             hosting: hosting,
-            paramsBuilder: {
-                let token = try await AccessTokenService.fetchToken(environment: "demo")
-                return DepositParams(
-                    accessToken: token,
-                    environment: "demo",
-                    locale: Locale.current.identifier,
-                    themeJSON: ThemeLoader.tokensJSON(),
-                    currentBalance: balance
-                )
-            },
+            params: DepositParams(
+                themeJSON: ThemeLoader.tokensJSON(),
+                currentBalance: balance
+            ),
             onResult: onResult
         )
     }

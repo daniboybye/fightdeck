@@ -39,9 +39,6 @@ public final class DepositAdapter: DepositHosting {
 
     nonisolated private static func properties(from params: DepositParams) -> [String: Any] {
         [
-            "accessToken": params.accessToken,
-            "environment": params.environment,
-            "locale": params.locale,
             "themeJSON": params.themeJSON,
             "currentBalance": NSDecimalNumber(decimal: params.currentBalance).stringValue,
             "safeAreaTop": Double(params.safeAreaTop),

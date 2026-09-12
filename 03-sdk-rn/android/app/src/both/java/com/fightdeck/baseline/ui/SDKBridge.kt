@@ -166,9 +166,6 @@ private fun depositParams(
     layoutStamp: Double = 1.0,
     textInputActive: Boolean = false,
 ) = DepositParams(
-    accessToken = "demo-token",
-    environment = "demo",
-    locale = "en",
     themeJSON = themeJSON,
     currentBalance = balance,
     layout = layout,
@@ -186,9 +183,6 @@ private fun betslipParams(
     layoutStamp: Double = 1.0,
     textInputActive: Boolean = false,
 ) = BetslipParams(
-    accessToken = "demo-token",
-    environment = "demo",
-    locale = "en",
     themeJSON = themeJSON,
     balance = balance,
     slipJSON = slipJSON,

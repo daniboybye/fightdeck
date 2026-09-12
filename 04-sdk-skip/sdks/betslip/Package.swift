@@ -43,7 +43,7 @@ let package = Package(
     name: "FightDeckBetslip",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v17),
+        .iOS("26.0"),
         .macOS(.v14),
     ],
     products: [

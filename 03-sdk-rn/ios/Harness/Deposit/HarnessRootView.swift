@@ -22,9 +22,6 @@ struct HarnessRootView: View {
             FightDeckRNRuntime.shared.prewarm()
             return hosting.makeViewController(
                 params: DepositParams(
-                    accessToken: "demo-token",
-                    environment: "demo",
-                    locale: "en_US",
                     themeJSON: "{}",
                     currentBalance: 500
                 ),

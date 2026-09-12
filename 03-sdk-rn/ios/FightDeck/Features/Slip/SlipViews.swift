@@ -113,9 +113,6 @@ struct BetslipSDKView: UIViewControllerRepresentable {
         let eventsURL = DatasetLocator.datasetRoot().appendingPathComponent("events.json")
         let eventsJSON = (try? String(contentsOf: eventsURL, encoding: .utf8)) ?? "{\"events\":[]}"
         return BetslipParams(
-            accessToken: "demo-token",
-            environment: "demo",
-            locale: Locale.current.identifier,
             themeJSON: ThemeLoader.tokensJSON(),
             balance: state.balance,
             slipJSON: slipJSON,
@@ -225,9 +222,6 @@ struct DepositSDKView: UIViewControllerRepresentable {
         let editing = textInputActive || RNSurfaceLayoutProbe.isTextInputActive(for: controller)
         let layout = SurfaceChrome.resolve(layoutMetrics, for: controller)
         return DepositParams(
-            accessToken: "demo-token",
-            environment: "demo",
-            locale: Locale.current.identifier,
             themeJSON: ThemeLoader.tokensJSON(),
             currentBalance: state.balance,
             safeAreaTop: layout.safeAreaTop,

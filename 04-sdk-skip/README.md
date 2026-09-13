@@ -227,6 +227,12 @@ Install: `brew install skiptools/skip/skip`
     `DateFormatter`/`RelativeDateTimeFormatter` and durations `String(format:)`, not
     `.formatted(date:time:)` or `Duration`. Both are fine to write — but you find them by
     building for Android, not by reading Swift.
+
+    The date one is not only a spelling difference. `DateFormatter` and `Date.FormatStyle`
+    disagree about region overrides, so on a simulator set to English with a Bulgarian region
+    the four apps using the modern API print `Jun 14, 2026` and this one prints `14 Jun 2026`.
+    Neither is wrong; the shared path is simply the one you cannot change, and the constraint
+    that forces it is skip-foundation's, not yours.
 11. **Sharing presentation exposes divergence too** — the two apps had been formatting the same
     dataset differently: `split_decision` was `Split Decision` on iOS (`localizedCapitalized`)
     and `Split decision` on Android (`replaceFirstChar`), and the iOS news list showed a

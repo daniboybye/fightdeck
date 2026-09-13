@@ -228,7 +228,7 @@ done
 
 ## Build and install all five Android apps
 
-Use the **`both`** product flavour for `03-sdk-rn` and `04-sdk-skip` — that is the default demo configuration (deposit + bet slip SDK screens). Flavours `runtime` and `deposit` exist only for size measurements.
+Use the **`all`** product flavour for `03-sdk-rn` and `04-sdk-skip` — that is the default demo configuration (deposit + bet slip + fighter profile SDK screens). Flavours `runtime`, `deposit` and `both` exist only for size measurements.
 
 `01-core-swift` needs its AAR built first (§3b) and `02-core-rust` needs its AARs (§3); both fail at configuration time otherwise.
 

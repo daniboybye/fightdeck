@@ -94,24 +94,49 @@ two Android ABIs. The app itself builds in 25 seconds.
 
 | Approach | iOS | Android | Shared | Config | Total | Shared |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 3,111 | 3,168 | 0 | 160 | 6,439 | 0% |
-| `01-core-swift` | 2,457 | 3,081 | 1,269 | 225 | 7,032 | 18% |
-| `02-core-rust` | 2,741 | 2,715 | 2,435 | 397 | 8,288 | 29% |
-| `04-sdk-skip` | 2,677 | 3,137 | 2,699 | 566 | 9,079 | 30% |
-| `03-sdk-rn` | 3,243 | 3,489 | 3,714 | 665 | 11,111 | 33% |
+| `00-native` baseline | 3,099 | 3,168 | 0 | 160 | 6,427 | 0% |
+| `01-core-swift` | 2,387 | 3,045 | 1,922 | 338 | 7,692 | 25% |
+| `02-core-rust` | 2,645 | 2,623 | 2,368 | 394 | 8,030 | 29% |
+| `04-sdk-skip` | 2,317 | 2,971 | 2,945 | 711 | 8,944 | 33% |
+| `03-sdk-rn` | 3,383 | 3,683 | 4,164 | 849 | 12,079 | 34% |
 
 Hand-written lines only, from `python3 tools/count-lines.py`. Generated bindings and
 transpiler output are excluded — counting them would credit a code generator for typing.
 The same script reports them separately, next to the hand-written boundary code, because
-the ratio between the two is the case for using a generator at all: jextract writes 3,678
-lines and leaves 319, UniFFI writes 12,354 and leaves 971.
+the ratio between the two is the case for using a generator at all: skipstone writes 3,061
+lines and leaves 447, UniFFI writes 12,271 and leaves 967, jextract writes 322 and leaves
+524 — the only generator here that hands back more work than it does.
 
 Read the per-platform columns before the shared one. Every approach that shares logic
 takes work *out* of the hosts, except React Native, which is the only one where the
-platform-specific code goes **up**: 6,732 lines across the two hosts against the
-baseline's 6,279, because embedding a surface, sizing it and feeding it the host's layout
+platform-specific code goes **up**: 7,066 lines across the two hosts against the
+baseline's 6,267, because embedding a surface, sizing it and feeding it the host's layout
 is code that only exists because the SDK is there. A bigger shared column is not the same
 as a smaller job.
+
+The sharpest number in this section is not in the table. `count-lines.py` also counts how
+many times each approach implements the same betting contract:
+
+| Approach | Times the contract is implemented |
+| --- | --- |
+| `00-native` baseline | twice — 449 lines of Swift, 297 of Kotlin |
+| `01-core-swift` | twice — 357 shared, 138 more in Kotlin |
+| `02-core-rust` | three times — 240 shared, 78 in Swift, 72 in Kotlin |
+| `03-sdk-rn` | three times — 378 in TypeScript, plus both hosts in full |
+| `04-sdk-skip` | **once** — 581 lines, and nothing else |
+
+Only Skip gets to one, and the reason is narrow enough to be worth saying plainly: its
+shared artefact is source in each host's own language, so a host can consume the SDK's own
+types. Rust ships a `.so` behind FFI and React Native ships JavaScript, so in both the host
+can call shared *behaviour* but cannot hold a shared *type* — which is why `02-core-rust`
+hand-writes 967 lines of glue and `03-sdk-rn` 1,011, against Skip's 447.
+
+That last row was not free, and it is not an argument that Skip wins. Sharing types means
+the host's Kotlin now handles transpiled Swift: `skip.lib.Array` instead of `List`, Swift
+`ID` casing, no generated `copy()`, and a core whose formatting reaches for Android's ICU
+and so no longer runs in a plain JVM test. It also means a bug in the shared core is a bug
+in both apps at once — see `04-sdk-skip/README.md`, where deduplicating the core is what
+finally surfaced odds maths that had been wrong on Android all along.
 
 ### The cost of the next feature
 

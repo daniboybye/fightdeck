@@ -195,6 +195,28 @@ Install: `brew install skiptools/skip/skip`
 4. **SPM pinned iOS** — Dynamic-library xcframework modules (`FightDeckCore`) collide with the umbrella product name when consumed via SPM path binaries; pinned iOS is verified with `FIGHTDECK_LOCAL_SDK=1` (source) or after GitHub HTTPS release. Android pinned + checksum manifest verification is fully wired.
 5. **Android Maven consumption** — `./sdks/{core,deposit,betslip,fighter}/build-aar.sh` publishes to `sdks/out/maven` with transitive POM metadata (`kotlin-reflect`, `commonmark`, Compose Material via SkipUI). Hosts point at that repo in `android/settings.gradle.kts`; do not re-declare those runtime deps. Verify with `sdks/consumer-verify/android` (`../../android/gradlew :app:assembleAllDebug` after building fighter AARs).
 6. **`skip checkup` Kotlin test** — Robolectric / compileSdk 37 mismatch in Skip hello-world harness (environment issue, not FightDeck-specific).
+7. **Division does not transpile the way you would assume** — Kotlin lowers `BigDecimal /` to
+   `divide(other, RoundingMode)`, which keeps the *dividend's* scale. `Money.one` has scale 0,
+   so `Money.one / decimalOdds` was `1` on Android and `0.8333…` on iOS from one Swift source.
+   `impliedProbability` and `fractionalToDecimal` were both wrong on Android until
+   `Money.divide` started naming the precision explicitly. Anything dividing `Decimal` in
+   shared code needs the same treatment; multiplication and addition are safe.
+
+   It stayed hidden because the Android host kept its own hand-written Kotlin core, so the
+   transpiled one was never exercised by the app or by a test. It surfaced the same day the
+   host started using the SDK core. Duplicated logic does not just cost lines — it hides
+   whether the shared copy is right.
+8. **The shared core is not JVM-testable** — `Money.format` goes through skip-foundation's
+   `NumberFormatter` onto `android.icu.text.NumberFormat`, which a plain unit test does not
+   provide. The contract fixtures therefore assert rounding (pure `BigDecimal`) rather than
+   formatted strings; formatting stays covered by the SDK's Swift tests. Robolectric would
+   close the gap but does not support `compileSdk 37` yet. Business logic shared this way is
+   not as environment-free as the Swift original.
+9. **Consuming transpiled Swift from hand-written Kotlin** — a `BetSlip` reaching the host is
+   a `MutableStruct` with emulated value semantics: `selections` is a `skip.lib.Array` so
+   `size`/`isNotEmpty()` do not apply, fields keep Swift `ID` casing, there is no generated
+   `copy()`, and the property getter hands back a write-back reference. Anything stored in a
+   `StateFlow` has to be rebuilt rather than mutated. Cheaper than a mapper, but not free.
 
 ## Architecture
 

@@ -232,6 +232,15 @@ Install: `brew install skiptools/skip/skip`
     and `Split decision` on Android (`replaceFirstChar`), and the iOS news list showed a
     relative date the Android list never rendered. One shared `Display` settles both. The
     Android news row is still missing its date — that is a UI gap, not a formatting one.
+12. **R8 cannot see through transpiled Swift** — a `Codable` conformance becomes
+    `container.decode(String::class, forKey: CodingKeys.boutID)`, which names its type and its
+    key at runtime, and SkipUI reads part of the SwiftUI shape through `kotlin-reflect`. So
+    `fight.deck.**` and `skip.**` have to be kept whole: 12.82 MB of dex against about 3 MB
+    for every other approach in the repo. Narrowing it to keep members while letting R8 drop
+    unreferenced classes saves 1.70 MB and produces an app that launches, shows *Something
+    went wrong* on the events screen, and logs nothing at all — the decode failure arrives as
+    a caught error, not a crash. The shrinker is the one place where sharing more source costs
+    real bytes rather than saving them.
 
 ## Architecture
 

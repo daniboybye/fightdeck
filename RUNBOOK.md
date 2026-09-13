@@ -256,6 +256,28 @@ build_android 03-sdk-rn        ':app:assembleBothDebug'  "$REPO/03-sdk-rn/androi
 build_android 04-sdk-skip      ':app:assembleBothDebug'  "$REPO/04-sdk-skip/android/app/build/outputs/apk/both/debug/app-both-debug.apk"
 ```
 
+### Release builds and R8
+
+Every app minifies and shrinks resources in `release`, and signs it with the debug key so the
+variant that gets measured can also be installed and run. Swap `Debug` for `Release` above to
+smoke-test what the size tables are actually made of:
+
+```bash
+cd "$REPO/04-sdk-skip/android" && ./gradlew :app:assembleAllRelease
+adb install -r app/build/outputs/apk/all/release/app-all-release.apk
+```
+
+To measure what the shrinker itself contributes, turn it off by property rather than by
+editing the build file — the same reason feature sets are flavours and not `#if`s:
+
+```bash
+./gradlew :app:assembleAllRelease -PfightdeckMinify=false
+```
+
+Keep rules live in each app's `android/app/proguard-rules.pro` and each explains what it
+protects. Loosen them only with a device in front of you: on `04-sdk-skip` an over-shrunk
+build still launches, shows *Something went wrong* on the events screen, and logs nothing.
+
 Build **all measurement flavours** (optional):
 
 ```bash
@@ -393,6 +415,7 @@ cd "$REPO/03-sdk-rn/android"
 | `Validate plug-in "skipstone" in package "skip"` | Skip SPM plugin not trusted in Xcode 26 | Add `-skipPackagePluginValidation -skipMacroValidation` to every `04-sdk-skip` `xcodebuild` invocation |
 | RN iOS link errors / missing React | Built `.xcodeproj` instead of workspace | Use `-workspace FightDeck.xcworkspace` after `pod install` in `03-sdk-rn/ios` |
 | `02-core-rust` iOS: missing `FightCore`/`FightSlip`/`FightEvents.xcframework`, or no generated Swift under `sdks/{core,slip,events}/Sources/` | Rust artifacts not built | `cd 02-core-rust/sdks && ./build-apple.sh` |
+| Release build shows *Something went wrong* on events but debug is fine, and logcat is empty | R8 removed something a reflective path needs — Skip's `Codable`, UniFFI's JNA interfaces, or a jextract binding | Confirm with `./gradlew :app:assembleAllRelease -PfightdeckMinify=false`; if that fixes it, widen `android/app/proguard-rules.pro` |
 | App shows empty events / 404 images | Dataset env/path wrong | **iOS:** set `FIGHTDECK_DATASET_ROOT` or `SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT`. **Android:** push to `/data/local/tmp/fightdeck/dataset` |
 | Updated dataset but UI unchanged | `adb push` nested into `.../dataset/dataset/` | `adb shell rm -rf /data/local/tmp/fightdeck/dataset` then push again |
 | Regenerated art, images still old | Coil / Kingfisher cache by URL | `adb shell pm clear <applicationId>`; iOS: `xcrun simctl uninstall booted <bundleId>` then reinstall |

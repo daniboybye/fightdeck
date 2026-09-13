@@ -59,7 +59,20 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 is on by default: release is the variant that gets measured and the one that
+            // would ship. `-PfightdeckMinify=false` turns it off so the shrinker's own
+            // contribution can be measured without editing this file — the same reason the
+            // feature sets are flavours and not `#if`s.
+            val minify = project.findProperty("fightdeckMinify") != "false"
+            isMinifyEnabled = minify
+            isShrinkResources = minify
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+            // Release is what gets measured, so it has to be installable: an unsigned APK
+            // cannot be smoke-tested, and a shipped APK carries a signature block anyway.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

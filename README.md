@@ -78,6 +78,9 @@ shares nothing. Android figures are per-ABI download size for `arm64-v8a` from t
 bundle, which is what a phone actually pulls — the universal APK is three to four times
 larger and nobody downloads it.
 
+> **The Android column predates R8.** Release builds are minified now; these rows are not.
+> Re-measure before quoting them.
+
 † `01-core-swift`'s Android figure is what a Swift core actually costs on Android: 273 KB
 of logic pulling 68 MB of Swift runtime behind it, of which three fifths is ICU. Its
 Android build time is the cross-compile of both ABIs plus jextract binding generation, and
@@ -155,9 +158,10 @@ the iOS news list showed a relative date the Android one never rendered at all.
 ### The cost of the next feature
 
 > **Stale — re-measure before quoting.** These rows predate the fighter-profile split, so
-> they are missing the third feature entirely, and the Skip Android row disagrees with the
-> most recent measurement on disk by more than a factor of two (47.09 MB of runtime, not
-> 22.42 MB). Run `./tools/measure-second-feature.sh`, then `./tools/render-receipt.py`.
+> they are missing the third feature entirely; they predate R8, so every Android figure is
+> too large; and the Skip Android row disagrees with the most recent measurement on disk by
+> more than a factor of two (47.09 MB of runtime, not 22.42 MB). Run
+> `./tools/measure-second-feature.sh`, then `./tools/render-receipt.py`.
 
 | Approach | Runtime alone | + deposit | + bet slip | Second feature |
 | --- | ---: | ---: | ---: | ---: |
@@ -227,10 +231,53 @@ Do not read the iOS kilobyte figures too closely. Every iOS number is the archiv
 measured with `du`, so all of them are multiples of 4 KB — a 12 KB delta is three disk
 blocks, not a byte count. The Android figures are APK download sizes and are exact.
 
+### What the shrinker changes
+
+Every Android release build runs R8 with resource shrinking. It did not always, and turning
+it on moved the numbers more than the approaches do. Universal APKs from one machine, so
+read the ratios rather than the digits — a per-ABI download compresses its dex and drops
+three of the four ABIs, so the download saving is smaller than the column below:
+
+| Approach | APK unminified | APK minified | dex unminified | dex minified |
+| --- | ---: | ---: | ---: | ---: |
+| `00-native` | 46.32 MB | 3.02 MB | 45.65 MB | 2.71 MB |
+| `01-core-swift` | 178.01 MB | 134.76 MB | 45.68 MB | 2.77 MB |
+| `02-core-rust` | 52.06 MB | 8.70 MB | 46.08 MB | 3.06 MB |
+| `03-sdk-rn` | 105.29 MB | 54.90 MB | 53.03 MB | 3.73 MB |
+| `04-sdk-skip` | 67.72 MB | 17.78 MB | 62.23 MB | 12.82 MB |
+
+Four of the five hosts were carrying about 45 MB of dex they never ran — Compose, AndroidX,
+Coil, OkHttp, all linked whole. That constant is the same in every column, so it was adding
+noise to precisely the comparison this repository exists to make, and drowning the native
+payload that actually distinguishes the approaches: `02-core-rust` ships 5.23 MB of Rust and
+was reporting a 52 MB APK.
+
+The one row that does not collapse to about 3 MB of dex is Skip's, and that is the finding.
+Transpiled Swift needs 12.82 MB kept, four times any other host, because `Codable` transpiles
+into reflection: `container.decode(String::class, forKey: CodingKeys.boutID)` names its type
+and its key at runtime, so R8 sees nothing referencing the property being filled. SkipUI
+resolves part of the SwiftUI shape reflectively too, which is why its AAR needs
+`kotlin-reflect` at all. The approach that shares the most source is the one a shrinker can
+see through the least, and it pays about 10 MB for it.
+
+That price was checked rather than assumed. Keeping members but letting R8 delete classes
+nothing statically references saves 1.70 MB and leaves an app that loads no data at all: the
+events screen shows *Something went wrong* and logcat is empty, because the failed decode
+arrives as an ordinary caught error rather than a crash. On this approach a shrinker
+misconfiguration is invisible to the build and nearly invisible at runtime.
+
+Nothing else needed persuading. The Rust host keeps the UniFFI bindings and JNA intact —
+that FFI is name-based in both directions, so R8 can shrink around it but never through it —
+and the Swift host is covered by the `proguard.txt` its own AARs ship. Both also had to name
+a class their libraries reference and Android does not have: `jdk.jfr` annotations on
+SwiftKit's thread-safety markers, `java.awt` in JNA's desktop bridge.
+
 ### Caveats that belong next to every number
 
-Measurements come from simulator and emulator rather than physical devices, and Android R8
-is off everywhere, so Android figures are uniformly inflated. Build times are clean builds
+Measurements come from simulator and emulator rather than physical devices. Android release
+builds now run R8 with resource shrinking, which they did not when the tables above were
+filled in, so every Android figure in this file is stale and too large — see [what the
+shrinker changes](#what-the-shrinker-changes). Build times are clean builds
 with dependencies already fetched — they include each approach's own SDK step, which is why
 Rust pays on iOS (three-target `xcframework`) and Skip pays on Android (transpilation), but
 they exclude package downloads, which measure the network rather than the approach. CI now

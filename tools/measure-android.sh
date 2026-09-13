@@ -45,10 +45,17 @@ AAB_PATH="$(ls "$MODULE/build/outputs/bundle/$VARIANT"/*.aab 2>/dev/null | head 
 FLAVOUR="${VARIANT%Release}"
 if [[ "$FLAVOUR" == "$VARIANT" ]]; then
     APK_DIR="$MODULE/build/outputs/apk/release"
+    APK_NAME="$MODULE-release.apk"
 else
     APK_DIR="$MODULE/build/outputs/apk/$FLAVOUR/release"
+    APK_NAME="$MODULE-$FLAVOUR-release.apk"
 fi
-APK_PATH="$(ls "$APK_DIR"/*.apk 2>/dev/null | head -1)"
+# Named exactly rather than globbed, for the same reason the directories above are. Release is
+# minified and signed, and an `-unsigned.apk` left over from before signing was configured
+# sorts *ahead* of the signed one ('-' < '.'), so a glob would silently measure a build from a
+# different configuration.
+APK_PATH="$APK_DIR/$APK_NAME"
+[[ -f "$APK_PATH" ]] || APK_PATH=""
 
 if [[ -z "$AAB_PATH" || -z "$APK_PATH" ]]; then
     echo "::error::no $VARIANT artifacts under $MODULE/build/outputs for $APPROACH"

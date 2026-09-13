@@ -37,9 +37,11 @@ That leaves two questions, and this repo exists to answer them with numbers:
 | `tools/` | Size, build-time, source-count and cold-start measurement scripts. |
 
 Each approach folder holds `ios/`, `android/` and (where relevant) `sdks/`. The
-`03-sdk-rn` and `04-sdk-skip` approaches split their `sdks/` into `core/`, `deposit/`
-and `betslip/` on purpose: **two features over one runtime is the only way to measure what
-the second screen actually costs**, which is the question everyone asks and nobody answers.
+`03-sdk-rn` and `04-sdk-skip` approaches split their `sdks/` into `core/`, `deposit/`,
+`betslip/` and `fighter/` on purpose: **more than one feature over one runtime is the only
+way to measure what the next screen actually costs**, which is the question everyone asks
+and nobody answers. Three features rather than two because the first one is not
+representative — it absorbs runtime that nothing had touched yet.
 
 ## Two ground rules
 
@@ -111,7 +113,12 @@ baseline's 6,279, because embedding a surface, sizing it and feeding it the host
 is code that only exists because the SDK is there. A bigger shared column is not the same
 as a smaller job.
 
-### The cost of the second feature
+### The cost of the next feature
+
+> **Stale — re-measure before quoting.** These rows predate the fighter-profile split, so
+> they are missing the third feature entirely, and the Skip Android row disagrees with the
+> most recent measurement on disk by more than a factor of two (47.09 MB of runtime, not
+> 22.42 MB). Run `./tools/measure-second-feature.sh`, then `./tools/render-receipt.py`.
 
 | Approach | Runtime alone | + deposit | + bet slip | Second feature |
 | --- | ---: | ---: | ---: | ---: |
@@ -120,17 +127,22 @@ as a smaller job.
 | `04-sdk-skip` iOS | 0.15 MB | 1.37 MB | 1.38 MB | 12.0 KB |
 | `04-sdk-skip` Android | 22.42 MB | 22.47 MB | 22.52 MB | 46.5 KB |
 
-Produced by `./tools/measure-second-feature.sh`, which builds three hosts — one that only
-starts the runtime, one that also mounts the deposit screen, one that mounts both — and
-subtracts. Only the two UI-bearing SDKs appear: the headless cores ship no UI, so a second
-feature there is ordinary application code.
+Produced by `./tools/measure-second-feature.sh`, which builds four hosts — one that only
+starts the runtime, then one each as the deposit screen, the bet slip and the fighter
+profile are added — and subtracts. Only the two UI-bearing SDKs appear: the headless cores
+ship no UI, so a second feature there is ordinary application code.
 
-On iOS those three hosts are a dedicated measurement harness (`ios/Harness/`), not the demo
+The first feature is the least useful of the three, because it pays for whatever the runtime
+only pulls in once a real screen uses it. The fighter profile is the most useful: it is pure
+presentation, so what it adds is about as close as this repository gets to the floor price
+of one more screen.
+
+On iOS those four hosts are a dedicated measurement harness (`ios/Harness/`), not the demo
 app with features switched off. That distinction is the whole reason the demo apps contain
 no conditional compilation: a host that has to compile both with and without a feature SDK
 needs `#if` around every import and every call site, and placeholder views to stand in for
 the screens that are missing. Measuring a separate host instead means the app reads as an
-app. It also changes what the numbers mean: none of the three iOS rows is the shipping app,
+app. It also changes what the numbers mean: none of the four iOS rows is the shipping app,
 so the "+ bet slip" column does not match the `.app` sizes in the table above and is not
 supposed to. Read the deltas, not the absolute sizes. Android needs none
 of this: Kotlin has no preprocessor, so the flavours swap whole source directories, and the
@@ -143,14 +155,16 @@ same question has an answer there too:
 | `02-core-rust` | Kernel alone | + `fightslip` | + `fightevents` | Second feature |
 | --- | ---: | ---: | ---: | ---: |
 | iOS (static, linker-deduped) | 0.60 MB | 0.89 MB | 1.30 MB | 410 KB |
-| Android (three `.so`, no dedup) | 437 KB | 1,119 KB | 2,167 KB | 1,048 KB |
+| Android (three `.so`, no dedup) | 437 KB | 1,119 KB | 2,139 KB | 1,020 KB |
 
 Different measurement, so read it on its own: the iOS row links against every exported
-entrypoint with `-dead_strip`, the Android row is the `lib/arm64-v8a/` payload in the APK.
+entrypoint with `-dead_strip`, the Android row is the stripped `lib/arm64-v8a/` payload in
+the release APK. The iOS row still predates the removal of two unused catalogue-search
+exports, which took 28 KB off the Android `fightevents` figure above.
 The gap between the rows is the finding. On iOS each feature crate statically links the
 kernel and the linker keeps one copy, so the second feature costs only its own logic. On
 Android each AAR is a real shared object that carries its own kernel and its own Rust
-`std`, so the same split costs 2.2 MB instead of 0.7 MB. Splitting a Rust SDK into feature
+`std`, so the same split costs 2.1 MB instead of 0.7 MB. Splitting a Rust SDK into feature
 binaries is close to free on one platform and very much not on the other — which is a
 thing you can only find out by shipping more than one.
 

@@ -8,6 +8,7 @@
 
 import BetslipSDK
 import DepositSDK
+import FighterSDK
 import FightDeckRNRuntime
 import Foundation
 import UIKit
@@ -44,6 +45,7 @@ final class SDKBootstrap {
 
     let depositHosting: DepositHosting = DepositAdapter()
     let betslipHosting: BetslipHosting = BetslipAdapter()
+    let fighterHosting: FighterHosting = FighterAdapter()
 
     private var didConfigure = false
 
@@ -56,6 +58,7 @@ final class SDKBootstrap {
         guard !didConfigure else { return }
         depositHosting.configure()
         betslipHosting.configure()
+        fighterHosting.configure()
         if !Self.shouldSkipRNPrewarm {
             FightDeckRNRuntime.shared.prewarm()
         }

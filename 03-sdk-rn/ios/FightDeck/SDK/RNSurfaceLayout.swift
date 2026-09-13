@@ -63,6 +63,17 @@ struct RNSurfacePropsFingerprint: Equatable {
             editing: params.textInputActive
         )
     }
+
+    init(_ params: FighterParams) {
+        data = [params.fighterJSON, params.portraitURL, params.themeJSON]
+        layout = layoutKey(
+            top: params.safeAreaTop,
+            bottom: params.safeAreaBottom,
+            keyboard: 0,
+            background: params.chromeBackground,
+            editing: false
+        )
+    }
 }
 
 /// Sub-point differences come from layout rounding, not from anything the user can see.

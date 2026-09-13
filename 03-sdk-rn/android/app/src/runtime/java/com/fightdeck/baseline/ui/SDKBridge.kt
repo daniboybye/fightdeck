@@ -35,6 +35,15 @@ fun RNBetslipScreen(
 }
 
 @Composable
+fun RNFighterProfileScreen(
+    fighterJSON: String,
+    portraitURL: String,
+    modifier: Modifier = Modifier,
+) {
+    UnavailableFeature(label = "Fighter profile (runtime-only build)", modifier = modifier)
+}
+
+@Composable
 private fun UnavailableFeature(label: String, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)

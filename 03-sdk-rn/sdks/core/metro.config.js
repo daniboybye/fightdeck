@@ -9,6 +9,7 @@ const config = {
   watchFolders: [
     path.resolve(monorepoRoot, 'deposit'),
     path.resolve(monorepoRoot, 'betslip'),
+    path.resolve(monorepoRoot, 'fighter'),
   ],
   resolver: {
     nodeModulesPaths: [

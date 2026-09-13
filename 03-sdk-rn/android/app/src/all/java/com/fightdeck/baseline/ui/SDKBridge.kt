@@ -19,6 +19,8 @@ import com.fightdeck.sdk.betslip.BetslipResult
 import com.fightdeck.sdk.deposit.DepositAdapter
 import com.fightdeck.sdk.deposit.DepositParams
 import com.fightdeck.sdk.deposit.DepositResult
+import com.fightdeck.sdk.fighter.FighterAdapter
+import com.fightdeck.sdk.fighter.FighterParams
 import java.math.BigDecimal
 
 @Composable
@@ -159,6 +161,61 @@ fun RNBetslipScreen(
     )
 }
 
+@Composable
+fun RNFighterProfileScreen(
+    fighterJSON: String,
+    portraitURL: String,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val app = context.applicationContext as Application
+    val adapter = remember { FighterAdapter() }
+    val themeJSON = remember { ThemeLoader.tokensJSON(context) }
+    val layoutHandle = rememberRNSurfaceLayout(
+        moduleName = "FighterFeature",
+        includesTabBarClearance = false,
+    )
+    var lastPushed by remember { mutableStateOf<RNSurfacePropsFingerprint?>(null) }
+
+    AndroidView(
+        modifier = modifier.fillMaxSize(),
+        factory = { ctx ->
+            adapter.createView(
+                ctx,
+                app,
+                fighterParams(
+                    fighterJSON = fighterJSON,
+                    portraitURL = portraitURL,
+                    themeJSON = themeJSON,
+                    layout = layoutHandle.metrics.toSnapshot(),
+                ),
+            )
+        },
+        update = { view ->
+            layoutHandle.trackHost(view)
+            val params = fighterParams(
+                fighterJSON = fighterJSON,
+                portraitURL = portraitURL,
+                themeJSON = themeJSON,
+                layout = layoutHandle.metrics.toSnapshot(),
+            )
+            val fingerprint = RNSurfacePropsFingerprint(
+                data = listOf(params.fighterJSON, params.portraitURL, params.themeJSON),
+                layout = params.layout,
+                textInputActive = false,
+            )
+            if (fingerprint.data != lastPushed?.data) {
+                adapter.updateProps(view, params)
+            }
+            lastPushed = fingerprint
+            view.requestLayout()
+        },
+        onRelease = { view ->
+            FightDeckRNRuntime.stopSurface(view)
+        },
+    )
+}
+
 private fun depositParams(
     balance: BigDecimal,
     themeJSON: String,
@@ -193,21 +250,19 @@ private fun betslipParams(
     layoutStamp = layoutStamp,
 )
 
-@Composable
-fun RNFighterProfileScreen(
+private fun fighterParams(
     fighterJSON: String,
     portraitURL: String,
-    modifier: Modifier = Modifier,
-) {
-    UnavailableFeature(label = "Fighter profile (both-features build)", modifier = modifier)
-}
-
-@Composable
-private fun UnavailableFeature(label: String, modifier: Modifier = Modifier) {
-    androidx.compose.foundation.layout.Box(modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-        androidx.compose.material3.Text(label, color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
+    themeJSON: String,
+    layout: com.fightdeck.rn.runtime.RNSurfaceLayoutSnapshot,
+    layoutStamp: Double = 1.0,
+) = FighterParams(
+    themeJSON = themeJSON,
+    fighterJSON = fighterJSON,
+    portraitURL = portraitURL,
+    layout = layout,
+    layoutStamp = layoutStamp,
+)
 
 private object ThemeLoader {
     fun tokensJSON(context: android.content.Context): String =

@@ -90,6 +90,15 @@ targets:
       INFOPLIST_KEY_CFBundleDisplayName: FD3 H-Both
       PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn.harness.both
 
+  FightDeckHarnessAll:
+    templates: [FightDeckHarness]
+    sources:
+      - path: Harness/Shared
+      - path: Harness/All
+    settings:
+      INFOPLIST_KEY_CFBundleDisplayName: FD3 H-All
+      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.rn.harness.all
+
   FightDeckUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -135,6 +144,14 @@ schemes:
     build:
       targets:
         FightDeckHarnessBoth: all
+    run:
+      environmentVariables:
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckHarnessAll:
+    build:
+      targets:
+        FightDeckHarnessAll: all
     run:
       environmentVariables:
         FIGHTDECK_LOCAL_SDK: "1"

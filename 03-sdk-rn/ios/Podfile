@@ -11,7 +11,7 @@ prepare_react_native_project!
 $RN_APP_ROOT = File.expand_path('..', __dir__)
 $FIGHTDECK_USE_LOCAL_SDK = ENV['FIGHTDECK_LOCAL_SDK'] == '1'
 $FIGHTDECK_RELEASE_VENDOR = File.expand_path('../../tools/out/release/rn/ios-vendor', __dir__)
-$FIGHTDECK_FEATURES = ENV.fetch('FIGHTDECK_FEATURES', 'both')
+$FIGHTDECK_FEATURES = ENV.fetch('FIGHTDECK_FEATURES', 'all')
 
 # The demo app links both features. The three harness targets exist only so
 # tools/measure-second-feature.sh can weigh a runtime with no feature screens against one
@@ -21,19 +21,22 @@ $FIGHTDECK_FEATURES = ENV.fetch('FIGHTDECK_FEATURES', 'both')
 # is what lets the app's Swift compile without a single #if: a source file is only ever
 # built by a target that links the SDKs it imports.
 FIGHTDECK_TARGET_FEATURES = {
-  'FightDeck' => %i[deposit betslip],
+  'FightDeck' => %i[deposit betslip fighter],
   'FightDeckHarnessRuntime' => [],
   'FightDeckHarnessDeposit' => %i[deposit],
   'FightDeckHarnessBoth' => %i[deposit betslip],
+  'FightDeckHarnessAll' => %i[deposit betslip fighter],
 }.freeze
 
 def fightdeck_feature_pods(features)
   if $FIGHTDECK_USE_LOCAL_SDK
     pod 'DepositSDK', :path => '../sdks/deposit/ios' if features.include?(:deposit)
     pod 'BetslipSDK', :path => '../sdks/betslip/ios' if features.include?(:betslip)
+    pod 'FighterSDK', :path => '../sdks/fighter/ios' if features.include?(:fighter)
   else
     pod 'DepositSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:deposit)
     pod 'BetslipSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:betslip)
+    pod 'FighterSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:fighter)
   end
 end
 

@@ -109,3 +109,45 @@ public protocol BetslipHosting: AnyObject {
     ) -> UIViewController
     func update(params: BetslipParams)
 }
+
+public struct FighterParams: Sendable {
+    public let themeJSON: String
+    public let fighterJSON: String
+    public let portraitURL: String
+    public let safeAreaTop: CGFloat
+    public let safeAreaBottom: CGFloat
+    public let chromeBackground: String
+    public let layoutStamp: Double
+
+    public init(
+        themeJSON: String,
+        fighterJSON: String,
+        portraitURL: String,
+        safeAreaTop: CGFloat = 0,
+        safeAreaBottom: CGFloat = 0,
+        chromeBackground: String = "#0B0E14",
+        layoutStamp: Double = 0
+    ) {
+        self.themeJSON = themeJSON
+        self.fighterJSON = fighterJSON
+        self.portraitURL = portraitURL
+        self.safeAreaTop = safeAreaTop
+        self.safeAreaBottom = safeAreaBottom
+        self.chromeBackground = chromeBackground
+        self.layoutStamp = layoutStamp
+    }
+}
+
+public enum FighterResult: Sendable {
+    case cancelled
+}
+
+@MainActor
+public protocol FighterHosting: AnyObject {
+    func configure()
+    func makeViewController(
+        params: FighterParams,
+        onResult: @escaping @Sendable (FighterResult) -> Void
+    ) -> UIViewController
+    func update(params: FighterParams)
+}

@@ -16,6 +16,8 @@ PODS:
     - React-RCTAppDelegate
     - ReactAppDependencyProvider
     - ReactCommon/turbomodule/core
+  - FighterSDK (0.1.0):
+    - FightDeckRNRuntime
   - fmt (12.1.0):
     - ReactNativeDependencies
   - glog (0.3.5):
@@ -1626,6 +1628,7 @@ DEPENDENCIES:
   - fast_float (from `build/rndeps-facades/fast_float`)
   - FBLazyVector (from `build/rncore-facades/FBLazyVector`)
   - FightDeckRNRuntime (from `../sdks/core/ios`)
+  - FighterSDK (from `../sdks/fighter/ios`)
   - fmt (from `build/rndeps-facades/fmt`)
   - glog (from `build/rndeps-facades/glog`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
@@ -1724,6 +1727,8 @@ EXTERNAL SOURCES:
     :path: build/rncore-facades/FBLazyVector
   FightDeckRNRuntime:
     :path: "../sdks/core/ios"
+  FighterSDK:
+    :path: "../sdks/fighter/ios"
   fmt:
     :path: build/rndeps-facades/fmt
   glog:
@@ -1896,6 +1901,7 @@ SPEC CHECKSUMS:
   fast_float: 7c925d1cebf8328d4018d061f49377e9f887e3b4
   FBLazyVector: 732df79fea96f10cc14477969cea05707026d2fd
   FightDeckRNRuntime: 87fb37c727d839d5e21624bc0b9b6e41a6cdda10
+  FighterSDK: 086053e6f349df1c528d2ae17dc789d8f755ef95
   fmt: ba0886e864ebb21d14c98b2e12e164b8002f5b93
   glog: 3cf7cb46f743c4bc758ae3e6d9c15bd1b4cfd6d4
   hermes-engine: 1c803fc6a6834dfca0e8a9a061011731162fbf92
@@ -1978,6 +1984,6 @@ SPEC CHECKSUMS:
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
 
-PODFILE CHECKSUM: f646d35db1137c798b15971b5b6ba647adbe8bd4
+PODFILE CHECKSUM: a9f704da585ae9f6d0b0a9faf03daeefed0bd968
 
 COCOAPODS: 1.17.0

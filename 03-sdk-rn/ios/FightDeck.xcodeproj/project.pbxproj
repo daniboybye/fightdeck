@@ -8,11 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
-		1C262F5D708A6338257EF70E /* libPods-FightDeckHosts-FightDeckHarnessBoth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BBAA32F52E90D6D9361F0894 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a */; };
 		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
-		228F77DD9BA46F68C4053B69 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3245733F2AEC761C41A8841 /* PrivacyInfo.xcprivacy */; };
-		29E7993B696622F4AAB54B4A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3245733F2AEC761C41A8841 /* PrivacyInfo.xcprivacy */; };
+		26AEA4C59ED74D1CB523CB70 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 81ABE29893DBD215A2932EF3 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a */; };
+		2C2A0E1EC84D0B31355AAB94 /* HarnessSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D854B46AAE164C6D3E38C90 /* HarnessSurface.swift */; };
+		2FF4ED8FCE23BDFB2E2221F0 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
 		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
 		3573316A38C53771E5FB45DF /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1C7202AD7E58476A06D92F /* HarnessRootView.swift */; };
 		486B5A4A780C5BFA3F1F1168 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
@@ -20,39 +20,44 @@
 		4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */; };
 		4ECABE7D0B4968F1D2D9D3C6 /* RNIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872B1166B1D25E7E5D989756 /* RNIntegrationTests.swift */; };
 		4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */; };
-		52C14E008A21D4D0F5897C98 /* libPods-FightDeckHosts-FightDeck.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C5575774D090CDCA8E371C9 /* libPods-FightDeckHosts-FightDeck.a */; };
 		54A6F6976569EF82BB16CD8F /* Money.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13620DECF8F3F4F8315E5EE /* Money.swift */; };
 		5AC16DDC8278439AC39636B4 /* DisplayFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CCE11576590506A00252D6D /* DisplayFormatting.swift */; };
 		5D57430FFA97C15866EA31B3 /* HarnessSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D854B46AAE164C6D3E38C90 /* HarnessSurface.swift */; };
 		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
 		72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
+		76CE917628C98DB1C5A6CEFE /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B1C14C92EEF1886E1E4F2DDC /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a */; };
 		8124699FEEDD6B02A56ABA0D /* FightCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8831274D01290C44D15A32E7 /* FightCore.swift */; };
+		845922C6A901BFE76D43EAA4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3D73D1CFBFF82EE5013B4DD /* PrivacyInfo.xcprivacy */; };
+		85181E0DC317FA2BABD3102E /* libPods-FightDeckHosts-FightDeckHarnessAll.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 68A7CD281C4F860191CA3775 /* libPods-FightDeckHosts-FightDeckHarnessAll.a */; };
 		8CC540AE2FD450B9960879BA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
 		8D6CF781BD2AB632A1F65C11 /* FightCoreTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B472255B466D66FBEFC149DD /* FightCoreTypes.swift */; };
+		8D858C899A3CAE5270B275F8 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3D73D1CFBFF82EE5013B4DD /* PrivacyInfo.xcprivacy */; };
 		9C4FE6062E1470B7C31FB2BA /* OddsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53C181750E494A6F381C9FD6 /* OddsEngine.swift */; };
 		A402CB917785917767655284 /* HarnessSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D854B46AAE164C6D3E38C90 /* HarnessSurface.swift */; };
+		A614B82379411F51A81EB94F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3D73D1CFBFF82EE5013B4DD /* PrivacyInfo.xcprivacy */; };
 		A6E2DD46038133AF8914EB17 /* HarnessSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D854B46AAE164C6D3E38C90 /* HarnessSurface.swift */; };
 		A7DC7E370D4A474AA69194D9 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
-		A9D2FBC350EF86BA51352D89 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3245733F2AEC761C41A8841 /* PrivacyInfo.xcprivacy */; };
 		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
 		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
-		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
 		B6D9AD2AAC514D4E6A09798F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42A7D4655065DF81DD8E152C /* Assets.xcassets */; };
 		B7CCACB5780A03933477148D /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
+		BD8A54855872C0545FFA048D /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C2CE32F376B39F2683C273 /* HarnessRootView.swift */; };
 		C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
+		C2FE40368B11819B2E09E8C9 /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4909E68D1015E03C9BCC5757 /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a */; };
 		C4CA6A81A1FF9EEF26C24A03 /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C893901A338D23A9ED33B5FA /* HarnessRootView.swift */; };
 		C9FE804A18590BE2B67D3CDA /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41381468C24B4370929B7F4 /* HarnessRootView.swift */; };
+		CA39CCFC5E4F0762BBD8ECD0 /* libPods-FightDeckHosts-FightDeck.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7B59B62EFFA6939D9EB3412A /* libPods-FightDeckHosts-FightDeck.a */; };
 		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
-		D79D06A5FAC5D9BBB640EB86 /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E5BBCF33ADA7A8A14C63A278 /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a */; };
 		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
-		DCD04D23BC99278D7CE14300 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3245733F2AEC761C41A8841 /* PrivacyInfo.xcprivacy */; };
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
+		DEC3E235E54608C61309E1D5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3D73D1CFBFF82EE5013B4DD /* PrivacyInfo.xcprivacy */; };
 		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
+		E07EA3E8C52EFBF1B9BF9D4B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D3D73D1CFBFF82EE5013B4DD /* PrivacyInfo.xcprivacy */; };
+		E7C0BE155D20655E42ADE364 /* FighterBridgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFFD0E35C9DDE6DB64B016ED /* FighterBridgeView.swift */; };
 		E9C4F079293B3B86093E18F1 /* FightCoreDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656180D875946D196F0E3DDD /* FightCoreDisplay.swift */; };
 		EA048786B062CB10545A4144 /* RNSurfaceLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1073B4632A753F69C87D7C9B /* RNSurfaceLayout.swift */; };
 		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
-		FA10FFC173DFAE7CA640DC6E /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = EEA2AC30F112F35928372D8F /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,63 +74,76 @@
 		04FF4541992DC2C0DF8B91E5 /* FightDeckHarnessDeposit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessDeposit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0647ED8C093622F890944CA4 /* HarnessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessApp.swift; sourceTree = "<group>"; };
 		1073B4632A753F69C87D7C9B /* RNSurfaceLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNSurfaceLayout.swift; sourceTree = "<group>"; };
-		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
 		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
 		1855FA16DD4899AFA6BC8E0E /* FightDeckHarnessBoth.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessBoth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		1C5575774D090CDCA8E371C9 /* libPods-FightDeckHosts-FightDeck.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeck.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1BB484400D908C06EEB51177 /* Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig"; sourceTree = "<group>"; };
 		1E1C7202AD7E58476A06D92F /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
+		21A44751B8EF4708B1422E56 /* FightDeckHarnessAll.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessAll.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		29BD96B6AFDC9F74AD011C22 /* Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig"; sourceTree = "<group>"; };
 		2D854B46AAE164C6D3E38C90 /* HarnessSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessSurface.swift; sourceTree = "<group>"; };
-		2F0214C30CFC140C3B27B8ED /* Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig"; sourceTree = "<group>"; };
 		3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceToolbar.swift; sourceTree = "<group>"; };
 		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
 		42A7D4655065DF81DD8E152C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		47F84314762385FF426F26FA /* Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig"; sourceTree = "<group>"; };
+		4909E68D1015E03C9BCC5757 /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeckHarnessDeposit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		49D472E7A2A7FBF4F4D64189 /* Pods-FightDeckHosts-FightDeckHarnessAll.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessAll.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll.release.xcconfig"; sourceTree = "<group>"; };
 		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
 		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
 		53C181750E494A6F381C9FD6 /* OddsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OddsEngine.swift; sourceTree = "<group>"; };
 		5CB34A2F61DC158028871445 /* DatasetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetModels.swift; sourceTree = "<group>"; };
 		5CCE11576590506A00252D6D /* DisplayFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatting.swift; sourceTree = "<group>"; };
-		606C263180013ECA3AB0129F /* Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig"; sourceTree = "<group>"; };
-		61625EF88D5EF0820298B034 /* Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig"; sourceTree = "<group>"; };
 		61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONFileRepository.swift; sourceTree = "<group>"; };
 		656180D875946D196F0E3DDD /* FightCoreDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreDisplay.swift; sourceTree = "<group>"; };
 		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		68A7CD281C4F860191CA3775 /* libPods-FightDeckHosts-FightDeckHarnessAll.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeckHarnessAll.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
 		75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositSheetView.swift; sourceTree = "<group>"; };
+		7ACA34E2A64B8086217D8E4F /* Pods-FightDeckHosts-FightDeck.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeck.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck.release.xcconfig"; sourceTree = "<group>"; };
+		7B59B62EFFA6939D9EB3412A /* libPods-FightDeckHosts-FightDeck.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeck.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7BC1FAA6EBD5C5B721CA2E02 /* Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig"; sourceTree = "<group>"; };
 		813BD28F72479374E713963B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		81ABE29893DBD215A2932EF3 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeckHarnessBoth.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		872B1166B1D25E7E5D989756 /* RNIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RNIntegrationTests.swift; sourceTree = "<group>"; };
 		8831274D01290C44D15A32E7 /* FightCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCore.swift; sourceTree = "<group>"; };
 		992440A70F2E2DCD051FFF1F /* FightDeck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9A9CC18077424EE4AB89A7F1 /* Pods-FightDeckHosts-FightDeck.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeck.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck.release.xcconfig"; sourceTree = "<group>"; };
-		A12CF68210908C0AD88AF1B1 /* Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig"; sourceTree = "<group>"; };
 		AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScreenView.swift; sourceTree = "<group>"; };
 		AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoutDetailView.swift; sourceTree = "<group>"; };
-		ADF44905D008D70F453CB726 /* Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig"; sourceTree = "<group>"; };
+		B1C14C92EEF1886E1E4F2DDC /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeckHarnessRuntime.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B257199D22ABFD2540722097 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig"; sourceTree = "<group>"; };
+		B3C2CE32F376B39F2683C273 /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
 		B472255B466D66FBEFC149DD /* FightCoreTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreTypes.swift; sourceTree = "<group>"; };
-		BBAA32F52E90D6D9361F0894 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeckHarnessBoth.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
+		C678F8BDA372E2941A2821C5 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig"; sourceTree = "<group>"; };
 		C893901A338D23A9ED33B5FA /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
 		D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKBootstrap.swift; sourceTree = "<group>"; };
-		D3245733F2AEC761C41A8841 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D3D73D1CFBFF82EE5013B4DD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = ../PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D83B2FF9D94616387CC70FFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		DE5AB7C32DFB35889C1F056E /* FightDeckHarnessRuntime.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessRuntime.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFFD0E35C9DDE6DB64B016ED /* FighterBridgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterBridgeView.swift; sourceTree = "<group>"; };
 		E41381468C24B4370929B7F4 /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
-		E5BBCF33ADA7A8A14C63A278 /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeckHarnessRuntime.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		EC4724909969E41CAAA84832 /* Pods-FightDeckHosts-FightDeck.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeck.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck.debug.xcconfig"; sourceTree = "<group>"; };
-		EEA2AC30F112F35928372D8F /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-FightDeckHosts-FightDeckHarnessDeposit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		EF318E7F7743C26E13867A92 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig"; sourceTree = "<group>"; };
+		E56F794C777F5C03983FA5C6 /* Pods-FightDeckHosts-FightDeck.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeck.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck.debug.xcconfig"; sourceTree = "<group>"; };
 		F13620DECF8F3F4F8315E5EE /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+		F8D855B8B8D5BD85838F52B9 /* Pods-FightDeckHosts-FightDeckHarnessAll.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FightDeckHosts-FightDeckHarnessAll.debug.xcconfig"; path = "Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		3AB8990457B0E767483034F1 /* Frameworks */ = {
+		356FDEC9382015AC43FBC1A3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C262F5D708A6338257EF70E /* libPods-FightDeckHosts-FightDeckHarnessBoth.a in Frameworks */,
+				85181E0DC317FA2BABD3102E /* libPods-FightDeckHosts-FightDeckHarnessAll.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5E4946E71ADD47F605AE69A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				26AEA4C59ED74D1CB523CB70 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,44 +152,33 @@
 			buildActionMask = 2147483647;
 			files = (
 				F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */,
-				52C14E008A21D4D0F5897C98 /* libPods-FightDeckHosts-FightDeck.a in Frameworks */,
+				CA39CCFC5E4F0762BBD8ECD0 /* libPods-FightDeckHosts-FightDeck.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		96EA283C4EF46BC281DE7BDD /* Frameworks */ = {
+		9E3A86FA58730AD060F5A947 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D79D06A5FAC5D9BBB640EB86 /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a in Frameworks */,
+				76CE917628C98DB1C5A6CEFE /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		FBE7531DBDAF06E82FE5E83F /* Frameworks */ = {
+		FE744D0819B7AB29EB3B0C13 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA10FFC173DFAE7CA640DC6E /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a in Frameworks */,
+				C2FE40368B11819B2E09E8C9 /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		06C4F34D11EF696A840E88AF /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1C5575774D090CDCA8E371C9 /* libPods-FightDeckHosts-FightDeck.a */,
-				BBAA32F52E90D6D9361F0894 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a */,
-				EEA2AC30F112F35928372D8F /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a */,
-				E5BBCF33ADA7A8A14C63A278 /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		0FEDBDDAC1739C981E1110C6 /* Fighter */ = {
 			isa = PBXGroup;
 			children = (
-				12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */,
+				DFFD0E35C9DDE6DB64B016ED /* FighterBridgeView.swift */,
 			);
 			path = Fighter;
 			sourceTree = "<group>";
@@ -202,7 +209,7 @@
 				FE9EE388C310ED4AB6AE0712 /* Services */,
 				42A7D4655065DF81DD8E152C /* Assets.xcassets */,
 				D83B2FF9D94616387CC70FFE /* Info.plist */,
-				D3245733F2AEC761C41A8841 /* PrivacyInfo.xcprivacy */,
+				D3D73D1CFBFF82EE5013B4DD /* PrivacyInfo.xcprivacy */,
 			);
 			path = FightDeck;
 			sourceTree = "<group>";
@@ -222,6 +229,14 @@
 				BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */,
 			);
 			path = Slip;
+			sourceTree = "<group>";
+		};
+		295AE396F8B3C5BB17A299C5 /* All */ = {
+			isa = PBXGroup;
+			children = (
+				B3C2CE32F376B39F2683C273 /* HarnessRootView.swift */,
+			);
+			path = All;
 			sourceTree = "<group>";
 		};
 		3F783D8202D7DC5872A05043 /* Both */ = {
@@ -248,22 +263,6 @@
 			path = News;
 			sourceTree = "<group>";
 		};
-		858CCEEBED387BE4B0B45FAC /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				EC4724909969E41CAAA84832 /* Pods-FightDeckHosts-FightDeck.debug.xcconfig */,
-				9A9CC18077424EE4AB89A7F1 /* Pods-FightDeckHosts-FightDeck.release.xcconfig */,
-				A12CF68210908C0AD88AF1B1 /* Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig */,
-				61625EF88D5EF0820298B034 /* Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig */,
-				606C263180013ECA3AB0129F /* Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig */,
-				EF318E7F7743C26E13867A92 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig */,
-				ADF44905D008D70F453CB726 /* Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig */,
-				2F0214C30CFC140C3B27B8ED /* Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		9F8C945A0C8FB47D84AF102F = {
 			isa = PBXGroup;
 			children = (
@@ -271,8 +270,8 @@
 				E3612764317CDA593DFB745F /* FightDeckUITests */,
 				BB2DC0DB85479AB4A39D5BA0 /* Harness */,
 				A1088A6E4DD381B5E286242F /* Products */,
-				858CCEEBED387BE4B0B45FAC /* Pods */,
-				06C4F34D11EF696A840E88AF /* Frameworks */,
+				BA18119CB618A5E456A71A64 /* Pods */,
+				C566D7CBBC931A56EFA0501C /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -280,6 +279,7 @@
 			isa = PBXGroup;
 			children = (
 				992440A70F2E2DCD051FFF1F /* FightDeck.app */,
+				21A44751B8EF4708B1422E56 /* FightDeckHarnessAll.app */,
 				1855FA16DD4899AFA6BC8E0E /* FightDeckHarnessBoth.app */,
 				04FF4541992DC2C0DF8B91E5 /* FightDeckHarnessDeposit.app */,
 				DE5AB7C32DFB35889C1F056E /* FightDeckHarnessRuntime.app */,
@@ -314,6 +314,24 @@
 			path = Video;
 			sourceTree = "<group>";
 		};
+		BA18119CB618A5E456A71A64 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E56F794C777F5C03983FA5C6 /* Pods-FightDeckHosts-FightDeck.debug.xcconfig */,
+				7ACA34E2A64B8086217D8E4F /* Pods-FightDeckHosts-FightDeck.release.xcconfig */,
+				F8D855B8B8D5BD85838F52B9 /* Pods-FightDeckHosts-FightDeckHarnessAll.debug.xcconfig */,
+				49D472E7A2A7FBF4F4D64189 /* Pods-FightDeckHosts-FightDeckHarnessAll.release.xcconfig */,
+				29BD96B6AFDC9F74AD011C22 /* Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig */,
+				7BC1FAA6EBD5C5B721CA2E02 /* Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig */,
+				B257199D22ABFD2540722097 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig */,
+				C678F8BDA372E2941A2821C5 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig */,
+				47F84314762385FF426F26FA /* Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig */,
+				1BB484400D908C06EEB51177 /* Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		BB2ACDBD1A29E5EB7A4575B7 /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -329,12 +347,25 @@
 		BB2DC0DB85479AB4A39D5BA0 /* Harness */ = {
 			isa = PBXGroup;
 			children = (
+				295AE396F8B3C5BB17A299C5 /* All */,
 				3F783D8202D7DC5872A05043 /* Both */,
 				D4BA1DFA5F5D3B61C4E70F6B /* Deposit */,
 				ABDD89A563D0A09DC64BE76C /* Runtime */,
 				1F692D97CA0DBB45E2966CF9 /* Shared */,
 			);
 			path = Harness;
+			sourceTree = "<group>";
+		};
+		C566D7CBBC931A56EFA0501C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7B59B62EFFA6939D9EB3412A /* libPods-FightDeckHosts-FightDeck.a */,
+				68A7CD281C4F860191CA3775 /* libPods-FightDeckHosts-FightDeckHarnessAll.a */,
+				81ABE29893DBD215A2932EF3 /* libPods-FightDeckHosts-FightDeckHarnessBoth.a */,
+				4909E68D1015E03C9BCC5757 /* libPods-FightDeckHosts-FightDeckHarnessDeposit.a */,
+				B1C14C92EEF1886E1E4F2DDC /* libPods-FightDeckHosts-FightDeckHarnessRuntime.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		D4BA1DFA5F5D3B61C4E70F6B /* Deposit */ = {
@@ -407,12 +438,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 19BDDF83FD9CB1BD02731E33 /* Build configuration list for PBXNativeTarget "FightDeckHarnessRuntime" */;
 			buildPhases = (
-				7D5050D2E2627F40BF65F9DB /* [CP] Check Pods Manifest.lock */,
+				C60759E9D8D6D13D92E4AC7C /* [CP] Check Pods Manifest.lock */,
 				A56275E8185162E488D6D500 /* Sources */,
-				915C7781D29DA432D7FAC1D0 /* Resources */,
-				96EA283C4EF46BC281DE7BDD /* Frameworks */,
-				C9A314240464A15B61182B47 /* [CP] Embed Pods Frameworks */,
-				467C3082C1561213CCC19E1B /* [CP] Copy Pods Resources */,
+				6A6E91F9CB5C1E95DF88EB85 /* Resources */,
+				9E3A86FA58730AD060F5A947 /* Frameworks */,
+				F7DC933A1B1A7CE5E66AB4FF /* [CP] Embed Pods Frameworks */,
+				1F7C1DBB241CBCAEC508C851 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -421,6 +452,26 @@
 			name = FightDeckHarnessRuntime;
 			productName = FightDeckHarnessRuntime;
 			productReference = DE5AB7C32DFB35889C1F056E /* FightDeckHarnessRuntime.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3283A32D0BD793DC860A3BE3 /* FightDeckHarnessAll */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F751178FE3908B4E43C98267 /* Build configuration list for PBXNativeTarget "FightDeckHarnessAll" */;
+			buildPhases = (
+				E6547FDAF4EF4D6A8F9AFCA5 /* [CP] Check Pods Manifest.lock */,
+				52FF96EBA3813ACD00447C58 /* Sources */,
+				D3EDDB23495DAA15E50D275D /* Resources */,
+				356FDEC9382015AC43FBC1A3 /* Frameworks */,
+				255699996533527C0E0D4167 /* [CP] Embed Pods Frameworks */,
+				C96B675570DC9F98A641AAEB /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FightDeckHarnessAll;
+			productName = FightDeckHarnessAll;
+			productReference = 21A44751B8EF4708B1422E56 /* FightDeckHarnessAll.app */;
 			productType = "com.apple.product-type.application";
 		};
 		4E593AC1BB4F8BA756C61049 /* FightDeckUITests */ = {
@@ -443,12 +494,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F7BC2D5C21B74ABE1A71BF06 /* Build configuration list for PBXNativeTarget "FightDeckHarnessBoth" */;
 			buildPhases = (
-				A89F1DB708357A9F30E91E51 /* [CP] Check Pods Manifest.lock */,
+				B0A3A9596564131F914DC5A8 /* [CP] Check Pods Manifest.lock */,
 				A2F105E102064BD3CEA2426A /* Sources */,
-				33871D7E30FD821A037B197F /* Resources */,
-				3AB8990457B0E767483034F1 /* Frameworks */,
-				404E672FA48FB49C7A0F382C /* [CP] Embed Pods Frameworks */,
-				D3F9F59BC44F9824EC67BCCA /* [CP] Copy Pods Resources */,
+				A7ACE60AFC1DADC55BDCA28C /* Resources */,
+				5E4946E71ADD47F605AE69A1 /* Frameworks */,
+				E24D1CD7C02DBCFB264AF5C5 /* [CP] Embed Pods Frameworks */,
+				3C661C332D03829F3F50CD4D /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -463,12 +514,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AE21C478BC5DC370EF8E33A0 /* Build configuration list for PBXNativeTarget "FightDeck" */;
 			buildPhases = (
-				B6B386930B4C5A365A2AF8D3 /* [CP] Check Pods Manifest.lock */,
+				6899E643764F063784F7797D /* [CP] Check Pods Manifest.lock */,
 				3AD307C6196DE9DC1C5BD5E4 /* Sources */,
 				77BEBE6D04B62A674E0DC9CC /* Resources */,
 				8FB1D06474B2D730B4A262FC /* Frameworks */,
-				FF1975B80055390A12E0E698 /* [CP] Embed Pods Frameworks */,
-				6A000E532C60E7C764789F5B /* [CP] Copy Pods Resources */,
+				F58891230FAF3C19CE8F5C86 /* [CP] Embed Pods Frameworks */,
+				B5330A364B68E987833B5F92 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -486,12 +537,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7D0A4DBA1608825E558DA136 /* Build configuration list for PBXNativeTarget "FightDeckHarnessDeposit" */;
 			buildPhases = (
-				0BAA4CD5B288A2E886009DF6 /* [CP] Check Pods Manifest.lock */,
+				46BF42A51E44CE5EF4EEE48D /* [CP] Check Pods Manifest.lock */,
 				89A3877D6837A345B0877D97 /* Sources */,
-				977B9D4A07062F366B35E9E7 /* Resources */,
-				FBE7531DBDAF06E82FE5E83F /* Frameworks */,
-				0D5A5F9BE67EBD39214F142D /* [CP] Embed Pods Frameworks */,
-				A3FD5CD56800D837556DC10B /* [CP] Copy Pods Resources */,
+				71E2FA2468486199536289FD /* Resources */,
+				FE744D0819B7AB29EB3B0C13 /* Frameworks */,
+				36662F86473875C1E7C17AF3 /* [CP] Embed Pods Frameworks */,
+				B5F02198E401AFE786F5DA68 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -512,6 +563,9 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					159F2179243B9BCB664C4453 = {
+						DevelopmentTeam = "";
+					};
+					3283A32D0BD793DC860A3BE3 = {
 						DevelopmentTeam = "";
 					};
 					4E593AC1BB4F8BA756C61049 = {
@@ -550,17 +604,26 @@
 				159F2179243B9BCB664C4453 /* FightDeckHarnessRuntime */,
 				D890208DA2836CBCECEB16F7 /* FightDeckHarnessDeposit */,
 				87C3F406FC14B040C96ED043 /* FightDeckHarnessBoth */,
+				3283A32D0BD793DC860A3BE3 /* FightDeckHarnessAll */,
 				4E593AC1BB4F8BA756C61049 /* FightDeckUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		33871D7E30FD821A037B197F /* Resources */ = {
+		6A6E91F9CB5C1E95DF88EB85 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DCD04D23BC99278D7CE14300 /* PrivacyInfo.xcprivacy in Resources */,
+				DEC3E235E54608C61309E1D5 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71E2FA2468486199536289FD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D858C899A3CAE5270B275F8 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -569,30 +632,98 @@
 			buildActionMask = 2147483647;
 			files = (
 				B6D9AD2AAC514D4E6A09798F /* Assets.xcassets in Resources */,
-				29E7993B696622F4AAB54B4A /* PrivacyInfo.xcprivacy in Resources */,
+				A614B82379411F51A81EB94F /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		915C7781D29DA432D7FAC1D0 /* Resources */ = {
+		A7ACE60AFC1DADC55BDCA28C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				228F77DD9BA46F68C4053B69 /* PrivacyInfo.xcprivacy in Resources */,
+				845922C6A901BFE76D43EAA4 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		977B9D4A07062F366B35E9E7 /* Resources */ = {
+		D3EDDB23495DAA15E50D275D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A9D2FBC350EF86BA51352D89 /* PrivacyInfo.xcprivacy in Resources */,
+				E07EA3E8C52EFBF1B9BF9D4B /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0BAA4CD5B288A2E886009DF6 /* [CP] Check Pods Manifest.lock */ = {
+		1F7C1DBB241CBCAEC508C851 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		255699996533527C0E0D4167 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		36662F86473875C1E7C17AF3 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3C661C332D03829F3F50CD4D /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		46BF42A51E44CE5EF4EEE48D /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -614,136 +745,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		0D5A5F9BE67EBD39214F142D /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		404E672FA48FB49C7A0F382C /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		467C3082C1561213CCC19E1B /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		6A000E532C60E7C764789F5B /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		7D5050D2E2627F40BF65F9DB /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-FightDeckHosts-FightDeckHarnessRuntime-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		A3FD5CD56800D837556DC10B /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		A89F1DB708357A9F30E91E51 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-FightDeckHosts-FightDeckHarnessBoth-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		B6B386930B4C5A365A2AF8D3 /* [CP] Check Pods Manifest.lock */ = {
+		6899E643764F063784F7797D /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -765,41 +767,141 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C9A314240464A15B61182B47 /* [CP] Embed Pods Frameworks */ = {
+		B0A3A9596564131F914DC5A8 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-FightDeckHosts-FightDeckHarnessBoth-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-frameworks.sh\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D3F9F59BC44F9824EC67BCCA /* [CP] Copy Pods Resources */ = {
+		B5330A364B68E987833B5F92 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-resources-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-resources-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		FF1975B80055390A12E0E698 /* [CP] Embed Pods Frameworks */ = {
+		B5F02198E401AFE786F5DA68 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessDeposit/Pods-FightDeckHosts-FightDeckHarnessDeposit-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C60759E9D8D6D13D92E4AC7C /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-FightDeckHosts-FightDeckHarnessRuntime-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C96B675570DC9F98A641AAEB /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessAll/Pods-FightDeckHosts-FightDeckHarnessAll-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E24D1CD7C02DBCFB264AF5C5 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessBoth/Pods-FightDeckHosts-FightDeckHarnessBoth-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E6547FDAF4EF4D6A8F9AFCA5 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-FightDeckHosts-FightDeckHarnessAll-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F58891230FAF3C19CE8F5C86 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -814,6 +916,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeck/Pods-FightDeckHosts-FightDeck-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F7DC933A1B1A7CE5E66AB4FF /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-FightDeckHosts-FightDeckHarnessRuntime/Pods-FightDeckHosts-FightDeckHarnessRuntime-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -836,7 +955,7 @@
 				8D6CF781BD2AB632A1F65C11 /* FightCoreTypes.swift in Sources */,
 				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
 				EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */,
-				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
+				E7C0BE155D20655E42ADE364 /* FighterBridgeView.swift in Sources */,
 				3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */,
 				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
 				54A6F6976569EF82BB16CD8F /* Money.swift in Sources */,
@@ -849,6 +968,16 @@
 				4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */,
 				CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */,
 				D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		52FF96EBA3813ACD00447C58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2FF4ED8FCE23BDFB2E2221F0 /* HarnessApp.swift in Sources */,
+				BD8A54855872C0545FFA048D /* HarnessRootView.swift in Sources */,
+				2C2A0E1EC84D0B31355AAB94 /* HarnessSurface.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -974,7 +1103,7 @@
 		};
 		3CE64FC7676D5B7E6E3B070A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EF318E7F7743C26E13867A92 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig */;
+			baseConfigurationReference = C678F8BDA372E2941A2821C5 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -997,9 +1126,34 @@
 			};
 			name = Release;
 		};
+		4DB3BF6C9061F1D066729E0C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F8D855B8B8D5BD85838F52B9 /* Pods-FightDeckHosts-FightDeckHarnessAll.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FD3 H-All";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lc++",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.rn.harness.all;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		4E2A1FB3A2844F2A3395169F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A12CF68210908C0AD88AF1B1 /* Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig */;
+			baseConfigurationReference = 29BD96B6AFDC9F74AD011C22 /* Pods-FightDeckHosts-FightDeckHarnessBoth.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1024,7 +1178,7 @@
 		};
 		5564E6125AEF64BFA977DA9C /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EC4724909969E41CAAA84832 /* Pods-FightDeckHosts-FightDeck.debug.xcconfig */;
+			baseConfigurationReference = E56F794C777F5C03983FA5C6 /* Pods-FightDeckHosts-FightDeck.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1048,7 +1202,7 @@
 		};
 		5686C05F69A6B5ADCE6F0288 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 606C263180013ECA3AB0129F /* Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig */;
+			baseConfigurationReference = B257199D22ABFD2540722097 /* Pods-FightDeckHosts-FightDeckHarnessDeposit.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1073,7 +1227,7 @@
 		};
 		57354A7FD65C3ABF02482FB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = ADF44905D008D70F453CB726 /* Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig */;
+			baseConfigurationReference = 47F84314762385FF426F26FA /* Pods-FightDeckHosts-FightDeckHarnessRuntime.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1115,7 +1269,7 @@
 		};
 		A51EFA01273B92885CB2B6B4 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9A9CC18077424EE4AB89A7F1 /* Pods-FightDeckHosts-FightDeck.release.xcconfig */;
+			baseConfigurationReference = 7ACA34E2A64B8086217D8E4F /* Pods-FightDeckHosts-FightDeck.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1137,9 +1291,34 @@
 			};
 			name = Release;
 		};
+		A74815F831E0D0BB90DC4F83 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 49D472E7A2A7FBF4F4D64189 /* Pods-FightDeckHosts-FightDeckHarnessAll.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FD3 H-All";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lc++",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.rn.harness.all;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		AEE66E8530021720B8A98B83 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 61625EF88D5EF0820298B034 /* Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig */;
+			baseConfigurationReference = 7BC1FAA6EBD5C5B721CA2E02 /* Pods-FightDeckHosts-FightDeckHarnessBoth.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1164,7 +1343,7 @@
 		};
 		BBE995D2C61F5BDAAF2E9094 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2F0214C30CFC140C3B27B8ED /* Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig */;
+			baseConfigurationReference = 1BB484400D908C06EEB51177 /* Pods-FightDeckHosts-FightDeckHarnessRuntime.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -1326,6 +1505,15 @@
 			buildConfigurations = (
 				CA0FFB70C20594FC1AC2FFAF /* Debug */,
 				67FE8D83695E986DBD3919D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F751178FE3908B4E43C98267 /* Build configuration list for PBXNativeTarget "FightDeckHarnessAll" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DB3BF6C9061F1D066729E0C /* Debug */,
+				A74815F831E0D0BB90DC4F83 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

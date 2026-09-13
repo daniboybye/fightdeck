@@ -48,8 +48,12 @@ android {
         }
         create("both") {
             dimension = "features"
-            isDefault = true
             buildConfigField("String", "FEATURE_MODE", "\"both\"")
+        }
+        create("all") {
+            dimension = "features"
+            isDefault = true
+            buildConfigField("String", "FEATURE_MODE", "\"all\"")
         }
     }
 
@@ -84,7 +88,8 @@ fun syncRnEntry(flavor: String) {
     val source = when (flavor) {
         "runtime" -> rnEntryRoot.resolve("index.runtime.js")
         "deposit" -> rnEntryRoot.resolve("index.deposit.js")
-        else -> rnEntryRoot.resolve("index.js")
+        "both" -> rnEntryRoot.resolve("index.js")
+        else -> rnEntryRoot.resolve("index.all.js")
     }
     source.copyTo(rnActiveEntry, overwrite = true)
 }
@@ -116,22 +121,26 @@ dependencies {
     val rnRuntime = if (fightdeckLocalSdk) project(":fightdeck-rn-runtime") else files(releaseAarDir.resolve("FightDeckRNRuntime.aar"))
     val depositSdk = if (fightdeckLocalSdk) project(":deposit-sdk") else files(releaseAarDir.resolve("DepositSDK.aar"))
     val betslipSdk = if (fightdeckLocalSdk) project(":betslip-sdk") else files(releaseAarDir.resolve("BetslipSDK.aar"))
+    val fighterSdk = if (fightdeckLocalSdk) project(":fighter-sdk") else files(releaseAarDir.resolve("FighterSDK.aar"))
 
-    listOf("runtime", "deposit", "both").forEach { flavor ->
+    listOf("runtime", "deposit", "both", "all").forEach { flavor ->
         "${flavor}Implementation"(rnRuntime)
     }
-    listOf("deposit", "both").forEach { flavor ->
+    listOf("deposit", "both", "all").forEach { flavor ->
         "${flavor}Implementation"(depositSdk)
     }
-    "bothImplementation"(betslipSdk)
+    listOf("both", "all").forEach { flavor ->
+        "${flavor}Implementation"(betslipSdk)
+    }
+    "allImplementation"(fighterSdk)
 
     if (fightdeckLocalSdk) {
-        listOf("runtime", "deposit", "both").forEach { flavor ->
+        listOf("runtime", "deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"("com.facebook.react:react-android")
             "${flavor}Implementation"("com.facebook.react:hermes-android")
         }
     } else {
-        listOf("runtime", "deposit", "both").forEach { flavor ->
+        listOf("runtime", "deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"("com.facebook.react:react-android")
             "${flavor}Implementation"("com.facebook.react:hermes-android")
         }

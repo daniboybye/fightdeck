@@ -25,13 +25,14 @@ fi
 # to index.active.js before Gradle bundles. iOS always bundled the all-surfaces entry, so a
 # deposit-only host still shipped the bet slip's JavaScript, and the measured cost of the
 # second feature was native code only.
-FEATURES="${FIGHTDECK_FEATURES:-both}"
+FEATURES="${FIGHTDECK_FEATURES:-all}"
 case "$FEATURES" in
     runtime) ENTRY="src/runtime/index.runtime.js" ;;
     deposit) ENTRY="src/runtime/index.deposit.js" ;;
     both)    ENTRY="src/runtime/index.js" ;;
+    all)     ENTRY="src/runtime/index.all.js" ;;
     *)
-        echo "error: FIGHTDECK_FEATURES must be runtime, deposit or both (got '$FEATURES')" >&2
+        echo "error: FIGHTDECK_FEATURES must be runtime, deposit, both or all (got '$FEATURES')" >&2
         exit 1
         ;;
 esac

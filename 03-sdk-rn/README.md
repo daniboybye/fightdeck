@@ -1,13 +1,13 @@
 # 03-sdk-rn — UI-bearing React Native SDK
 
-Two feature screens (**deposit**, **bet slip**) ship as a black box over **one shared Hermes runtime**. The host apps are native SwiftUI and Compose; they never import React Native.
+Three feature screens (**deposit**, **bet slip**, **fighter profile**) ship as a black box over **one shared Hermes runtime**. The host apps are native SwiftUI and Compose; they never import React Native.
 
 ## What this demonstrates
 
 | Decision | Implementation |
 | --- | --- |
-| Shared runtime + feature adapters | `FightDeckRNRuntime`, `DepositSDK`, `BetslipSDK` (CocoaPods / Gradle modules) |
-| Mockable adapter boundary | `DepositHosting` / `BetslipHosting` protocols |
+| Shared runtime + feature adapters | `FightDeckRNRuntime`, `DepositSDK`, `BetslipSDK`, `FighterSDK` (CocoaPods / Gradle modules) |
+| Mockable adapter boundary | `DepositHosting` / `BetslipHosting` / `FighterHosting` protocols |
 | Launcher separate from adapter | `DepositLauncher` fetches token, pushes VC |
 | Theme as JSON | `themeJSON` in params from `shared-ui-spec/tokens.json` |
 | Runtime singleton | `FightDeckRNRuntime.shared` — configure → registerFeature → host |
@@ -88,10 +88,11 @@ SPM `binaryTarget` URLs require **HTTPS** (GitHub Releases in production). `file
 | **Runtime / core alone** | **154.6 MB** (162,117,764 B) | **294 KB** (301,134 B) |
 | **+ Deposit** | **73 KB** (74,292 B) adapter zip | **2.15 MB** (2,253,282 B) |
 | **+ Betslip** (second feature) | **49 KB** (50,096 B) adapter zip | **2.17 MB** (2,271,963 B) |
+| **+ Fighter** (third feature) | *(re-measure)* | *(re-measure)* |
 
 RN core zip bundles `React.xcframework`, `hermesvm.xcframework`, `ReactNativeDependencies.xcframework`, and Hermes bytecode. Feature zips are adapter-only; runtime is shared.
 
-**Second-feature cost (zip):** RN **−24 KB** (betslip adapter smaller than deposit); Skip **+18 KB** (2,271,963 − 2,253,282 B).
+**Second-feature cost (zip):** RN **−24 KB** (betslip adapter smaller than deposit); Skip **+18 KB** (2,271,963 − 2,253,282 B). **Third-feature cost:** not yet measured — see `FightDeckHarnessAll` / `all` Android flavour.
 
 ### Android — distributable `.aar` set
 
@@ -100,14 +101,15 @@ RN core zip bundles `React.xcframework`, `hermesvm.xcframework`, `ReactNativeDep
 | **Runtime / core alone** | **239 MB** (react 161 MB + hermes 77.5 MB + runtime 236 KB + soloader 117 KB) | **2.83 MB** |
 | **+ Deposit** | **+8.8 KB** adapter | **8.93 MB** total |
 | **+ Both features** | **+13.4 KB** adapters (deposit 8.8 KB + betslip 4.5 KB) | **9.03 MB** total |
+| **+ All features** | *(re-measure)* | *(re-measure)* |
 
 Skip core stack: `SkipFoundation` 1.22 MB + `SkipLib` 1.54 MB + `SkipUnit` 12 KB + `FightDeckCore` 116 KB. Deposit adds `SkipUI` 5.91 MB + `SkipModel` 84 KB + feature module ~100 KB.
 
-**Second-feature cost (feature module AAR):** RN **4.5 KB** (`BetslipSDK.aar`); Skip **94 KB** (`FightDeckBetslip-release.aar`).
+**Second-feature cost (feature module AAR):** RN **4.5 KB** (`BetslipSDK.aar`); Skip **94 KB** (`FightDeckBetslip-release.aar`). **Third-feature cost:** not yet measured — `FighterSDK.aar` added under `sdks/fighter/`.
 
 ### JS / Hermes payload (RN only)
 
-All-surfaces bundle; the deposit-only entry is roughly 16 KB smaller.
+All-surfaces bundle (`FIGHTDECK_FEATURES=all`); the deposit-only entry is roughly 16 KB smaller than the two-feature bundle, and the two-feature entry is smaller than all three.
 
 | Artifact | Size | Shipped |
 | --- | --- | --- |
@@ -152,6 +154,7 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 | Event list / card / bout detail | Native SwiftUI | Native Compose |
 | Bet slip | **BetslipSDK** (RN) | **RNBetslipScreen** (RN) |
 | Deposit | **DepositSDK** (RN) | **RNDepositScreen** (RN) |
+| Fighter profile | **FighterSDK** (RN) | **RNFighterProfileScreen** (RN) |
 
 ## Honest seams
 
@@ -161,20 +164,20 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 4. **Fabric badge + Turbo `PreferencesStore`** — TypeScript specs and native stub files exist; codegen + ObjC++ Fabric wrapper not linked.
 5. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
 6. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
-7. **iOS feature gating is a build-time concern only** — Which pods a target links is fixed by target name in the `Podfile`, so the demo app needs no conditional compilation and the three `ios/Harness/` measurement hosts each compile against exactly the SDKs they import. `FIGHTDECK_FEATURES` survives for one job the target name cannot do: picking the JS bundle's entry point when the SDK is built. Nothing ties the bundle to the host, so the `Podfile` compares the value against the `ios/.fightdeck-features` stamp and refuses a mismatch rather than producing an app whose size means nothing.
+7. **iOS feature gating is a build-time concern only** — Which pods a target links is fixed by target name in the `Podfile`, so the demo app needs no conditional compilation and the four `ios/Harness/` measurement hosts each compile against exactly the SDKs they import. `FIGHTDECK_FEATURES` survives for one job the target name cannot do: picking the JS bundle's entry point when the SDK is built. Nothing ties the bundle to the host, so the `Podfile` compares the value against the `ios/.fightdeck-features` stamp and refuses a mismatch rather than producing an app whose size means nothing.
 8. **Android Fabric layout specs** — `FabricLayoutSpecsBridge` reflects `ReactSurfaceImpl.updateLayoutSpecs$ReactAndroid` because bridgeless RN 0.84 exposes no public pre-start layout API. Coupled to the pinned `react_native.version` in `versions.lock.toml`; upgrade RN only after re-verifying this seam.
 
 ## Architecture sketch
 
 ```
 Host (SwiftUI / Compose)
-  │  DepositHosting / BetslipHosting  ← mockable, no RN import
+  │  DepositHosting / BetslipHosting / FighterHosting  ← mockable, no RN import
   ▼
-DepositSDK / BetslipSDK  (feature pod/AAR)
+DepositSDK / BetslipSDK / FighterSDK  (feature pod/AAR)
   │  registerFeature("deposit", moduleName: "DepositFeature")
   ▼
 FightDeckRNRuntime  (RCTReactNativeFactory / ReactHost, one Hermes, bundle in Resources/)
   │  NotificationCenter bridge (no host native modules)
   ▼
-JS: DepositFeature / BetslipFeature + shared FightCore (decimal.js)
+JS: DepositFeature / BetslipFeature / FighterFeature + shared FightCore (decimal.js)
 ```

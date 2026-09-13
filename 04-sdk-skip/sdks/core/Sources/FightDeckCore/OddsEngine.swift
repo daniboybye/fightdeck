@@ -25,12 +25,12 @@ public enum OddsEngine {
               denominator > 0 else {
             return Money.zero
         }
-        let profit = Money.fromInt(numerator) / Money.fromInt(denominator)
+        let profit = Money.divide(Money.fromInt(numerator), by: Money.fromInt(denominator))
         return Money.money(profit + Money.one)
     }
 
     public static func impliedProbability(_ decimalOdds: Decimal) -> Decimal {
-        Money.round(Money.one / decimalOdds, scale: 4)
+        Money.round(Money.divide(Money.one, by: decimalOdds), scale: 4)
     }
 
     private static func gcd(_ a: Int, _ b: Int) -> Int {

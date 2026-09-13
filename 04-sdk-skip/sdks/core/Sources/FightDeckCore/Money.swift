@@ -23,6 +23,17 @@ public enum Money {
         #endif
     }
 
+    /// Kotlin's `/` on BigDecimal keeps the dividend's scale, so `Money.one / 1.20` is 1 on
+    /// Android and 0.8333… on Apple platforms. Shared code has to name the precision it wants
+    /// or the two builds of this file disagree about money.
+    public static func divide(_ dividend: Decimal, by divisor: Decimal, scale: Int = 10) -> Decimal {
+        #if SKIP
+        return dividend.divide(divisor, Int32(scale), java.math.RoundingMode.HALF_UP)
+        #else
+        return round(dividend / divisor, scale: scale)
+        #endif
+    }
+
     public static func money(_ value: Decimal) -> Decimal {
         round(value, scale: 2)
     }

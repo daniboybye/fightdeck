@@ -10,21 +10,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
 
-interface FightRepository {
-    suspend fun loadEvents(): List<EventItem>
-    suspend fun loadFighters(): List<FighterItem>
-}
-
 class JsonFileRepository(
     private val datasetRoot: File,
     private val json: Json = Json { ignoreUnknownKeys = true },
-) : FightRepository {
+) {
     suspend fun loadNews(): List<NewsItem> = load("news.json", "news")
     suspend fun loadMedia(): List<MediaItem> = load("media.json", "media")
-
-    override suspend fun loadEvents(): List<EventItem> = load("events.json", "events")
-
-    override suspend fun loadFighters(): List<FighterItem> = load("fighters.json", "fighters")
 
     fun imageUrl(path: String): String? =
         if (LocalAssetServer.port > 0) "http://127.0.0.1:${LocalAssetServer.port}/$path" else null
@@ -41,71 +32,6 @@ class JsonFileRepository(
             JsonFileRepository(DatasetLocator.datasetRoot(context))
     }
 }
-
-@Serializable
-data class EventItem(
-    val id: String,
-    val name: String,
-    val date: String,
-    val venue: String,
-    val city: String,
-    val bouts: List<BoutItem>,
-)
-
-@Serializable
-data class BoutItem(
-    val id: String,
-    val order: Int,
-    val segment: String,
-    val weightClass: String,
-    val titleFight: Boolean,
-    val scheduledRounds: Int,
-    val redCorner: CornerItem,
-    val blueCorner: CornerItem,
-    val result: BoutResultItem,
-)
-
-@Serializable
-data class CornerItem(
-    @SerialName("fighterId") val fighterId: String,
-    val name: String,
-    val closingOdds: OddsItem,
-)
-
-@Serializable
-data class OddsItem(val decimal: String, val fractional: String)
-
-@Serializable
-data class BoutResultItem(
-    @SerialName("winnerId") val winnerId: String,
-    val winnerName: String,
-    val method: String,
-    val detail: String,
-    val endRound: Int,
-    val endTime: String,
-)
-
-@Serializable
-data class FighterItem(
-    val id: String,
-    val name: String,
-    val nickname: String? = null,
-    val country: String? = null,
-    val heightCm: Int? = null,
-    val reachIn: Int? = null,
-    val stance: String? = null,
-    val record: FighterRecord,
-    val portrait: String,
-)
-
-@Serializable
-data class FighterRecord(
-    val display: String,
-    val wins: Int = 0,
-    val losses: Int = 0,
-    val draws: Int = 0,
-    val noContests: Int = 0,
-)
 
 @Serializable
 data class NewsItem(

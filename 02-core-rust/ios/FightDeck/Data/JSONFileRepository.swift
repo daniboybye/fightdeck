@@ -15,14 +15,6 @@ final class JSONFileRepository: HostFightRepository, @unchecked Sendable {
         self.datasetRoot = datasetRoot
     }
 
-    func loadEvents() async throws -> [EventItem] {
-        try await load(file: "events.json", key: "events")
-    }
-
-    func loadFighters() async throws -> [FighterItem] {
-        try await load(file: "fighters.json", key: "fighters")
-    }
-
     func loadNews() async throws -> [NewsItem] {
         try await load(file: "news.json", key: "news")
     }

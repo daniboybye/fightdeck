@@ -6,9 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.core.StateFlowBetSlipStore
-import com.fightdeck.rust.data.BoutItem
-import com.fightdeck.rust.data.EventItem
-import com.fightdeck.rust.data.FighterItem
 import com.fightdeck.rust.data.JsonFileRepository
 import com.fightdeck.rust.data.MediaItem
 import com.fightdeck.rust.data.NewsItem
@@ -20,7 +17,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import uniffi.fightevents.BoutSummary
 import uniffi.fightevents.EventCatalog
+import uniffi.fightevents.EventSummary
+import uniffi.fightevents.FighterSummary
 import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.BoutIndexRecord
 import uniffi.fightslip.SlipHandle
@@ -58,11 +58,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _engine = MutableStateFlow<RustEngine?>(null)
     val engine: StateFlow<RustEngine?> = _engine.asStateFlow()
 
-    private val _events = MutableStateFlow<LoadState<List<EventItem>>>(LoadState.Loading)
-    val events: StateFlow<LoadState<List<EventItem>>> = _events.asStateFlow()
-
-    private val _fighters = MutableStateFlow<LoadState<List<FighterItem>>>(LoadState.Loading)
-    val fighters: StateFlow<LoadState<List<FighterItem>>> = _fighters.asStateFlow()
+    private val _events = MutableStateFlow<LoadState<List<EventSummary>>>(LoadState.Loading)
+    val events: StateFlow<LoadState<List<EventSummary>>> = _events.asStateFlow()
 
     private val _news = MutableStateFlow<LoadState<List<NewsItem>>>(LoadState.Loading)
     val news: StateFlow<LoadState<List<NewsItem>>> = _news.asStateFlow()
@@ -99,7 +96,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _engine.value = engine.rustEngine
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
-                    refreshFighters()
                     refreshNews()
                     refreshMedia()
                 },
@@ -119,6 +115,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun requireCatalog(): EventCatalog =
         requireNotNull(_engine.value?.catalog) { "Rust engine not ready" }
 
+    fun fighter(id: String): FighterSummary? =
+        runCatching { requireCatalog().fighter(id) }.getOrNull()
+
     val slip: StateFlow<BetSlipRecord>
         get() = requireSlipStore().slip
 
@@ -129,25 +128,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         get() = requireSlipStore().balance
 
     fun refreshEvents() {
-        viewModelScope.launch {
-            _events.value = LoadState.Loading
-            _events.value = runCatching { requireNotNull(repository).loadEvents() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load events") },
-                )
+        val events = runCatching { requireCatalog().events() }.getOrElse {
+            _events.value = LoadState.Error("Could not load events")
+            return
         }
-    }
-
-    fun refreshFighters() {
-        viewModelScope.launch {
-            _fighters.value = LoadState.Loading
-            _fighters.value = runCatching { requireNotNull(repository).loadFighters() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load fighters") },
-                )
-        }
+        _events.value = if (events.isEmpty()) LoadState.Empty else LoadState.Loaded(events)
     }
 
     fun refreshNews() {
@@ -174,7 +159,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun imageUrl(path: String): String? = repository?.imageUrl(path)
 
-    fun toggleSelection(bout: BoutItem, fighterId: String, odds: String) {
+    fun toggleSelection(bout: BoutSummary, fighterId: String, odds: String) {
         requireSlipStore().toggleSelection(bout.id, fighterId, odds)
         _betPlacedMessage.value = null
     }
@@ -226,7 +211,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             onStep("Loading fight catalogue…")
             val root = DatasetLocator.datasetRoot(application)
             LocalAssetServer.start(root)
-            // FightEvents parses the dataset; the app declares no Kotlin mirror of the JSON.
             val catalog = EventCatalog.parse(
                 root.resolve("events.json").readText(),
                 root.resolve("fighters.json").readText(),
@@ -234,8 +218,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Log.i(TAG, "EventCatalog ready")
 
             onStep("Starting bet slip…")
-            // FightEvents produces the index, FightSlip consumes it; the app is the only place
-            // the two feature SDKs meet.
             val slip = SlipHandle(
                 catalog.boutIndex().map {
                     BoutIndexRecord(it.id, it.redFighterId, it.blueFighterId, it.winnerId)
@@ -249,4 +231,3 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 }
-

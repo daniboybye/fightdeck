@@ -29,8 +29,7 @@ enum LoadState<Value>: Sendable where Value: Sendable {
 @Observable
 @MainActor
 final class AppState {
-    var eventsState: LoadState<[EventItem]> = .loading
-    var fightersState: LoadState<[FighterItem]> = .loading
+    var eventsState: LoadState<[EventSummary]> = .loading
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
@@ -78,30 +77,15 @@ final class AppState {
     }
 
     func refreshAll() async {
-        await loadEvents()
-        await loadFighters()
+        loadEvents()
         await loadNews()
         await loadMedia()
     }
 
-    func loadEvents() async {
+    func loadEvents() {
         eventsState = .loading
-        do {
-            let events = try await repository.loadEvents()
-            eventsState = events.isEmpty ? .empty : .loaded(events)
-        } catch {
-            eventsState = .error("Could not load events")
-        }
-    }
-
-    func loadFighters() async {
-        fightersState = .loading
-        do {
-            let fighters = try await repository.loadFighters()
-            fightersState = fighters.isEmpty ? .empty : .loaded(fighters)
-        } catch {
-            fightersState = .error("Could not load fighters")
-        }
+        let events = catalog.events()
+        eventsState = events.isEmpty ? .empty : .loaded(events)
     }
 
     func loadNews() async {
@@ -124,7 +108,7 @@ final class AppState {
         }
     }
 
-    func toggleSelection(bout: BoutItem, fighterID: String, odds: String) {
+    func toggleSelection(bout: BoutSummary, fighterID: String, odds: String) {
         slipStore.toggleSelection(boutId: bout.id, fighterId: fighterID, odds: odds)
         betPlacedMessage = nil
     }
@@ -156,13 +140,8 @@ final class AppState {
         repository.imageURL(for: path)
     }
 
-    func fighter(_ id: String) -> FighterItem? {
-        guard case .loaded(let fighters) = fightersState else { return nil }
-        return fighters.first { $0.id == id }
-    }
-
-    func record(for id: String) -> String {
-        fighter(id)?.recordDisplay ?? "—"
+    func fighter(_ id: String) -> FighterSummary? {
+        try? catalog.fighter(id: id)
     }
 
     /// The dataset is read as text and parsed inside FightEvents, so the app declares no
@@ -191,6 +170,12 @@ private extension BoutIndexRecord {
         )
     }
 }
+
+extension EventSummary: Identifiable {}
+
+extension BoutSummary: Identifiable {}
+
+extension FighterSummary: Identifiable {}
 
 // Retroactive because the record is FightSlip's and Identifiable is the standard library's.
 // UniFFI will not emit the conformance, so the app has to own it and accept that a future

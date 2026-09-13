@@ -51,6 +51,11 @@ pub struct BoutSummary {
     pub blue: CornerSummary,
     pub result_line: String,
     pub winner_id: String,
+    pub winner_name: String,
+    pub result_method: String,
+    pub result_detail: String,
+    pub end_round: u32,
+    pub end_time: String,
 }
 
 #[derive(uniffi::Record, Clone, Debug)]
@@ -168,6 +173,11 @@ fn bout_summary(catalog: &Catalog, event_id: &str, bout: &Bout) -> BoutSummary {
             &bout.result.end_time,
         ),
         winner_id: bout.result.winner_id.clone(),
+        winner_name: bout.result.winner_name.clone(),
+        result_method: bout.result.method.clone(),
+        result_detail: bout.result.detail.clone(),
+        end_round: bout.result.end_round,
+        end_time: bout.result.end_time.clone(),
     }
 }
 

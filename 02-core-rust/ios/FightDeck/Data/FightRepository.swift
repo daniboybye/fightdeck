@@ -9,8 +9,6 @@
 import Foundation
 
 protocol HostFightRepository {
-    func loadEvents() async throws -> [EventItem]
-    func loadFighters() async throws -> [FighterItem]
     func loadNews() async throws -> [NewsItem]
     func loadMedia() async throws -> [MediaItem]
 }

@@ -51,10 +51,6 @@ targets:
       GENERATE_INFOPLIST_FILE: YES
       OTHER_LDFLAGS:
         - -lc++
-    scheme:
-      testTargets:
-        - FightDeckTests
-        - FightDeckUITests
 
   FightDeckTests:
     type: bundle.unit-test

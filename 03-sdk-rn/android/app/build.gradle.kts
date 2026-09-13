@@ -201,3 +201,63 @@ tasks.withType<Test>().configureEach {
     systemProperty("fightdeck.dataset.root", rootProject.file("../../dataset").absolutePath)
     systemProperty("fightdeck.fixtures.root", rootProject.file("../../contract/fixtures").absolutePath)
 }
+
+// The apps read the dataset from /data/local/tmp rather than bundling it: 4.7 MB of fixtures
+// inside the APK would land in every size measurement. That makes a device stateful, so
+// pressing Run in Android Studio on a fresh emulator would otherwise reach
+// DatasetLocator.NotFoundException. Every debug build and every install puts it there first,
+// and says nothing when no device is attached — a build must not fail for want of an emulator.
+val datasetDir = rootProject.file("../../dataset")
+// Android Studio and the terminal do not agree on how the SDK is found: Studio writes
+// local.properties, a shell exports ANDROID_HOME, and neither is guaranteed to put
+// platform-tools on PATH. All three are tried so Run works either way.
+val adbExecutable = listOfNotNull(
+    rootProject.file("local.properties").takeIf { it.isFile }
+        ?.readLines()
+        ?.firstOrNull { it.startsWith("sdk.dir=") }
+        ?.substringAfter('=')
+        ?.trim(),
+    System.getenv("ANDROID_HOME"),
+    System.getenv("ANDROID_SDK_ROOT"),
+).map { File(it, "platform-tools/adb") }.firstOrNull { it.canExecute() }
+val remoteDataset = "/data/local/tmp/fightdeck/dataset"
+
+val pushDataset = tasks.register("pushDataset") {
+    description = "Copies the repo dataset onto every attached device."
+    doLast {
+        val adb = adbExecutable
+        if (!datasetDir.isDirectory || adb == null) return@doLast
+        val serials = ProcessBuilder(adb.path, "devices")
+            .redirectErrorStream(true)
+            .start()
+            .inputStream
+            .bufferedReader()
+            .readLines()
+            .mapNotNull { line ->
+                line.split('\t').takeIf { it.size == 2 && it[1].trim() == "device" }?.first()
+            }
+        serials.forEach { serial ->
+            // Removed first: pushing onto a directory that already exists nests it as
+            // dataset/dataset, and the app then keeps reading the stale copy one level up.
+            ProcessBuilder(adb.path, "-s", serial, "shell", "rm", "-rf", remoteDataset)
+                .start()
+                .waitFor()
+            ProcessBuilder(adb.path, "-s", serial, "push", datasetDir.path, remoteDataset)
+                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                .start()
+                .waitFor()
+            logger.lifecycle("dataset -> $serial")
+        }
+    }
+}
+
+// Studio's Run does not go through the `install` task — it builds and deploys with its own
+// installer — so the packaging tasks are hooked too. Gradle runs a finalizer once per build no
+// matter how many tasks name it.
+tasks.matching { task ->
+    val debugBuild = task.name.endsWith("Debug") &&
+        (task.name.startsWith("assemble") || task.name.startsWith("package"))
+    debugBuild || task.name.startsWith("install")
+}.configureEach {
+    finalizedBy(pushDataset)
+}

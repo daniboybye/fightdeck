@@ -44,9 +44,9 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "FAC8A24A8EB552C6AB2A0082"
-               BuildableName = "FightDeckTests.xctest"
-               BlueprintName = "FightDeckTests"
+               BlueprintIdentifier = "4E593AC1BB4F8BA756C61049"
+               BuildableName = "FightDeckUITests.xctest"
+               BlueprintName = "FightDeckUITests"
                ReferencedContainer = "container:FightDeck.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -55,9 +55,9 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4E593AC1BB4F8BA756C61049"
-               BuildableName = "FightDeckUITests.xctest"
-               BlueprintName = "FightDeckUITests"
+               BlueprintIdentifier = "FAC8A24A8EB552C6AB2A0082"
+               BuildableName = "FightDeckTests.xctest"
+               BlueprintName = "FightDeckTests"
                ReferencedContainer = "container:FightDeck.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -87,6 +87,18 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
       </CommandLineArguments>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "FIGHTDECK_DATASET_ROOT"
+            value = "$(SRCROOT)/../../dataset"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "FIGHTDECK_LOCAL_SDK"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -104,8 +116,6 @@
             ReferencedContainer = "container:FightDeck.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

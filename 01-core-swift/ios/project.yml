@@ -49,9 +49,6 @@ targets:
       INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
       INFOPLIST_KEY_NSLocalNetworkUsageDescription: Serves dataset images over localhost for demo image loading.
       GENERATE_INFOPLIST_FILE: YES
-    scheme:
-      testTargets:
-        - FightDeckTests
 
   FightDeckTests:
     type: bundle.unit-test

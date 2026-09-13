@@ -29,6 +29,16 @@ object SkipSDKBridge {
     }
 
     @Composable
+    fun FighterScreen(
+        fighter: com.fightdeck.baseline.data.FighterItem,
+        viewModel: MainViewModel,
+        saveKey: String,
+        modifier: Modifier = Modifier,
+    ) {
+        UnavailableFeature("Fighter profile (deposit-only build)", modifier)
+    }
+
+    @Composable
     fun DepositScreen(
         viewModel: MainViewModel,
         saveKey: String,

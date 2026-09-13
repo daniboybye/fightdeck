@@ -10,11 +10,14 @@
 		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
 		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
+		2FF4ED8FCE23BDFB2E2221F0 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
 		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
+		32CF71885CF48AEA17391AFE /* FightDeckFighter in Frameworks */ = {isa = PBXBuildFile; productRef = 134D4C3D222A6178DBCD5A85 /* FightDeckFighter */; };
 		3573316A38C53771E5FB45DF /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1C7202AD7E58476A06D92F /* HarnessRootView.swift */; };
 		486B5A4A780C5BFA3F1F1168 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
 		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
 		4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */; };
+		52E15E3F30F5D4FF91A0EE65 /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = D6B892DC5A2E0912D7D76AEB /* FightDeckCore */; };
 		54C89BBBB11426ED8AE7CFD4 /* FightDeckBetslip in Frameworks */ = {isa = PBXBuildFile; productRef = F43F702E8415F7CC50B66BC5 /* FightDeckBetslip */; };
 		5BE0D0F96C8DCD7E5809B733 /* FightDeckDeposit in Frameworks */ = {isa = PBXBuildFile; productRef = 82A10ADFDCD4764B052A855D /* FightDeckDeposit */; };
 		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
@@ -23,15 +26,16 @@
 		8CC540AE2FD450B9960879BA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
 		8D9D6F3D5C283BE96968F992 /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = DFE3F0A2ABFBDB3D70586AB4 /* FightDeckCore */; };
 		935A4FDC6C317378EE0C156D /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = 5D1E9D130BC22D1835824432 /* FightDeckCore */; };
+		95FF86BF5E361F3315653195 /* FightDeckFighter in Frameworks */ = {isa = PBXBuildFile; productRef = 139D4C386C4136D02F61C1ED /* FightDeckFighter */; };
 		9FAE979935271512DD91DA3D /* FightDeckDeposit in Frameworks */ = {isa = PBXBuildFile; productRef = 19678514C928A35DB4F989E8 /* FightDeckDeposit */; };
 		A7DC7E370D4A474AA69194D9 /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
 		A9A9015BFEAC6B0641118019 /* DisplayFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */; };
 		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
 		B32901AFEBA37B42E2A4E949 /* ScreenshotTour.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */; };
 		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
-		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
 		B6D9AD2AAC514D4E6A09798F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42A7D4655065DF81DD8E152C /* Assets.xcassets */; };
 		B7CCACB5780A03933477148D /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
+		BD8A54855872C0545FFA048D /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C2CE32F376B39F2683C273 /* HarnessRootView.swift */; };
 		C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
 		C4CA6A81A1FF9EEF26C24A03 /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C893901A338D23A9ED33B5FA /* HarnessRootView.swift */; };
 		C9FE804A18590BE2B67D3CDA /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41381468C24B4370929B7F4 /* HarnessRootView.swift */; };
@@ -40,6 +44,9 @@
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
 		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
 		E6E8B3C39142ADA333F006B9 /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2C8ED382D8C72D7DFBF6D4ED /* FightDeckCore */; };
+		E7C0BE155D20655E42ADE364 /* FighterBridgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFFD0E35C9DDE6DB64B016ED /* FighterBridgeView.swift */; };
+		EA15655DA2F6BF0E14F07420 /* FightDeckDeposit in Frameworks */ = {isa = PBXBuildFile; productRef = 3E74BE59645D6F73439CE3D5 /* FightDeckDeposit */; };
+		EB6585CCB055DF3258B19579 /* FightDeckBetslip in Frameworks */ = {isa = PBXBuildFile; productRef = 894693BA743445023F1422DC /* FightDeckBetslip */; };
 		EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
 		F4CF0C26D9CF8D4D4900BF3F /* DepositSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C46D3800643B3F42EBC14C65 /* DepositSheetView.swift */; };
@@ -58,13 +65,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		00A86AC3AAB9806288EA6E90 /* fighter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fighter; path = ../sdks/fighter; sourceTree = SOURCE_ROOT; };
 		04FF4541992DC2C0DF8B91E5 /* FightDeckHarnessDeposit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessDeposit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0647ED8C093622F890944CA4 /* HarnessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessApp.swift; sourceTree = "<group>"; };
-		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
 		15B935DE3BDB2F1EAF34DCAC /* FightRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightRepository.swift; sourceTree = "<group>"; };
 		1855FA16DD4899AFA6BC8E0E /* FightDeckHarnessBoth.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessBoth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E1C7202AD7E58476A06D92F /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
+		21A44751B8EF4708B1422E56 /* FightDeckHarnessAll.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessAll.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C15AC4F04B3055B51F23702 /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../sdks/core; sourceTree = SOURCE_ROOT; };
 		3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceToolbar.swift; sourceTree = "<group>"; };
 		3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
@@ -82,6 +90,7 @@
 		AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScreenView.swift; sourceTree = "<group>"; };
 		AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoutDetailView.swift; sourceTree = "<group>"; };
 		ADDF1CDA0A11FAECC2BEA97E /* deposit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = deposit; path = ../sdks/deposit; sourceTree = SOURCE_ROOT; };
+		B3C2CE32F376B39F2683C273 /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
 		BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlipViews.swift; sourceTree = "<group>"; };
 		C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTour.swift; sourceTree = "<group>"; };
 		C46D3800643B3F42EBC14C65 /* DepositSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositSheetView.swift; sourceTree = "<group>"; };
@@ -90,12 +99,24 @@
 		D83B2FF9D94616387CC70FFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		DE5AB7C32DFB35889C1F056E /* FightDeckHarnessRuntime.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessRuntime.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFFD0E35C9DDE6DB64B016ED /* FighterBridgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterBridgeView.swift; sourceTree = "<group>"; };
 		E41381468C24B4370929B7F4 /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
 		E691CF9C42896B81D0B19AC9 /* DisplayFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatting.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		38042C5D3B51A8AFEAFF374C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				52E15E3F30F5D4FF91A0EE65 /* FightDeckCore in Frameworks */,
+				EA15655DA2F6BF0E14F07420 /* FightDeckDeposit in Frameworks */,
+				EB6585CCB055DF3258B19579 /* FightDeckBetslip in Frameworks */,
+				32CF71885CF48AEA17391AFE /* FightDeckFighter in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		81495D701FBC35329E4DB685 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -113,6 +134,7 @@
 				8D9D6F3D5C283BE96968F992 /* FightDeckCore in Frameworks */,
 				9FAE979935271512DD91DA3D /* FightDeckDeposit in Frameworks */,
 				F502F17CC36E3303471CFBD6 /* FightDeckBetslip in Frameworks */,
+				95FF86BF5E361F3315653195 /* FightDeckFighter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -140,7 +162,7 @@
 		0FEDBDDAC1739C981E1110C6 /* Fighter */ = {
 			isa = PBXGroup;
 			children = (
-				12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */,
+				DFFD0E35C9DDE6DB64B016ED /* FighterBridgeView.swift */,
 			);
 			path = Fighter;
 			sourceTree = "<group>";
@@ -177,6 +199,14 @@
 			path = Slip;
 			sourceTree = "<group>";
 		};
+		295AE396F8B3C5BB17A299C5 /* All */ = {
+			isa = PBXGroup;
+			children = (
+				B3C2CE32F376B39F2683C273 /* HarnessRootView.swift */,
+			);
+			path = All;
+			sourceTree = "<group>";
+		};
 		3F783D8202D7DC5872A05043 /* Both */ = {
 			isa = PBXGroup;
 			children = (
@@ -208,6 +238,7 @@
 			isa = PBXGroup;
 			children = (
 				992440A70F2E2DCD051FFF1F /* FightDeck.app */,
+				21A44751B8EF4708B1422E56 /* FightDeckHarnessAll.app */,
 				1855FA16DD4899AFA6BC8E0E /* FightDeckHarnessBoth.app */,
 				04FF4541992DC2C0DF8B91E5 /* FightDeckHarnessDeposit.app */,
 				DE5AB7C32DFB35889C1F056E /* FightDeckHarnessRuntime.app */,
@@ -257,6 +288,7 @@
 		BB2DC0DB85479AB4A39D5BA0 /* Harness */ = {
 			isa = PBXGroup;
 			children = (
+				295AE396F8B3C5BB17A299C5 /* All */,
 				3F783D8202D7DC5872A05043 /* Both */,
 				D4BA1DFA5F5D3B61C4E70F6B /* Deposit */,
 				ABDD89A563D0A09DC64BE76C /* Runtime */,
@@ -271,6 +303,7 @@
 				671EA38BCD5536798738A94F /* betslip */,
 				3C15AC4F04B3055B51F23702 /* core */,
 				ADDF1CDA0A11FAECC2BEA97E /* deposit */,
+				00A86AC3AAB9806288EA6E90 /* fighter */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -360,6 +393,28 @@
 			productReference = DE5AB7C32DFB35889C1F056E /* FightDeckHarnessRuntime.app */;
 			productType = "com.apple.product-type.application";
 		};
+		3283A32D0BD793DC860A3BE3 /* FightDeckHarnessAll */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F751178FE3908B4E43C98267 /* Build configuration list for PBXNativeTarget "FightDeckHarnessAll" */;
+			buildPhases = (
+				52FF96EBA3813ACD00447C58 /* Sources */,
+				38042C5D3B51A8AFEAFF374C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FightDeckHarnessAll;
+			packageProductDependencies = (
+				D6B892DC5A2E0912D7D76AEB /* FightDeckCore */,
+				3E74BE59645D6F73439CE3D5 /* FightDeckDeposit */,
+				894693BA743445023F1422DC /* FightDeckBetslip */,
+				134D4C3D222A6178DBCD5A85 /* FightDeckFighter */,
+			);
+			productName = FightDeckHarnessAll;
+			productReference = 21A44751B8EF4708B1422E56 /* FightDeckHarnessAll.app */;
+			productType = "com.apple.product-type.application";
+		};
 		4E593AC1BB4F8BA756C61049 /* FightDeckUITests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B7B15D16CC95842B0276D311 /* Build configuration list for PBXNativeTarget "FightDeckUITests" */;
@@ -417,6 +472,7 @@
 				DFE3F0A2ABFBDB3D70586AB4 /* FightDeckCore */,
 				19678514C928A35DB4F989E8 /* FightDeckDeposit */,
 				EB8D6D7EABFFCE9FD6725FB8 /* FightDeckBetslip */,
+				139D4C386C4136D02F61C1ED /* FightDeckFighter */,
 			);
 			productName = FightDeck;
 			productReference = 992440A70F2E2DCD051FFF1F /* FightDeck.app */;
@@ -454,6 +510,9 @@
 					159F2179243B9BCB664C4453 = {
 						DevelopmentTeam = "";
 					};
+					3283A32D0BD793DC860A3BE3 = {
+						DevelopmentTeam = "";
+					};
 					4E593AC1BB4F8BA756C61049 = {
 						TestTargetID = A14FF0BBB1A87FBC2C0E6EB7;
 					};
@@ -482,6 +541,7 @@
 				3F1C1BFAA7F7A10456AD899B /* XCLocalSwiftPackageReference "../sdks/betslip" */,
 				826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */,
 				90DC4F9CD0D6B0D273EAADF1 /* XCLocalSwiftPackageReference "../sdks/deposit" */,
+				6B27DABE38EDB65776BC6A0D /* XCLocalSwiftPackageReference "../sdks/fighter" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A1088A6E4DD381B5E286242F /* Products */;
@@ -492,6 +552,7 @@
 				159F2179243B9BCB664C4453 /* FightDeckHarnessRuntime */,
 				D890208DA2836CBCECEB16F7 /* FightDeckHarnessDeposit */,
 				87C3F406FC14B040C96ED043 /* FightDeckHarnessBoth */,
+				3283A32D0BD793DC860A3BE3 /* FightDeckHarnessAll */,
 				4E593AC1BB4F8BA756C61049 /* FightDeckUITests */,
 			);
 		};
@@ -523,7 +584,7 @@
 				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
 				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
 				EEE3C21C56429E390283D9FD /* FightRepository.swift in Sources */,
-				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
+				E7C0BE155D20655E42ADE364 /* FighterBridgeView.swift in Sources */,
 				3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */,
 				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
 				1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */,
@@ -533,6 +594,15 @@
 				4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */,
 				CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */,
 				D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		52FF96EBA3813ACD00447C58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2FF4ED8FCE23BDFB2E2221F0 /* HarnessApp.swift in Sources */,
+				BD8A54855872C0545FFA048D /* HarnessRootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -661,6 +731,30 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		4DB3BF6C9061F1D066729E0C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FD4 H-All";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.skip.harness.all;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		4E2A1FB3A2844F2A3395169F /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -794,6 +888,30 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.skip;
+				SDKROOT = iphoneos;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A74815F831E0D0BB90DC4F83 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "FD4 H-All";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Serves dataset images over localhost for demo image loading.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.sdk.skip.harness.all;
 				SDKROOT = iphoneos;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
@@ -977,6 +1095,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		F751178FE3908B4E43C98267 /* Build configuration list for PBXNativeTarget "FightDeckHarnessAll" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DB3BF6C9061F1D066729E0C /* Debug */,
+				A74815F831E0D0BB90DC4F83 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		F7BC2D5C21B74ABE1A71BF06 /* Build configuration list for PBXNativeTarget "FightDeckHarnessBoth" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -992,6 +1119,10 @@
 		3F1C1BFAA7F7A10456AD899B /* XCLocalSwiftPackageReference "../sdks/betslip" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../sdks/betslip;
+		};
+		6B27DABE38EDB65776BC6A0D /* XCLocalSwiftPackageReference "../sdks/fighter" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/fighter;
 		};
 		826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */ = {
 			isa = XCLocalSwiftPackageReference;
@@ -1015,6 +1146,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		134D4C3D222A6178DBCD5A85 /* FightDeckFighter */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckFighter;
+		};
+		139D4C386C4136D02F61C1ED /* FightDeckFighter */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckFighter;
+		};
 		19678514C928A35DB4F989E8 /* FightDeckDeposit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FightDeckDeposit;
@@ -1027,6 +1166,10 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = FightDeckCore;
 		};
+		3E74BE59645D6F73439CE3D5 /* FightDeckDeposit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckDeposit;
+		};
 		5D1E9D130BC22D1835824432 /* FightDeckCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FightDeckCore;
@@ -1035,9 +1178,17 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = FightDeckDeposit;
 		};
+		894693BA743445023F1422DC /* FightDeckBetslip */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckBetslip;
+		};
 		A60F790B813948ABCA9C3674 /* FightDeckDeposit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FightDeckDeposit;
+		};
+		D6B892DC5A2E0912D7D76AEB /* FightDeckCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightDeckCore;
 		};
 		DFE3F0A2ABFBDB3D70586AB4 /* FightDeckCore */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -16,6 +16,8 @@ packages:
     path: ../sdks/deposit
   FightDeckBetslip:
     path: ../sdks/betslip
+  FightDeckFighter:
+    path: ../sdks/fighter
 
 settingGroups:
   fightdeck_app:
@@ -80,11 +82,13 @@ targets:
         product: FightDeckDeposit
       - package: FightDeckBetslip
         product: FightDeckBetslip
+      - package: FightDeckFighter
+        product: FightDeckFighter
 
-  # The three size-measurement hosts. They share Harness/Shared and take exactly one
+  # The four size-measurement hosts. They share Harness/Shared and take exactly one
   # Harness/<stage> directory each, so no source file needs an #if to compile against a
   # link set that is missing a feature SDK. tools/measure-second-feature.sh builds all
-  # three and subtracts; nothing else references them.
+  # four and subtracts; nothing else references them.
   FightDeckHarnessRuntime:
     templates: [FightDeckHarness]
     settings:
@@ -130,6 +134,25 @@ targets:
       - package: FightDeckBetslip
         product: FightDeckBetslip
 
+  FightDeckHarnessAll:
+    templates: [FightDeckHarness]
+    settings:
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: FD4 H-All
+        PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.sdk.skip.harness.all
+    sources:
+      - path: Harness/Shared
+      - path: Harness/All
+    dependencies:
+      - package: FightDeckCore
+        product: FightDeckCore
+      - package: FightDeckDeposit
+        product: FightDeckDeposit
+      - package: FightDeckBetslip
+        product: FightDeckBetslip
+      - package: FightDeckFighter
+        product: FightDeckFighter
+
   FightDeckUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -174,6 +197,14 @@ schemes:
     build:
       targets:
         FightDeckHarnessBoth: all
+    run:
+      environmentVariables:
+        FIGHTDECK_LOCAL_SDK: "1"
+
+  FightDeckHarnessAll:
+    build:
+      targets:
+        FightDeckHarnessAll: all
     run:
       environmentVariables:
         FIGHTDECK_LOCAL_SDK: "1"

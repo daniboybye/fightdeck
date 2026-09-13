@@ -1,11 +1,7 @@
 package com.fightdeck.baseline.sdk
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,13 +10,19 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fightdeck.baseline.data.FighterItem
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetslipComposeEntry
 import fight.deck.betslip.BetslipTheme
 import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
+import fight.deck.fighter.FighterComposeEntry
+import fight.deck.fighter.FighterParams
+import fight.deck.fighter.FighterTheme
 import java.util.Locale
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 object SkipSDKBridge {
     @Composable
@@ -35,9 +37,6 @@ object SkipSDKBridge {
         val slip by viewModel.slip.collectAsStateWithLifecycle()
         val balance by viewModel.balance.collectAsStateWithLifecycle()
         val betPlacedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
-        // Collected rather than read off the flow inside the display context: a plain `.value`
-        // read is not a composition input, so selection rows kept showing fighter ids when the
-        // slip opened before the roster finished loading.
         val fighters by viewModel.fighters.collectAsStateWithLifecycle()
         val events by viewModel.events.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
@@ -50,8 +49,6 @@ object SkipSDKBridge {
             LaunchedEffect(balance) {
                 store.balance = balance
             }
-            // The host clears the confirmation when the slip changes from another tab; without
-            // pushing that back the SDK keeps showing "bet placed" over an empty slip.
             LaunchedEffect(betPlacedMessage) {
                 store.betPlacedMessage = betPlacedMessage
             }
@@ -77,16 +74,6 @@ object SkipSDKBridge {
                 }
             }
         }
-    }
-
-    @Composable
-    fun FighterScreen(
-        fighter: com.fightdeck.baseline.data.FighterItem,
-        viewModel: MainViewModel,
-        saveKey: String,
-        modifier: Modifier = Modifier,
-    ) {
-        UnavailableFeature("Fighter profile (both-only build)", modifier)
     }
 
     @Composable
@@ -130,9 +117,35 @@ object SkipSDKBridge {
     }
 
     @Composable
-    private fun UnavailableFeature(label: String, modifier: Modifier = Modifier) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    fun FighterScreen(
+        fighter: FighterItem,
+        viewModel: MainViewModel,
+        saveKey: String,
+        modifier: Modifier = Modifier,
+    ) {
+        val context = LocalContext.current
+        val stateHolder = rememberSaveableStateHolder()
+        stateHolder.SaveableStateProvider(saveKey) {
+            val themeJSON = remember { ThemeLoader.tokensJSON(context) }
+            val params = remember(fighter, themeJSON) {
+                FighterParams(
+                    themeJSON = themeJSON,
+                    fighterJSON = fighterJson.encodeToString(fighter),
+                    portraitURL = viewModel.imageUrl(fighter.portrait).orEmpty(),
+                )
+            }
+            val theme = remember(themeJSON) { FighterTheme.parse(themeJSON) }
+            FighterComposeEntry(
+                params = params,
+                theme = theme,
+            ).Compose()
+            DisposableEffect(saveKey) {
+                onDispose {
+                    stateHolder.removeState(saveKey)
+                }
+            }
         }
     }
+
+    private val fighterJson = Json { ignoreUnknownKeys = true }
 }

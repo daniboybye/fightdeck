@@ -14,8 +14,8 @@ import SwiftUI
 // that inside FightDeck itself meant every feature screen needed an #else branch for a
 // configuration that never shipped.
 //
-// Exactly one HarnessRootView is compiled per target: Harness/Runtime, Harness/Deposit or
-// Harness/Both. Same trick the Android hosts use with flavour source sets — different
+// Exactly one HarnessRootView is compiled per target: Harness/Runtime, Harness/Deposit,
+// Harness/Both or Harness/All. Same trick the Android hosts use with flavour source sets — different
 // files, not different branches inside one file.
 //
 // Nothing here is a product surface. It renders whatever is cheapest that still keeps the

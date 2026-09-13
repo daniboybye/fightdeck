@@ -51,6 +51,13 @@ fun skipBetslipAar(local: Boolean): File? {
     return releaseAarDir.resolve("FightDeckBetslip-release.aar").takeIf { it.isFile }
 }
 
+fun skipFighterAar(local: Boolean): File? {
+    if (local) {
+        return rootProject.file("../sdks/fighter/out/FightDeckFighter-release.aar").takeIf { it.isFile }
+    }
+    return releaseAarDir.resolve("FightDeckFighter-release.aar").takeIf { it.isFile }
+}
+
 android {
     namespace = "com.fightdeck.baseline"
     compileSdk = 37
@@ -77,8 +84,12 @@ android {
         }
         create("both") {
             dimension = "features"
-            isDefault = true
             buildConfigField("String", "FEATURE_MODE", "\"both\"")
+        }
+        create("all") {
+            dimension = "features"
+            isDefault = true
+            buildConfigField("String", "FEATURE_MODE", "\"all\"")
         }
     }
 
@@ -117,26 +128,35 @@ tasks.named("preBuild") {
 
 dependencies {
     if (useSkipMaven) {
-        listOf("runtime", "deposit", "both").forEach { flavor ->
+        listOf("runtime", "deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"("fightdeck.skip:FightDeckCoreBinary:$skipSdkVersion")
         }
-        listOf("deposit", "both").forEach { flavor ->
+        listOf("deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"("fightdeck.skip:FightDeckDepositBinary:$skipSdkVersion")
         }
-        "bothImplementation"("fightdeck.skip:FightDeckBetslipBinary:$skipSdkVersion")
+        listOf("both", "all").forEach { flavor ->
+            "${flavor}Implementation"("fightdeck.skip:FightDeckBetslipBinary:$skipSdkVersion")
+        }
+        "allImplementation"("fightdeck.skip:FightDeckFighterBinary:$skipSdkVersion")
     } else {
         val coreAars = skipCoreAars(fightdeckLocalSdk)
         val depositAars = skipDepositFeatureAars(fightdeckLocalSdk)
         val betslipAar = skipBetslipAar(fightdeckLocalSdk)
+        val fighterAar = skipFighterAar(fightdeckLocalSdk)
 
-        listOf("runtime", "deposit", "both").forEach { flavor ->
+        listOf("runtime", "deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"(files(*coreAars))
         }
-        listOf("deposit", "both").forEach { flavor ->
+        listOf("deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"(files(*depositAars))
         }
         betslipAar?.let { aar ->
-            "bothImplementation"(files(aar))
+            listOf("both", "all").forEach { flavor ->
+                "${flavor}Implementation"(files(aar))
+            }
+        }
+        fighterAar?.let { aar ->
+            "allImplementation"(files(aar))
         }
     }
 

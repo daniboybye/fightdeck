@@ -33,6 +33,16 @@ object SkipSDKBridge {
     }
 
     @Composable
+    fun FighterScreen(
+        fighter: com.fightdeck.baseline.data.FighterItem,
+        viewModel: MainViewModel,
+        saveKey: String,
+        modifier: Modifier = Modifier,
+    ) {
+        UnavailableFeature("Fighter profile (runtime-only build)", modifier)
+    }
+
+    @Composable
     private fun UnavailableFeature(label: String, modifier: Modifier = Modifier) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)

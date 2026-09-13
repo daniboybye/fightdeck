@@ -102,7 +102,7 @@ struct EventsTabView: View {
                 BoutDetailView(state: state, event: event, bout: bout, path: $path, mode: mode)
             }
         case .fighter(let id):
-            FighterProfileView(state: state, fighterID: id)
+            FighterBridgeView(state: state, fighterID: id)
                 .navigationTransition(.zoom(sourceID: id, in: posterNamespace))
         case .article(let id):
             if case .loaded(let items) = state.newsState,

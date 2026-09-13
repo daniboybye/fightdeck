@@ -437,13 +437,21 @@ private fun EventsNavHost(
             val fighter = loadedFighters
                 .firstOrNull { it.id == entry.arguments?.getString("fighterId") }
             if (fighter != null) {
-                FighterProfileScreen(
-                    fighter,
-                    viewModel,
+                DetailScaffold(
+                    title = fighter.name,
+                    onBack = { nav.popBackStack() },
                     balance = balance,
                     onDeposit = onDeposit,
-                    onBack = { nav.popBackStack() },
-                )
+                ) { padding ->
+                    com.fightdeck.baseline.sdk.SkipSDKBridge.FighterScreen(
+                        fighter = fighter,
+                        viewModel = viewModel,
+                        saveKey = "fighter-${fighter.id}",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = padding.calculateTopPadding()),
+                    )
+                }
             }
         }
         composable(
@@ -1345,93 +1353,6 @@ private fun TapeRow(left: String?, label: String, right: String?) {
             overflow = TextOverflow.Visible,
             modifier = Modifier.weight(1f),
         )
-    }
-}
-
-@Composable
-private fun FighterProfileScreen(
-    fighter: FighterItem,
-    viewModel: MainViewModel,
-    balance: BigDecimal,
-    onDeposit: () -> Unit,
-    onBack: () -> Unit,
-) {
-    DetailScaffold(title = fighter.name, onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
-        LazyColumn(
-            contentPadding = PaddingValues(
-                top = padding.calculateTopPadding(),
-                bottom = Tokens.spacingXl,
-            ),
-        ) {
-            item {
-                Box {
-                    RemoteImage(
-                        url = viewModel.imageUrl(fighter.portrait),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(320.dp),
-                    )
-                    Column(
-                        Modifier
-                            .align(Alignment.BottomStart)
-                            .fillMaxWidth()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)),
-                                ),
-                            )
-                            .padding(Tokens.spacingLg),
-                        verticalArrangement = Arrangement.spacedBy(Tokens.spacingXs),
-                    ) {
-                        Text(fighter.name, style = MaterialTheme.typography.headlineLarge)
-                        fighter.nickname?.let {
-                            Text(
-                                "\u201C$it\u201D",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Text(
-                            fighter.record.display,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = Tokens.accent,
-                        )
-                    }
-                }
-            }
-            item {
-                Column(Modifier.padding(Tokens.spacingLg)) {
-                    SectionHeader("Profile")
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                        shape = RoundedCornerShape(Tokens.radiusLg),
-                    ) {
-                        Column(Modifier.padding(Tokens.spacingLg)) {
-                            DetailRow("Record", fighter.record.display)
-                            HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Wins", "${fighter.record.wins}")
-                            HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Losses", "${fighter.record.losses}")
-                        }
-                    }
-                    SectionHeader("Physicals")
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                        shape = RoundedCornerShape(Tokens.radiusLg),
-                    ) {
-                        Column(Modifier.padding(Tokens.spacingLg)) {
-                            DetailRow("Height", fighter.heightCm?.let { "$it cm" } ?: "—")
-                            HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Reach", fighter.reachIn?.let { "$it in" } ?: "—")
-                            HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Stance", fighter.stance?.replaceFirstChar { it.uppercase() } ?: "—")
-                            HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Country", fighter.country ?: "—")
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 

@@ -1,6 +1,6 @@
 # 04-sdk-skip — UI-bearing Skip SDK
 
-Two feature screens (**deposit**, **bet slip**) ship as SwiftUI source that becomes real Jetpack Compose on Android via **Skip Lite** (`skipstone`). The host apps are native SwiftUI and Compose; SDK screens mount through adapter protocols.
+Three feature screens (**deposit**, **bet slip**, **fighter profile**) ship as SwiftUI source that becomes real Jetpack Compose on Android via **Skip Lite** (`skipstone`). The host apps are native SwiftUI and Compose; SDK screens mount through adapter protocols.
 
 ## What Skip actually does (read this before the README elsewhere)
 
@@ -30,8 +30,9 @@ Skip has been free and open source since 21 January 2026 (v1.7).
 sdks/core/      — FightCore (headless, skipstone)
 sdks/deposit/   — Deposit SwiftUI → Compose
 sdks/betslip/   — Bet slip SwiftUI → Compose
-ios/            — SwiftUI host (Events native; Slip/Deposit from SDK)
-android/        — Compose host (Events native; Slip/Deposit SDK seam)
+sdks/fighter/   — Fighter profile SwiftUI → Compose
+ios/            — SwiftUI host (Events native; Slip/Deposit/Fighter from SDK)
+android/        — Compose host (Events native; Slip/Deposit/Fighter SDK seam)
 ```
 
 ## Build order
@@ -45,6 +46,7 @@ FIGHTDECK_FIXTURES_ROOT=../../../contract/fixtures swift test
 cd sdks/core    && ./build-xcframework.sh && ./build-aar.sh
 cd sdks/deposit && ./build-xcframework.sh && ./build-aar.sh
 cd sdks/betslip && ./build-xcframework.sh && ./build-aar.sh
+cd sdks/fighter && ./build-xcframework.sh && ./build-aar.sh
 
 # 3. iOS host (local SDK sources)
 export FIGHTDECK_LOCAL_SDK=1
@@ -144,7 +146,7 @@ stateHolder.SaveableStateProvider("myKey") {
 }
 ```
 
-Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/main/java/com/fightdeck/baseline/sdk/SkipSDKBridge.kt). Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleDebug` links real AARs; APK dex contains `DepositComposeEntry`, `BetslipComposeEntry`, `DepositFlowView`, `BetSlipRootView`. iOS uses ordinary `UIHostingController` via `DepositHosting` / `BetslipHosting` — no seam there.
+Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/all/java/com/fightdeck/baseline/sdk/SkipSDKBridge.kt). Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositComposeEntry`, `BetslipComposeEntry`, `FighterComposeEntry`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. iOS uses ordinary `UIHostingController` via `DepositHosting` / `BetslipHosting` / `FighterHosting` — no seam there.
 
 ## Host split
 
@@ -153,6 +155,7 @@ Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/main/java/com/fi
 | Event list / card / bout | Native SwiftUI | Native Compose |
 | Bet slip | **FightDeckBetslip** SDK | **SkipSDKBridge** → `BetslipComposeEntry(...).Compose()` |
 | Deposit | **FightDeckDeposit** SDK | **SkipSDKBridge** → `DepositComposeEntry(...).Compose()` |
+| Fighter profile | **FightDeckFighter** SDK | **SkipSDKBridge** → `FighterComposeEntry(...).Compose()` |
 
 ## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
 
@@ -190,16 +193,16 @@ Install: `brew install skiptools/skip/skip`
 2. **Transpilation fixes applied (20 Aug 2026)** — `ThemeTokens`/`BetslipTheme` hex parsing (`filtered += String(character)` not `append(Char)`); `BetSlipStore`/`DepositFlowView`/`BetSlipRootView` use `Money.parse` not float-derived `Decimal` literals or int fallbacks.
 3. **Xcode + skipstone** — Host build needs `-skipPackagePluginValidation` until the Skip plugin is trusted in Xcode 26.
 4. **SPM pinned iOS** — Dynamic-library xcframework modules (`FightDeckCore`) collide with the umbrella product name when consumed via SPM path binaries; pinned iOS is verified with `FIGHTDECK_LOCAL_SDK=1` (source) or after GitHub HTTPS release. Android pinned + checksum manifest verification is fully wired.
-5. **Android Maven consumption** — `./sdks/{core,deposit,betslip}/build-aar.sh` publishes to `sdks/out/maven` with transitive POM metadata (`kotlin-reflect`, `commonmark`, Compose Material via SkipUI). Hosts point at that repo in `android/settings.gradle.kts`; do not re-declare those runtime deps. Verify with `sdks/consumer-verify/android` (`../../android/gradlew :app:assembleDebug` after building betslip AARs).
+5. **Android Maven consumption** — `./sdks/{core,deposit,betslip,fighter}/build-aar.sh` publishes to `sdks/out/maven` with transitive POM metadata (`kotlin-reflect`, `commonmark`, Compose Material via SkipUI). Hosts point at that repo in `android/settings.gradle.kts`; do not re-declare those runtime deps. Verify with `sdks/consumer-verify/android` (`../../android/gradlew :app:assembleAllDebug` after building fighter AARs).
 6. **`skip checkup` Kotlin test** — Robolectric / compileSdk 37 mismatch in Skip hello-world harness (environment issue, not FightDeck-specific).
 
 ## Architecture
 
 ```
 Host (SwiftUI / Compose)
-  │  DepositHosting / BetslipHosting  ← mockable, UIKit adapters on iOS
+  │  DepositHosting / BetslipHosting / FighterHosting  ← mockable, UIKit adapters on iOS
   ▼
-FightDeckDeposit / FightDeckBetslip  (SwiftPM + skipstone)
+FightDeckDeposit / FightDeckBetslip / FightDeckFighter  (SwiftPM + skipstone)
   │  SkipUI Swift → Kotlin (Compose)
   ▼
 FightDeckCore  (headless, shared fixtures)

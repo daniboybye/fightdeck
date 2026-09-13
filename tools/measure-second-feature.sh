@@ -6,10 +6,15 @@
 #   ./tools/measure-second-feature.sh 03-sdk-rn          # one approach
 #   FIGHTDECK_PLATFORM=android ./tools/measure-second-feature.sh 03-sdk-rn
 #
-# Builds each UI-bearing SDK's host three times — runtime alone, runtime plus deposit,
-# runtime plus deposit plus bet slip — leaving one measurement file per stage. Only the two
-# SDK approaches have anything to measure: the headless cores ship no UI, so a second
+# Builds each UI-bearing SDK's host four times — runtime alone, then with deposit, bet slip
+# and fighter profile added one at a time — leaving one measurement file per stage. Only the
+# two SDK approaches have anything to measure: the headless cores ship no UI, so a second
 # feature there is ordinary application code.
+#
+# Three feature screens rather than two because the first one is not representative: it
+# drags in whatever the runtime lazily needs. The fighter profile is the smallest of the
+# three and pure presentation, so it shows what a screen costs once nothing is left to
+# amortise.
 #
 # The stages are selected differently on each platform, which is itself part of the
 # comparison. Both iOS hosts build a small measurement harness per stage, so neither demo
@@ -45,14 +50,23 @@ else
     APPROACHES=(03-sdk-rn 04-sdk-skip)
 fi
 
-STAGES=(runtime deposit both)
+STAGES=(runtime deposit both all)
+
+# What each stage adds on top of the one before it, for the summary at the end.
+stage_feature() {
+    case "$1" in
+        deposit) echo "deposit" ;;
+        both)    echo "bet slip" ;;
+        all)     echo "fighter" ;;
+    esac
+}
 
 # Leaving the React Native checkout on a partial feature set would silently shrink the next
 # ordinary build, so restore the full one whatever happens.
 restore_rn() {
     echo "==> Restoring React Native host to the full feature set"
-    FIGHTDECK_FEATURES=both ./03-sdk-rn/sdks/core/build-jsbundle.sh >/dev/null 2>&1 || true
-    (cd 03-sdk-rn/ios && FIGHTDECK_FEATURES=both pod install >/dev/null 2>&1) || true
+    FIGHTDECK_FEATURES=all ./03-sdk-rn/sdks/core/build-jsbundle.sh >/dev/null 2>&1 || true
+    (cd 03-sdk-rn/ios && FIGHTDECK_FEATURES=all pod install >/dev/null 2>&1) || true
 }
 
 # Both iOS hosts name their harnesses the same way, so the stage maps straight to a scheme.
@@ -63,6 +77,7 @@ harness_scheme() {
         runtime) echo "FightDeckHarnessRuntime" ;;
         deposit) echo "FightDeckHarnessDeposit" ;;
         both)    echo "FightDeckHarnessBoth" ;;
+        all)     echo "FightDeckHarnessAll" ;;
     esac
 }
 
@@ -108,14 +123,20 @@ out, approach, platform = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 WANTED = {"ios": ("ios", "app_bytes"), "android": ("android", "arm64_download_bytes")}
 targets = WANTED if platform == "both" else {platform: WANTED[platform]}
 
+# Each stage adds one screen to the one before it, so consecutive differences are the
+# marginal cost of that screen.
+STAGES = (("runtime", None), ("deposit", "deposit"), ("both", "bet slip"), ("all", "fighter"))
+
 for label, (prefix, key) in targets.items():
-    runtime, one, two = (
+    sizes = [
         json.load(open(out / f"{prefix}-{approach}-{stage}.json"))[key]
-        for stage in ("runtime", "deposit", "both")
+        for stage, _ in STAGES
+    ]
+    marginal = "".join(
+        f" · {name} {(after - before) / 1024:7.1f} KB"
+        for (_, name), before, after in zip(STAGES[1:], sizes, sizes[1:])
     )
-    print(f"  {label:<8} runtime {runtime / 1048576:6.2f} MB"
-          f" · 1st feature {(one - runtime) / 1024:8.1f} KB"
-          f" · 2nd feature {(two - one) / 1024:8.1f} KB")
+    print(f"  {label:<8} runtime {sizes[0] / 1048576:6.2f} MB{marginal}")
 PY
 
     if [[ "$approach" == "03-sdk-rn" && "$PLATFORM" != "android" ]]; then

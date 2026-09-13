@@ -102,9 +102,14 @@ def startup_section() -> str:
 def second_feature_section() -> str:
     """The number the whole demo exists to produce.
 
-    One runtime with one surface against the same runtime with two. Everything else in
+    One runtime with one surface against the same runtime with three. Everything else in
     this file can be found in somebody else's benchmark; this one cannot, because nobody
-    else builds two features over a shared runtime just to weigh the difference.
+    else builds three features over a shared runtime just to weigh the differences.
+
+    The first feature is the least interesting of the three: it pays for whatever the
+    runtime only pulls in once a real screen uses it. Features two and three are the ones
+    to quote, and the fighter profile is the cleanest of all — it is pure presentation, so
+    what it adds is close to the floor for "one more screen".
 
     Split by platform because the two do not agree: the same TypeScript ships as Hermes
     bytecode on iOS and as minified JavaScript on Android, and each feature drags a
@@ -121,19 +126,30 @@ def second_feature_section() -> str:
             # separate runners and still land in one table.
             sizes = [
                 load(f"{prefix}-{key}-{stage}.json").get(field)
-                for stage in ("runtime", "deposit", "both")
+                for stage in ("runtime", "deposit", "both", "all")
             ]
-            runtime, one, two = sizes
-            delta = two - one if isinstance(one, int) and isinstance(two, int) else None
+
+            def marginal(before: int | None, after: int | None) -> str:
+                if not isinstance(before, int) or not isinstance(after, int):
+                    return DASH
+                return kib(after - before)
+
             rows.append([
                 f"{label} · {platform_label}",
-                mib(runtime),
-                mib(one),
-                mib(two),
-                kib(delta),
+                *(mib(size) for size in sizes),
+                marginal(sizes[1], sizes[2]),
+                marginal(sizes[2], sizes[3]),
             ])
     return table(
-        ["Approach", "Runtime only", "+ deposit", "+ betslip", "Cost of feature 2"],
+        [
+            "Approach",
+            "Runtime only",
+            "+ deposit",
+            "+ betslip",
+            "+ fighter",
+            "Feature 2",
+            "Feature 3",
+        ],
         rows,
     )
 
@@ -168,10 +184,11 @@ def main() -> None:
         "",
         startup_section(),
         "",
-        "## What the second feature costs",
+        "## What the next feature costs",
         "",
-        "One shared runtime carrying one feature, then two. The delta is the honest answer "
-        "to \"what if we had five of these screens?\".",
+        "One shared runtime, then one, two and three features on top of it. The last two "
+        "deltas are the honest answer to \"what if we had five of these screens?\" — the "
+        "first feature is inflated by runtime it is merely the first to touch.",
         "",
         second_feature_section(),
         "",

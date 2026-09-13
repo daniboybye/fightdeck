@@ -13,9 +13,9 @@ $FIGHTDECK_USE_LOCAL_SDK = ENV['FIGHTDECK_LOCAL_SDK'] == '1'
 $FIGHTDECK_RELEASE_VENDOR = File.expand_path('../../tools/out/release/rn/ios-vendor', __dir__)
 $FIGHTDECK_FEATURES = ENV.fetch('FIGHTDECK_FEATURES', 'all')
 
-# The demo app links both features. The three harness targets exist only so
-# tools/measure-second-feature.sh can weigh a runtime with no feature screens against one
-# with one and one with two — see ios/Harness/Shared/HarnessApp.swift.
+# The demo app links all three features. The four harness targets exist only so
+# tools/measure-second-feature.sh can weigh a runtime with no feature screens against the
+# same runtime with one, two and three — see ios/Harness/Shared/HarnessApp.swift.
 #
 # Each target's pod set is fixed by its name rather than by an environment variable, which
 # is what lets the app's Swift compile without a single #if: a source file is only ever

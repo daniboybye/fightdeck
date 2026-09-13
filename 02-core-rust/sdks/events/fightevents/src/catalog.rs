@@ -115,46 +115,4 @@ impl Catalog {
         };
         self.fighter(opponent_id)
     }
-
-    /// Case-insensitive match across event names, venues, cities and fighter names.
-    pub fn search_events(&self, query: &str) -> Vec<&Event> {
-        let needle = query.trim().to_lowercase();
-        if needle.is_empty() {
-            return self.events.iter().collect();
-        }
-        self.events
-            .iter()
-            .filter(|event| {
-                let haystack = format!(
-                    "{} {} {}",
-                    event.name.to_lowercase(),
-                    event.venue.to_lowercase(),
-                    event.city.to_lowercase()
-                );
-                haystack.contains(&needle)
-                    || event.bouts.iter().any(|b| {
-                        b.red_corner.name.to_lowercase().contains(&needle)
-                            || b.blue_corner.name.to_lowercase().contains(&needle)
-                    })
-            })
-            .collect()
-    }
-
-    pub fn search_fighters(&self, query: &str) -> Vec<&Fighter> {
-        let needle = query.trim().to_lowercase();
-        let mut found: Vec<&Fighter> = if needle.is_empty() {
-            self.fighters.values().collect()
-        } else {
-            self.fighters
-                .values()
-                .filter(|f| {
-                    f.name.to_lowercase().contains(&needle)
-                        || f.nickname.as_deref().is_some_and(|n| n.to_lowercase().contains(&needle))
-                        || f.country.as_deref().is_some_and(|c| c.to_lowercase().contains(&needle))
-                })
-                .collect()
-        };
-        found.sort_by(|a, b| a.name.cmp(&b.name));
-        found
-    }
 }

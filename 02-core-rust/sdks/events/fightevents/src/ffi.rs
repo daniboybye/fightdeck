@@ -344,21 +344,6 @@ impl EventCatalog {
         }
     }
 
-    pub fn search_events(&self, query: String) -> Vec<EventSummary> {
-        self.catalog
-            .search_events(&query)
-            .into_iter()
-            .map(event_summary)
-            .collect()
-    }
-
-    pub fn search_fighters(&self, query: String) -> Vec<FighterSummary> {
-        self.catalog
-            .search_fighters(&query)
-            .into_iter()
-            .map(fighter_summary)
-            .collect()
-    }
 }
 
 // MARK: - Pure formatting

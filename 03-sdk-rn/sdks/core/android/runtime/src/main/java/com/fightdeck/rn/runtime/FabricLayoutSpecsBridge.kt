@@ -5,7 +5,7 @@ import com.facebook.react.runtime.ReactSurfaceImpl
 
 /**
  * Fabric requires [ReactSurfaceImpl.updateLayoutSpecs] before [com.facebook.react.interfaces.fabric.ReactSurface.start].
- * React Native 0.84 exposes that method as `internal` on [ReactSurfaceImpl] — there is no public
+ * React Native 0.87 exposes that method as `internal` on [ReactSurfaceImpl] — there is no public
  * layout-spec API on [com.facebook.react.runtime.ReactHost] yet.
  *
  * Version coupling: pinned React Native in repository `versions.lock.toml` (`react_native.version`).

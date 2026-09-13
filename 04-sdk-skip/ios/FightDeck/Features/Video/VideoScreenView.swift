@@ -8,6 +8,7 @@
 
 import AVKit
 import MediaPlayer
+import FightDeckEvents
 import SwiftUI
 import UIKit
 
@@ -26,7 +27,7 @@ struct VideoScreenView: View {
             Section {
                 Text(item.title)
                     .font(.title3.bold())
-                LabeledContent("Duration", value: item.durationSeconds.formattedDuration)
+                LabeledContent("Duration", value: Display.duration(totalSeconds: item.durationSeconds))
                 LabeledContent("Format", value: item.kind.uppercased())
             }
             if let note = item.note {

@@ -12,6 +12,8 @@ packages:
     revision: cf8be20d07654570554c8a8a4952bc8a5766a8b0 # 8.9.0
   FightDeckCore:
     path: ../sdks/core
+  FightDeckEvents:
+    path: ../sdks/events
   FightDeckDeposit:
     path: ../sdks/deposit
   FightDeckBetslip:
@@ -77,6 +79,8 @@ targets:
       - package: Kingfisher
       - package: FightDeckCore
         product: FightDeckCore
+      - package: FightDeckEvents
+        product: FightDeckEvents
       - package: FightDeckDeposit
         product: FightDeckDeposit
       - package: FightDeckBetslip

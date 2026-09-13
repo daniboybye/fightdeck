@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightDeckEvents
 import SwiftUI
 
 struct NewsRow: View {
@@ -29,7 +30,7 @@ struct NewsRow: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
-                Text("\(item.publishedAt.formattedRelativeDate) · \(item.readMinutes) min read")
+                Text("\(Display.relativeDate(item.publishedAt)) · \(item.readMinutes) min read")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -51,7 +52,7 @@ struct NewsArticleView: View {
                 VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
                     Text(item.headline)
                         .font(.title.bold())
-                    Text("\(item.publishedAt.formattedRelativeDate) · \(item.readMinutes) min read · \(item.source)")
+                    Text("\(Display.relativeDate(item.publishedAt)) · \(item.readMinutes) min read · \(item.source)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(item.body)

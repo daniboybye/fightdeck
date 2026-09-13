@@ -123,8 +123,10 @@ jobs:
           key: second-feature-skip-${{ inputs.platform }}
           build-path: |
             04-sdk-skip/sdks/core/.build
+            04-sdk-skip/sdks/events/.build
             04-sdk-skip/sdks/deposit/.build
             04-sdk-skip/sdks/betslip/.build
+            04-sdk-skip/sdks/fighter/.build
 
       - uses: ./.github/actions/swiftpm-cache
         if: inputs.approach == '03-sdk-rn' && inputs.platform == 'ios'

@@ -97,13 +97,13 @@ two Android ABIs. The app itself builds in 25 seconds.
 | `00-native` baseline | 3,099 | 3,168 | 0 | 160 | 6,427 | 0% |
 | `01-core-swift` | 2,387 | 3,045 | 1,922 | 338 | 7,692 | 25% |
 | `02-core-rust` | 2,645 | 2,623 | 2,368 | 394 | 8,030 | 29% |
-| `04-sdk-skip` | 2,317 | 2,971 | 2,945 | 711 | 8,944 | 33% |
+| `04-sdk-skip` | 2,082 | 2,812 | 3,179 | 793 | 8,866 | 36% |
 | `03-sdk-rn` | 3,383 | 3,683 | 4,164 | 849 | 12,079 | 34% |
 
 Hand-written lines only, from `python3 tools/count-lines.py`. Generated bindings and
 transpiler output are excluded — counting them would credit a code generator for typing.
 The same script reports them separately, next to the hand-written boundary code, because
-the ratio between the two is the case for using a generator at all: skipstone writes 3,061
+the ratio between the two is the case for using a generator at all: skipstone writes 3,512
 lines and leaves 447, UniFFI writes 12,271 and leaves 967, jextract writes 322 and leaves
 524 — the only generator here that hands back more work than it does.
 
@@ -131,12 +131,26 @@ types. Rust ships a `.so` behind FFI and React Native ships JavaScript, so in bo
 can call shared *behaviour* but cannot hold a shared *type* — which is why `02-core-rust`
 hand-writes 967 lines of glue and `03-sdk-rn` 1,011, against Skip's 447.
 
+Holding a shared type is also what lets Skip share the layer above the contract. `04-sdk-skip`
+is the only approach where the fight catalogue — reading the dataset, indexing it, and
+formatting a result line, an event date or a clip length — exists once, in `sdks/events`.
+Every other approach either hand-writes it twice (`00-native`, `03-sdk-rn`) or shares the
+parsing but re-declares the types to get them across the boundary (`01-core-swift` pays 197
+lines of jextract glue for exactly this, `02-core-rust` 328 lines of UniFFI FFI).
+
 That last row was not free, and it is not an argument that Skip wins. Sharing types means
 the host's Kotlin now handles transpiled Swift: `skip.lib.Array` instead of `List`, Swift
 `ID` casing, no generated `copy()`, and a core whose formatting reaches for Android's ICU
-and so no longer runs in a plain JVM test. It also means a bug in the shared core is a bug
-in both apps at once — see `04-sdk-skip/README.md`, where deduplicating the core is what
-finally surfaced odds maths that had been wrong on Android all along.
+and so no longer runs in a plain JVM test. Shared code is also written against a narrower
+Swift than an iOS-only module would be — a generic `decode<T>` does not transpile, because
+Kotlin needs a reified type parameter, and dates have to go through `DateFormatter` rather
+than `.formatted(date:time:)`, because Skip's `FormatStyle` covers numbers only.
+
+What it buys is that divergence stops being invisible. A bug in the shared core is a bug in
+both apps at once — see `04-sdk-skip/README.md`, where deduplicating the core is what finally
+surfaced odds maths that had been wrong on Android all along. Sharing the catalogue did the
+same for presentation: the two apps had been title-casing `split_decision` differently, and
+the iOS news list showed a relative date the Android one never rendered at all.
 
 ### The cost of the next feature
 

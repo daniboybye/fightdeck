@@ -9,8 +9,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APPROACH="${1:-}"
 
 case "$APPROACH" in
-    rn) APPROACH_DIR="$ROOT/03-sdk-rn"; MODULES=(core deposit betslip) ;;
-    skip) APPROACH_DIR="$ROOT/04-sdk-skip"; MODULES=(core deposit betslip) ;;
+    rn) APPROACH_DIR="$ROOT/03-sdk-rn"; MODULES=(core deposit betslip fighter) ;;
+    # core first: every other Skip module compiles against its AAR.
+    skip) APPROACH_DIR="$ROOT/04-sdk-skip"; MODULES=(core events deposit betslip fighter) ;;
     rust) APPROACH_DIR="$ROOT/02-core-rust"; MODULES=(core slip events) ;;
     *) echo "usage: $0 {rn|skip|rust}" >&2; exit 1 ;;
 esac

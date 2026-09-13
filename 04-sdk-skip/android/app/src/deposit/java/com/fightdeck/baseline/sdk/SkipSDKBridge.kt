@@ -30,7 +30,7 @@ object SkipSDKBridge {
 
     @Composable
     fun FighterScreen(
-        fighter: com.fightdeck.baseline.data.FighterItem,
+        fighter: fight.deck.core.Fighter,
         viewModel: MainViewModel,
         saveKey: String,
         modifier: Modifier = Modifier,

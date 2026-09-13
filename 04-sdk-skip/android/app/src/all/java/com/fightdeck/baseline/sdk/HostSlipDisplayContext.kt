@@ -1,10 +1,10 @@
 package com.fightdeck.baseline.sdk
 
-import com.fightdeck.baseline.data.BoutItem
-import com.fightdeck.baseline.data.EventItem
-import com.fightdeck.baseline.data.FighterItem
 import com.fightdeck.baseline.ui.LoadState
 import fight.deck.betslip.SlipDisplayContext
+import fight.deck.core.Bout
+import fight.deck.core.Event
+import fight.deck.core.Fighter
 import fight.deck.core.Selection
 
 /**
@@ -13,8 +13,8 @@ import fight.deck.core.Selection
  * in the SDK's Compose tree depended on the flows that later filled in.
  */
 class HostSlipDisplayContext(
-    private val fighters: LoadState<List<FighterItem>>,
-    private val events: LoadState<List<EventItem>>,
+    private val fighters: LoadState<List<Fighter>>,
+    private val events: LoadState<List<Event>>,
 ) : SlipDisplayContext {
     override fun fighterName(id: String): String {
         val loaded = fighters as? LoadState.Loaded ?: return id
@@ -38,7 +38,7 @@ class HostSlipDisplayContext(
         }?.name ?: "—"
     }
 
-    private fun findBout(boutId: String): BoutItem? {
+    private fun findBout(boutId: String): Bout? {
         val loaded = events as? LoadState.Loaded ?: return null
         for (event in loaded.value) {
             val bout = event.bouts.firstOrNull { it.id == boutId }

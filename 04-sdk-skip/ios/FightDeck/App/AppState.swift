@@ -7,6 +7,7 @@
 //
 
 import FightDeckCore
+import FightDeckEvents
 import Foundation
 import Observation
 
@@ -27,8 +28,8 @@ enum LoadState<Value>: Sendable where Value: Sendable {
 @Observable
 @MainActor
 final class AppState {
-    var eventsState: LoadState<[EventItem]> = .loading
-    var fightersState: LoadState<[FighterItem]> = .loading
+    var eventsState: LoadState<[Event]> = .loading
+    var fightersState: LoadState<[Fighter]> = .loading
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
@@ -45,12 +46,13 @@ final class AppState {
     /// environment, which is a new value on every `RootView` body pass.
     var isPresentingDeposit = false
 
-    let repository: JSONFileRepository
+    let catalog: EventCatalog
     let fightCore: FightCore
 
-    init(repository: JSONFileRepository = JSONFileRepository()) {
-        self.repository = repository
-        self.fightCore = AppState.makeFightCore()
+    init(datasetRoot: URL = DatasetLocator.datasetRoot()) {
+        let catalog = EventCatalog(datasetRoot: datasetRoot)
+        self.catalog = catalog
+        self.fightCore = catalog.loadFightCore()
     }
 
     var slipState: SlipState {
@@ -82,45 +84,43 @@ final class AppState {
 
     func loadEvents() async {
         eventsState = .loading
-        do {
-            let events = try await repository.loadEvents()
-            eventsState = events.isEmpty ? .empty : .loaded(events)
-        } catch {
-            eventsState = .error("Could not load events")
-        }
+        eventsState = await load("events") { try $0.loadEvents() }
     }
 
     func loadFighters() async {
         fightersState = .loading
-        do {
-            let fighters = try await repository.loadFighters()
-            fightersState = fighters.isEmpty ? .empty : .loaded(fighters)
-        } catch {
-            fightersState = .error("Could not load fighters")
-        }
+        fightersState = await load("fighters") { try $0.loadFighters() }
     }
 
     func loadNews() async {
         newsState = .loading
-        do {
-            let news = try await repository.loadNews()
-            newsState = news.isEmpty ? .empty : .loaded(news)
-        } catch {
-            newsState = .error("Could not load news")
-        }
+        newsState = await load("news") { try $0.loadNews() }
     }
 
     func loadMedia() async {
         mediaState = .loading
+        mediaState = await load("media") { try $0.loadMedia() }
+    }
+
+    /// The shared catalogue is synchronous, so the hop off the main thread is the host's job.
+    /// Without it the read and decode would run on the caller's executor and block the UI:
+    /// an async function that never suspends never leaves it.
+    private func load<T: Sendable>(
+        _ label: String,
+        _ work: @escaping @Sendable (EventCatalog) throws -> [T]
+    ) async -> LoadState<[T]> {
+        let catalog = catalog
         do {
-            let media = try await repository.loadMedia()
-            mediaState = media.isEmpty ? .empty : .loaded(media)
+            let items = try await Task.detached(priority: .userInitiated) {
+                try work(catalog)
+            }.value
+            return items.isEmpty ? .empty : .loaded(items)
         } catch {
-            mediaState = .error("Could not load media")
+            return .error("Could not load \(label)")
         }
     }
 
-    func toggleSelection(bout: BoutItem, fighterID: String, odds: String) {
+    func toggleSelection(bout: Bout, fighterID: String, odds: String) {
         if let index = slip.selections.firstIndex(where: { $0.boutID == bout.id }) {
             let existing = slip.selections[index]
             if existing.fighterID == fighterID {
@@ -168,11 +168,14 @@ final class AppState {
         balance += amount
     }
 
+    /// Dataset images are served over localhost, so the URL depends on the port the host's
+    /// asset server happened to bind — nothing the shared catalogue can know.
     func imageURL(_ path: String) -> URL? {
-        repository.imageURL(for: path)
+        guard LocalAssetServer.port > 0 else { return nil }
+        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(path)")
     }
 
-    func fighter(_ id: String) -> FighterItem? {
+    func fighter(_ id: String) -> Fighter? {
         guard case .loaded(let fighters) = fightersState else { return nil }
         return fighters.first { $0.id == id }
     }
@@ -180,45 +183,4 @@ final class AppState {
     func record(for id: String) -> String {
         fighter(id)?.recordDisplay ?? "—"
     }
-
-    private static func makeFightCore() -> FightCore {
-        let datasetRoot = DatasetLocator.datasetRoot()
-        let url = datasetRoot.appendingPathComponent("events.json")
-        guard let data = try? Data(contentsOf: url),
-              let file = try? JSONDecoder().decode(EventsEnvelope.self, from: data) else {
-            return FightCore(bouts: [])
-        }
-        let bouts = file.events.flatMap(\.bouts).map { bout in
-            BoutIndex(
-                id: bout.id,
-                redFighterID: bout.redCorner.fighterId,
-                blueFighterID: bout.blueCorner.fighterId,
-                winnerID: bout.result.winnerId
-            )
-        }
-        return FightCore(bouts: bouts)
-    }
-}
-
-private struct EventsEnvelope: Decodable {
-    let events: [EventEnvelope]
-}
-
-private struct EventEnvelope: Decodable {
-    let bouts: [BoutEnvelope]
-}
-
-private struct BoutEnvelope: Decodable {
-    let id: String
-    let redCorner: CornerEnvelope
-    let blueCorner: CornerEnvelope
-    let result: ResultEnvelope
-}
-
-private struct CornerEnvelope: Decodable {
-    let fighterId: String
-}
-
-private struct ResultEnvelope: Decodable {
-    let winnerId: String
 }

@@ -1,6 +1,5 @@
 package com.fightdeck.baseline.sdk
 
-import android.content.Context
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetSlipStore
 import java.util.WeakHashMap
@@ -12,10 +11,10 @@ import java.util.WeakHashMap
 object SdkBetSlipStoreRegistry {
     private val stores = WeakHashMap<MainViewModel, BetSlipStore>()
 
-    fun store(viewModel: MainViewModel, context: Context): BetSlipStore =
+    fun store(viewModel: MainViewModel): BetSlipStore =
         stores.getOrPut(viewModel) {
             BetSlipStore(
-                fightCore = SdkFightCoreFactory.build(context.applicationContext),
+                fightCore = viewModel.sharedFightCore,
                 slip = viewModel.slip.value,
                 balance = viewModel.balance.value,
             )

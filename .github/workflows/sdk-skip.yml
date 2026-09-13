@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [core, deposit, betslip]
+        module: [core, events, deposit, betslip, fighter]
     steps:
       - uses: actions/checkout@v7
 
@@ -138,8 +138,10 @@ jobs:
           key: sdk-skip-android
           build-path: |
             04-sdk-skip/sdks/core/.build
+            04-sdk-skip/sdks/events/.build
             04-sdk-skip/sdks/deposit/.build
             04-sdk-skip/sdks/betslip/.build
+            04-sdk-skip/sdks/fighter/.build
 
       - name: Skip checkup
         if: steps.guard.outputs.exists == 'true'

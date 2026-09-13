@@ -1,0 +1,8 @@
+# Skip Lite — Swift transpiled to Kotlin via skipstone (no Swift runtime on Android).
+skip:
+  mode: 'transpiled'
+  # Without this the Kotlin package follows the SPM target name, which is
+  # FightDeckEventsBinary because a binary target cannot depend on other packages and
+  # needs a source target to re-export it. Consumers import the umbrella, so they
+  # compile against fight.deck.events and would not find fight.deck.events.binary.
+  package: 'fight.deck.events'

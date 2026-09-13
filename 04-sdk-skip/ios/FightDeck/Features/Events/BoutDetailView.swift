@@ -7,12 +7,13 @@
 //
 
 import FightDeckCore
+import FightDeckEvents
 import SwiftUI
 
 struct BoutDetailView: View {
     @Bindable var state: AppState
-    let event: EventItem
-    let bout: BoutItem
+    let event: Event
+    let bout: Bout
     @Binding var path: [EventsRoute]
     let mode: EventMode
 
@@ -38,14 +39,14 @@ struct BoutDetailView: View {
                         Text(bout.result.winnerName)
                             .foregroundStyle(DesignTokens.ColorToken.positive)
                     }
-                    LabeledContent("Method", value: bout.result.method.displayMethod)
+                    LabeledContent("Method", value: Display.humanise(bout.result.method))
                     LabeledContent("Detail", value: bout.result.detail)
                     LabeledContent("Ended", value: "Round \(bout.result.endRound) · \(bout.result.endTime)")
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle(bout.weightClass.displayMethod)
+        .navigationTitle(Display.humanise(bout.weightClass))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -69,7 +70,7 @@ struct BoutDetailView: View {
 
     // A Button rather than a NavigationLink: two links inside one list row make the list draw
     // two disclosure chevrons across the middle of the matchup.
-    private func cornerColumn(_ corner: CornerItem, ring: Color) -> some View {
+    private func cornerColumn(_ corner: Corner, ring: Color) -> some View {
         Button {
             path.append(.fighter(corner.fighterId))
         } label: {
@@ -138,7 +139,7 @@ struct BoutDetailView: View {
     /// An `HStack` rather than `LabeledContent`: an avatar plus two lines of text is enough to
     /// tip that layout into stacking, which would drop the odds under the name on some rows
     /// and leave them at the trailing edge on others.
-    private func marketRow(_ corner: CornerItem, ring: Color) -> some View {
+    private func marketRow(_ corner: Corner, ring: Color) -> some View {
         HStack(spacing: DesignTokens.Spacing.md) {
             FighterAvatar(
                 url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"),

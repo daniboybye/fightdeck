@@ -124,8 +124,10 @@ jobs:
           key: sdk-skip-android
           build-path: |
             04-sdk-skip/sdks/core/.build
+            04-sdk-skip/sdks/events/.build
             04-sdk-skip/sdks/deposit/.build
             04-sdk-skip/sdks/betslip/.build
+            04-sdk-skip/sdks/fighter/.build
 
       - name: Export the Skip AARs
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'

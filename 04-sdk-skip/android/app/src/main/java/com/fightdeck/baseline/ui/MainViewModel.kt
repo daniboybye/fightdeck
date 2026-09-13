@@ -3,22 +3,22 @@ package com.fightdeck.baseline.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.fightdeck.baseline.data.BoutItem
-import com.fightdeck.baseline.data.EventItem
-import com.fightdeck.baseline.data.FighterItem
-import com.fightdeck.baseline.data.JsonFileRepository
-import com.fightdeck.baseline.data.MediaItem
-import com.fightdeck.baseline.data.NewsItem
-import com.fightdeck.baseline.sdk.SdkFightCoreFactory
 import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.baseline.services.LocalAssetServer
 import fight.deck.core.BetMode
 import fight.deck.core.BetSlip
+import fight.deck.core.Bout
+import fight.deck.core.Event
 import fight.deck.core.FightCore
+import fight.deck.core.Fighter
 import fight.deck.core.Money
 import fight.deck.core.Selection
 import fight.deck.core.SlipState
+import fight.deck.events.EventCatalog
+import fight.deck.events.MediaItem
+import fight.deck.events.NewsItem
 import java.math.BigDecimal
+import skip.foundation.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,8 +42,13 @@ sealed interface BootstrapState {
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private var repository: JsonFileRepository? = null
+    private var catalog: EventCatalog? = null
     private var fightCore: FightCore? = null
+
+    /// The SDK's bet-slip store needs the same bout index the host already built. Handing this
+    /// one out beats parsing the dataset a second time to construct an identical core.
+    val sharedFightCore: FightCore
+        get() = requireNotNull(fightCore)
     private var datasetRoot: java.io.File? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
@@ -51,11 +56,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     )
     val bootstrapState: StateFlow<BootstrapState> = _bootstrapState.asStateFlow()
 
-    private val _events = MutableStateFlow<LoadState<List<EventItem>>>(LoadState.Loading)
-    val events: StateFlow<LoadState<List<EventItem>>> = _events.asStateFlow()
+    private val _events = MutableStateFlow<LoadState<List<Event>>>(LoadState.Loading)
+    val events: StateFlow<LoadState<List<Event>>> = _events.asStateFlow()
 
-    private val _fighters = MutableStateFlow<LoadState<List<FighterItem>>>(LoadState.Loading)
-    val fighters: StateFlow<LoadState<List<FighterItem>>> = _fighters.asStateFlow()
+    private val _fighters = MutableStateFlow<LoadState<List<Fighter>>>(LoadState.Loading)
+    val fighters: StateFlow<LoadState<List<Fighter>>> = _fighters.asStateFlow()
 
     // BetSlip arrives from the SDK as transpiled Swift, so its selections are a
     // skip.lib.Array rather than a Kotlin List.
@@ -96,7 +101,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             booted.fold(
                 onSuccess = { engine ->
                     datasetRoot = engine.root
-                    repository = engine.repository
+                    catalog = engine.catalog
                     fightCore = engine.fightCore
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
@@ -115,66 +120,75 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private data class Engine(
         val root: java.io.File,
-        val repository: JsonFileRepository,
+        val catalog: EventCatalog,
         val fightCore: FightCore,
     )
 
     private fun bootstrapEngine(application: Application): Engine {
         val root = DatasetLocator.datasetRoot(application)
         LocalAssetServer.start(root)
-        return Engine(root, JsonFileRepository(root), SdkFightCoreFactory.build(application))
+        // The shared catalogue speaks Foundation's URL, so the host's File has to be converted
+        // once here rather than at every call.
+        val catalog = EventCatalog(datasetRoot = URL(fileURLWithPath = root.absolutePath))
+        return Engine(root, catalog, catalog.loadFightCore())
     }
 
     fun refreshEvents() {
         viewModelScope.launch {
             _events.value = LoadState.Loading
-            _events.value = runCatching { requireNotNull(repository).loadEvents() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load events") },
-                )
+            _events.value = loadCatalogue("events") { it.loadEvents() }
         }
     }
 
     fun refreshFighters() {
         viewModelScope.launch {
             _fighters.value = LoadState.Loading
-            _fighters.value = runCatching { requireNotNull(repository).loadFighters() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load fighters") },
-                )
+            _fighters.value = loadCatalogue("fighters") { it.loadFighters() }
         }
     }
 
     fun refreshNews() {
         viewModelScope.launch {
             _news.value = LoadState.Loading
-            _news.value = runCatching { requireNotNull(repository).loadNews() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load news") },
-                )
+            _news.value = loadCatalogue("news") { it.loadNews() }
         }
     }
 
     fun refreshMedia() {
         viewModelScope.launch {
             _media.value = LoadState.Loading
-            _media.value = runCatching { requireNotNull(repository).loadMedia() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load media") },
-                )
+            _media.value = loadCatalogue("media") { it.loadMedia() }
         }
     }
 
-    fun imageUrl(path: String): String? = repository?.imageUrl(path)
+    /**
+     * Two seams in one place: the shared catalogue is synchronous, so leaving the main thread is
+     * the host's job, and it hands back Swift's Array, which every Compose list wants as a
+     * Kotlin List. The transpiled Array is an Iterable, so toList() stays type-safe.
+     */
+    private suspend fun <T> loadCatalogue(
+        label: String,
+        read: (EventCatalog) -> SkipArray<T>,
+    ): LoadState<List<T>> {
+        val catalog = requireNotNull(catalog)
+        return runCatching { withContext(Dispatchers.IO) { read(catalog).toList() } }
+            .fold(
+                onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
+                onFailure = { LoadState.Error("Could not load $label") },
+            )
+    }
+
+    /**
+     * Dataset images are served over localhost, so the URL depends on the port the host's asset
+     * server happened to bind — nothing the shared catalogue can know.
+     */
+    fun imageUrl(path: String): String? =
+        if (LocalAssetServer.port > 0) "http://127.0.0.1:${LocalAssetServer.port}/$path" else null
 
     // A transpiled Swift struct has no generated copy(), so an edited slip is rebuilt rather
     // than copied. Mutating one in place would be worse than verbose: BetSlip is a reference
     // type on this side, and the instance is shared with whatever the SDK still holds.
-    fun toggleSelection(bout: BoutItem, fighterId: String, odds: String) {
+    fun toggleSelection(bout: Bout, fighterId: String, odds: String) {
         _slip.update { slip ->
             val parsedOdds = Money.parse(odds)
             val selections = slip.selections.toList().toMutableList()

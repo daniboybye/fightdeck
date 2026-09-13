@@ -28,6 +28,15 @@ fun skipCoreAars(local: Boolean): Array<File> {
     }?.sortedBy { it.name }?.toTypedArray() ?: emptyArray()
 }
 
+// Only the module's own AAR: the Skip runtime AARs next to it in events/out are the same ones
+// core already contributes, and two copies on the classpath is a duplicate-class failure.
+fun skipEventsAar(local: Boolean): File? {
+    if (local) {
+        return rootProject.file("../sdks/events/out/FightDeckEvents-release.aar").takeIf { it.isFile }
+    }
+    return releaseAarDir.resolve("FightDeckEvents-release.aar").takeIf { it.isFile }
+}
+
 fun skipDepositFeatureAars(local: Boolean): Array<File> {
     if (local) {
         val out = rootProject.file("../sdks/deposit/out")
@@ -130,6 +139,7 @@ dependencies {
     if (useSkipMaven) {
         listOf("runtime", "deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"("fightdeck.skip:FightDeckCoreBinary:$skipSdkVersion")
+            "${flavor}Implementation"("fightdeck.skip:FightDeckEventsBinary:$skipSdkVersion")
         }
         listOf("deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"("fightdeck.skip:FightDeckDepositBinary:$skipSdkVersion")
@@ -140,12 +150,14 @@ dependencies {
         "allImplementation"("fightdeck.skip:FightDeckFighterBinary:$skipSdkVersion")
     } else {
         val coreAars = skipCoreAars(fightdeckLocalSdk)
+        val eventsAar = skipEventsAar(fightdeckLocalSdk)
         val depositAars = skipDepositFeatureAars(fightdeckLocalSdk)
         val betslipAar = skipBetslipAar(fightdeckLocalSdk)
         val fighterAar = skipFighterAar(fightdeckLocalSdk)
 
         listOf("runtime", "deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"(files(*coreAars))
+            eventsAar?.let { "${flavor}Implementation"(files(it)) }
         }
         listOf("deposit", "both", "all").forEach { flavor ->
             "${flavor}Implementation"(files(*depositAars))

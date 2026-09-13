@@ -27,7 +27,8 @@ Skip has been free and open source since 21 January 2026 (v1.7).
 ## Layout
 
 ```
-sdks/core/      — FightCore (headless, skipstone)
+sdks/core/      — FightCore (headless, skipstone): betting logic, DTOs, design tokens
+sdks/events/    — Fight catalogue (headless): dataset loading and display formatting
 sdks/deposit/   — Deposit SwiftUI → Compose
 sdks/betslip/   — Bet slip SwiftUI → Compose
 sdks/fighter/   — Fighter profile SwiftUI → Compose
@@ -42,8 +43,10 @@ android/        — Compose host (Events native; Slip/Deposit/Fighter SDK seam)
 cd sdks/core
 FIGHTDECK_FIXTURES_ROOT=../../../contract/fixtures swift test
 
-# 2. SDK artifacts
+# 2. SDK artifacts — core first: the others compile against its AAR
+cd sdks && ./build-aars.sh          # or, per module:
 cd sdks/core    && ./build-xcframework.sh && ./build-aar.sh
+cd sdks/events  && ./build-xcframework.sh && ./build-aar.sh
 cd sdks/deposit && ./build-xcframework.sh && ./build-aar.sh
 cd sdks/betslip && ./build-xcframework.sh && ./build-aar.sh
 cd sdks/fighter && ./build-xcframework.sh && ./build-aar.sh
@@ -193,7 +196,7 @@ Install: `brew install skiptools/skip/skip`
 2. **Transpilation fixes applied (20 Aug 2026)** — `ThemeTokens`/`BetslipTheme` hex parsing (`filtered += String(character)` not `append(Char)`); `BetSlipStore`/`DepositFlowView`/`BetSlipRootView` use `Money.parse` not float-derived `Decimal` literals or int fallbacks.
 3. **Xcode + skipstone** — Host build needs `-skipPackagePluginValidation` until the Skip plugin is trusted in Xcode 26.
 4. **SPM pinned iOS** — Dynamic-library xcframework modules (`FightDeckCore`) collide with the umbrella product name when consumed via SPM path binaries; pinned iOS is verified with `FIGHTDECK_LOCAL_SDK=1` (source) or after GitHub HTTPS release. Android pinned + checksum manifest verification is fully wired.
-5. **Android Maven consumption** — `./sdks/{core,deposit,betslip,fighter}/build-aar.sh` publishes to `sdks/out/maven` with transitive POM metadata (`kotlin-reflect`, `commonmark`, Compose Material via SkipUI). Hosts point at that repo in `android/settings.gradle.kts`; do not re-declare those runtime deps. Verify with `sdks/consumer-verify/android` (`../../android/gradlew :app:assembleAllDebug` after building fighter AARs).
+5. **Android Maven consumption** — `./sdks/{core,events,deposit,betslip,fighter}/build-aar.sh` publishes to `sdks/out/maven` with transitive POM metadata (`kotlin-reflect`, `commonmark`, Compose Material via SkipUI). Hosts point at that repo in `android/settings.gradle.kts`; do not re-declare those runtime deps. Verify with `sdks/consumer-verify/android` (`../../android/gradlew :app:assembleAllDebug` after building fighter AARs).
 6. **`skip checkup` Kotlin test** — Robolectric / compileSdk 37 mismatch in Skip hello-world harness (environment issue, not FightDeck-specific).
 7. **Division does not transpile the way you would assume** — Kotlin lowers `BigDecimal /` to
    `divide(other, RoundingMode)`, which keeps the *dividend's* scale. `Money.one` has scale 0,
@@ -217,6 +220,18 @@ Install: `brew install skiptools/skip/skip`
    `size`/`isNotEmpty()` do not apply, fields keep Swift `ID` casing, there is no generated
    `copy()`, and the property getter hands back a write-back reference. Anything stored in a
    `StateFlow` has to be rebuilt rather than mutated. Cheaper than a mapper, but not free.
+10. **Shared code is written against a narrower Swift** — two limits showed up the moment the
+    catalogue moved into `sdks/events`. A generic `load<T: Decodable>` compiles on iOS and then
+    fails as Kotlin with `Cannot use 'T' as reified type parameter`, so each file gets its own
+    concrete decode. And `FormatStyle` exists only for numbers in skip-foundation: dates need
+    `DateFormatter`/`RelativeDateTimeFormatter` and durations `String(format:)`, not
+    `.formatted(date:time:)` or `Duration`. Both are fine to write — but you find them by
+    building for Android, not by reading Swift.
+11. **Sharing presentation exposes divergence too** — the two apps had been formatting the same
+    dataset differently: `split_decision` was `Split Decision` on iOS (`localizedCapitalized`)
+    and `Split decision` on Android (`replaceFirstChar`), and the iOS news list showed a
+    relative date the Android list never rendered. One shared `Display` settles both. The
+    Android news row is still missing its date — that is a UI gap, not a formatting one.
 
 ## Architecture
 

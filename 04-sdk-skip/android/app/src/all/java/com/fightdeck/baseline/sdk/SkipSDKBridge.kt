@@ -10,7 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.fightdeck.baseline.data.FighterItem
+import fight.deck.core.Fighter
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetslipComposeEntry
 import fight.deck.betslip.BetslipTheme
@@ -42,7 +42,7 @@ object SkipSDKBridge {
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
             val themeJSON = remember { ThemeLoader.tokensJSON(context) }
-            val store = SdkBetSlipStoreRegistry.store(viewModel, context)
+            val store = SdkBetSlipStoreRegistry.store(viewModel)
             LaunchedEffect(slip) {
                 store.slip = slip
             }
@@ -118,7 +118,7 @@ object SkipSDKBridge {
 
     @Composable
     fun FighterScreen(
-        fighter: FighterItem,
+        fighter: Fighter,
         viewModel: MainViewModel,
         saveKey: String,
         modifier: Modifier = Modifier,

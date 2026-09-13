@@ -43,7 +43,7 @@ object SkipSDKBridge {
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
             val themeJSON = remember { ThemeLoader.tokensJSON(context) }
-            val store = SdkBetSlipStoreRegistry.store(viewModel, context)
+            val store = SdkBetSlipStoreRegistry.store(viewModel)
             LaunchedEffect(slip) {
                 store.slip = slip
             }
@@ -81,7 +81,7 @@ object SkipSDKBridge {
 
     @Composable
     fun FighterScreen(
-        fighter: com.fightdeck.baseline.data.FighterItem,
+        fighter: fight.deck.core.Fighter,
         viewModel: MainViewModel,
         saveKey: String,
         modifier: Modifier = Modifier,

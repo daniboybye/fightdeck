@@ -107,20 +107,18 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil3.compose.SubcomposeAsyncImage
-import com.fightdeck.baseline.data.BoutItem
-import com.fightdeck.baseline.data.CornerItem
-import com.fightdeck.baseline.data.EventItem
-import com.fightdeck.baseline.data.FighterItem
-import com.fightdeck.baseline.data.MediaItem
-import com.fightdeck.baseline.data.NewsItem
 import com.fightdeck.baseline.design.BalanceMenuAction
 import com.fightdeck.baseline.design.Tokens
 import fight.deck.core.BetSlip
+import fight.deck.core.Bout
+import fight.deck.core.Corner
+import fight.deck.core.Event
+import fight.deck.core.Fighter
 import fight.deck.core.Money
+import fight.deck.events.Display
+import fight.deck.events.MediaItem
+import fight.deck.events.NewsItem
 import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 /**
  * Both event tabs render the same two events. The mode decides which half of the data is
@@ -509,7 +507,7 @@ private fun SlipNavHost(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventListScreen(
-    state: LoadState<List<EventItem>>,
+    state: LoadState<List<Event>>,
     news: LoadState<List<NewsItem>>,
     media: LoadState<List<MediaItem>>,
     mode: EventMode,
@@ -517,7 +515,7 @@ private fun EventListScreen(
     balance: BigDecimal,
     onDeposit: () -> Unit,
     onRetry: () -> Unit,
-    onEventClick: (EventItem) -> Unit,
+    onEventClick: (Event) -> Unit,
     onArticleClick: (NewsItem) -> Unit,
     onVideoClick: (MediaItem) -> Unit,
 ) {
@@ -819,7 +817,7 @@ private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier
 }
 
 @Composable
-private fun EventCard(event: EventItem, mode: EventMode, posterUrl: String?, onClick: () -> Unit) {
+private fun EventCard(event: Event, mode: EventMode, posterUrl: String?, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
@@ -848,7 +846,7 @@ private fun EventCard(event: EventItem, mode: EventMode, posterUrl: String?, onC
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    "${event.date.displayDate} · ${event.bouts.size} fights",
+                    "${event.date.displayDate} · ${event.bouts.count} fights",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -918,15 +916,15 @@ private fun NewsCard(item: NewsItem, eventName: String, imageUrl: String?, onCli
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EventDetailScreen(
-    event: EventItem,
+    event: Event,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     media: LoadState<List<MediaItem>>,
     balance: BigDecimal,
     onDeposit: () -> Unit,
-    onBoutClick: (BoutItem) -> Unit,
+    onBoutClick: (Bout) -> Unit,
     onVideoClick: (MediaItem) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -1005,11 +1003,11 @@ private fun DetailScaffold(
 
 @Composable
 private fun BoutRow(
-    bout: BoutItem,
+    bout: Bout,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     onClick: () -> Unit,
 ) {
     Card(
@@ -1054,12 +1052,12 @@ private fun BoutRow(
 
 @Composable
 private fun CornerLine(
-    corner: CornerItem,
-    bout: BoutItem,
+    corner: Corner,
+    bout: Bout,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     ring: Color,
 ) {
     Row(
@@ -1156,11 +1154,11 @@ private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun BoutDetailScreen(
-    bout: BoutItem,
+    bout: Bout,
     mode: EventMode,
     slip: BetSlip,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     balance: BigDecimal,
     onDeposit: () -> Unit,
     onFighterClick: (String) -> Unit,
@@ -1265,10 +1263,10 @@ private fun DetailRow(label: String, value: String, valueColor: Color = Color.Un
 
 @Composable
 private fun FighterHero(
-    corner: CornerItem,
+    corner: Corner,
     ring: Color,
     viewModel: MainViewModel,
-    fighters: List<FighterItem>,
+    fighters: List<Fighter>,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -1295,8 +1293,8 @@ private fun FighterHero(
 }
 
 @Composable
-private fun TaleOfTheTape(bout: BoutItem, fighters: List<FighterItem>) {
-    fun of(id: String): FighterItem? = fighters.firstOrNull { it.id == id }
+private fun TaleOfTheTape(bout: Bout, fighters: List<Fighter>) {
+    fun of(id: String): Fighter? = fighters.firstOrNull { it.id == id }
     val red = of(bout.redCorner.fighterId)
     val blue = of(bout.blueCorner.fighterId)
 
@@ -1607,19 +1605,14 @@ private fun Modifier.fixedActionHeight(height: Dp = Tokens.primaryActionHeight):
         .heightIn(max = height)
         .height(height)
 
-/** `split_decision` reads as a database column; `Split decision` reads as a result. */
+// The three formats below are the shared module's, reached through extensions so the call sites
+// stay Kotlin-idiomatic. Each of these used to be a second implementation, and displayMethod's
+// was not even equivalent: it title-cased only the first word where iOS title-cased every one.
 private val String.displayMethod: String
-    get() = replace('_', ' ').replaceFirstChar { it.uppercase() }
+    get() = Display.humanise(this)
 
-/** Dataset dates are plain `yyyy-MM-dd`; the raw form reads as a database column. */
 private val String.displayDate: String
-    get() = runCatching {
-        LocalDate.parse(this).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-    }.getOrDefault(this)
+    get() = Display.eventDate(this)
 
 private val MediaItem.durationLabel: String
-    get() {
-        val minutes = durationSeconds / 60
-        val seconds = durationSeconds % 60
-        return "%d:%02d".format(minutes, seconds)
-    }
+    get() = Display.duration(durationSeconds)

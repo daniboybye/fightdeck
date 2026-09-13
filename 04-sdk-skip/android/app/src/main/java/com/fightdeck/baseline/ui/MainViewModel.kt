@@ -3,21 +3,21 @@ package com.fightdeck.baseline.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.fightdeck.baseline.core.BetMode
-import com.fightdeck.baseline.core.BetSlip
-import com.fightdeck.baseline.core.BoutIndex
-import com.fightdeck.baseline.core.FightCore
-import com.fightdeck.baseline.core.Money
-import com.fightdeck.baseline.core.Selection
-import com.fightdeck.baseline.core.SlipState
 import com.fightdeck.baseline.data.BoutItem
 import com.fightdeck.baseline.data.EventItem
 import com.fightdeck.baseline.data.FighterItem
 import com.fightdeck.baseline.data.JsonFileRepository
 import com.fightdeck.baseline.data.MediaItem
 import com.fightdeck.baseline.data.NewsItem
+import com.fightdeck.baseline.sdk.SdkFightCoreFactory
 import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.baseline.services.LocalAssetServer
+import fight.deck.core.BetMode
+import fight.deck.core.BetSlip
+import fight.deck.core.FightCore
+import fight.deck.core.Money
+import fight.deck.core.Selection
+import fight.deck.core.SlipState
 import java.math.BigDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
+import skip.lib.Array as SkipArray
 
 sealed interface LoadState<out T> {
     data object Loading : LoadState<Nothing>
@@ -40,9 +40,6 @@ sealed interface BootstrapState {
     data class Failed(val message: String) : BootstrapState
     data object Ready : BootstrapState
 }
-
-/** Shared: building a Json format per call re-derives the serializers each time. */
-private val lenientJson = Json { ignoreUnknownKeys = true }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var repository: JsonFileRepository? = null
@@ -60,8 +57,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _fighters = MutableStateFlow<LoadState<List<FighterItem>>>(LoadState.Loading)
     val fighters: StateFlow<LoadState<List<FighterItem>>> = _fighters.asStateFlow()
 
+    // BetSlip arrives from the SDK as transpiled Swift, so its selections are a
+    // skip.lib.Array rather than a Kotlin List.
     private val _slip = MutableStateFlow(
-        BetSlip(BetMode.single, emptyList(), BigDecimal("10.00")),
+        BetSlip(BetMode.single, SkipArray(emptyList()), BigDecimal("10.00")),
     )
     val slip: StateFlow<BetSlip> = _slip.asStateFlow()
 
@@ -123,7 +122,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun bootstrapEngine(application: Application): Engine {
         val root = DatasetLocator.datasetRoot(application)
         LocalAssetServer.start(root)
-        return Engine(root, JsonFileRepository(root), buildFightCore(root))
+        return Engine(root, JsonFileRepository(root), SdkFightCoreFactory.build(application))
     }
 
     fun refreshEvents() {
@@ -172,14 +171,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun imageUrl(path: String): String? = repository?.imageUrl(path)
 
+    // A transpiled Swift struct has no generated copy(), so an edited slip is rebuilt rather
+    // than copied. Mutating one in place would be worse than verbose: BetSlip is a reference
+    // type on this side, and the instance is shared with whatever the SDK still holds.
     fun toggleSelection(bout: BoutItem, fighterId: String, odds: String) {
         _slip.update { slip ->
             val parsedOdds = Money.parse(odds)
-            val existingIndex = slip.selections.indexOfFirst { it.boutId == bout.id }
-            val selections = slip.selections.toMutableList()
+            val selections = slip.selections.toList().toMutableList()
+            val existingIndex = selections.indexOfFirst { it.boutID == bout.id }
             if (existingIndex >= 0) {
-                val existing = selections[existingIndex]
-                if (existing.fighterId == fighterId) {
+                if (selections[existingIndex].fighterID == fighterId) {
                     selections.removeAt(existingIndex)
                 } else {
                     selections[existingIndex] = Selection(bout.id, fighterId, parsedOdds)
@@ -187,16 +188,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 selections += Selection(bout.id, fighterId, parsedOdds)
             }
-            slip.copy(selections = selections, mode = modeFor(selections.size))
+            BetSlip(modeFor(selections.size), SkipArray(selections), slip.stake)
         }
         _betPlacedMessage.value = null
     }
 
     private fun modeFor(legCount: Int): BetMode =
-        if (legCount >= FightCore.MIN_ACCA_LEGS) BetMode.accumulator else BetMode.single
+        if (legCount >= FightCore.minAccaLegs) BetMode.accumulator else BetMode.single
 
     fun applySdkSlip(slip: BetSlip, balance: BigDecimal, betPlacedMessage: String?) {
-        _slip.value = slip
+        // Rebuilt for the same reason: the SDK keeps its own reference to this slip.
+        _slip.value = BetSlip(slip.mode, SkipArray(slip.selections.toList()), slip.stake)
         _balance.value = balance
         _betPlacedMessage.value = betPlacedMessage
     }
@@ -207,35 +209,4 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun eventsJSON(): String =
         requireNotNull(datasetRoot).resolve("events.json").readText()
-
-    private fun buildFightCore(root: java.io.File): FightCore {
-        val events = lenientJson
-            .decodeFromString<EventsEnvelope>(
-                root.resolve("events.json").readText(),
-            )
-        val bouts = events.events.flatMap { it.bouts }.map {
-            BoutIndex(it.id, it.redCorner.fighterId, it.blueCorner.fighterId, it.result.winnerId)
-        }
-        return FightCore(bouts.associateBy { it.id })
-    }
 }
-
-@kotlinx.serialization.Serializable
-private data class EventsEnvelope(val events: List<EventEnvelope>)
-
-@kotlinx.serialization.Serializable
-private data class EventEnvelope(val bouts: List<BoutEnvelope>)
-
-@kotlinx.serialization.Serializable
-private data class BoutEnvelope(
-    val id: String,
-    val redCorner: CornerEnvelope,
-    val blueCorner: CornerEnvelope,
-    val result: ResultEnvelope,
-)
-
-@kotlinx.serialization.Serializable
-private data class CornerEnvelope(@kotlinx.serialization.SerialName("fighterId") val fighterId: String)
-
-@kotlinx.serialization.Serializable
-private data class ResultEnvelope(@kotlinx.serialization.SerialName("winnerId") val winnerId: String)

@@ -16,7 +16,7 @@ object SdkBetSlipStoreRegistry {
         stores.getOrPut(viewModel) {
             BetSlipStore(
                 fightCore = SdkFightCoreFactory.build(context.applicationContext),
-                slip = SdkSlipMapper.toSdkSlip(viewModel.slip.value),
+                slip = viewModel.slip.value,
                 balance = viewModel.balance.value,
             )
         }

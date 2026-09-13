@@ -49,7 +49,6 @@ targetTemplates:
       - path: FightDeck
         excludes:
           - Deposit/**
-          - Core/**
       - path: FightDeck/Features/Fighter
       - path: FightDeck/Features/News
       - path: FightDeck/Features/Video

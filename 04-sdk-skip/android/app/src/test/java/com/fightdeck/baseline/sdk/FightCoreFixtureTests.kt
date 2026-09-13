@@ -1,5 +1,12 @@
-package com.fightdeck.baseline.core
+package com.fightdeck.baseline.sdk
 
+import fight.deck.core.BetMode
+import fight.deck.core.BetSlip
+import fight.deck.core.BoutIndex
+import fight.deck.core.FightCore
+import fight.deck.core.Money
+import fight.deck.core.OddsEngine
+import fight.deck.core.Selection
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -7,7 +14,15 @@ import java.io.File
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import skip.lib.Array as SkipArray
+import skip.lib.Set as SkipSet
 
+/**
+ * The same golden fixtures every other core in this repository runs, pointed at the Kotlin
+ * that Skip generated from the SDK's Swift. The host used to keep a hand-written Kotlin core
+ * and test that instead, which proved only that the copy agreed with the fixtures. Testing
+ * the transpiled core proves the transpiler preserved the money, odds and settlement rules.
+ */
 class FightCoreFixtureTests {
     private val json = Json { ignoreUnknownKeys = true }
     private val core = fixtureFightCore()
@@ -24,7 +39,7 @@ class FightCoreFixtureTests {
                 case.id,
             )
             val roundTrip = OddsEngine.fractionalToDecimal(case.fractional)
-            assertEquals(Money.format(decimal), Money.format(roundTrip), case.id)
+            assertEquals(plain(decimal), plain(roundTrip), case.id)
         }
     }
 
@@ -32,17 +47,18 @@ class FightCoreFixtureTests {
     fun slipMath() {
         val root = json.decodeFromString<SlipMathRoot>(fixture("slip-math"))
         root.cases.forEach { case ->
-            val slip = case.toSlip()
-            val state = core.slipState(slip, BigDecimal("10000"))
+            val state = core.slipState(case.toSlip(), BigDecimal("10000"))
             case.expect.combinedOddsExact?.let {
-                assertEquals(it, FightCore.formatExactOdds(state.combinedOddsExact!!), case.id)
+                // FightCoreDisplay.formatExactOdds is ICU-backed like Money.format, so the
+                // exact odds are compared as an unpadded plain string instead.
+                assertEquals(it, state.combinedOddsExact!!.stripTrailingZeros().toPlainString(), case.id)
             }
             case.expect.combinedOddsDisplay?.let {
-                assertEquals(it, Money.format(state.combinedOddsDisplay!!), case.id)
+                assertEquals(it, plain(state.combinedOddsDisplay!!), case.id)
             }
-            assertEquals(case.expect.totalStake, Money.format(state.totalStake), case.id)
-            assertEquals(case.expect.potentialReturn, Money.format(state.potentialReturn), case.id)
-            assertEquals(case.expect.potentialProfit, Money.format(state.potentialProfit), case.id)
+            assertEquals(case.expect.totalStake, plain(state.totalStake), case.id)
+            assertEquals(case.expect.potentialReturn, plain(state.potentialReturn), case.id)
+            assertEquals(case.expect.potentialProfit, plain(state.potentialProfit), case.id)
         }
     }
 
@@ -50,7 +66,9 @@ class FightCoreFixtureTests {
     fun slipValidation() {
         val root = json.decodeFromString<SlipValidationRoot>(fixture("slip-validation"))
         root.cases.forEach { case ->
-            val errors = core.validate(case.toSlip(), Money.parse(case.balance)).map { it.code }
+            val errors = core.validate(case.toSlip(), Money.parse(case.balance))
+                .toList()
+                .map { it.rawValue }
             assertEquals(case.expect.errors, errors, case.id)
         }
     }
@@ -59,14 +77,16 @@ class FightCoreFixtureTests {
     fun settlement() {
         val root = json.decodeFromString<SettlementRoot>(fixture("settlement"))
         root.cases.forEach { case ->
-            val result = core.settle(case.toSlip(), case.voidedBouts?.toSet() ?: emptySet())
-            assertEquals(case.expect.returned, Money.format(result.returned), case.id)
-            assertEquals(case.expect.profit, Money.format(result.profit), case.id)
-            assertEquals(case.expect.status, result.status.name, case.id)
+            val result = core.settle(case.toSlip(), SkipSet(case.voidedBouts ?: emptyList()))
+            assertEquals(case.expect.returned, plain(result.returned), case.id)
+            assertEquals(case.expect.profit, plain(result.profit), case.id)
+            // rawValue, not name: partiallyWon is spelled partially_won in the contract.
+            assertEquals(case.expect.status, result.status.rawValue, case.id)
+            val legs = result.legs.toList()
             case.expect.legs.forEachIndexed { index, expected ->
-                assertEquals(expected.boutId, result.legs[index].boutId)
-                assertEquals(expected.fighterId, result.legs[index].fighterId)
-                assertEquals(expected.outcome, result.legs[index].outcome.name)
+                assertEquals(expected.boutId, legs[index].boutID)
+                assertEquals(expected.fighterId, legs[index].fighterID)
+                assertEquals(expected.outcome, legs[index].outcome.rawValue)
             }
         }
     }
@@ -75,12 +95,21 @@ class FightCoreFixtureTests {
     fun cashOut() {
         val root = json.decodeFromString<CashOutRoot>(fixture("cash-out"))
         root.cases.forEach { case ->
-            val offer = core.cashOutOffer(case.toSlip(), case.settledBouts.toSet())
+            val offer = core.cashOutOffer(case.toSlip(), SkipSet(case.settledBouts))
             assertEquals(case.expect.available, offer.available, case.id)
-            assertEquals(case.expect.amount, Money.format(offer.amount), case.id)
+            assertEquals(case.expect.amount, plain(offer.amount), case.id)
             assertEquals(case.expect.reason, offer.reason, case.id)
         }
     }
+
+    /**
+     * `Money.format` goes through skip-foundation's NumberFormatter, which lands on
+     * `android.icu.text.NumberFormat` and so cannot run on a plain JVM runner. Rounding is the
+     * part of the contract worth asserting here, and `Money.money` is pure BigDecimal, so the
+     * amounts are compared as rounded plain strings. Formatting itself is covered by the SDK's
+     * own Swift tests.
+     */
+    private fun plain(value: BigDecimal): String = Money.money(value).toPlainString()
 
     private fun fixture(name: String): String =
         File(fixturesRoot(), "$name.json").readText()
@@ -96,7 +125,7 @@ class FightCoreFixtureTests {
         val bouts = events.events.flatMap { it.bouts }.map {
             BoutIndex(it.id, it.redCorner.fighterId, it.blueCorner.fighterId, it.result.winnerId)
         }
-        return FightCore(bouts.associateBy { it.id })
+        return FightCore(SkipArray(bouts))
     }
 }
 
@@ -122,11 +151,7 @@ private data class SlipMathCase(
     val selections: List<SelectionDto>,
     val expect: SlipMathExpect,
 ) {
-    fun toSlip() = BetSlip(
-        mode = BetMode.valueOf(mode),
-        selections = selections.map { it.toSelection() },
-        stake = Money.parse(stake),
-    )
+    fun toSlip() = slip(mode, selections, stake)
 }
 
 @Serializable
@@ -150,11 +175,7 @@ private data class SlipValidationCase(
     val selections: List<SelectionDto>,
     val expect: SlipValidationExpect,
 ) {
-    fun toSlip() = BetSlip(
-        mode = BetMode.valueOf(mode),
-        selections = selections.map { it.toSelection() },
-        stake = Money.parse(stake),
-    )
+    fun toSlip() = slip(mode, selections, stake)
 }
 
 @Serializable
@@ -172,11 +193,7 @@ private data class SettlementCase(
     val voidedBouts: List<String>? = null,
     val expect: SettlementExpect,
 ) {
-    fun toSlip() = BetSlip(
-        mode = BetMode.valueOf(mode),
-        selections = selections.map { it.toSelection() },
-        stake = Money.parse(stake),
-    )
+    fun toSlip() = slip(mode, selections, stake)
 }
 
 @Serializable
@@ -206,11 +223,7 @@ private data class CashOutCase(
     val settledBouts: List<String>,
     val expect: CashOutExpect,
 ) {
-    fun toSlip() = BetSlip(
-        mode = BetMode.valueOf(mode),
-        selections = selections.map { it.toSelection() },
-        stake = Money.parse(stake),
-    )
+    fun toSlip() = slip(mode, selections, stake)
 }
 
 @Serializable
@@ -228,6 +241,13 @@ private data class SelectionDto(
 ) {
     fun toSelection() = Selection(boutId, fighterId, Money.parse(odds))
 }
+
+/** A transpiled Swift array, so the fixture selections cannot be handed over as a List. */
+private fun slip(mode: String, selections: List<SelectionDto>, stake: String) = BetSlip(
+    BetMode.valueOf(mode),
+    SkipArray(selections.map { it.toSelection() }),
+    Money.parse(stake),
+)
 
 @Serializable
 private data class EventsFile(val events: List<EventDto>)

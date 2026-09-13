@@ -44,7 +44,7 @@ object SkipSDKBridge {
             val themeJSON = remember { ThemeLoader.tokensJSON(context) }
             val store = SdkBetSlipStoreRegistry.store(viewModel, context)
             LaunchedEffect(slip) {
-                store.slip = SdkSlipMapper.toSdkSlip(slip)
+                store.slip = slip
             }
             LaunchedEffect(balance) {
                 store.balance = balance
@@ -62,7 +62,7 @@ object SkipSDKBridge {
                 onBrowseEvents = onBrowseEvents,
                 onHostSync = { sdkSlip, sdkBalance, message ->
                     viewModel.applySdkSlip(
-                        SdkSlipMapper.toHostSlip(sdkSlip),
+                        sdkSlip,
                         sdkBalance,
                         message,
                     )

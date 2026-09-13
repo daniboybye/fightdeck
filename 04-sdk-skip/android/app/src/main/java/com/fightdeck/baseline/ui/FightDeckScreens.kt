@@ -107,10 +107,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil3.compose.SubcomposeAsyncImage
-import com.fightdeck.baseline.core.BetMode
-import com.fightdeck.baseline.core.BetSlip
-import com.fightdeck.baseline.core.Money
-import com.fightdeck.baseline.core.SlipState
 import com.fightdeck.baseline.data.BoutItem
 import com.fightdeck.baseline.data.CornerItem
 import com.fightdeck.baseline.data.EventItem
@@ -119,6 +115,8 @@ import com.fightdeck.baseline.data.MediaItem
 import com.fightdeck.baseline.data.NewsItem
 import com.fightdeck.baseline.design.BalanceMenuAction
 import com.fightdeck.baseline.design.Tokens
+import fight.deck.core.BetSlip
+import fight.deck.core.Money
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -229,7 +227,9 @@ private fun FightDeckMain(viewModel: MainViewModel) {
         val slipNav = rememberNavController()
         // The bar is a shortcut into the slip on every tab while selections exist, and it
         // hides while the deposit sheet is open — matching iOS tabViewBottomAccessory.
-        val showsSlipToolbar = slip.selections.isNotEmpty() && !showDepositSheet
+        // isEmpty and count come from the SDK's Swift Array, so the Kotlin
+        // isNotEmpty()/size idioms are not available here.
+        val showsSlipToolbar = !slip.selections.isEmpty && !showDepositSheet
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -241,7 +241,7 @@ private fun FightDeckMain(viewModel: MainViewModel) {
                         // insets so it never covers the last row.
                         if (showsSlipToolbar) {
                             BetSlipToolbar(
-                                legCount = slip.selections.size,
+                                legCount = slip.selections.count,
                                 potentialReturn = Money.formatCurrency(viewModel.slipState.potentialReturn),
                                 onClick = { selectedTab = SLIP_TAB },
                                 modifier = Modifier
@@ -1083,7 +1083,7 @@ private fun CornerLine(
             OddsChip(
                 label = corner.closingOdds.decimal,
                 selected = slip.selections.any {
-                    it.boutId == bout.id && it.fighterId == corner.fighterId
+                    it.boutID == bout.id && it.fighterID == corner.fighterId
                 },
                 onClick = {
                     viewModel.toggleSelection(bout, corner.fighterId, corner.closingOdds.decimal)

@@ -1,11 +1,12 @@
 //
 // BetSlipStore.swift
-// FightCore
+// FightSlip
 //
 // Created by FightDeck on 20.08.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
 import Foundation
 import Observation
 
@@ -31,14 +32,14 @@ public final class BetSlipStore {
         set { session.settlement = newValue }
     }
 
-    public var fightCore: FightCore { session.fightCore }
+    public var slipEngine: SlipEngine { session.slipEngine }
 
     public init(
-        fightCore: FightCore,
+        slipEngine: SlipEngine,
         slip: BetSlip = BetSlip(mode: .accumulator, selections: [], stake: Decimal(string: "10.00")!),
         balance: Decimal = Decimal(string: "500.00")!
     ) {
-        session = SlipSession(fightCore: fightCore, slip: slip, balance: balance)
+        session = SlipSession(slipEngine: slipEngine, slip: slip, balance: balance)
     }
 
     public var slipState: SlipState { session.slipState }

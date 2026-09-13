@@ -1,16 +1,9 @@
 package com.fightdeck.swiftcore.core
 
 import com.fightdeck.fightcore.FightCoreJava
-import com.fightdeck.fightcore.SlipEngine
-import com.fightdeck.fightcore.SlipValidationError
+import com.fightdeck.fightslip.SlipEngine
+import com.fightdeck.fightslip.SlipValidationError
 import java.math.BigDecimal
-
-// Everything here marshals values to and from the cross-compiled Swift core over the JNI
-// bindings jextract generated. No rule, rounding or ordering is decided on this side.
-//
-// Money crosses the boundary as a decimal string because jextract has no mapping for
-// Swift's `Decimal`. `BigDecimal` exists here only to keep Compose off `Double`; it never
-// performs the rounding, so HALF_UP cannot drift from `NSDecimalRound`.
 
 object Money {
     fun money(value: BigDecimal): BigDecimal = BigDecimal(format(value))
@@ -35,15 +28,7 @@ object OddsEngine {
         FightCoreJava.impliedProbability(odds.toPlainString())
 }
 
-/**
- * Kotlin's view of the Swift `SlipSession` living behind the generated `SlipEngine`.
- *
- * iOS gets change notifications for free: `BetSlipStore` is `@Observable` and SwiftUI
- * re-renders whatever it read. Observation does not cross JNI, so every mutation here is
- * followed by a full read-back into an immutable snapshot the Compose layer can diff.
- * That re-read is the manual half of what Skip's Fuse bridge would have generated.
- */
-class SwiftSlipStore(bouts: List<BoutIndex>) {
+class SwiftSlipStore(boutIDs: List<BoutIndex>) {
     private val engine = SlipEngine.init()
 
     var slip: BetSlip = BetSlip(BetMode.single, emptyList(), BigDecimal("10.00"))
@@ -57,7 +42,7 @@ class SwiftSlipStore(bouts: List<BoutIndex>) {
         private set
 
     init {
-        bouts.forEach { engine.registerBout(it.id, it.redFighterId, it.blueFighterId, it.winnerId) }
+        boutIDs.forEach { engine.registerBout(it.id, it.redFighterId, it.blueFighterId, it.winnerId) }
         readBack()
     }
 
@@ -83,7 +68,6 @@ class SwiftSlipStore(bouts: List<BoutIndex>) {
         readBack()
     }
 
-    /** Null when the slip failed validation, matching what `BetSlipStore.placeBet` returns. */
     fun placeBet(): SlipState? {
         val placed = slipState
         if (!engine.placeBet()) return null
@@ -110,10 +94,6 @@ class SwiftSlipStore(bouts: List<BoutIndex>) {
         )
     }
 
-    /**
-     * The Swift facade returns an empty string where the core has `nil`; jextract can carry
-     * optionals, but not through a `Decimal` that has no Java counterpart.
-     */
     private fun String.toBigDecimalOrNull(): BigDecimal? = if (isEmpty()) null else BigDecimal(this)
 
     private fun toValidationError(error: SlipValidationError): ValidationError =

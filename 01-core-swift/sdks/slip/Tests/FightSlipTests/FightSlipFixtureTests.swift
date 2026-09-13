@@ -1,35 +1,19 @@
 //
-// FightCoreFixtureTests.swift
-// FightDeckTests
+// FightSlipFixtureTests.swift
+// FightSlipTests
 //
 // Created by FightDeck on 20.08.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
 import FightCore
-import FightEvents
-import FightSlip
 import Foundation
 import Testing
+@testable import FightSlip
 
-@Suite("FightCore fixtures")
-struct FightCoreFixtureTests {
+@Suite("FightSlip fixtures")
+struct FightSlipFixtureTests {
     private var engine: SlipEngine { fixtureSlipEngine() }
-
-    @Test("odds-conversion.json")
-    func oddsConversion() throws {
-        let data = try FixtureLoader.loadJSON(named: "odds-conversion")
-        let root = try JSONDecoder().decode(OddsConversionRoot.self, from: data)
-        for testCase in root.cases {
-            let decimal = Money.parse(testCase.decimal)
-            let fractional = OddsEngine.decimalToFractional(decimal)
-            let implied = Money.formatImpliedProbability(decimal)
-            #expect(fractional == testCase.fractional, "Case \(testCase.id): fractional")
-            #expect(implied == testCase.impliedProbability, "Case \(testCase.id): implied")
-            let roundTrip = OddsEngine.fractionalToDecimal(testCase.fractional)
-            #expect(Money.format(roundTrip) == Money.format(decimal), "Case \(testCase.id): round-trip")
-        }
-    }
 
     @Test("slip-math.json")
     func slipMath() throws {
@@ -106,41 +90,54 @@ struct FightCoreFixtureTests {
             #expect(offer.reason == testCase.expect.reason, "Case \(testCase.id): reason")
         }
     }
+
+    @Test("mode_for follows leg count")
+    func modeFor() {
+        #expect(SlipEngine.modeFor(selectionCount: 0) == .single)
+        #expect(SlipEngine.modeFor(selectionCount: 1) == .single)
+        #expect(SlipEngine.modeFor(selectionCount: 2) == .accumulator)
+    }
 }
 
 private func fixtureSlipEngine() -> SlipEngine {
-    let repoRoot = FixtureLoader.fixturesDirectory
+    let datasetURL = FixtureLoader.fixturesDirectory
         .deletingLastPathComponent()
         .deletingLastPathComponent()
-    let eventsJSON = try! String(contentsOf: repoRoot.appendingPathComponent("dataset/events.json"))
-    let fightersJSON = try! String(contentsOf: repoRoot.appendingPathComponent("dataset/fighters.json"))
-    let catalog = try! Catalog.parse(eventsJSON: eventsJSON, fightersJSON: fightersJSON)
-    return SlipEngine(bouts: catalog.boutIndex())
-}
-
-private enum FixtureLoader {
-    static func loadJSON(named name: String) throws -> Data {
-        try Data(contentsOf: fixturesDirectory.appendingPathComponent("\(name).json"))
+        .appendingPathComponent("dataset/events.json")
+    let data = try! Data(contentsOf: datasetURL)
+    let events = try! JSONDecoder().decode(EventsFile.self, from: data)
+    let bouts = events.events.flatMap(\.bouts).map { bout in
+        BoutIndex(
+            id: bout.id,
+            redFighterID: bout.redCorner.fighterId,
+            blueFighterID: bout.blueCorner.fighterId,
+            winnerID: bout.result.winnerId
+        )
     }
-
-    static var fixturesDirectory: URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("contract/fixtures", isDirectory: true)
-    }
+    return SlipEngine(bouts: bouts)
 }
 
-private struct OddsConversionRoot: Decodable {
-    let cases: [OddsConversionCase]
+private struct EventsFile: Decodable {
+    let events: [EventDTO]
 }
 
-private struct OddsConversionCase: Decodable {
+private struct EventDTO: Decodable {
+    let bouts: [BoutDTO]
+}
+
+private struct BoutDTO: Decodable {
     let id: String
-    let decimal: String
-    let fractional: String
-    let impliedProbability: String
+    let redCorner: CornerDTO
+    let blueCorner: CornerDTO
+    let result: ResultDTO
+}
+
+private struct CornerDTO: Decodable {
+    let fighterId: String
+}
+
+private struct ResultDTO: Decodable {
+    let winnerId: String
 }
 
 private struct SlipMathRoot: Decodable {

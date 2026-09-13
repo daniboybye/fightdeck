@@ -20,6 +20,26 @@ public enum Money {
         return formatter
     }()
 
+    private static let exactOddsFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = posix
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 12
+        formatter.groupingSeparator = ""
+        return formatter
+    }()
+
+    private static let probabilityFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.locale = posix
+        formatter.minimumFractionDigits = 4
+        formatter.maximumFractionDigits = 4
+        formatter.groupingSeparator = ""
+        return formatter
+    }()
+
     public static func round(_ value: Decimal, scale: Int = 2) -> Decimal {
         var input = value
         var result = Decimal()
@@ -42,5 +62,18 @@ public enum Money {
 
     public static func formatCurrency(_ value: Decimal) -> String {
         "€\(format(value))"
+    }
+
+    public static func formatOdds(_ odds: Decimal) -> String {
+        format(odds)
+    }
+
+    public static func formatExactOdds(_ odds: Decimal) -> String {
+        exactOddsFormatter.string(from: odds as NSDecimalNumber) ?? format(odds)
+    }
+
+    public static func formatImpliedProbability(_ odds: Decimal) -> String {
+        let probability = OddsEngine.impliedProbability(odds)
+        return probabilityFormatter.string(from: probability as NSDecimalNumber) ?? "0.0000"
     }
 }

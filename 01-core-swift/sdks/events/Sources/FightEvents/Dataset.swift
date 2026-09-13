@@ -1,6 +1,6 @@
 //
-// Ports.swift
-// FightCore
+// Dataset.swift
+// FightEvents
 //
 // Created by FightDeck on 20.08.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
@@ -8,20 +8,49 @@
 
 import Foundation
 
+public struct EventsFile: Codable, Sendable {
+    public let events: [Event]
+
+    public init(events: [Event]) {
+        self.events = events
+    }
+}
+
+public struct FightersFile: Codable, Sendable {
+    public let fighters: [Fighter]
+
+    public init(fighters: [Fighter]) {
+        self.fighters = fighters
+    }
+}
+
 public struct Event: Codable, Identifiable, Sendable {
     public let id: String
     public let name: String
     public let date: String
     public let venue: String
     public let city: String
+    public let country: String?
+    public let attendance: Int?
     public let bouts: [Bout]
 
-    public init(id: String, name: String, date: String, venue: String, city: String, bouts: [Bout]) {
+    public init(
+        id: String,
+        name: String,
+        date: String,
+        venue: String,
+        city: String,
+        country: String? = nil,
+        attendance: Int? = nil,
+        bouts: [Bout]
+    ) {
         self.id = id
         self.name = name
         self.date = date
         self.venue = venue
         self.city = city
+        self.country = country
+        self.attendance = attendance
         self.bouts = bouts
     }
 }
@@ -156,31 +185,5 @@ public struct FighterRecord: Codable, Sendable {
         self.draws = draws
         self.noContests = noContests
         self.display = display
-    }
-}
-
-/// Platform port — implemented by the host (UserDefaults on iOS, SharedPreferences on Android).
-public protocol PreferencesStore: Sendable {
-    func read(key: String) -> String?
-    func write(key: String, value: String)
-}
-
-/// Platform port — async data loading with typed errors across the FFI boundary.
-public protocol FightRepository: Sendable {
-    func loadEvents() async throws(FightCoreError) -> [Event]
-    func loadFighters() async throws(FightCoreError) -> [Fighter]
-}
-
-public extension FightCore {
-    static func make(from events: [Event]) -> FightCore {
-        let bouts = events.flatMap(\.bouts).map { bout in
-            BoutIndex(
-                id: bout.id,
-                redFighterID: bout.redCorner.fighterId,
-                blueFighterID: bout.blueCorner.fighterId,
-                winnerID: bout.result.winnerId
-            )
-        }
-        return FightCore(bouts: bouts)
     }
 }

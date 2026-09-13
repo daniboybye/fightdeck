@@ -7,6 +7,8 @@
 //
 
 import FightCore
+import FightEvents
+import FightSlip
 import Foundation
 import Observation
 
@@ -28,7 +30,6 @@ enum LoadState<Value>: Sendable where Value: Sendable {
 @MainActor
 final class AppState {
     var eventsState: LoadState<[Event]> = .loading
-    var fightersState: LoadState<[Fighter]> = .loading
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
@@ -40,14 +41,17 @@ final class AppState {
     /// environment, which is a new value on every `RootView` body pass.
     var isPresentingDeposit = false
 
-    let repository: JSONFileRepository
+    let catalog: Catalog
     let slipStore: BetSlipStore
+
+    private let repository: JSONFileRepository
 
     init(repository: JSONFileRepository = JSONFileRepository()) {
         self.repository = repository
-        let core = AppState.makeFightCore()
+        self.catalog = AppState.makeCatalog()
+        let slipEngine = SlipEngine(bouts: catalog.boutIndex())
         self.slipStore = BetSlipStore(
-            fightCore: core,
+            slipEngine: slipEngine,
             slip: BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
         )
     }
@@ -81,30 +85,15 @@ final class AppState {
     }
 
     func refreshAll() async {
-        await loadEvents()
-        await loadFighters()
+        loadEvents()
         await loadNews()
         await loadMedia()
     }
 
-    func loadEvents() async {
+    func loadEvents() {
         eventsState = .loading
-        do {
-            let events = try await repository.loadEvents()
-            eventsState = events.isEmpty ? .empty : .loaded(events)
-        } catch {
-            eventsState = .error("Could not load events")
-        }
-    }
-
-    func loadFighters() async {
-        fightersState = .loading
-        do {
-            let fighters = try await repository.loadFighters()
-            fightersState = fighters.isEmpty ? .empty : .loaded(fighters)
-        } catch {
-            fightersState = .error("Could not load fighters")
-        }
+        let events = catalog.allEvents()
+        eventsState = events.isEmpty ? .empty : .loaded(events)
     }
 
     func loadNews() async {
@@ -156,12 +145,23 @@ final class AppState {
     }
 
     func fighter(_ id: String) -> Fighter? {
-        guard case .loaded(let fighters) = fightersState else { return nil }
-        return fighters.first { $0.id == id }
+        catalog.fighter(id: id)
     }
 
     func record(for id: String) -> String {
         fighter(id)?.recordDisplay ?? "—"
+    }
+
+    func cardSections(for eventID: String) -> [CardSection] {
+        catalog.cardSections(eventID: eventID)
+    }
+
+    func taleOfTheTape(for boutID: String) -> TaleOfTheTape? {
+        catalog.taleOfTheTape(boutID: boutID)
+    }
+
+    func legContext(boutID: String, fighterID: String) -> LegContext {
+        catalog.legContext(boutID: boutID, fighterID: fighterID)
     }
 
     func presentDeposit() {
@@ -176,17 +176,16 @@ final class AppState {
         repository.imageURL(for: path)
     }
 
-    private static func makeFightCore() -> FightCore {
-        let datasetRoot = DatasetLocator.datasetRoot()
-        let url = datasetRoot.appendingPathComponent("events.json")
-        guard let data = try? Data(contentsOf: url),
-              let file = try? JSONDecoder().decode(EventsEnvelope.self, from: data) else {
-            return FightCore(bouts: [])
+    /// The dataset is read as text and parsed inside FightEvents, so the app declares no
+    /// `Codable` mirror of the JSON and neither does the Android host.
+    private static func makeCatalog() -> Catalog {
+        let root = DatasetLocator.datasetRoot()
+        func read(_ name: String, empty: String) -> String {
+            (try? String(contentsOf: root.appendingPathComponent(name), encoding: .utf8)) ?? empty
         }
-        return FightCore.make(from: file.events)
+        let events = read("events.json", empty: #"{"events":[]}"#)
+        let fighters = read("fighters.json", empty: #"{"fighters":[]}"#)
+        return (try? Catalog.parse(eventsJSON: events, fightersJSON: fighters))
+            ?? (try! Catalog.parse(eventsJSON: #"{"events":[]}"#, fightersJSON: #"{"fighters":[]}"#))
     }
-}
-
-private struct EventsEnvelope: Decodable {
-    let events: [Event]
 }

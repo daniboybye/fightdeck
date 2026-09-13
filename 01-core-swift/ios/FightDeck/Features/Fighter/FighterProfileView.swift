@@ -7,6 +7,7 @@
 //
 
 import FightCore
+import FightEvents
 import SwiftUI
 
 struct FighterProfileView: View {

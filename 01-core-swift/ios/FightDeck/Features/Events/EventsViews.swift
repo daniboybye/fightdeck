@@ -7,6 +7,7 @@
 //
 
 import FightCore
+import FightEvents
 import SwiftUI
 
 struct EventsTabView: View {
@@ -18,7 +19,7 @@ struct EventsTabView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            LoadStateView(state: state.eventsState, retry: { Task { await state.loadEvents() } }) { events in
+            LoadStateView(state: state.eventsState, retry: { state.loadEvents() }) { events in
                 List {
                     Section {
                         ForEach(events) { event in
@@ -169,13 +170,11 @@ struct EventDetailView: View {
 
     var body: some View {
         List {
-            ForEach(segmentOrder, id: \.self) { segment in
-                if let bouts = grouped[segment], !bouts.isEmpty {
-                    Section(segmentTitle(segment)) {
-                        ForEach(bouts) { bout in
-                            NavigationLink(value: EventsRoute.bout(eventID: event.id, boutID: bout.id)) {
-                                BoutRowView(state: state, bout: bout, mode: mode)
-                            }
+            ForEach(state.cardSections(for: event.id), id: \.title) { section in
+                Section(section.title) {
+                    ForEach(section.bouts) { bout in
+                        NavigationLink(value: EventsRoute.bout(eventID: event.id, boutID: bout.id)) {
+                            BoutRowView(state: state, bout: bout, mode: mode)
                         }
                     }
                 }
@@ -200,7 +199,7 @@ struct EventDetailView: View {
                             Label {
                                 VStack(alignment: .leading) {
                                     Text(clip.title)
-                                    Text(clip.durationSeconds.formattedDuration)
+                                    Text(Display.duration(totalSeconds: clip.durationSeconds))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -215,22 +214,6 @@ struct EventDetailView: View {
         }
     }
 
-    private var grouped: [String: [Bout]] {
-        Dictionary(grouping: event.bouts.sorted { $0.order < $1.order }, by: \.segment)
-    }
-
-    private var segmentOrder: [String] {
-        ["main", "main_card", "prelim", "prelims", "early_prelim", "early_prelims"]
-    }
-
-    private func segmentTitle(_ segment: String) -> String {
-        switch segment {
-        case "main": "Main Event"
-        case "main_card": "Main Card"
-        case "prelim", "prelims": "Prelims"
-        default: "Early Prelims"
-        }
-    }
 }
 
 struct BoutRowView: View {
@@ -240,14 +223,23 @@ struct BoutRowView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("\(bout.weightClass.replacingOccurrences(of: "_", with: " ").uppercased())\(bout.titleFight ? " · TITLE" : "") · \(bout.scheduledRounds) RNDS")
+            Text(Display.boutHeadline(
+                weightClassRaw: bout.weightClass,
+                titleFight: bout.titleFight,
+                scheduledRounds: bout.scheduledRounds
+            ))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             cornerRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
             cornerRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
             if mode.showsResults {
                 Label(
-                    "\(bout.result.winnerName) · \(bout.result.method.displayMethod) · R\(bout.result.endRound) \(bout.result.endTime)",
+                    Display.resultLine(
+                        winnerName: bout.result.winnerName,
+                        method: bout.result.method,
+                        endRound: bout.result.endRound,
+                        endTime: bout.result.endTime
+                    ),
                     systemImage: "checkmark.seal.fill"
                 )
                 .font(.caption)
@@ -270,7 +262,7 @@ struct BoutRowView: View {
             Spacer()
             if mode.showsOdds {
                 OddsButton(
-                    label: FightCoreDisplay.formatOdds(Money.parse(corner.closingOdds.decimal)),
+                    label: Money.formatOdds(Money.parse(corner.closingOdds.decimal)),
                     fractional: corner.closingOdds.fractional,
                     isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
                 ) {

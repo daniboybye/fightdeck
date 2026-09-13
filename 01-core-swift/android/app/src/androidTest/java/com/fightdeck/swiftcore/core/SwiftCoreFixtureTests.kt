@@ -2,7 +2,7 @@ package com.fightdeck.swiftcore.core
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fightdeck.fightcore.FightCoreJava
-import com.fightdeck.fightcore.SlipEngine
+import com.fightdeck.fightslip.SlipEngine
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

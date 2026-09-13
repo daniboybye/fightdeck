@@ -13,6 +13,7 @@
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
 		3129973EC0A1BE6E3FF738B4 /* JSONFileRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61D15408C406DA2BBD11C236 /* JSONFileRepository.swift */; };
 		3541578715FFE9CEC805A044 /* FixtureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F09AEF29810752187509740 /* FixtureLoader.swift */; };
+		4C5FF29EC91AFACA71BA6224 /* FightEvents in Frameworks */ = {isa = PBXBuildFile; productRef = 4A3B9251D60ABA4CD4FB54AE /* FightEvents */; };
 		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
 		4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */; };
 		4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */; };
@@ -20,7 +21,8 @@
 		6BC0BF513175E7D13038C269 /* DatasetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB34A2F61DC158028871445 /* DatasetModels.swift */; };
 		72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */; };
 		8CC540AE2FD450B9960879BA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 667CCDA71CC013177D5B28C2 /* AppState.swift */; };
-		8D9D6F3D5C283BE96968F992 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
+		8D9D6F3D5C283BE96968F992 /* FightSlip in Frameworks */ = {isa = PBXBuildFile; productRef = 7D8400068086060F932DA052 /* FightSlip */; };
+		9FAE979935271512DD91DA3D /* FightEvents in Frameworks */ = {isa = PBXBuildFile; productRef = FF71178CBCAEEB96110B61BD /* FightEvents */; };
 		ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF3347F556E995F73653E0C /* EventsViews.swift */; };
 		B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5C66B1CE93502EF9451749 /* NewsViews.swift */; };
 		B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */; };
@@ -30,9 +32,11 @@
 		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
 		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
+		EC46CD279D0EE48925A18279 /* FightSlip in Frameworks */ = {isa = PBXBuildFile; productRef = 0E46BC8018B687513AC57860 /* FightSlip */; };
 		F1060FA2A462524D25A47296 /* FightCoreFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D66837804C3536582216021 /* FightCoreFixtureTests.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = D7285AEB9A4CAF9CCC5C0247 /* FightCore */; };
 		F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D0326034EA5B85604BFA1F /* DepositFlowView.swift */; };
+		F502F17CC36E3303471CFBD6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,7 +50,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		082B9B33D487907D6F872D68 /* slip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = slip; path = ../sdks/slip; sourceTree = SOURCE_ROOT; };
 		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
+		2085E9D24DAD8A41FD78BA17 /* events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = events; path = ../sdks/events; sourceTree = SOURCE_ROOT; };
 		2485A43DDAE8181054D5F8C2 /* DepositHosting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositHosting.swift; sourceTree = "<group>"; };
 		3C15AC4F04B3055B51F23702 /* core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = core; path = ../sdks/core; sourceTree = SOURCE_ROOT; };
 		3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceToolbar.swift; sourceTree = "<group>"; };
@@ -81,6 +87,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0FE2600B8D971FE1ED1E412B /* FightCore in Frameworks */,
+				EC46CD279D0EE48925A18279 /* FightSlip in Frameworks */,
+				4C5FF29EC91AFACA71BA6224 /* FightEvents in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -89,7 +97,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				F2145FE5DA42059AA6E8A9DD /* FightCore in Frameworks */,
-				8D9D6F3D5C283BE96968F992 /* Kingfisher in Frameworks */,
+				8D9D6F3D5C283BE96968F992 /* FightSlip in Frameworks */,
+				9FAE979935271512DD91DA3D /* FightEvents in Frameworks */,
+				F502F17CC36E3303471CFBD6 /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +226,8 @@
 			isa = PBXGroup;
 			children = (
 				3C15AC4F04B3055B51F23702 /* core */,
+				2085E9D24DAD8A41FD78BA17 /* events */,
+				082B9B33D487907D6F872D68 /* slip */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -275,6 +287,8 @@
 			name = FightDeck;
 			packageProductDependencies = (
 				D7285AEB9A4CAF9CCC5C0247 /* FightCore */,
+				7D8400068086060F932DA052 /* FightSlip */,
+				FF71178CBCAEEB96110B61BD /* FightEvents */,
 				EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */,
 			);
 			productName = FightDeck;
@@ -296,6 +310,8 @@
 			name = FightDeckTests;
 			packageProductDependencies = (
 				78720776C9C05B178D7B6255 /* FightCore */,
+				0E46BC8018B687513AC57860 /* FightSlip */,
+				4A3B9251D60ABA4CD4FB54AE /* FightEvents */,
 			);
 			productName = FightDeckTests;
 			productReference = FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */;
@@ -330,6 +346,8 @@
 			packageReferences = (
 				34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */,
+				7B3A75B74CE49E3D34A5C416 /* XCLocalSwiftPackageReference "../sdks/events" */,
+				A9C115EDC86C9FEC12420479 /* XCLocalSwiftPackageReference "../sdks/slip" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A1088A6E4DD381B5E286242F /* Products */;
@@ -637,9 +655,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		7B3A75B74CE49E3D34A5C416 /* XCLocalSwiftPackageReference "../sdks/events" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/events;
+		};
 		826C2F85E47DA74C35FD900E /* XCLocalSwiftPackageReference "../sdks/core" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../sdks/core;
+		};
+		A9C115EDC86C9FEC12420479 /* XCLocalSwiftPackageReference "../sdks/slip" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../sdks/slip;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -655,9 +681,21 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0E46BC8018B687513AC57860 /* FightSlip */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightSlip;
+		};
+		4A3B9251D60ABA4CD4FB54AE /* FightEvents */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightEvents;
+		};
 		78720776C9C05B178D7B6255 /* FightCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FightCore;
+		};
+		7D8400068086060F932DA052 /* FightSlip */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightSlip;
 		};
 		D7285AEB9A4CAF9CCC5C0247 /* FightCore */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -667,6 +705,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 34BF9620CC0AB094DC284E64 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		FF71178CBCAEEB96110B61BD /* FightEvents */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FightEvents;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

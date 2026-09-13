@@ -1,11 +1,12 @@
 //
 // SlipSession.swift
-// FightCore
+// FightSlip
 //
 // Created by FightDeck on 09.09.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
 import Foundation
 
 /// Slip state and the mutations over it, with no Observation and no actor isolation.
@@ -14,27 +15,27 @@ import Foundation
 /// the same value for Compose. Everything a bet slip actually does lives here, so both
 /// platforms run this code rather than a port of it.
 public struct SlipSession: Sendable {
-    public var fightCore: FightCore
+    public var slipEngine: SlipEngine
     public var slip: BetSlip
     public var balance: Decimal
     public var settlement: Settlement?
 
     public init(
-        fightCore: FightCore,
+        slipEngine: SlipEngine,
         slip: BetSlip = BetSlip(mode: .accumulator, selections: [], stake: Decimal(string: "10.00")!),
         balance: Decimal = Decimal(string: "500.00")!
     ) {
-        self.fightCore = fightCore
+        self.slipEngine = slipEngine
         self.slip = slip
         self.balance = balance
     }
 
     public var slipState: SlipState {
-        fightCore.slipState(slip: slip, balance: balance)
+        slipEngine.slipState(slip: slip, balance: balance)
     }
 
     public var cashOutOffer: CashOutOffer {
-        fightCore.cashOutOffer(slip: slip, settledBouts: [])
+        slipEngine.cashOutOffer(slip: slip, settledBouts: [])
     }
 
     public mutating func toggleSelection(boutID: String, fighterID: String, odds: Decimal) {
@@ -80,7 +81,7 @@ public struct SlipSession: Sendable {
     }
 
     public mutating func settleSlip() {
-        settlement = fightCore.settle(slip: slip)
+        settlement = slipEngine.settle(slip: slip)
     }
 
     public mutating func deposit(amount: Decimal) {
@@ -88,6 +89,6 @@ public struct SlipSession: Sendable {
     }
 
     private mutating func syncMode() {
-        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
+        slip.mode = SlipEngine.modeFor(selectionCount: slip.selections.count)
     }
 }

@@ -7,6 +7,8 @@
 //
 
 import FightCore
+import FightEvents
+import FightSlip
 import SwiftUI
 
 struct SlipTabView: View {
@@ -84,7 +86,7 @@ struct BetSlipView: View {
                 stakeChips
             }
             Section {
-                ForEach(Array(FightCoreDisplay.slipSummary(state: state.slipState).enumerated()), id: \.offset) { _, row in
+                ForEach(Array(SlipDisplay.slipSummary(state: state.slipState).enumerated()), id: \.offset) { _, row in
                     LabeledContent(row.label, value: row.value)
                 }
             }
@@ -131,12 +133,12 @@ struct BetSlipView: View {
         HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
             VStack(alignment: .leading) {
                 Text(state.fighter(selection.fighterID)?.name ?? selection.fighterID)
-                Text("vs \(opponentName(for: selection)) · \(eventName(for: selection))")
+                Text(state.legContext(boutID: selection.boutID, fighterID: selection.fighterID).subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text(FightCoreDisplay.formatOdds(selection.odds))
+            Text(Money.formatOdds(selection.odds))
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(DesignTokens.ColorToken.accent)
@@ -183,23 +185,4 @@ struct BetSlipView: View {
         .animation(.snappy(duration: 0.25), value: stakeFocused)
     }
 
-    private func opponentName(for selection: Selection) -> String {
-        guard case .loaded(let events) = state.eventsState else { return "—" }
-        for event in events {
-            if let bout = event.bouts.first(where: { $0.id == selection.boutID }) {
-                let opponentID = bout.redCorner.fighterId == selection.fighterID
-                    ? bout.blueCorner.fighterId : bout.redCorner.fighterId
-                return state.fighter(opponentID)?.name ?? opponentID
-            }
-        }
-        return "—"
-    }
-
-    private func eventName(for selection: Selection) -> String {
-        guard case .loaded(let events) = state.eventsState,
-              let event = events.first(where: { $0.bouts.contains { $0.id == selection.boutID } }) else {
-            return "—"
-        }
-        return event.name
-    }
 }

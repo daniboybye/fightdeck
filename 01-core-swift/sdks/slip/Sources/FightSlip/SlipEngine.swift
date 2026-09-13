@@ -1,39 +1,23 @@
 //
-// FightCore.swift
-// FightCore
+// SlipEngine.swift
+// FightSlip
 //
 // Created by FightDeck on 20.08.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
 import Foundation
 
-public struct BoutIndex: Sendable {
-    public let id: String
-    public let redFighterID: String
-    public let blueFighterID: String
-    public let winnerID: String
-
-    public init(id: String, redFighterID: String, blueFighterID: String, winnerID: String) {
-        self.id = id
-        self.redFighterID = redFighterID
-        self.blueFighterID = blueFighterID
-        self.winnerID = winnerID
-    }
-}
-
-public struct FightCore: Sendable {
-    public static let minStake = Decimal(string: "1.00")!
-    public static let maxStake = Decimal(string: "5000.00")!
-    public static let maxSelections = 12
-    public static let minAccaLegs = 2
-    public static let maxPayout = Decimal(string: "100000.00")!
-    public static let cashOutMargin = Decimal(string: "0.05")!
-
+public struct SlipEngine: Sendable {
     public let bouts: [String: BoutIndex]
 
     public init(bouts: [BoutIndex]) {
         self.bouts = Dictionary(uniqueKeysWithValues: bouts.map { ($0.id, $0) })
+    }
+
+    public static func modeFor(selectionCount: Int) -> BetMode {
+        selectionCount >= ContractLimits.minAccaLegs ? .accumulator : .single
     }
 
     public func combinedOddsExact(_ selections: [Selection]) -> Decimal {
@@ -59,18 +43,18 @@ public struct FightCore: Sendable {
         if slip.selections.isEmpty {
             found.insert(.emptySlip)
         }
-        if slip.stake < Self.minStake {
+        if slip.stake < ContractLimits.minStake {
             found.insert(.stakeBelowMinimum)
         }
-        if slip.stake > Self.maxStake {
+        if slip.stake > ContractLimits.maxStake {
             found.insert(.stakeAboveMaximum)
         }
-        if slip.selections.count > Self.maxSelections {
+        if slip.selections.count > ContractLimits.maxSelections {
             found.insert(.tooManySelections)
         }
         if slip.mode == .accumulator,
            !slip.selections.isEmpty,
-           slip.selections.count < Self.minAccaLegs {
+           slip.selections.count < ContractLimits.minAccaLegs {
             found.insert(.accumulatorNeedsTwoLegs)
         }
 
@@ -97,7 +81,7 @@ public struct FightCore: Sendable {
             if math.totalStake > balance {
                 found.insert(.insufficientBalance)
             }
-            if math.potentialReturn > Self.maxPayout {
+            if math.potentialReturn > ContractLimits.maxPayout {
                 found.insert(.payoutExceedsLimit)
             }
         } else if slip.stake > balance {
@@ -193,7 +177,7 @@ public struct FightCore: Sendable {
             }
         }
 
-        let amount = Money.money(fairValue * (1 - Self.cashOutMargin))
+        let amount = Money.money(fairValue * (1 - ContractLimits.cashOutMargin))
         return CashOutOffer(available: true, amount: amount, reason: nil)
     }
 

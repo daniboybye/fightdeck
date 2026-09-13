@@ -3,18 +3,23 @@ package com.fightdeck.swiftcore.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.fightdeck.fightevents.EventCatalogBridge
 import com.fightdeck.swiftcore.bridge.SharedPreferencesStore
 import com.fightdeck.swiftcore.bridge.SwiftCoreBridge
+import com.fightdeck.swiftcore.catalog.BoutCard
+import com.fightdeck.swiftcore.catalog.CardSectionCard
+import com.fightdeck.swiftcore.catalog.EventCard
+import com.fightdeck.swiftcore.catalog.FighterCard
+import com.fightdeck.swiftcore.catalog.boutCard
+import com.fightdeck.swiftcore.catalog.cardSections
+import com.fightdeck.swiftcore.catalog.fighterCard
+import com.fightdeck.swiftcore.catalog.loadEvents
 import com.fightdeck.swiftcore.core.BetSlip
 import com.fightdeck.swiftcore.core.BetMode
 import com.fightdeck.swiftcore.core.BoutIndex
 import com.fightdeck.swiftcore.core.Money
 import com.fightdeck.swiftcore.core.SlipState
 import com.fightdeck.swiftcore.core.SwiftSlipStore
-import com.fightdeck.swiftcore.data.Bout
-import com.fightdeck.swiftcore.data.Event
-import com.fightdeck.swiftcore.data.Fighter
-import com.fightdeck.swiftcore.data.boutIndex
 import com.fightdeck.swiftcore.data.JsonFileRepository
 import com.fightdeck.swiftcore.data.MediaItem
 import com.fightdeck.swiftcore.data.NewsItem
@@ -27,7 +32,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 
 sealed interface LoadState<out T> {
     data object Loading : LoadState<Nothing>
@@ -45,6 +49,7 @@ sealed interface BootstrapState {
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = SharedPreferencesStore(application)
     private var repository: JsonFileRepository? = null
+    private var catalog: EventCatalogBridge? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
         BootstrapState.Loading("Loading fight core…"),
@@ -60,11 +65,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         bootstrap()
     }
 
-    private val _events = MutableStateFlow<LoadState<List<Event>>>(LoadState.Loading)
-    val events: StateFlow<LoadState<List<Event>>> = _events.asStateFlow()
-
-    private val _fighters = MutableStateFlow<LoadState<List<Fighter>>>(LoadState.Loading)
-    val fighters: StateFlow<LoadState<List<Fighter>>> = _fighters.asStateFlow()
+    private val _events = MutableStateFlow<LoadState<List<EventCard>>>(LoadState.Loading)
+    val events: StateFlow<LoadState<List<EventCard>>> = _events.asStateFlow()
 
     private var slipStore: SwiftSlipStore? = null
 
@@ -107,11 +109,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             booted.fold(
                 onSuccess = { engine ->
                     repository = engine.repository
+                    catalog = engine.catalog
                     slipStore = SwiftSlipStore(engine.bouts)
                     publishSlipState()
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
-                    refreshFighters()
                     refreshNews()
                     refreshMedia()
                 },
@@ -126,36 +128,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private data class Engine(
         val repository: JsonFileRepository,
+        val catalog: EventCatalogBridge,
         val bouts: List<BoutIndex>,
     )
 
     private fun bootstrapEngine(application: Application): Engine {
         val root = DatasetLocator.datasetRoot(application)
         LocalAssetServer.start(root)
-        return Engine(JsonFileRepository(root), loadBoutIndex(root))
+        // jextract exposes Swift initialisers as a static `init`, which Kotlin reads as a
+        // keyword and needs escaped.
+        val catalog = EventCatalogBridge.`init`(
+            root.resolve("events.json").readText(),
+            root.resolve("fighters.json").readText(),
+        )
+        val bouts = catalog.boutIndexEntries.map {
+            BoutIndex(it.id, it.redFighterID, it.blueFighterID, it.winnerID)
+        }
+        return Engine(JsonFileRepository(root), catalog, bouts)
     }
 
     fun refreshEvents() {
-        viewModelScope.launch {
-            _events.value = LoadState.Loading
-            _events.value = runCatching { requireNotNull(repository).loadEvents() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load events") },
-                )
+        val events = runCatching { requireNotNull(catalog).loadEvents() }.getOrElse {
+            _events.value = LoadState.Error("Could not load events")
+            return
         }
+        _events.value = if (events.isEmpty()) LoadState.Empty else LoadState.Loaded(events)
     }
 
-    fun refreshFighters() {
-        viewModelScope.launch {
-            _fighters.value = LoadState.Loading
-            _fighters.value = runCatching { requireNotNull(repository).loadFighters() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load fighters") },
-                )
-        }
-    }
+    fun cardSections(eventID: String): List<CardSectionCard> =
+        requireNotNull(catalog).cardSections(eventID)
+
+    fun bout(boutID: String): BoutCard = requireNotNull(catalog).boutCard(boutID)
+
+    fun fighter(id: String): FighterCard? =
+        runCatching { requireNotNull(catalog).fighterCard(id) }.getOrNull()
+
+    fun taleOfTheTape(boutID: String) = requireNotNull(catalog).taleOfTheTape(boutID)
+
+    fun legContext(boutID: String, fighterID: String) =
+        requireNotNull(catalog).legContext(boutID, fighterID)
 
     fun refreshNews() {
         viewModelScope.launch {
@@ -181,8 +192,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun imageUrl(path: String): String? = repository?.imageUrl(path)
 
-    fun toggleSelection(bout: Bout, fighterId: String, odds: String) {
-        requireNotNull(slipStore).toggleSelection(bout.id, fighterId, Money.parse(odds))
+    fun toggleSelection(boutID: String, fighterId: String, odds: String) {
+        requireNotNull(slipStore).toggleSelection(boutID, fighterId, Money.parse(odds))
         publishSlipState()
         _betPlacedMessage.value = null
     }
@@ -209,15 +220,4 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         requireNotNull(slipStore).deposit(amount)
         publishSlipState()
     }
-
-    private fun loadBoutIndex(root: java.io.File): List<BoutIndex> {
-        val events = Json { ignoreUnknownKeys = true }
-            .decodeFromString<EventsEnvelope>(
-                root.resolve("events.json").readText(),
-            )
-        return boutIndex(events.events)
-    }
 }
-
-@kotlinx.serialization.Serializable
-private data class EventsEnvelope(val events: List<Event>)

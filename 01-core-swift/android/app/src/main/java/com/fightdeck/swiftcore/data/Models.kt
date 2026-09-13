@@ -2,74 +2,6 @@ package com.fightdeck.swiftcore.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.math.BigDecimal
-
-@Serializable
-data class Event(
-    val id: String,
-    val name: String,
-    val date: String,
-    val venue: String,
-    val city: String,
-    val bouts: List<Bout>,
-)
-
-@Serializable
-data class Bout(
-    val id: String,
-    val order: Int,
-    val segment: String,
-    val weightClass: String,
-    val titleFight: Boolean,
-    val scheduledRounds: Int,
-    val redCorner: Corner,
-    val blueCorner: Corner,
-    val result: BoutResult,
-)
-
-@Serializable
-data class Corner(
-    @SerialName("fighterId") val fighterId: String,
-    val name: String,
-    val closingOdds: OddsQuote,
-)
-
-@Serializable
-data class OddsQuote(val decimal: String, val fractional: String)
-
-@Serializable
-data class BoutResult(
-    @SerialName("winnerId") val winnerId: String,
-    val winnerName: String,
-    val method: String,
-    val detail: String,
-    val endRound: Int,
-    val endTime: String,
-)
-
-@Serializable
-data class Fighter(
-    val id: String,
-    val name: String,
-    val nickname: String? = null,
-    val country: String? = null,
-    val heightCm: Int? = null,
-    val reachIn: Int? = null,
-    val stance: String? = null,
-    val record: FighterRecord,
-    val portrait: String,
-) {
-    val recordDisplay: String get() = record.display
-}
-
-@Serializable
-data class FighterRecord(
-    val display: String,
-    val wins: Int = 0,
-    val losses: Int = 0,
-    val draws: Int = 0,
-    val noContests: Int = 0,
-)
 
 @Serializable
 data class NewsItem(
@@ -99,23 +31,14 @@ data class MediaItem(
     val note: String? = null,
 )
 
-interface FightRepository {
-    suspend fun loadEvents(): List<Event>
-    suspend fun loadFighters(): List<Fighter>
-}
-
 class JsonFileRepository(
     private val datasetRoot: java.io.File,
     private val json: kotlinx.serialization.json.Json = kotlinx.serialization.json.Json {
         ignoreUnknownKeys = true
     },
-) : FightRepository {
+) {
     suspend fun loadNews(): List<NewsItem> = load("news.json", "news")
     suspend fun loadMedia(): List<MediaItem> = load("media.json", "media")
-
-    override suspend fun loadEvents(): List<Event> = load("events.json", "events")
-
-    override suspend fun loadFighters(): List<Fighter> = load("fighters.json", "fighters")
 
     fun imageUrl(path: String): String? =
         if (com.fightdeck.swiftcore.services.LocalAssetServer.port > 0) {
@@ -136,14 +59,3 @@ class JsonFileRepository(
             JsonFileRepository(com.fightdeck.swiftcore.services.DatasetLocator.datasetRoot(context))
     }
 }
-
-/** The bout index the Swift core validates selections against, one entry per bout. */
-fun boutIndex(events: List<Event>): List<com.fightdeck.swiftcore.core.BoutIndex> =
-    events.flatMap { it.bouts }.map {
-        com.fightdeck.swiftcore.core.BoutIndex(
-            it.id,
-            it.redCorner.fighterId,
-            it.blueCorner.fighterId,
-            it.result.winnerId,
-        )
-    }

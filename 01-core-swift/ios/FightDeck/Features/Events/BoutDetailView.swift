@@ -7,6 +7,7 @@
 //
 
 import FightCore
+import FightEvents
 import SwiftUI
 
 struct BoutDetailView: View {
@@ -38,14 +39,14 @@ struct BoutDetailView: View {
                         Text(bout.result.winnerName)
                             .foregroundStyle(DesignTokens.ColorToken.positive)
                     }
-                    LabeledContent("Method", value: bout.result.method.displayMethod)
+                    LabeledContent("Method", value: Display.humanise(bout.result.method))
                     LabeledContent("Detail", value: bout.result.detail)
                     LabeledContent("Ended", value: "Round \(bout.result.endRound) · \(bout.result.endTime)")
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle(bout.weightClass.displayMethod)
+        .navigationTitle(Display.weightClass(bout.weightClass))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -118,21 +119,8 @@ struct BoutDetailView: View {
         .padding(.vertical, DesignTokens.Spacing.xs)
     }
 
-    private var tapeRows: [(label: String, red: String, blue: String)] {
-        let red = state.fighter(bout.redCorner.fighterId)
-        let blue = state.fighter(bout.blueCorner.fighterId)
-        return [
-            ("RECORD", red?.recordDisplay ?? "—", blue?.recordDisplay ?? "—"),
-            ("HEIGHT", format(red?.heightCm, unit: "cm"), format(blue?.heightCm, unit: "cm")),
-            ("REACH", format(red?.reachIn, unit: "in"), format(blue?.reachIn, unit: "in")),
-            ("STANCE", red?.stance?.localizedCapitalized ?? "—", blue?.stance?.localizedCapitalized ?? "—"),
-            ("COUNTRY", red?.country ?? "—", blue?.country ?? "—"),
-        ]
-    }
-
-    private func format(_ value: Int?, unit: String) -> String {
-        guard let value else { return "—" }
-        return "\(value) \(unit)"
+    private var tapeRows: [TapeRow] {
+        state.taleOfTheTape(for: bout.id)?.rows ?? []
     }
 
     /// An `HStack` rather than `LabeledContent`: an avatar plus two lines of text is enough to
@@ -147,13 +135,13 @@ struct BoutDetailView: View {
             )
             VStack(alignment: .leading) {
                 Text(corner.name)
-                Text("Implied \(FightCoreDisplay.formatImpliedProbability(Money.parse(corner.closingOdds.decimal)))")
+                Text("Implied \(Money.formatImpliedProbability(Money.parse(corner.closingOdds.decimal)))")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             OddsButton(
-                label: FightCoreDisplay.formatOdds(Money.parse(corner.closingOdds.decimal)),
+                label: Money.formatOdds(Money.parse(corner.closingOdds.decimal)),
                 fractional: corner.closingOdds.fractional,
                 isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
             ) {

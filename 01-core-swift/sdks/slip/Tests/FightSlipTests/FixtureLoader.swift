@@ -1,0 +1,33 @@
+//
+// FixtureLoader.swift
+// FightSlipTests
+//
+// Created by FightDeck on 20.08.26.
+// Copyright © 2026 Daniel Urumov. All rights reserved.
+//
+
+import Foundation
+
+enum FixtureLoader {
+    static func loadJSON(named name: String) throws -> Data {
+        let url = fixturesDirectory.appendingPathComponent("\(name).json")
+        return try Data(contentsOf: url)
+    }
+
+    static var fixturesDirectory: URL {
+        if let env = ProcessInfo.processInfo.environment["FIGHTDECK_FIXTURES_ROOT"],
+           !env.isEmpty {
+            return URL(fileURLWithPath: env, isDirectory: true)
+        }
+
+        let sourceFile = URL(fileURLWithPath: #filePath)
+        return sourceFile
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("contract/fixtures", isDirectory: true)
+    }
+}

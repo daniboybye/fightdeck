@@ -6,29 +6,20 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
-import FightCore
 import Foundation
 
-final class JSONFileRepository: FightRepository, @unchecked Sendable {
+final class JSONFileRepository: @unchecked Sendable {
     private let datasetRoot: URL
 
     init(datasetRoot: URL = DatasetLocator.datasetRoot()) {
         self.datasetRoot = datasetRoot
     }
 
-    func loadEvents() async throws(FightCoreError) -> [Event] {
-        try await load(file: "events.json", key: "events")
-    }
-
-    func loadFighters() async throws(FightCoreError) -> [Fighter] {
-        try await load(file: "fighters.json", key: "fighters")
-    }
-
-    func loadNews() async throws(FightCoreError) -> [NewsItem] {
+    func loadNews() async throws -> [NewsItem] {
         try await load(file: "news.json", key: "news")
     }
 
-    func loadMedia() async throws(FightCoreError) -> [MediaItem] {
+    func loadMedia() async throws -> [MediaItem] {
         try await load(file: "media.json", key: "media")
     }
 
@@ -37,33 +28,19 @@ final class JSONFileRepository: FightRepository, @unchecked Sendable {
         return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(relativePath)")
     }
 
-    private func load<T: Decodable & Sendable>(file: String, key: String) async throws(FightCoreError) -> [T] {
+    private func load<T: Decodable & Sendable>(file: String, key: String) async throws -> [T] {
         let url = datasetRoot.appendingPathComponent(file)
-        // Every caller is main-actor isolated, and an async function that never suspends runs
-        // on the caller's executor — so without this hop the read and decode block the UI.
-        // The Result round-trip keeps the typed throw a detached task cannot carry.
-        let outcome = await Task.detached(priority: .userInitiated) { () -> Result<[T], FightCoreError> in
-            let data: Data
-            do {
-                data = try Data(contentsOf: url)
-            } catch {
-                return .failure(FightCoreError.network(retryable: false))
+        return try await Task.detached(priority: .userInitiated) {
+            let data = try Data(contentsOf: url)
+            let wrapper = try JSONDecoder().decode([String: [T]].self, from: data)
+            guard let items = wrapper[key] else {
+                throw RepositoryError.decoding(field: key)
             }
-            do {
-                let wrapper = try JSONDecoder().decode([String: [T]].self, from: data)
-                guard let items = wrapper[key] else {
-                    return .failure(FightCoreError.decoding(field: key))
-                }
-                return .success(items)
-            } catch {
-                return .failure(FightCoreError.decoding(field: key))
-            }
-        }.value
-        switch outcome {
-        case .success(let items):
             return items
-        case .failure(let error):
-            throw error
-        }
+        }.value
     }
+}
+
+enum RepositoryError: Error, Sendable {
+    case decoding(field: String)
 }

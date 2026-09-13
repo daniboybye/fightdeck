@@ -9,6 +9,10 @@ options:
 packages:
   FightCore:
     path: ../sdks/core
+  FightSlip:
+    path: ../sdks/slip
+  FightEvents:
+    path: ../sdks/events
   Kingfisher:
     url: https://github.com/onevcat/Kingfisher.git
     revision: cf8be20d07654570554c8a8a4952bc8a5766a8b0 # 8.9.0
@@ -29,6 +33,8 @@ targets:
       - path: FightDeck
     dependencies:
       - package: FightCore
+      - package: FightSlip
+      - package: FightEvents
       - package: Kingfisher
     info:
       path: FightDeck/Info.plist
@@ -55,6 +61,8 @@ targets:
     dependencies:
       - target: FightDeck
       - package: FightCore
+      - package: FightSlip
+      - package: FightEvents
     resources:
       - path: ../../contract/fixtures
         type: folder

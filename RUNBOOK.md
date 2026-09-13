@@ -156,7 +156,13 @@ adb devices    # must show one device/emulator
 
 ## Install dataset on Android
 
-Apps read **`/data/local/tmp/fightdeck/dataset`** (see `DatasetLocator` in each Android app). Push from the repo root:
+Apps read **`/data/local/tmp/fightdeck/dataset`** (see `DatasetLocator` in each Android app).
+
+**Any debug build does this for you**, to every attached device, which is what makes pressing Run
+in Android Studio enough on a fresh emulator. The `pushDataset` task in each
+`android/app/build.gradle.kts` finalises the debug `assemble`/`package`/`install` tasks and stays
+quiet when no device is attached. Release builds do not, so push by hand before a release smoke
+test:
 
 ```bash
 adb shell rm -rf /data/local/tmp/fightdeck/dataset

@@ -27,11 +27,15 @@ struct BalanceToolbarModifier: ViewModifier {
                         .monospacedDigit()
                         .contentTransition(.numericText())
                         .padding(.horizontal, DesignTokens.Spacing.sm)
-                        .frame(minHeight: DesignTokens.Layout.minTapTarget)
                         .contentShape(.rect)
                 }
+                .frame(minHeight: DesignTokens.Layout.minTapTarget)
+                .glassEffect(.regular.interactive(), in: .capsule)
                 .accessibilityIdentifier("balance-menu")
             }
+            // Tabs own separate navigation bars, so switching tab rebuilds the bar's shared glass
+            // and every item in it blinks. Carrying our own glass keeps the balance still.
+            .sharedBackgroundVisibility(.hidden)
         }
     }
 }

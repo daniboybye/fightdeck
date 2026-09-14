@@ -1,34 +1,13 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
-let useLocal = Context.environment["FIGHTDECK_LOCAL_SDK"] == "1"
-let useReleasePath = Context.environment["FIGHTDECK_RELEASE_PATH"] == "1"
-let sdkVersion = "0.1.0"
-let releaseBase = Context.environment["FIGHTDECK_RELEASE_BASE_URL"]
-    ?? "https://github.com/fightdeck/fightdeck/releases/download/sdk-v\(sdkVersion)"
-// Belongs to the zip that release-sdk.yml publishes, and that workflow prints the value to
-// paste here. Local rebuilds produce a different sum because zip records timestamps, which is
-// why the development loop goes through FIGHTDECK_LOCAL_SDK rather than this path.
-let releaseChecksum = "59790ae786f9a3883f750ab04521ada04f38135b29674f701829aae705a7f462"
-
 // Only the Rust staticlib travels in the xcframework. The C header and the generated Swift
 // are written into Sources by build-xcframework.sh, because this repo regenerates bindings
 // rather than committing them.
-let rustLibrary: Target = useLocal
-    ? .binaryTarget(
-        name: "FightCoreRust",
-        path: "out/FightCore.xcframework"
-    )
-    : useReleasePath
-        ? .binaryTarget(
-            name: "FightCoreRust",
-            path: "out/FightCore.xcframework.zip"
-        )
-        : .binaryTarget(
-            name: "FightCoreRust",
-            url: "\(releaseBase)/FightCore.xcframework.zip",
-            checksum: releaseChecksum
-        )
+let rustLibrary: Target = .binaryTarget(
+    name: "FightCoreRust",
+    path: "out/FightCore.xcframework"
+)
 
 let package = Package(
     name: "FightCore",

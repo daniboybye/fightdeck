@@ -9,8 +9,8 @@ platform :ios, '26.0'
 prepare_react_native_project!
 
 $RN_APP_ROOT = File.expand_path('..', __dir__)
-$FIGHTDECK_USE_LOCAL_SDK = ENV['FIGHTDECK_LOCAL_SDK'] == '1'
-$FIGHTDECK_RELEASE_VENDOR = File.expand_path('../../tools/out/release/rn/ios-vendor', __dir__)
+$FIGHTDECK_BUILDING_SDK = ENV['FIGHTDECK_BUILDING_SDK'] == '1'
+$FIGHTDECK_VENDOR = '../sdks/out/ios-vendor'
 $FIGHTDECK_FEATURES = ENV.fetch('FIGHTDECK_FEATURES', 'all')
 
 # The demo app links all three features. The four harness targets exist only so
@@ -29,21 +29,16 @@ FIGHTDECK_TARGET_FEATURES = {
 }.freeze
 
 def fightdeck_feature_pods(features)
-  if $FIGHTDECK_USE_LOCAL_SDK
-    pod 'DepositSDK', :path => '../sdks/deposit/ios' if features.include?(:deposit)
-    pod 'BetslipSDK', :path => '../sdks/betslip/ios' if features.include?(:betslip)
-    pod 'FighterSDK', :path => '../sdks/fighter/ios' if features.include?(:fighter)
-  else
-    pod 'DepositSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:deposit)
-    pod 'BetslipSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:betslip)
-    pod 'FighterSDKVendor', :path => $FIGHTDECK_RELEASE_VENDOR if features.include?(:fighter)
-  end
+  root = $FIGHTDECK_BUILDING_SDK ? '../sdks' : $FIGHTDECK_VENDOR
+  pod 'DepositSDK', :path => ($FIGHTDECK_BUILDING_SDK ? "#{root}/deposit/ios" : root) if features.include?(:deposit)
+  pod 'BetslipSDK', :path => ($FIGHTDECK_BUILDING_SDK ? "#{root}/betslip/ios" : root) if features.include?(:betslip)
+  pod 'FighterSDK', :path => ($FIGHTDECK_BUILDING_SDK ? "#{root}/fighter/ios" : root) if features.include?(:fighter)
 end
 
 # React Native, Hermes and the runtime pod are shared by every target; only the feature pods
 # differ. use_react_native! has to be inside the abstract target so all four inherit it.
 abstract_target 'FightDeckHosts' do
-  if $FIGHTDECK_USE_LOCAL_SDK
+  if $FIGHTDECK_BUILDING_SDK
     config = use_native_modules!
 
     use_react_native!(
@@ -53,11 +48,11 @@ abstract_target 'FightDeckHosts' do
 
     pod 'FightDeckRNRuntime', :path => '../sdks/core/ios'
   else
-    unless File.directory?($FIGHTDECK_RELEASE_VENDOR)
-      raise "Pinned RN iOS vendor missing at #{$FIGHTDECK_RELEASE_VENDOR}. Run tools/release-sdk-local.sh rn"
+    unless File.directory?(File.expand_path($FIGHTDECK_VENDOR, __dir__))
+      raise "Local RN iOS binaries missing at #{$FIGHTDECK_VENDOR}. Run ./sdks/build-apple.sh"
     end
 
-    pod 'FightDeckRNVendor', :path => $FIGHTDECK_RELEASE_VENDOR
+    pod 'FightDeckRNRuntime', :path => $FIGHTDECK_VENDOR
   end
 
   FIGHTDECK_TARGET_FEATURES.each do |target_name, features|
@@ -67,7 +62,7 @@ abstract_target 'FightDeckHosts' do
   end
 
   post_install do |installer|
-    if $FIGHTDECK_USE_LOCAL_SDK
+    if $FIGHTDECK_BUILDING_SDK
       react_native_post_install(
         installer,
         config[:reactNativePath],

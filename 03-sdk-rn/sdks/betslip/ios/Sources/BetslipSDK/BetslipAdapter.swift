@@ -10,8 +10,8 @@ public final class BetslipAdapter: BetslipHosting {
 
     public func configure() {
         guard !configured else { return }
-        FightDeckRNRuntime.shared.configure()
-        FightDeckRNRuntime.shared.registerFeature("betslip", moduleName: "BetslipFeature")
+        FightDeckRuntime.shared.configure()
+        FightDeckRuntime.shared.registerFeature("betslip", moduleName: "BetslipFeature")
         configured = true
     }
 
@@ -21,7 +21,7 @@ public final class BetslipAdapter: BetslipHosting {
     ) -> UIViewController {
         configure()
         let properties: [String: Any] = Self.properties(from: params)
-        return FightDeckRNRuntime.shared.makeViewController(feature: "betslip", properties: properties) { payload in
+        return FightDeckRuntime.shared.makeViewController(feature: "betslip", properties: properties) { payload in
             let result = BetslipAdapter.mapResult(payload)
             Task { @MainActor in
                 onResult(result)
@@ -31,14 +31,14 @@ public final class BetslipAdapter: BetslipHosting {
 
     public func update(params: BetslipParams) {
         configure()
-        FightDeckRNRuntime.shared.updateProperties(
+        FightDeckRuntime.shared.updateProperties(
             feature: "betslip",
             properties: Self.properties(from: params)
         )
     }
 
     public func destroy() {
-        FightDeckRNRuntime.shared.destroyFeature("betslip")
+        FightDeckRuntime.shared.destroyFeature("betslip")
     }
 
     nonisolated private static func properties(from params: BetslipParams) -> [String: Any] {

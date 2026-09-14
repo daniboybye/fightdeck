@@ -34,11 +34,6 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
 
-    # No release has been published from this repository yet, so the UI-bearing SDKs are
-    # resolved from source. The pinned-artifact path is exercised by release-sdk.yml.
-    env:
-      FIGHTDECK_LOCAL_SDK: "1"
-
     steps:
       - uses: actions/checkout@v7
 
@@ -99,16 +94,17 @@ jobs:
           restore-keys: |
             cocoapods-${{ runner.os }}-
 
-      - name: Install Pods
+      - name: Build the RN binary SDKs
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '03-sdk-rn'
-        working-directory: 03-sdk-rn/ios
         run: |
           pod --version || sudo gem install cocoapods --no-document
-          pod install
+          ./03-sdk-rn/sdks/build-apple.sh
 
-      # 02-core-rust is the one host whose dependency is not a pinned release: its UniFFI
-      # bindings and xcframework are build output, so the core has to be packaged here
-      # before the app will compile. The other four resolve artifacts over HTTPS.
+      - name: Build the Skip binary SDKs
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
+        run: ./04-sdk-skip/sdks/build-apple.sh
+
+      # UniFFI bindings and xcframeworks are build output, so package them before the host.
       - name: Read pinned Rust toolchain
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'
         run: ./tools/versions.py rust.toolchain --github-env PINNED_RUST

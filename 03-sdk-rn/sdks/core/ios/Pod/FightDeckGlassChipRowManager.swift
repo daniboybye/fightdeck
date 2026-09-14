@@ -1,4 +1,4 @@
-import React
+@_implementationOnly import React
 
 final class FightDeckGlassChipRowContainer: UIView {
     @objc var values: [String] = [] {

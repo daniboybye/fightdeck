@@ -2,7 +2,7 @@
 # Export FightDeckBetslip as an Android AAR via skipstone / skip export.
 set -euo pipefail
 
-export FIGHTDECK_LOCAL_SDK=1
+export FIGHTDECK_BUILDING_SDK=1
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 OUT="$ROOT/out"
@@ -10,7 +10,7 @@ REPO_ROOT="$(cd "$ROOT/../../.." && pwd)"
 # shellcheck source=../skip-aar-publish.sh
 source "$ROOT/../skip-aar-publish.sh"
 
-CORE_AAR="${FIGHTDECK_CORE_AAR:-$REPO_ROOT/tools/out/release/skip/FightDeckCore-release.aar}"
+CORE_AAR="${FIGHTDECK_CORE_AAR:-$REPO_ROOT/04-sdk-skip/sdks/core/out/FightDeckCore-release.aar}"
 SKIPSTONE="$ROOT/.build/plugins/outputs/betslip/FightDeckBetslipBinary/destination/skipstone"
 BINARY_MODULE="FightDeckBetslipBinary"
 MAVEN_REPO="$REPO_ROOT/04-sdk-skip/sdks/out/maven"
@@ -19,7 +19,7 @@ mkdir -p "$OUT"
 rm -f "$OUT"/*.aar
 
 if [[ ! -f "$CORE_AAR" ]]; then
-    echo "error: FightDeckCore AAR not found at $CORE_AAR (build sdks/core first or use pinned release)" >&2
+    echo "error: FightDeckCore AAR not found at $CORE_AAR (build sdks/core first)" >&2
     exit 1
 fi
 

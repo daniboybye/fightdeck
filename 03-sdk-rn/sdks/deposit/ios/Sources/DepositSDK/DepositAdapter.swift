@@ -10,8 +10,8 @@ public final class DepositAdapter: DepositHosting {
 
     public func configure() {
         guard !configured else { return }
-        FightDeckRNRuntime.shared.configure()
-        FightDeckRNRuntime.shared.registerFeature("deposit", moduleName: "DepositFeature")
+        FightDeckRuntime.shared.configure()
+        FightDeckRuntime.shared.registerFeature("deposit", moduleName: "DepositFeature")
         configured = true
     }
 
@@ -21,7 +21,7 @@ public final class DepositAdapter: DepositHosting {
     ) -> UIViewController {
         configure()
         let properties: [String: Any] = Self.properties(from: params)
-        return FightDeckRNRuntime.shared.makeViewController(feature: "deposit", properties: properties) { payload in
+        return FightDeckRuntime.shared.makeViewController(feature: "deposit", properties: properties) { payload in
             let result = DepositAdapter.mapResult(payload)
             Task { @MainActor in
                 onResult(result)
@@ -31,7 +31,7 @@ public final class DepositAdapter: DepositHosting {
 
     public func update(params: DepositParams) {
         configure()
-        FightDeckRNRuntime.shared.updateProperties(
+        FightDeckRuntime.shared.updateProperties(
             feature: "deposit",
             properties: Self.properties(from: params)
         )

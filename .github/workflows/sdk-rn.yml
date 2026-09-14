@@ -1,186 +1,105 @@
-# Build the React Native SDKs: one shared runtime plus two feature modules.
-#
-# The split matters. `core` carries Hermes, React and the autolinking layer; `deposit`
-# and `betslip` carry only their own JS bundle and native shim. Packaging them separately
-# is the only way to answer "what does the second screen cost?" — with one fat artifact
-# the runtime and the feature are indistinguishable and the honest number is unobtainable.
+# Builds the local React Native binary SDKs in dependency order.
 
 name: SDK — React Native
 
 on:
-  # Three modules times two platforms is six jobs, three of them on macOS at ten times the
-  # Linux rate. When only one half is being debugged, dispatch only that half.
-  # workflow_call leaves the input unset, so the measure run still gets both.
   workflow_dispatch:
     inputs:
       job:
-        description: Which half to run
+        description: Which platform to build
         type: choice
         default: both
-        options:
-          - both
-          - apple
-          - android
+        options: [both, apple, android]
   workflow_call:
 
 jobs:
   apple:
-    name: XCFramework (${{ matrix.module }})
+    name: XCFrameworks
     if: inputs.job != 'android'
     runs-on: macos-26
     timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        module: [core, deposit, betslip, fighter]
     steps:
       - uses: actions/checkout@v7
 
-      - name: Guard
-        id: guard
-        run: |
-          if [[ -f 03-sdk-rn/sdks/${{ matrix.module }}/package.json ]]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::RN ${{ matrix.module }} not written yet"
-          fi
-
       - name: Read pinned versions
-        if: steps.guard.outputs.exists == 'true'
         run: |
           ./tools/versions.py react_native.node --github-env PINNED_NODE
           ./tools/versions.py apple.xcode --github-env PINNED_XCODE
 
-      # cache: npm points ~/.npm at a restored store, which is where nearly all of the
-      # install time goes — react-native and its transitive tree are the bulk of it.
       - uses: actions/setup-node@v7
-        if: steps.guard.outputs.exists == 'true'
         with:
           node-version: ${{ env.PINNED_NODE }}
           cache: npm
           cache-dependency-path: 03-sdk-rn/sdks/core/package-lock.json
 
-      # Only the download cache, never Pods/ itself: the pod set is generated per feature
-      # set, and a restored Pods/ from a different one is exactly the mismatch the Podfile
-      # is written to refuse.
       - uses: actions/cache@v6
-        if: steps.guard.outputs.exists == 'true'
         with:
           path: ~/Library/Caches/CocoaPods
           key: cocoapods-${{ runner.os }}-${{ hashFiles('03-sdk-rn/ios/Podfile.lock') }}
-          restore-keys: |
-            cocoapods-${{ runner.os }}-
+          restore-keys: cocoapods-${{ runner.os }}-
 
       - uses: ./.github/actions/swiftpm-cache
-        if: steps.guard.outputs.exists == 'true'
         with:
-          key: sdk-rn-${{ matrix.module }}
+          key: sdk-rn-apple
           build-path: |
-            03-sdk-rn/sdks/${{ matrix.module }}/.build
+            03-sdk-rn/sdks/core/.build
             03-sdk-rn/sdks/core/ios/BuildPackage/.build
+            03-sdk-rn/sdks/deposit/.build
+            03-sdk-rn/sdks/betslip/.build
+            03-sdk-rn/sdks/fighter/.build
 
       - name: Pin Xcode
-        if: steps.guard.outputs.exists == 'true'
         run: |
           sudo xcode-select -switch "/Applications/Xcode_${PINNED_XCODE}.app" 2>/dev/null \
             || echo "::warning::Xcode ${PINNED_XCODE} not found; using runner default"
 
-      # Only the runtime has a package.json worth installing: the feature modules are Swift
-      # shims over it and their JS ships inside the runtime bundle. The app-level
-      # node_modules is a checked-in symlink to this one, which is how the Podfile below
-      # resolves react-native.
-      - name: Install dependencies
-        if: steps.guard.outputs.exists == 'true' && matrix.module == 'core'
-        working-directory: 03-sdk-rn/sdks/core
-        run: npm ci
-
-      - name: Ensure CocoaPods
-        if: steps.guard.outputs.exists == 'true' && matrix.module == 'core'
-        run: pod --version || sudo gem install cocoapods --no-document
-
-      - name: Bundle JS and build XCFramework
-        if: steps.guard.outputs.exists == 'true'
-        working-directory: 03-sdk-rn/sdks/${{ matrix.module }}
+      - name: Build local binary SDKs
         run: |
-          # The JS bundle is compiled to Hermes bytecode and embedded in the framework as
-          # a resource. No over-the-air fetch: one thing to version, one thing to sign,
-          # and a size number that cannot quietly change after the measurement.
-          ./build-xcframework.sh
+          npm ci --prefix 03-sdk-rn/sdks/core
+          pod --version || sudo gem install cocoapods --no-document
+          ./03-sdk-rn/sdks/build-apple.sh
 
       - uses: actions/upload-artifact@v7
-        if: steps.guard.outputs.exists == 'true'
         with:
-          name: rn-${{ matrix.module }}-xcframework
-          path: 03-sdk-rn/sdks/${{ matrix.module }}/out/*.xcframework.zip
-          if-no-files-found: warn
+          name: rn-xcframeworks
+          path: 03-sdk-rn/sdks/*/out/*.xcframework.zip
+          if-no-files-found: error
 
   android:
-    name: AAR (${{ matrix.module }})
+    name: AARs
     if: inputs.job != 'apple'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        module: [core, deposit, betslip, fighter]
     steps:
       - uses: actions/checkout@v7
 
-      - name: Guard
-        id: guard
-        run: |
-          if [[ -f 03-sdk-rn/sdks/${{ matrix.module }}/package.json ]]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Read pinned versions
-        if: steps.guard.outputs.exists == 'true'
         run: |
           ./tools/versions.py react_native.node --github-env PINNED_NODE
           ./tools/versions.py android.jdk --github-env PINNED_JDK
 
       - uses: actions/setup-node@v7
-        if: steps.guard.outputs.exists == 'true'
         with:
           node-version: ${{ env.PINNED_NODE }}
           cache: npm
           cache-dependency-path: 03-sdk-rn/sdks/core/package-lock.json
 
       - uses: actions/setup-java@v5
-        if: steps.guard.outputs.exists == 'true'
         with:
           distribution: temurin
           java-version: ${{ env.PINNED_JDK }}
 
-      # All three modules assemble out of 03-sdk-rn/android, so one Gradle cache serves the
-      # whole matrix. It also ends the failure that took this workflow down on 4 Sep: the
-      # wrapper fetches a ~130 MB distribution from services.gradle.org with a 10 s timeout
-      # and, as its own log says, "Attempt 1/1" — one connection reset and the job is over.
-      # setup-gradle keeps the distribution and the module cache between runs, so the common
-      # path stops touching the network at all.
       - uses: gradle/actions/setup-gradle@v6
-        if: steps.guard.outputs.exists == 'true'
         with:
           build-root-directory: 03-sdk-rn/android
 
-      # Every module's Gradle build pulls the React Native Gradle plugin out of the app-level
-      # node_modules, so the runtime's install is a prerequisite even for a feature AAR.
-      - name: Install dependencies
-        if: steps.guard.outputs.exists == 'true'
-        working-directory: 03-sdk-rn/sdks/core
-        run: npm ci
-
-      - name: Build AAR
-        if: steps.guard.outputs.exists == 'true'
-        working-directory: 03-sdk-rn/sdks/${{ matrix.module }}
-        run: ./build-aar.sh
+      - name: Build local binary SDKs
+        run: |
+          npm ci --prefix 03-sdk-rn/sdks/core
+          ./03-sdk-rn/sdks/build-android.sh
 
       - uses: actions/upload-artifact@v7
-        if: steps.guard.outputs.exists == 'true'
         with:
-          name: rn-${{ matrix.module }}-aar
-          path: 03-sdk-rn/sdks/${{ matrix.module }}/out/*.aar
-          if-no-files-found: warn
+          name: rn-aars
+          path: 03-sdk-rn/sdks/*/out/*.aar
+          if-no-files-found: error

@@ -33,8 +33,6 @@ OUT_DIR="$REPO_ROOT/tools/out"
 mkdir -p "$OUT_DIR"
 cd "$REPO_ROOT"
 
-export FIGHTDECK_LOCAL_SDK=1
-
 PLATFORM="${FIGHTDECK_PLATFORM:-both}"
 case "$PLATFORM" in
     ios|android|both) ;;
@@ -66,6 +64,8 @@ stage_feature() {
 restore_rn() {
     echo "==> Restoring React Native host to the full feature set"
     FIGHTDECK_FEATURES=all ./03-sdk-rn/sdks/core/build-jsbundle.sh >/dev/null 2>&1 || true
+    cp 03-sdk-rn/sdks/core/ios/Resources/fightdeck.hbc \
+        03-sdk-rn/sdks/out/ios-vendor/runtime/Resources/fightdeck.hbc 2>/dev/null || true
     (cd 03-sdk-rn/ios && FIGHTDECK_FEATURES=all pod install >/dev/null 2>&1) || true
 }
 
@@ -89,6 +89,8 @@ measure_ios() {
     # its harness is archived.
     if [[ "$approach" == "03-sdk-rn" ]]; then
         FIGHTDECK_FEATURES="$stage" ./03-sdk-rn/sdks/core/build-jsbundle.sh >/dev/null
+        cp 03-sdk-rn/sdks/core/ios/Resources/fightdeck.hbc \
+            03-sdk-rn/sdks/out/ios-vendor/runtime/Resources/fightdeck.hbc
         (cd 03-sdk-rn/ios && FIGHTDECK_FEATURES="$stage" pod install >/dev/null)
     fi
 
@@ -96,6 +98,14 @@ measure_ios() {
 }
 
 for approach in "${APPROACHES[@]}"; do
+    if [[ "$approach" == "03-sdk-rn" ]]; then
+        [[ "$PLATFORM" == "android" ]] || ./03-sdk-rn/sdks/build-apple.sh
+        [[ "$PLATFORM" == "ios" ]] || ./03-sdk-rn/sdks/build-android.sh
+    elif [[ "$approach" == "04-sdk-skip" ]]; then
+        [[ "$PLATFORM" == "android" ]] || ./04-sdk-skip/sdks/build-apple.sh
+        [[ "$PLATFORM" == "ios" ]] || ./04-sdk-skip/sdks/build-aars.sh
+    fi
+
     if [[ "$approach" == "03-sdk-rn" && "$PLATFORM" != "android" ]]; then
         trap restore_rn EXIT
     fi

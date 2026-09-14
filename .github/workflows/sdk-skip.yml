@@ -1,4 +1,4 @@
-# Build the Skip SDKs: one shared core plus two feature modules.
+# Build the Skip SDKs: one shared core plus four focused modules.
 #
 # Same split as the React Native SDKs, and deliberately the same packaging, because a
 # size comparison between two technologies packaged differently is worthless.
@@ -31,11 +31,10 @@ jobs:
     if: inputs.job != 'android'
     runs-on: macos-26
     timeout-minutes: 45
-    # The manifests resolve a published .zip unless told otherwise, and the release this
-    # workflow feeds does not exist yet. The build scripts export this themselves; the
-    # bare `swift test` below would otherwise try to download a 404.
+    # SDK packaging and source tests need the source targets; normal host builds use the
+    # local xcframework binary targets.
     env:
-      FIGHTDECK_LOCAL_SDK: "1"
+      FIGHTDECK_BUILDING_SDK: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -86,7 +85,7 @@ jobs:
           path: 04-sdk-skip/sdks/${{ matrix.module }}/out/*.xcframework.zip
           if-no-files-found: warn
 
-  # One job for all three AARs, unlike the Apple side: the feature modules link against
+  # One job for all AARs, unlike the Apple side: the feature modules link against
   # core's AAR instead of re-transpiling it, so they cannot be built in parallel with it.
   android:
     name: AARs
@@ -97,7 +96,7 @@ jobs:
     # something to discover is broken the week of the talk.
     timeout-minutes: 75
     env:
-      FIGHTDECK_LOCAL_SDK: "1"
+      FIGHTDECK_BUILDING_SDK: "1"
     steps:
       - uses: actions/checkout@v7
 

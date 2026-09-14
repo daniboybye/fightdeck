@@ -2,7 +2,7 @@
 # Export FightDeckCore as an Android AAR via skipstone / skip export.
 set -euo pipefail
 
-export FIGHTDECK_LOCAL_SDK=1
+export FIGHTDECK_BUILDING_SDK=1
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 OUT="$ROOT/out"

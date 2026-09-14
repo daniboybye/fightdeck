@@ -76,6 +76,8 @@ struct BetslipSDKView: UIViewControllerRepresentable {
                     state.placeBetFromSDK(message: message, slipJSON: slipJSON, balanceString: balance)
                 case .cancelled:
                     break
+                @unknown default:
+                    break
                 }
             }
         }
@@ -189,6 +191,8 @@ struct DepositSDKView: UIViewControllerRepresentable {
                     state.deposit(amount: amount)
                     onDismiss()
                 case .cancelled, .failed:
+                    break
+                @unknown default:
                     break
                 }
             }

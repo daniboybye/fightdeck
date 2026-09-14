@@ -13,7 +13,8 @@ Pod::Spec.new do |s|
   s.source       = { git: 'https://github.com/fightdeck/fightdeck.git', tag: s.version.to_s }
 
   s.source_files = 'Pod/**/*.{h,m,mm,swift}'
-  s.public_header_files = 'Pod/**/*.h'
+  s.public_header_files = 'Pod/FightDeckRNHost.h'
+  s.private_header_files = 'Pod/FightDeckRuntimeBridge.h'
   s.resource_bundles = {
     'FightDeckRNRuntime' => ['Resources/*']
   }

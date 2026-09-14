@@ -60,9 +60,9 @@ final class SDKBootstrap {
         betslipHosting.configure()
         fighterHosting.configure()
         if !Self.shouldSkipRNPrewarm {
-            FightDeckRNRuntime.shared.prewarm()
+            FightDeckRuntime.shared.prewarm()
         }
-        let metrics = FightDeckRNRuntime.shared.startupMetrics()
+        let metrics = FightDeckRuntime.shared.startupMetrics()
         NSLog(
             "[FightDeckStartup] prewarm=%.0fms cold=%.0fms skipPrewarm=%@",
             metrics.prewarmedMilliseconds,

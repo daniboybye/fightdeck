@@ -9,7 +9,6 @@
 #   ./tools/ci-local.sh ios 03-sdk-rn
 #   ./tools/ci-local.sh android 04-sdk-skip
 #   ./tools/ci-local.sh measure
-#   ./tools/ci-local.sh release-sdk skip 0.1.0 --artifacts-dir /path/to/zips
 #   ./tools/ci-local.sh all
 #
 # By default the repo is copied into a fresh temp directory so stale AARs and dylibs cannot
@@ -23,7 +22,6 @@ set -euo pipefail
 SOURCE_REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IN_PLACE=0
 SKIP_TESTS=0
-ARTIFACTS_DIR=""
 TARGET=""
 TARGET_ARGS=()
 
@@ -38,7 +36,6 @@ usage: tools/ci-local.sh [options] <target> [args...]
 options:
   --in-place              Run in the current checkout instead of a pristine copy
   --skip-tests            Skip unit-test steps (ios, android, measure)
-  --artifacts-dir PATH    Pre-built zips/AARs for release-sdk (skips SDK rebuild)
 
 targets:
   contract                contract.yml (Swift + Rust + native baseline)
@@ -50,13 +47,11 @@ targets:
   android APPROACH        _android-app.yml for one approach
   measure                 measure.yml (all apps + contract + receipt render)
   measure-receipt         measure.yml receipt job only (needs tools/out/*.json)
-  release-sdk SDK [VER]   release-sdk.yml checksum/staging — SDK is rn or skip
   all                     Every target that can run on macOS
 
 examples:
   ./tools/ci-local.sh contract
   ./tools/ci-local.sh --in-place sdk-skip android
-  ./tools/ci-local.sh release-sdk skip 0.1.0 --artifacts-dir /tmp/fd-skip/04-sdk-skip/sdks
 EOF
 }
 
@@ -69,10 +64,6 @@ while [[ $# -gt 0 ]]; do
         --skip-tests)
             SKIP_TESTS=1
             shift
-            ;;
-        --artifacts-dir)
-            ARTIFACTS_DIR="${2:?--artifacts-dir requires a path}"
-            shift 2
             ;;
         -h | --help)
             usage
@@ -205,11 +196,6 @@ install_rn_deps() {
         nvm use "$node_version" 2>/dev/null || nvm install "$node_version"
     fi
     (cd 03-sdk-rn/sdks/core && npm ci)
-}
-
-install_rn_pods() {
-    pod --version >/dev/null 2>&1 || sudo gem install cocoapods --no-document
-    (cd 03-sdk-rn/ios && pod install)
 }
 
 ensure_cargo_ndk() {
@@ -371,46 +357,26 @@ run_sdk_core_rust() {
 
 # --- sdk-rn.yml -------------------------------------------------------------------
 
-run_sdk_rn_apple_module() {
-    local module="$1"
-    guard_file "03-sdk-rn/sdks/${module}/package.json" || return 0
-    if [[ "$module" == "core" ]]; then
-        install_rn_deps
-        pod --version >/dev/null 2>&1 || sudo gem install cocoapods --no-document
-    fi
-    (cd "03-sdk-rn/sdks/${module}" && ./build-xcframework.sh)
-}
-
 run_sdk_rn_apple() {
     pin_xcode
-    local module
-    for module in core deposit betslip; do
-        run_step "sdk-rn/apple/${module}" run_sdk_rn_apple_module "$module" || true
-    done
-}
-
-run_sdk_rn_android_module() {
-    local module="$1"
-    guard_file "03-sdk-rn/sdks/${module}/package.json" || return 0
     install_rn_deps
-    (cd "03-sdk-rn/sdks/${module}" && ./build-aar.sh)
+    pod --version >/dev/null 2>&1 || sudo gem install cocoapods --no-document
+    ./03-sdk-rn/sdks/build-apple.sh
 }
 
 run_sdk_rn_android() {
-    local module
-    for module in core deposit betslip; do
-        run_step "sdk-rn/android/${module}" run_sdk_rn_android_module "$module" || true
-    done
+    install_rn_deps
+    ./03-sdk-rn/sdks/build-android.sh
 }
 
 run_sdk_rn() {
     local part="${1:-all}"
     case "$part" in
-        apple) run_sdk_rn_apple ;;
-        android) run_sdk_rn_android ;;
+        apple) run_step "sdk-rn/apple" run_sdk_rn_apple || true ;;
+        android) run_step "sdk-rn/android" run_sdk_rn_android || true ;;
         all)
-            run_sdk_rn_apple
-            run_sdk_rn_android
+            run_step "sdk-rn/apple" run_sdk_rn_apple || true
+            run_step "sdk-rn/android" run_sdk_rn_android || true
             ;;
         *)
             echo "unknown sdk-rn part: $part" >&2
@@ -421,28 +387,14 @@ run_sdk_rn() {
 
 # --- sdk-skip.yml -----------------------------------------------------------------
 
-run_sdk_skip_apple_module() {
-    local module="$1"
-    guard_file "04-sdk-skip/sdks/${module}/Package.swift" || return 0
-    export FIGHTDECK_LOCAL_SDK=1
-    if [[ "$module" == "core" ]]; then
-        (cd 04-sdk-skip/sdks/core && swift test)
-    fi
-    (cd "04-sdk-skip/sdks/${module}" && ./build-xcframework.sh)
-}
-
 run_sdk_skip_apple() {
     pin_xcode
-    export FIGHTDECK_LOCAL_SDK=1
-    local module
-    for module in core deposit betslip; do
-        run_step "sdk-skip/apple/${module}" run_sdk_skip_apple_module "$module" || true
-    done
+    (cd 04-sdk-skip/sdks/core && FIGHTDECK_BUILDING_SDK=1 swift test)
+    ./04-sdk-skip/sdks/build-apple.sh
 }
 
 run_sdk_skip_android() {
     guard_file 04-sdk-skip/sdks/core/Package.swift || return 0
-    export FIGHTDECK_LOCAL_SDK=1
     local jdk
     jdk="$(./tools/versions.py android.jdk)"
     if [[ -z "${JAVA_HOME:-}" ]]; then
@@ -460,10 +412,10 @@ run_sdk_skip_android() {
 run_sdk_skip() {
     local part="${1:-all}"
     case "$part" in
-        apple) run_sdk_skip_apple ;;
+        apple) run_step "sdk-skip/apple" run_sdk_skip_apple || true ;;
         android) run_step "sdk-skip/android" run_sdk_skip_android || true ;;
         all)
-            run_sdk_skip_apple
+            run_step "sdk-skip/apple" run_sdk_skip_apple || true
             run_step "sdk-skip/android" run_sdk_skip_android || true
             ;;
         *)
@@ -486,12 +438,15 @@ run_ios_app() {
     }
 
     pin_xcode
-    export FIGHTDECK_LOCAL_SDK=1
     ensure_xcbeautify
 
     if [[ "$approach" == "03-sdk-rn" ]]; then
         install_rn_deps
-        install_rn_pods
+        ./03-sdk-rn/sdks/build-apple.sh
+    fi
+
+    if [[ "$approach" == "04-sdk-skip" ]]; then
+        ./04-sdk-skip/sdks/build-apple.sh
     fi
 
     if [[ "$approach" == "02-core-rust" ]]; then
@@ -550,7 +505,6 @@ run_android_app() {
         return 0
     }
 
-    export FIGHTDECK_LOCAL_SDK=1
     local jdk
     jdk="$(./tools/versions.py android.jdk)"
     if [[ -z "${JAVA_HOME:-}" ]]; then
@@ -570,6 +524,7 @@ run_android_app() {
 
     if [[ "$approach" == "03-sdk-rn" ]]; then
         install_rn_deps
+        ./03-sdk-rn/sdks/build-android.sh
     fi
 
     if [[ "$approach" == "04-sdk-skip" ]]; then
@@ -611,88 +566,6 @@ run_measure() {
     done
     run_contract
     run_step "measure/receipt" run_measure_receipt || true
-}
-
-# --- release-sdk.yml publish job --------------------------------------------------
-
-stage_release_artifacts() {
-    local sdk="$1"
-    local staging="$2"
-    rm -rf "$staging"
-    mkdir -p "$staging"
-
-    if [[ -n "$ARTIFACTS_DIR" ]]; then
-        echo "Staging from --artifacts-dir $ARTIFACTS_DIR"
-        find "$ARTIFACTS_DIR" -type f \( -name '*.xcframework.zip' -o -name '*.aar' \) -exec cp {} "$staging/" \;
-        return 0
-    fi
-
-    export FIGHTDECK_LOCAL_SDK=1
-    if [[ "$sdk" == "rn" ]]; then
-        run_sdk_rn all
-        find 03-sdk-rn/sdks -path '*/out/*.xcframework.zip' -exec cp {} "$staging/" \;
-        find 03-sdk-rn/sdks -path '*/out/*.aar' -exec cp {} "$staging/" \;
-    elif [[ "$sdk" == "skip" ]]; then
-        run_sdk_skip all
-        find 04-sdk-skip/sdks -path '*/out/*.xcframework.zip' -exec cp {} "$staging/" \;
-        find 04-sdk-skip/sdks -path '*/out/*.aar' -exec cp {} "$staging/" \;
-    fi
-}
-
-run_release_sdk_checksum() {
-    local sdk="${1:?release-sdk requires rn or skip}"
-    local version="${2:-0.1.0-local}"
-    local staging="$WORK_DIR/release-staging"
-
-    if [[ "$sdk" != "rn" && "$sdk" != "skip" ]]; then
-        echo "release-sdk SDK must be rn or skip, got: $sdk" >&2
-        return 1
-    fi
-
-    stage_release_artifacts "$sdk" "$staging"
-
-    echo "Artifacts staged for release:"
-    find "$staging" -type f \( -name '*.zip' -o -name '*.aar' \) -exec ls -lh {} \;
-
-    local zip_count
-    zip_count="$(find "$staging" -type f -name '*.xcframework.zip' | wc -l | tr -d ' ')"
-    if [[ "$zip_count" -eq 0 ]]; then
-        echo "error: no .xcframework.zip files in $staging" >&2
-        return 1
-    fi
-
-    local snippet_file="${TMPDIR:-/tmp}/fightdeck-snippet-$$.md"
-    local base="https://github.com/daniboybye/fightdeck/releases/download/sdk-v${version}"
-
-    {
-        echo "## Checksums for \`sdk-v${version}\`"
-        echo
-        echo "Paste straight into the SDK wrapper's \`Package.swift\`."
-        echo
-        echo '```swift'
-    } > "$snippet_file"
-
-    local zip name sum
-    while IFS= read -r zip; do
-        name="$(basename "$zip" .xcframework.zip)"
-        sum="$(swift package compute-checksum "$zip")"
-        {
-            echo ".binaryTarget(name: \"${name}\","
-            echo "              url: \"${base}/$(basename "$zip")\","
-            echo "              checksum: \"${sum}\"),"
-        } >> "$snippet_file"
-        echo "${name}: ${sum}"
-    done < <(find "$staging" -type f -name '*.xcframework.zip' | sort)
-
-    echo '```' >> "$snippet_file"
-    echo "Snippet written to $snippet_file"
-    cat "$snippet_file"
-}
-
-run_release_sdk() {
-    local sdk="${TARGET_ARGS[0]:?release-sdk requires rn or skip as the first argument}"
-    local version="${TARGET_ARGS[1]:-0.1.0-local}"
-    run_step "release-sdk/${sdk}" run_release_sdk_checksum "$sdk" "$version"
 }
 
 # --- all --------------------------------------------------------------------------
@@ -776,7 +649,6 @@ main() {
             ;;
         measure) run_measure ;;
         measure-receipt) run_step "measure-receipt" run_measure_receipt || exit_code=1 ;;
-        release-sdk) run_release_sdk || exit_code=1 ;;
         all) run_all ;;
         *)
             echo "unknown target: $TARGET" >&2

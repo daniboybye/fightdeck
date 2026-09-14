@@ -43,16 +43,12 @@ android/        — Compose host (Events native; Slip/Deposit/Fighter SDK seam)
 cd sdks/core
 FIGHTDECK_FIXTURES_ROOT=../../../contract/fixtures swift test
 
-# 2. SDK artifacts — core first: the others compile against its AAR
-cd sdks && ./build-aars.sh          # or, per module:
-cd sdks/core    && ./build-xcframework.sh && ./build-aar.sh
-cd sdks/events  && ./build-xcframework.sh && ./build-aar.sh
-cd sdks/deposit && ./build-xcframework.sh && ./build-aar.sh
-cd sdks/betslip && ./build-xcframework.sh && ./build-aar.sh
-cd sdks/fighter && ./build-xcframework.sh && ./build-aar.sh
+# 2. Local binary SDK artifacts
+cd sdks
+./build-apple.sh
+./build-aars.sh
 
-# 3. iOS host (local SDK sources)
-export FIGHTDECK_LOCAL_SDK=1
+# 3. iOS host
 cd ios
 xcodegen generate   # FightDeck.xcodeproj committed after first generate
 xcodebuild build -scheme FightDeck \
@@ -64,20 +60,9 @@ xcodebuild build -scheme FightDeck \
 cd android && ./gradlew :app:assembleDebug
 ```
 
-Fresh clones without `FIGHTDECK_LOCAL_SDK=1` resolve pinned release artifacts (checksums in `Package.swift`, filled by `tools/release-sdk-local.sh`).
-
-## Binary distribution
-
-Same packaging shape as `03-sdk-rn` — six scripts, six artifacts, checksum manifest.
-
-```bash
-./tools/release-sdk-local.sh skip
-
-export FIGHTDECK_LOCAL_SDK=1          # local source + skipstone
-./gradlew :app:assembleDebug -PfightdeckLocalSdk=false   # pinned Android AARs
-unset FIGHTDECK_LOCAL_SDK
-export FIGHTDECK_RELEASE_PATH=1       # pinned iOS xcframework zips (see SPM note below)
-```
+The package manifests expose source targets only while an SDK build script runs with
+`FIGHTDECK_BUILDING_SDK=1`. Normal host builds always resolve the local xcframeworks and
+the local Maven repository; there is no source/remote consumption switch.
 
 ## Artifact sizes (real binaries — measured 20 Aug 2026)
 
@@ -91,7 +76,7 @@ export FIGHTDECK_RELEASE_PATH=1       # pinned iOS xcframework zips (see SPM not
 
 **Second-feature zip delta:** **+18 KB** (2,271,963 − 2,253,282 B).
 
-### Android — `.aar` (deduped set under `tools/out/release/skip/`, re-measured 12 Sep 2026 on Skip 1.9.8)
+### Android — `.aar` (deduped local Maven set, re-measured 12 Sep 2026 on Skip 1.9.8)
 
 | Stack | Total |
 | --- | --- |
@@ -195,7 +180,9 @@ Install: `brew install skiptools/skip/skip`
 1. **Skip Lite Swift subset** — `#if SKIP` workarounds throughout core (`Money`, `OddsEngine`, `FightCoreDisplay`) and UI (`ThemeColor.fromHex` string filtering, `Typography`, no `Color` extensions, `Money.parse` instead of decimal literals, string stake binding). Not all SwiftUI sugar transpiles.
 2. **Transpilation fixes applied (20 Aug 2026)** — `ThemeTokens`/`BetslipTheme` hex parsing (`filtered += String(character)` not `append(Char)`); `BetSlipStore`/`DepositFlowView`/`BetSlipRootView` use `Money.parse` not float-derived `Decimal` literals or int fallbacks.
 3. **Xcode + skipstone** — Host build needs `-skipPackagePluginValidation` until the Skip plugin is trusted in Xcode 26.
-4. **SPM pinned iOS** — Dynamic-library xcframework modules (`FightDeckCore`) collide with the umbrella product name when consumed via SPM path binaries; pinned iOS is verified with `FIGHTDECK_LOCAL_SDK=1` (source) or after GitHub HTTPS release. Android pinned + checksum manifest verification is fully wired.
+4. **SPM local binary iOS** — SDK build scripts use dynamic source products to create the
+   xcframeworks; normal host builds consume those local binary targets through the umbrella
+   packages.
 5. **Android Maven consumption** — `./sdks/{core,events,deposit,betslip,fighter}/build-aar.sh` publishes to `sdks/out/maven` with transitive POM metadata (`kotlin-reflect`, `commonmark`, Compose Material via SkipUI). Hosts point at that repo in `android/settings.gradle.kts`; do not re-declare those runtime deps. Verify with `sdks/consumer-verify/android` (`../../android/gradlew :app:assembleAllDebug` after building fighter AARs).
 6. **`skip checkup` Kotlin test** — Robolectric / compileSdk 37 mismatch in Skip hello-world harness (environment issue, not FightDeck-specific).
 7. **Division does not transpile the way you would assume** — Kotlin lowers `BigDecimal /` to
@@ -247,6 +234,27 @@ Install: `brew install skiptools/skip/skip`
     went wrong* on the events screen, and logs nothing at all — the decode failure arrives as
     a caught error, not a crash. The shrinker is the one place where sharing more source costs
     real bytes rather than saving them.
+13. **Chrome is not shared until something hosts it** — `DepositFlowView` declares a
+    `navigationTitle` and a toolbar with a Close button. On iOS the host sheet wraps it in a
+    `NavigationStack`, so both appear; on Android `DepositComposeEntry` handed the view
+    straight to a Compose bottom sheet, and a toolbar with no bar to live in renders nothing
+    at all — no title, no way out but the system back gesture. The entry point now carries its
+    own `NavigationStack`, which is one line of shared code instead of a Compose top bar per
+    host. Two follow-ons surfaced immediately: `navigationBarTitleDisplayMode(.inline)`
+    silently suppresses the title on Android (it is `#if !SKIP` now, so Android gets the large
+    one), and a `ToolbarItemGroup(placement: .keyboard)` — written for a keyboard accessory —
+    was rendered as a sliver clipped to the trailing edge of the navigation bar, because
+    SkipUI has nowhere to put keyboard placement.
+14. **The Android app links AARs, not sources** — `android/app/build.gradle.kts` consumes
+    `fightdeck.skip:FightDeck*Binary` from `sdks/out/maven`, so editing Swift and pressing Run
+    builds and installs happily while shipping the previous transpile. The deposit screen ran
+    two days behind its source this way. `./sdks/<module>/build-aar.sh` is not optional after
+    touching an SDK, and `.build/plugins/outputs/**/skipstone/**/*.kt` is where to check what
+    Android is actually getting.
+15. **SF Symbols leak into accessibility** — `Button("Close", systemImage: "xmark")` announces
+    as *xmark* on Android, because SkipUI uses the symbol name as the content description
+    instead of the button's label. Symbols it cannot map at all (the radio circles in the
+    deposit method rows) draw as a warning triangle described as *missing icon*.
 
 ## Architecture
 

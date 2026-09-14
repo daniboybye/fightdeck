@@ -54,30 +54,22 @@ xcodebuild archive -workspace ios/FightDeck.xcworkspace -scheme FightDeck \
 ./scripts/measure-artifacts.sh /tmp/fightdeck-rn.xcarchive
 ```
 
-## Binary distribution
+## Local binary SDKs
 
-SDKs ship as checksum-pinned `.xcframework.zip` / `.aar` artifacts. Local development uses source; release consumption uses pinned binaries.
+Hosts always consume artifacts built under `sdks/*/out`; there is no source/remote switch.
 
 ```bash
-# Build + stage all artifacts, write manifest, print Package.swift snippets
-./tools/release-sdk-local.sh rn    # or: skip
-
-# Local development (source adapters + toolchain deps)
-export FIGHTDECK_LOCAL_SDK=1
-
-# Pinned Android (AARs under tools/out/release/<approach>/)
-./gradlew :app:assembleDebug -PfightdeckLocalSdk=false
-
-# Pinned iOS — RN uses CocoaPods vendor pods; Skip uses SPM with FIGHTDECK_RELEASE_PATH=1
-unset FIGHTDECK_LOCAL_SDK
-export FIGHTDECK_RELEASE_PATH=1   # resolves tools/out/release/<approach>/*.xcframework.zip
+cd 03-sdk-rn
+npm ci --prefix sdks/core
+./sdks/build-apple.sh
+./sdks/build-android.sh
 ```
-
-SPM `binaryTarget` URLs require **HTTPS** (GitHub Releases in production). `file://` and `http://localhost` are rejected by SwiftPM; checksum verification is proven via manifest + `swift package compute-checksum`, and SPM checksum rejection via a deliberate mismatch against a public HTTPS artifact.
 
 ### iOS distribution zip layout (RN core)
 
-`FightDeckRNRuntime.xcframework.zip` contains the adapter xcframework **plus** bundled RN/Hermes frameworks and `Resources/fightdeck.hbc`. See `LAYOUT.txt` inside the zip. CocoaPods vendor pods under `tools/out/release/rn/ios-vendor/` link everything for pinned iOS hosts.
+`FightDeckRNRuntime.xcframework.zip` contains the adapter xcframework **plus** bundled
+RN/Hermes frameworks and `Resources/fightdeck.hbc`. The local CocoaPods vendor wrappers
+under `sdks/out/ios-vendor/` link everything into the iOS host.
 
 ## Artifact sizes (real binaries — measured 20 Aug 2026)
 
@@ -158,14 +150,17 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 
 ## Honest seams
 
-1. **iOS pinned host (RN)** — Vendor CocoaPods from `tools/out/release/rn/ios-vendor/` link bundled RN xcframeworks. SPM binary targets resolve the adapter module from the zip; full runtime linking uses the vendor pod layout documented in `LAYOUT.txt`.
-2. **Android pinned host (RN)** — SDK adapter AARs are pinned from release; `react-android` / `hermes-android` still resolve from Maven to avoid duplicate-class conflicts with the RN Gradle plugin. Full self-contained AARs (161 MB + 77.5 MB) ship in `sdks/core/out/` for foreign hosts.
-3. **SPM URL scheme** — Production checksum pins require HTTPS (GitHub Releases). Local bootstrap uses `FIGHTDECK_RELEASE_PATH=1` (path binary) plus manifest checksum verification.
-4. **Fabric badge + Turbo `PreferencesStore`** — TypeScript specs and native stub files exist; codegen + ObjC++ Fabric wrapper not linked.
-5. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
-6. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
-7. **iOS feature gating is a build-time concern only** — Which pods a target links is fixed by target name in the `Podfile`, so the demo app needs no conditional compilation and the four `ios/Harness/` measurement hosts each compile against exactly the SDKs they import. `FIGHTDECK_FEATURES` survives for one job the target name cannot do: picking the JS bundle's entry point when the SDK is built. Nothing ties the bundle to the host, so the `Podfile` compares the value against the `ios/.fightdeck-features` stamp and refuses a mismatch rather than producing an app whose size means nothing.
-8. **Android Fabric layout specs** — `FabricLayoutSpecsBridge` reflects `ReactSurfaceImpl.updateLayoutSpecs$ReactAndroid` because bridgeless RN 0.87 exposes no public pre-start layout API. Coupled to the pinned `react_native.version` in `versions.lock.toml`; upgrade RN only after re-verifying this seam.
+1. **iOS binary host (RN)** — local CocoaPods vendor wrappers link the generated adapter,
+   React and Hermes xcframeworks.
+2. **Android binary host (RN)** — SDK adapter AARs come from `sdks/*/out`;
+   `react-android` / `hermes-android` still resolve from Maven to avoid duplicate classes.
+3. **Fabric badge + Turbo `PreferencesStore`** — TypeScript specs and native stub files exist; codegen + ObjC++ Fabric wrapper not linked.
+4. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
+5. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
+6. **iOS feature gating is a build-time concern only** — Which pods a target links is fixed by target name in the `Podfile`, so the demo app needs no conditional compilation and the four `ios/Harness/` measurement hosts each compile against exactly the SDKs they import. `FIGHTDECK_FEATURES` survives for one job the target name cannot do: picking the JS bundle's entry point when the SDK is built. Nothing ties the bundle to the host, so the `Podfile` compares the value against the `ios/.fightdeck-features` stamp and refuses a mismatch rather than producing an app whose size means nothing.
+7. **Android Fabric layout specs** — `FabricLayoutSpecsBridge` reflects `ReactSurfaceImpl.updateLayoutSpecs$ReactAndroid` because bridgeless RN 0.87 exposes no public pre-start layout API. Coupled to the pinned `react_native.version` in `versions.lock.toml`; upgrade RN only after re-verifying this seam.
+8. **A native fast path hides the shared code behind it** — `GlassPresetChipRow` renders a real UIKit view on iOS and a JS fallback everywhere else. The fallback row never claimed a width, so its `flex: 1` chips measured zero and the deposit screen's €10/€25/€50/€100 row arrived on Android as four hairlines — while iOS, going through the native component, looked perfect. Shared code is only as tested as its least-exercised branch, and a per-platform shortcut is exactly where that branch hides.
+9. **The host owns the chrome, per platform** — the React screen draws the deposit form and nothing around it, so the title and the Close button are written twice: a `NavigationStack` toolbar on iOS, a `TopAppBar` in the Compose sheet on Android. The RN side reports `confirmed` so both hosts can drop the close affordance once the money has moved. Compare with `04-sdk-skip`, where the same two controls are declared once in Swift.
 
 ## Architecture sketch
 

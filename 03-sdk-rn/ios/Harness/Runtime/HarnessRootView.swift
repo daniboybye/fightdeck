@@ -18,8 +18,8 @@ struct HarnessRootView: View {
     var body: some View {
         Text(summary)
             .task {
-                FightDeckRNRuntime.shared.prewarm()
-                let metrics = FightDeckRNRuntime.shared.startupMetrics()
+                FightDeckRuntime.shared.prewarm()
+                let metrics = FightDeckRuntime.shared.startupMetrics()
                 summary = "prewarm \(Int(metrics.prewarmedMilliseconds))ms"
             }
     }

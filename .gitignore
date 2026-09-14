@@ -18,8 +18,7 @@ xcuserdata/
 .swiftpm/
 Package.resolved.local
 
-# Locally built binary artifacts consumed when FIGHTDECK_LOCAL_SDK=1.
-# The committed Package.swift points at pinned GitHub Releases; these are the dev-loop copies.
+# Locally built binary SDK artifacts consumed by the host apps.
 artifacts/
 *.xcframework/
 *.xcframework.zip

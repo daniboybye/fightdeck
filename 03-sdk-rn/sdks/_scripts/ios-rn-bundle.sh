@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Bundle React Native + Hermes iOS xcframeworks and Hermes bytecode into a distribution zip.
-# The zip root contains the SDK xcframework (for SPM checksum targets) plus sibling folders
-# documented in LAYOUT.txt that CocoaPods / Xcode must link explicitly.
+# The zip root contains the local SDK xcframework plus sibling folders documented in
+# LAYOUT.txt that CocoaPods / Xcode must link explicitly.
 set -euo pipefail
 
 bundle_rn_ios_distribution() {

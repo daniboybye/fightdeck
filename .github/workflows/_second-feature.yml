@@ -32,10 +32,7 @@ jobs:
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 120
 
-    # No release has been published from this repository yet, so the UI-bearing SDKs are
-    # resolved from source. The pinned-artifact path is exercised by release-sdk.yml.
     env:
-      FIGHTDECK_LOCAL_SDK: "1"
       FIGHTDECK_PLATFORM: ${{ inputs.platform }}
 
     steps:

@@ -178,36 +178,23 @@ schemes:
     run:
       environmentVariables:
         FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
-        FIGHTDECK_LOCAL_SDK: "1"
 
   FightDeckHarnessRuntime:
     build:
       targets:
         FightDeckHarnessRuntime: all
-    run:
-      environmentVariables:
-        FIGHTDECK_LOCAL_SDK: "1"
 
   FightDeckHarnessDeposit:
     build:
       targets:
         FightDeckHarnessDeposit: all
-    run:
-      environmentVariables:
-        FIGHTDECK_LOCAL_SDK: "1"
 
   FightDeckHarnessBoth:
     build:
       targets:
         FightDeckHarnessBoth: all
-    run:
-      environmentVariables:
-        FIGHTDECK_LOCAL_SDK: "1"
 
   FightDeckHarnessAll:
     build:
       targets:
         FightDeckHarnessAll: all
-    run:
-      environmentVariables:
-        FIGHTDECK_LOCAL_SDK: "1"

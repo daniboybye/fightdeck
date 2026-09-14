@@ -10,8 +10,8 @@ public final class FighterAdapter: FighterHosting {
 
     public func configure() {
         guard !configured else { return }
-        FightDeckRNRuntime.shared.configure()
-        FightDeckRNRuntime.shared.registerFeature("fighter", moduleName: "FighterFeature")
+        FightDeckRuntime.shared.configure()
+        FightDeckRuntime.shared.registerFeature("fighter", moduleName: "FighterFeature")
         configured = true
     }
 
@@ -21,7 +21,7 @@ public final class FighterAdapter: FighterHosting {
     ) -> UIViewController {
         configure()
         let properties: [String: Any] = Self.properties(from: params)
-        return FightDeckRNRuntime.shared.makeViewController(feature: "fighter", properties: properties) { payload in
+        return FightDeckRuntime.shared.makeViewController(feature: "fighter", properties: properties) { payload in
             let result = FighterAdapter.mapResult(payload)
             Task { @MainActor in
                 onResult(result)
@@ -31,14 +31,14 @@ public final class FighterAdapter: FighterHosting {
 
     public func update(params: FighterParams) {
         configure()
-        FightDeckRNRuntime.shared.updateProperties(
+        FightDeckRuntime.shared.updateProperties(
             feature: "fighter",
             properties: Self.properties(from: params)
         )
     }
 
     public func destroy() {
-        FightDeckRNRuntime.shared.destroyFeature("fighter")
+        FightDeckRuntime.shared.destroyFeature("fighter")
     }
 
     nonisolated private static func properties(from params: FighterParams) -> [String: Any] {

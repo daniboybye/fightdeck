@@ -95,4 +95,3 @@ schemes:
     run:
       environmentVariables:
         FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset
-        FIGHTDECK_LOCAL_SDK: "1"

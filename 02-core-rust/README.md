@@ -29,22 +29,14 @@ sdks/
 
 ## How the SDKs are delivered
 
-Each SDK is its own SwiftPM package with its own binary target, resolved over HTTPS against a
-pinned SHA-256, the same shape `03-sdk-rn` and `04-sdk-skip` use:
-
-| Env | Binary target resolves to |
-| --- | --- |
-| `FIGHTDECK_LOCAL_SDK=1` | `out/FightCore.xcframework` from a local build |
-| `FIGHTDECK_RELEASE_PATH=1` | `out/FightCore.xcframework.zip`, pinned but offline |
-| neither | `$FIGHTDECK_RELEASE_BASE_URL/FightCore.xcframework.zip` + checksum |
-
-`FightSlip` and `FightEvents` read the same three variables; each package's `Package.swift`
-resolves its own artifact.
+Each SDK is its own SwiftPM package with one local binary target. `build-apple.sh` creates
+the three xcframeworks under `{core,slip,events}/out/`; the host package manifests always
+resolve those paths.
 
 The xcframework carries the Rust staticlib and nothing else. UniFFI's C header goes into a
 C target and the generated Swift into a Swift target, both inside the package, so the host
 gets a plain `import FightCore` with no header search paths or module-map flags. Publishing
-runs through `release-sdk.yml` (`sdk: rust`) or `tools/release-sdk-local.sh rust`.
+and remote checksum resolution are deliberately out of scope for this demo repository.
 
 Android publishes one `fightdeck.aar`. Its `libfightdeck.so` contains the three namespaces,
 and `uniffi-bindgen --library` still emits separate `fightcore`, `fightslip`, and
@@ -114,6 +106,11 @@ What is left in those files is the part UniFFI genuinely cannot generate: a list
 | **Total** | **2435** | **4325** | **6068** |
 
 The generated columns are not maintained by anyone, but they are real compile time and real binary, and they scale per namespace rather than per line of logic — a third SDK costs another full scaffolding preamble.
+
+Each component has its own `uniffi.toml`. `generate_immutable_records = true` applies to
+every UniFFI `Record` in that component: Swift receives `let` fields and Kotlin receives
+`val` fields. It is a per-component and per-target-language setting, not a per-file or
+per-struct annotation; individual exceptions can be listed under `mutable_records`.
 
 ## What UniFFI does **not** give you for free
 

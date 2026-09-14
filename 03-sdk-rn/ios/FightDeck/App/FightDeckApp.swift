@@ -18,12 +18,12 @@ struct FightDeckApp: App {
             RootView()
                 .preferredColorScheme(.dark)
         }
-        .onChange(of: scenePhase) { _, phase in
-            switch phase {
+        .onChange(of: scenePhase) {
+            switch scenePhase {
             case .active:
-                FightDeckRNRuntime.shared.onHostResume()
+                FightDeckRuntime.shared.onHostResume()
             case .inactive, .background:
-                FightDeckRNRuntime.shared.onHostPause()
+                FightDeckRuntime.shared.onHostPause()
             @unknown default:
                 break
             }

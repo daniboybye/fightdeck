@@ -5,11 +5,6 @@ plugins {
     id("com.facebook.react")
 }
 
-val fightdeckLocalSdk =
-    (project.findProperty("fightdeckLocalSdk") as String?)?.toBoolean()
-        ?: (System.getenv("FIGHTDECK_LOCAL_SDK") == "1")
-
-val releaseAarDir = rootProject.file("../../tools/out/release/rn")
 val rnEntryRoot = rootProject.file("../sdks/core/src/runtime")
 val rnActiveEntry = rnEntryRoot.resolve("index.active.js")
 
@@ -131,10 +126,11 @@ tasks.named("preBuild") {
 }
 
 dependencies {
-    val rnRuntime = if (fightdeckLocalSdk) project(":fightdeck-rn-runtime") else files(releaseAarDir.resolve("FightDeckRNRuntime.aar"))
-    val depositSdk = if (fightdeckLocalSdk) project(":deposit-sdk") else files(releaseAarDir.resolve("DepositSDK.aar"))
-    val betslipSdk = if (fightdeckLocalSdk) project(":betslip-sdk") else files(releaseAarDir.resolve("BetslipSDK.aar"))
-    val fighterSdk = if (fightdeckLocalSdk) project(":fighter-sdk") else files(releaseAarDir.resolve("FighterSDK.aar"))
+    val sdkRoot = rootProject.file("../sdks")
+    val rnRuntime = files(sdkRoot.resolve("core/out/FightDeckRNRuntime.aar"))
+    val depositSdk = files(sdkRoot.resolve("deposit/out/DepositSDK.aar"))
+    val betslipSdk = files(sdkRoot.resolve("betslip/out/BetslipSDK.aar"))
+    val fighterSdk = files(sdkRoot.resolve("fighter/out/FighterSDK.aar"))
 
     listOf("runtime", "deposit", "both", "all").forEach { flavor ->
         "${flavor}Implementation"(rnRuntime)
@@ -147,16 +143,9 @@ dependencies {
     }
     "allImplementation"(fighterSdk)
 
-    if (fightdeckLocalSdk) {
-        listOf("runtime", "deposit", "both", "all").forEach { flavor ->
-            "${flavor}Implementation"("com.facebook.react:react-android")
-            "${flavor}Implementation"("com.facebook.react:hermes-android")
-        }
-    } else {
-        listOf("runtime", "deposit", "both", "all").forEach { flavor ->
-            "${flavor}Implementation"("com.facebook.react:react-android")
-            "${flavor}Implementation"("com.facebook.react:hermes-android")
-        }
+    listOf("runtime", "deposit", "both", "all").forEach { flavor ->
+        "${flavor}Implementation"("com.facebook.react:react-android")
+        "${flavor}Implementation"("com.facebook.react:hermes-android")
     }
 
     val composeBom = platform("androidx.compose:compose-bom:2026.08.00")

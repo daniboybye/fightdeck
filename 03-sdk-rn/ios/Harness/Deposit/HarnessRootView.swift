@@ -19,7 +19,7 @@ struct HarnessRootView: View {
         HarnessSurface { onResult in
             let hosting: DepositHosting = DepositAdapter()
             hosting.configure()
-            FightDeckRNRuntime.shared.prewarm()
+            FightDeckRuntime.shared.prewarm()
             return hosting.makeViewController(
                 params: DepositParams(
                     themeJSON: "{}",

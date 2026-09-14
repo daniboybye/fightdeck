@@ -48,9 +48,9 @@ representative — it absorbs runtime that nothing had touched yet.
 **Separate host apps, never a switcher.** No single app with a dropdown to swap
 implementations. You cannot honestly measure binary size or cold start that way.
 
-**SDKs ship as checksum-pinned binaries, not source.** "The host does not know what is
-inside" is rhetoric if the host can read the source. Here the host resolves a `.zip` over
-HTTPS against a pinned SHA-256 and has access to nothing else.
+**SDK hosts use built artifacts, not a source fallback.** Rust, React Native and Skip hosts
+resolve one local `.xcframework` / AAR path. A clean checkout builds those SDK artifacts
+before the app; there is no second remote-release configuration to drift.
 
 ## The receipt
 
@@ -295,18 +295,16 @@ so CI's contract workflow gates the cores rather than every host.
 
 **Full bootstrap (all ten apps on one simulator + one emulator):** follow [`RUNBOOK.md`](RUNBOOK.md).
 
-Clone and open. The two UI-bearing SDKs need nothing built first: Swift Package Manager and
-Gradle resolve pinned release artifacts over HTTPS.
-
-The two headless cores are the exception: their generated bindings and native libraries are
-build output rather than committed files, so each needs one packaging run after cloning.
+Binary SDK outputs are gitignored. Build them once after cloning, then build the hosts:
 
 ```bash
 cd 02-core-rust/sdks && ./build-apple.sh && ./build-android.sh
+cd 03-sdk-rn && npm ci --prefix sdks/core && ./sdks/build-apple.sh && ./sdks/build-android.sh
+cd 04-sdk-skip/sdks && ./build-apple.sh && ./build-aars.sh
 ```
 
-`01-core-swift` needs this only for Android — the iOS host resolves the package through
-SPM, but the Compose host links a cross-compiled `.so` and will not configure without it:
+`01-core-swift` also needs its Android AARs; its iOS host intentionally remains the direct
+SwiftPM source comparison:
 
 ```bash
 cd 01-core-swift/sdks/core && swiftly run ./build-aar.sh +6.3.3
@@ -315,14 +313,8 @@ cd 01-core-swift/sdks/core && swiftly run ./build-aar.sh +6.3.3
 The `swiftly run … +6.3.3` prefix is load-bearing: Xcode's Swift cannot cross-compile
 against the Android SDK even at a matching version number.
 
-To work on an SDK itself, flip to locally built artifacts:
-
-```bash
-export FIGHTDECK_LOCAL_SDK=1
-```
-
 Every toolchain version is pinned in [`versions.lock.toml`](versions.lock.toml) and every
-CI workflow reads from it.
+CI workflow reads from it. Workflows run the same SDK-build scripts before their host build.
 
 ## CI
 

@@ -93,11 +93,6 @@
             value = "$(SRCROOT)/../../dataset"
             isEnabled = "YES">
          </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "FIGHTDECK_LOCAL_SDK"
-            value = "1"
-            isEnabled = "YES">
-         </EnvironmentVariable>
       </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction

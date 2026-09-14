@@ -2,10 +2,7 @@
 # Export every Skip module as an Android AAR, in the only order that works.
 #
 # The other modules link against the core AAR rather than re-transpiling it, so
-# core has to exist on disk before they run. Their scripts look for it in the staged
-# release directory by default, which is exactly what a machine that has never built
-# this repository does not have; pointing them at core's own output is what makes a
-# clean clone behave like a developer's machine.
+# core has to exist on disk before they run.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"

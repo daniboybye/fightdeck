@@ -1,14 +1,9 @@
 // swift-tools-version: 6.1
 import PackageDescription
 
-let useLocal = Context.environment["FIGHTDECK_LOCAL_SDK"] == "1"
-let useReleasePath = Context.environment["FIGHTDECK_RELEASE_PATH"] == "1"
-let sdkVersion = "0.1.0"
-let releaseBase = Context.environment["FIGHTDECK_RELEASE_BASE_URL"]
-    ?? "https://github.com/fightdeck/fightdeck/releases/download/sdk-v\(sdkVersion)"
-let releaseChecksum = "2063e029e7449bf6f0864e9ebeee4b4be93f5c194810d491e4ecf62c5e2f8117"
+let buildFromSource = Context.environment["FIGHTDECK_BUILDING_SDK"] == "1"
 
-let betslipBinary: Target = useLocal
+let betslipBinary: Target = buildFromSource
     ? .target(
         name: "FightDeckBetslipBinary",
         dependencies: [
@@ -21,21 +16,15 @@ let betslipBinary: Target = useLocal
             .plugin(name: "skipstone", package: "skip"),
         ]
     )
-    : useReleasePath
-        ? .binaryTarget(
-            name: "FightDeckBetslipBinary",
-            path: "../../../tools/out/release/skip/FightDeckBetslip.xcframework.zip"
-        )
-        : .binaryTarget(
-            name: "FightDeckBetslipBinary",
-            url: "\(releaseBase)/FightDeckBetslip.xcframework.zip",
-            checksum: releaseChecksum
-        )
+    : .binaryTarget(
+        name: "FightDeckBetslipBinary",
+        path: "out/FightDeckBetslip.xcframework"
+    )
 
 // The xcframework this package is distributed as contains a dylib, and SwiftPM only
-// links one for a dynamic product. Consumers of a published release get that dylib
-// through the binary target above, so only the source build needs the switch.
-let fightDeckBetslipLibrary: Product = useLocal
+// links one for a dynamic product. The source-only packaging build therefore uses a
+// dynamic product; normal host builds consume the local xcframework.
+let fightDeckBetslipLibrary: Product = buildFromSource
     ? .library(name: "FightDeckBetslip", type: .dynamic, targets: ["FightDeckBetslip"])
     : .library(name: "FightDeckBetslip", targets: ["FightDeckBetslip"])
 

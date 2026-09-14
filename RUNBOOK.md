@@ -110,34 +110,23 @@ The iOS host needs nothing here — it consumes the package through SPM.
 
 ### 4. SDK approaches (`03-sdk-rn`, `04-sdk-skip`)
 
-Host apps normally consume **checksum-pinned release binaries**. For a fresh clone without GitHub Releases, use either:
-
-| Mode | When | What to do |
-| --- | --- | --- |
-| **Local SDK sources** | Working on SDK code; simplest bootstrap | `export FIGHTDECK_LOCAL_SDK=1` before iOS/Android SDK builds |
-| **Local pinned binaries** | Testing the release consumption path | `./tools/release-sdk-local.sh rn` and/or `./tools/release-sdk-local.sh skip`, then `export FIGHTDECK_RELEASE_PATH=1` (iOS Skip SPM) and **unset** `FIGHTDECK_LOCAL_SDK` (Android Gradle reads `tools/out/release/<approach>/`) |
-
-**React Native (`03-sdk-rn`) — local SDK**
+Hosts always consume locally built binary SDKs. Build them before opening the host:
 
 ```bash
-export FIGHTDECK_LOCAL_SDK=1
 cd "$REPO/03-sdk-rn"
-npm install                                    # host + RN gradle plugin
-cd sdks/core && npm install && npm test        # TypeScript FightCore fixtures
-cd "$REPO/03-sdk-rn/ios" && pod install        # must use workspace, not bare xcodeproj
+npm ci --prefix sdks/core
+./sdks/build-apple.sh
+./sdks/build-android.sh
 ```
-
-**Skip (`04-sdk-skip`) — local SDK**
 
 ```bash
-export FIGHTDECK_LOCAL_SDK=1
-# Optional: build distributable artifacts (also run by tools/release-sdk-local.sh skip)
-for module in core deposit betslip; do
-  (cd "$REPO/04-sdk-skip/sdks/$module" && ./build-xcframework.sh && ./build-aar.sh)
-done
+cd "$REPO/04-sdk-skip/sdks"
+./build-apple.sh
+./build-aars.sh
 ```
 
-iOS schemes for `03-sdk-rn` and `04-sdk-skip` already set `FIGHTDECK_LOCAL_SDK=1` for **Run** in Xcode; you still need the env var (or staged release artifacts) at **build** time for CocoaPods / SPM resolution.
+The build scripts use source internally to produce the binaries. Host manifests have one
+resolution path and require no environment switch.
 
 ---
 
@@ -184,9 +173,10 @@ SIM='platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
 DD="$REPO/DerivedData/all-ios"
 mkdir -p "$DD"
 
-# SDK hosts: local sources (see One-time setup for alternatives)
-export FIGHTDECK_LOCAL_SDK=1
-(cd "$REPO/03-sdk-rn/ios" && pod install)
+# SDK hosts: build local binaries first.
+(cd "$REPO/02-core-rust/sdks" && ./build-apple.sh)
+(cd "$REPO/03-sdk-rn/sdks" && ./build-apple.sh)
+(cd "$REPO/04-sdk-skip/sdks" && ./build-apple.sh)
 
 build_ios() {
   local approach="$1"
@@ -236,12 +226,16 @@ done
 
 Use the **`all`** product flavour for `03-sdk-rn` and `04-sdk-skip` — that is the default demo configuration (deposit + bet slip + fighter profile SDK screens). Flavours `runtime`, `deposit` and `both` exist only for size measurements.
 
-`01-core-swift` needs its AAR built first (§3b) and `02-core-rust` needs its AARs (§3); both fail at configuration time otherwise.
+Every SDK host needs its local Android binaries built first.
 
 ```bash
 export REPO="$(git rev-parse --show-toplevel)"
 export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
-export FIGHTDECK_LOCAL_SDK=1
+
+(cd "$REPO/01-core-swift/sdks" && swiftly run ./build-aars.sh +6.3.3)
+(cd "$REPO/02-core-rust/sdks" && ./build-android.sh)
+(cd "$REPO/03-sdk-rn/sdks" && ./build-android.sh)
+(cd "$REPO/04-sdk-skip/sdks" && ./build-aars.sh)
 
 adb shell rm -rf /data/local/tmp/fightdeck/dataset
 adb push "$REPO/dataset" /data/local/tmp/fightdeck/dataset
@@ -395,7 +389,6 @@ SDK apps — run per flavour or all three:
 
 ```bash
 export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
-export FIGHTDECK_LOCAL_SDK=1
 cd "$REPO/03-sdk-rn/android"
 ./gradlew :app:testRuntimeDebugUnitTest :app:testDepositDebugUnitTest :app:testBothDebugUnitTest
 cd "$REPO/04-sdk-skip/android"
@@ -425,8 +418,8 @@ cd "$REPO/03-sdk-rn/android"
 | App shows empty events / 404 images | Dataset env/path wrong | **iOS:** set `FIGHTDECK_DATASET_ROOT` or `SIMCTL_CHILD_FIGHTDECK_DATASET_ROOT`. **Android:** push to `/data/local/tmp/fightdeck/dataset` |
 | Updated dataset but UI unchanged | `adb push` nested into `.../dataset/dataset/` | `adb shell rm -rf /data/local/tmp/fightdeck/dataset` then push again |
 | Regenerated art, images still old | Coil / Kingfisher cache by URL | `adb shell pm clear <applicationId>`; iOS: `xcrun simctl uninstall booted <bundleId>` then reinstall |
-| `03-sdk-rn` / `04-sdk-skip` Gradle: missing AARs | No release artifacts and `FIGHTDECK_LOCAL_SDK` unset | `export FIGHTDECK_LOCAL_SDK=1` or run `./tools/release-sdk-local.sh {rn\|skip}` |
-| CocoaPods: pinned RN vendor missing | `FIGHTDECK_LOCAL_SDK` unset and no local release tree | `tools/release-sdk-local.sh rn` or build with `FIGHTDECK_LOCAL_SDK=1` |
+| `03-sdk-rn` / `04-sdk-skip` Gradle: missing AARs | Local SDK binaries were not built | Run `03-sdk-rn/sdks/build-android.sh` or `04-sdk-skip/sdks/build-aars.sh` |
+| CocoaPods: local RN vendor missing | Local RN Apple SDKs were not built | Run `03-sdk-rn/sdks/build-apple.sh` |
 | `01-core-swift` Gradle: missing `fightcore.aar` | The Android app has no Kotlin fallback; it needs the cross-compiled core | `cd 01-core-swift/sdks/core && swiftly run ./build-aar.sh +6.3.3` |
 | `01-core-swift` Android: `compiled module was created by an older version of the compiler` | Xcode's Swift cannot read the Android SDK's Foundation | Prefix with `swiftly run … +6.3.3` so the open-source toolchain builds it |
 | `01-core-swift` Android: `dlopen failed: library "libc++_shared.so" not found` | AAR packaged without the NDK's C++ runtime | Rebuild with the current `build-aar.sh`, which copies it out of the NDK sysroot |

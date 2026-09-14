@@ -136,16 +136,3 @@ setup_swift = "swiftly (swift.org installer, no marketplace action)"
 setup_rust = "dtolnay/rust-toolchain@stable"
 upload_artifact = "actions/upload-artifact@v7"
 download_artifact = "actions/download-artifact@v8"
-gh_release = "softprops/action-gh-release@v3"
-
-# ---------------------------------------------------------------------------
-# Binary SDK distribution
-# ---------------------------------------------------------------------------
-# The host apps consume SDKs as checksum-pinned binaries, never as source.
-# "The host does not know what is inside" is only true if it literally cannot look.
-# FIGHTDECK_LOCAL_SDK=1 switches to a locally built artifact so the repo can be
-# bootstrapped before any GitHub Release exists.
-[distribution]
-sdk_version = "0.1.0"
-release_tag_prefix = "sdk-v"
-local_switch_env = "FIGHTDECK_LOCAL_SDK"

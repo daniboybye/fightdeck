@@ -37,7 +37,9 @@ xcodebuild build \
   FIGHTDECK_DATASET_ROOT="$(cd ../.. && pwd)/dataset"
 ```
 
-The iOS app depends on all three packages under `../sdks/{core,slip,events}` as local SPM packages (not the zipped XCFramework). Set `FIGHTDECK_LOCAL_SDK=1` semantics apply when CI consumes the release artifact instead.
+The iOS app depends on all three packages under `../sdks/{core,slip,events}` as local SPM
+source packages. This is the intentional exception to the binary-host rule: it isolates the
+cost of compiling a Swift package directly, while Android still consumes prebuilt AARs.
 
 ### Android host
 

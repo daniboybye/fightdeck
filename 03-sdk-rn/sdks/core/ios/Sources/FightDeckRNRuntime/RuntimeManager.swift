@@ -7,8 +7,8 @@ public struct RuntimeStartupMetrics: Sendable {
 }
 
 @MainActor
-public final class FightDeckRNRuntime {
-    public static let shared = FightDeckRNRuntime()
+public final class FightDeckRuntime {
+    public static let shared = FightDeckRuntime()
 
     private var configured = false
     private var prewarmed = false

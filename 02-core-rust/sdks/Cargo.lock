@@ -292,6 +292,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fightdeck-android"
+version = "0.1.0"
+dependencies = [
+ "fightcore",
+ "fightevents",
+ "fightslip",
+]
+
+[[package]]
 name = "fightevents"
 version = "0.1.0"
 dependencies = [

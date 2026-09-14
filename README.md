@@ -31,7 +31,7 @@ That leaves two questions, and this repo exists to answer them with numbers:
 | `shared-ui-spec/` | Screen-by-screen spec so all five pairs look identical. |
 | `00-native/` | Baseline. Zero shared code. SwiftUI and Compose, written twice. |
 | `01-core-swift/` | Headless Swift core, cross-compiled for Android via the Swift SDK. |
-| `02-core-rust/` | Headless Rust via UniFFI: a `fightcore` kernel plus `fightslip` and `fightevents` feature SDKs, three binaries per platform. |
+| `02-core-rust/` | Headless Rust via UniFFI: three namespaces, shipped as three Apple binaries and one aggregate Android `.so`. |
 | `03-sdk-rn/` | UI-bearing SDK: React Native, one Hermes runtime, two surfaces. |
 | `04-sdk-skip/` | UI-bearing SDK: Skip, Swift that becomes real Jetpack Compose. |
 | `tools/` | Size, build-time, source-count and cold-start measurement scripts. |
@@ -88,10 +88,9 @@ is not comparable to the Gradle-only figures in the other rows — jextract reru
 build and cascades a recompile, so this is also the per-change cost, not just the first
 one.
 
-‡ `02-core-rust` ships three separate Rust binaries per platform, not one, and its build
-column is dominated by Rust packaging rather than by the app: 3m09s of the iOS 3m34s and
-1m39s of the Android 2m00s is `cargo` compiling three crates for three Apple targets and
-two Android ABIs. The app itself builds in 25 seconds.
+‡ `02-core-rust` keeps three separate Apple binaries but now ships one aggregate Android
+`libfightdeck.so`. This row predates that Android packaging change and must be re-measured;
+its original build column was dominated by Rust packaging rather than by the app.
 
 ### What it costs to write
 
@@ -191,25 +190,23 @@ supposed to. Read the deltas, not the absolute sizes. Android needs none
 of this: Kotlin has no preprocessor, so the flavours swap whole source directories, and the
 demo app itself is what gets measured.
 
-`02-core-rust` splits along the same axis but below the UI, into three separately built
-binaries — a `fightcore` kernel plus `fightslip` and `fightevents` feature SDKs — so the
-same question has an answer there too:
+`02-core-rust` still splits source and APIs along the same axis below the UI — a `fightcore`
+kernel plus `fightslip` and `fightevents` feature SDKs. The Android numbers below document
+the previous three-`.so` experiment; current Android releases aggregate all three into one
+`libfightdeck.so`, so they no longer expose a per-feature shipping delta:
 
 | `02-core-rust` | Kernel alone | + `fightslip` | + `fightevents` | Second feature |
 | --- | ---: | ---: | ---: | ---: |
 | iOS (static, linker-deduped) | 0.60 MB | 0.89 MB | 1.30 MB | 410 KB |
-| Android (three `.so`, no dedup) | 437 KB | 1,119 KB | 2,139 KB | 1,020 KB |
+| Android (historical: three `.so`) | 437 KB | 1,119 KB | 2,139 KB | 1,020 KB |
 
 Different measurement, so read it on its own: the iOS row links against every exported
-entrypoint with `-dead_strip`, the Android row is the stripped `lib/arm64-v8a/` payload in
-the release APK. The iOS row still predates the removal of two unused catalogue-search
-exports, which took 28 KB off the Android `fightevents` figure above.
-The gap between the rows is the finding. On iOS each feature crate statically links the
-kernel and the linker keeps one copy, so the second feature costs only its own logic. On
-Android each AAR is a real shared object that carries its own kernel and its own Rust
-`std`, so the same split costs 2.1 MB instead of 0.7 MB. Splitting a Rust SDK into feature
-binaries is close to free on one platform and very much not on the other — which is a
-thing you can only find out by shipping more than one.
+entrypoint with `-dead_strip`; the historical Android row measured the three stripped
+`lib/arm64-v8a/` payloads. On iOS the linker keeps one copy of overlapping Rust code. The
+old Android layout could not deduplicate across independently loaded libraries, which is why
+it motivated the aggregate crate. The current arm64 `libfightdeck.so` is 2.08 MB, about 4%
+smaller than the old three-file total; the more important trade is that Android updates are
+now released as one native unit.
 
 This is the point of the whole repository. React Native's iOS host is 19.26 MB before a
 single feature screen exists, and the two screens together add 100 KB — the runtime is
@@ -249,8 +246,9 @@ three of the four ABIs, so the download saving is smaller than the column below:
 Four of the five hosts were carrying about 45 MB of dex they never ran — Compose, AndroidX,
 Coil, OkHttp, all linked whole. That constant is the same in every column, so it was adding
 noise to precisely the comparison this repository exists to make, and drowning the native
-payload that actually distinguishes the approaches: `02-core-rust` ships 5.23 MB of Rust and
-was reporting a 52 MB APK.
+payload that actually distinguishes the approaches: before the aggregate `.so` change,
+`02-core-rust` shipped 5.23 MB of Rust and was reporting a 52 MB APK. The current
+`libfightdeck.so` layout must be re-measured before quoting this row.
 
 The one row that does not collapse to about 3 MB of dex is Skip's, and that is the finding.
 Transpiled Swift needs 12.82 MB kept, four times any other host, because `Codable` transpiles

@@ -1,0 +1,15 @@
+[package]
+name = "fightdeck-android"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "One Android cdylib containing every FightDeck UniFFI component"
+
+[lib]
+crate-type = ["cdylib"]
+name = "fightdeck"
+
+[dependencies]
+fightcore.workspace = true
+fightslip = { path = "../../slip/fightslip" }
+fightevents = { path = "../../events/fightevents" }

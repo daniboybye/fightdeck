@@ -30,9 +30,15 @@ for module in "${MODULES[@]}"; do
     mod_dir="$APPROACH_DIR/sdks/$module"
     echo "--- $module: xcframework ---"
     (cd "$mod_dir" && chmod +x ./build-xcframework.sh && ./build-xcframework.sh)
-    echo "--- $module: aar ---"
-    (cd "$mod_dir" && chmod +x ./build-aar.sh && ./build-aar.sh)
+    if [[ "$APPROACH" != "rust" ]]; then
+        echo "--- $module: aar ---"
+        (cd "$mod_dir" && chmod +x ./build-aar.sh && ./build-aar.sh)
+    fi
 done
+if [[ "$APPROACH" == "rust" ]]; then
+    echo "--- aggregate Android AAR ---"
+    (cd "$APPROACH_DIR/sdks" && chmod +x ./build-android.sh && ./build-android.sh)
+fi
 
 echo "=== Staging artifacts ==="
 find "$APPROACH_DIR/sdks" -maxdepth 3 -path "*/out/*.xcframework.zip" -exec cp {} "$STAGING/" \;
@@ -45,9 +51,7 @@ elif [[ "$APPROACH" == "rn" ]]; then
     cp "$APPROACH_DIR/sdks/deposit/out/DepositSDK.aar" "$STAGING/"
     cp "$APPROACH_DIR/sdks/betslip/out/BetslipSDK.aar" "$STAGING/"
 elif [[ "$APPROACH" == "rust" ]]; then
-    for module in "${MODULES[@]}"; do
-        cp "$APPROACH_DIR/sdks/$module/out/android/"*.aar "$STAGING/"
-    done
+    cp "$APPROACH_DIR/sdks/android/fightdeck/out/android/fightdeck.aar" "$STAGING/"
 fi
 
 if [[ "$APPROACH" == "rn" ]]; then

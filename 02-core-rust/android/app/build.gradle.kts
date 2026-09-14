@@ -72,7 +72,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
-    // UniFFI Kotlin bindings call into libfightcore.so via JNA — must resolve the AAR so
+    // All three UniFFI namespaces call into libfightdeck.so via JNA — must resolve the AAR so
     // libjnidispatch.so ships for every ABI, not the JVM jar that looks on the classpath.
     // Version pinned in versions.lock.toml (android.jna): 5.19.1 is 16 KB aligned.
     implementation("net.java.dev.jna:jna:5.19.1") {

@@ -1,5 +1,10 @@
 [workspace]
-members = ["core/fightcore", "slip/fightslip", "events/fightevents"]
+members = [
+    "core/fightcore",
+    "slip/fightslip",
+    "events/fightevents",
+    "android/fightdeck",
+]
 resolver = "2"
 
 [workspace.package]

@@ -6,7 +6,7 @@ license.workspace = true
 description = "FightEvents — catalogue feature SDK: dataset parsing, card grouping, tale of the tape, search"
 
 [lib]
-crate-type = ["lib", "cdylib", "staticlib"]
+crate-type = ["lib", "staticlib"]
 name = "fightevents"
 
 [dependencies]

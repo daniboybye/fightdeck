@@ -57,7 +57,7 @@ echo "02-core-rust — Rust behind UniFFI"
 ck "the Apple artifact has Rust debug info" "DW_LANG_Rust" bash -c \
     "xcrun dwarfdump --debug-info $REPO/02-core-rust/sdks/core/out/FightCore.xcframework/ios-arm64_x86_64-simulator/libfightcore-sim.a | grep -m2 DW_AT_language"
 ck "the Android .so is stripped" "no debug sections" bash -c \
-    "xcrun llvm-objdump --section-headers $REPO/02-core-rust/sdks/core/out/android/aar-staging/jni/arm64-v8a/libfightcore.so | grep -i debug || echo 'no debug sections'"
+    "xcrun llvm-objdump --section-headers $REPO/02-core-rust/sdks/android/fightdeck/out/android/aar-staging/jni/arm64-v8a/libfightdeck.so | grep -i debug || echo 'no debug sections'"
 ck "no Rust sources in the Xcode project" "no .rs in the project" bash -c \
     "rg -c '\.rs' $REPO/02-core-rust/ios/FightDeck.xcodeproj/project.pbxproj || echo 'no .rs in the project'"
 ck "the logic tests without a device" "test result: ok" bash -c \

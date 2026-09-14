@@ -1,5 +1,5 @@
-# Build the three Rust SDKs — fightcore, fightslip, fightevents — into an xcframework
-# and an AAR apiece.
+# Build the three Rust SDKs — fightcore, fightslip, fightevents — into one xcframework
+# apiece for Apple and one aggregate AAR for Android.
 #
 # Rust is the most predictable of the three cores: one cargo workspace, UniFFI generates
 # the Swift and Kotlin bindings, and the artifacts drop out the other end. It is
@@ -140,5 +140,5 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           name: rust-sdk-aars
-          path: 02-core-rust/sdks/*/out/android/*.aar
+          path: 02-core-rust/sdks/android/fightdeck/out/android/fightdeck.aar
           if-no-files-found: warn

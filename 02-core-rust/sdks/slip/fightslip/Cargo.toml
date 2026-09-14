@@ -6,7 +6,7 @@ license.workspace = true
 description = "FightSlip — bet slip feature SDK: slip math, validation, settlement, cash-out"
 
 [lib]
-crate-type = ["lib", "cdylib", "staticlib"]
+crate-type = ["lib", "staticlib"]
 name = "fightslip"
 
 [dependencies]

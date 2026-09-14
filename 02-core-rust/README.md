@@ -1,29 +1,30 @@
 # 02-core-rust — One Rust kernel, two Rust feature SDKs, via UniFFI
 
-Same UFC betting product as [`00-native/`](../00-native/): event list, bout detail, bet slip, deposit. The business logic lives in Rust and ships as **three independently built binaries**; SwiftUI and Compose are thin shells that bind to them.
+Same UFC betting product as [`00-native/`](../00-native/): event list, bout detail, bet slip, deposit. The business logic lives in three Rust components; SwiftUI and Compose are thin shells that bind to them. Apple keeps one binary per component, while Android aggregates all three UniFFI namespaces into one `libfightdeck.so`.
 
-## Three SDKs, not one
+## Three logical SDKs, one Android runtime
 
 | SDK | Crate | UniFFI namespace | Apple artifact | Android artifact | Owns |
 | --- | --- | --- | --- | --- | --- |
-| Kernel | `fightcore` | `fightcore` | `FightCore.xcframework` | `fightcore.aar` | Decimal money, odds conversion, contract vocabulary and limits |
-| Feature one | `fightslip` | `fightslip` | `FightSlip.xcframework` | `fightslip.aar` | Bet slip store, validation, settlement, cash-out, place-bet |
-| Feature two | `fightevents` | `fightevents` | `FightEvents.xcframework` | `fightevents.aar` | Dataset parsing, bout index, card ordering, tale of the tape, search |
+| Kernel | `fightcore` | `fightcore` | `FightCore.xcframework` | `fightdeck.aar` | Decimal money, odds conversion, contract vocabulary and limits |
+| Feature one | `fightslip` | `fightslip` | `FightSlip.xcframework` | `fightdeck.aar` | Bet slip store, validation, settlement, cash-out, place-bet |
+| Feature two | `fightevents` | `fightevents` | `FightEvents.xcframework` | `fightdeck.aar` | Dataset parsing, bout index, card ordering, tale of the tape, search |
 
-Both feature crates depend on `fightcore` as an ordinary Rust dependency and **neither depends on the other**. `fightevents` produces the bout index, `fightslip` consumes it, and the app is the only place the two meet — four lines of mapping in each host. That is the point of the split: a feature team ships its own binary without coordinating a release with the other feature.
+Both feature crates depend on `fightcore` as an ordinary Rust dependency and **neither depends on the other**. `fightevents` produces the bout index, `fightslip` consumes it, and the app is the only place the two meet — four lines of mapping in each host. This remains a source and API boundary, but Android is now one native release unit: changing any crate creates a new common `.so`.
 
 ```
 sdks/
-├── Cargo.toml            # workspace: three members
+├── Cargo.toml            # workspace: three components + the Android aggregate
 ├── build-apple.sh        # packages all three SwiftPM packages
-├── build-android.sh      # packages all three AARs, syncs the host's jniLibs/
+├── build-android.sh      # packages one AAR/.so, syncs the host's jniLibs/
+├── android/fightdeck/    # cdylib that re-exports all three UniFFI scaffolds
 ├── core/                 # SwiftPM package FightCore
 │   ├── Package.swift     #   binary target + the C header target + the bindings target
 │   ├── fightcore/        #   the kernel crate
-│   └── out/              #   FightCore.xcframework(.zip), android/fightcore.aar
+│   └── out/              #   FightCore.xcframework(.zip)
 ├── slip/                 # SwiftPM package FightSlip   → crate depends on fightcore
 ├── events/               # SwiftPM package FightEvents → crate depends on fightcore
-└── scripts/              # one shared packaging script per platform
+└── scripts/              # shared Apple packaging helper
 ```
 
 ## How the SDKs are delivered
@@ -45,6 +46,10 @@ C target and the generated Swift into a Swift target, both inside the package, s
 gets a plain `import FightCore` with no header search paths or module-map flags. Publishing
 runs through `release-sdk.yml` (`sdk: rust`) or `tools/release-sdk-local.sh rust`.
 
+Android publishes one `fightdeck.aar`. Its `libfightdeck.so` contains the three namespaces,
+and `uniffi-bindgen --library` still emits separate `fightcore`, `fightslip`, and
+`fightevents` Kotlin packages. All three generated packages load the same native library.
+
 ## What three static libraries actually cost
 
 Each crate compiles to its own `staticlib`, so each `.a` embeds a full copy of `fightcore` **and** the Rust standard library — roughly 17 MB apiece on disk. The Apple linker resolves duplicate definitions across archives to the first one it pulls, so the app pays for the kernel once. Measured by linking against every exported entrypoint with `-dead_strip` (arm64 simulator):
@@ -57,15 +62,24 @@ Each crate compiles to its own `staticlib`, so each `.a` embeds a full copy of `
 
 The whole app in Release, both simulator architectures, all three SDKs linked: **11.4 MB**. `nm` finds `rust_eh_personality` exactly once in it.
 
-Android does not get that deduplication. Each AAR ships a real `.so`, dynamically loaded, carrying its own copy of the kernel and of `std`:
+Android originally shipped one `.so` per crate. Each dynamically loaded library carried its
+own copy of the kernel and the Rust support code it used:
 
-| `lib/arm64-v8a/` | Size |
+| Previous `lib/arm64-v8a/` | Size |
 | --- | ---: |
 | `libfightcore.so` | 437 KB |
 | `libfightslip.so` | 682 KB |
 | `libfightevents.so` | 1048 KB |
 
-**2.2 MB on Android against roughly 0.7 MB of marginal cost on iOS, for the same source split.** That asymmetry is the honest number for the "should we split our SDK?" conversation, and it only shows up once there is more than one feature SDK to measure.
+The aggregate crate now uses UniFFI's `uniffi_reexport_scaffolding!` mechanism to retain all
+three components in one cdylib. The current arm64 `libfightdeck.so` is **2,075,512 bytes
+(2.08 MB)**, versus about 2.17 MB for the three old files: a modest saving of roughly 4%,
+not a threefold reduction. Rust and the linker already discarded much unused runtime code
+from each old library; the common `.so` removes only the overlap that was actually present.
+
+The trade-off is release granularity: Cargo recompiles only the changed crate and the small
+aggregate crate, but every Android SDK update replaces and versions the common
+`libfightdeck.so`. The three Rust crates and Kotlin namespaces remain separate APIs.
 
 ## What moved into Rust
 
@@ -121,10 +135,9 @@ cd 02-core-rust/sdks
 cargo test --workspace          # 16 tests: fixtures + unit
 
 ./build-apple.sh                # all three SPM packages: {core,slip,events}/out/*.xcframework
-./build-android.sh              # all three AARs + syncs android jniLibs/ and uniffi/
+./build-android.sh              # one fightdeck.aar/.so + three generated Kotlin packages
 
-./core/build-xcframework.sh     # or one SDK at a time
-./slip/build-aar.sh
+./core/build-xcframework.sh     # Apple can still build one SDK at a time
 ```
 
 ### Hosts

@@ -89,7 +89,7 @@ UniFFI bindings and native libraries are **build output**, not committed. Packag
 ```bash
 cd "$REPO/02-core-rust/sdks"
 ./build-apple.sh          # → {core,slip,events}/out/*.xcframework, bindings into each package
-./build-android.sh        # → {core,slip,events}/out/android/*.aar (+ syncs jniLibs/ and uniffi/)
+./build-android.sh        # → android/fightdeck/out/android/fightdeck.aar (one .so, three namespaces)
 ```
 
 ### 3b. Swift core for Android (`01-core-swift`)

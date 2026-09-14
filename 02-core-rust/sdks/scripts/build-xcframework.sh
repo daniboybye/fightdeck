@@ -30,7 +30,7 @@ done
 OUT="$PKG/out"
 SWIFT_SRC="$PKG/Sources/$FRAMEWORK"
 FFI_INCLUDE="$PKG/Sources/${NAMESPACE}FFI/include"
-# Targeted rather than `rm -rf "$OUT"`, which would take build-aar.sh's output with it.
+# Targeted so unrelated package artifacts in `out/` survive an Apple rebuild.
 rm -rf "$OUT/$FRAMEWORK.xcframework" "$OUT/$FRAMEWORK.xcframework.zip" "$SWIFT_SRC" "$FFI_INCLUDE"
 mkdir -p "$OUT" "$SWIFT_SRC" "$FFI_INCLUDE"
 

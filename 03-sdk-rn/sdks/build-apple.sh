@@ -122,7 +122,10 @@ package_module() {
   local sim_arm_library="$sim_arm_product/lib${module}.a"
   local sim_x64_library="$sim_x64_product/lib${module}.a"
 
-  rm -rf "$out"
+  # Only this script's own products. build-aar.sh writes the Android AARs into the same
+  # directory and never clears it, so wiping the whole thing left the next Gradle build
+  # failing on a missing .aar that nothing in the Android build had touched.
+  rm -rf "$out/${module}.xcframework" "$out/${module}.xcframework.zip"
   mkdir -p "$out" "$frameworks"
   if [[ "$module" == "FightDeckRNRuntime" ]]; then
     libtool -static -o "$frameworks/lib${module}-ios.a" \

@@ -1998,13 +1998,17 @@ private fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: ()
     Scaffold(
         containerColor = Tokens.background,
         topBar = {
-            TopAppBar(
-                title = { Text(if (didSucceed) "Confirmed" else "Deposit") },
-                // The money has already moved by the time the confirmation shows, so that screen
-                // leaves through Done only: closing it would offer to spend the deposit twice.
-                navigationIcon = { if (!didSucceed) CloseButton(onClose) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-            )
+            // The money has already moved by the time the confirmation shows, so that screen
+            // leaves through Done only: closing it would offer to spend the deposit twice. With
+            // no way out and nothing to name — the confirmation says what happened, in the
+            // middle of the screen where the eye already is — the bar has nothing left to hold.
+            if (!didSucceed) {
+                TopAppBar(
+                    title = { Text("Deposit") },
+                    navigationIcon = { CloseButton(onClose) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                )
+            }
         },
         bottomBar = {
             if (!didSucceed) {

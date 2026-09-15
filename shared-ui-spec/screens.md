@@ -187,8 +187,9 @@ comparison collapses.
    note. Card is preselected
 3. **Confirm** — summary of amount, method, fee and total, then a primary button
 
-**Result.** Success shows a tick, the new balance and a Done button. Failure shows the
-error and a Retry.
+**Result.** Success shows a tick, the new balance and a Done button, with no title and no
+way back: the money has moved, so the only way out is forward. Failure shows the error and
+a Retry.
 
 **The contract with the host.** The host passes in parameters and receives one result:
 

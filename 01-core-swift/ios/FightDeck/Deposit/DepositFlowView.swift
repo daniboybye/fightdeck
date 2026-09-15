@@ -65,7 +65,9 @@ struct DepositFlowView: View {
                 formContent
             }
         }
-        .navigationTitle(didSucceed ? "Confirmed" : "Deposit")
+        // Nothing to name once it has happened: the confirmation says so in the middle of the
+        // screen, where the eye already is, and a title would only repeat it in the corner.
+        .navigationTitle(didSucceed ? "" : "Deposit")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             // The money has already moved by the time the confirmation shows, so that screen

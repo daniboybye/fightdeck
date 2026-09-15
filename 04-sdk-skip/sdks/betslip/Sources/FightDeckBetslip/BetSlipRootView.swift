@@ -114,7 +114,10 @@ public struct BetSlipRootView: View {
             .foregroundStyle(theme.positive)
             .symbolEffect(.bounce, options: .nonRepeating)
         #else
-        Image(systemName: "checkmark.seal.fill")
+        // Same hole the remove button falls into: SkipUI has no Material mapping for the seal
+        // and renders a warning triangle labelled "missing icon". A checkmark in a circle is
+        // mapped, and it is what the deposit confirmation already shows.
+        Image(systemName: "checkmark.circle.fill")
             .font(Typography.body(48.0))
             .foregroundStyle(theme.positive)
         #endif

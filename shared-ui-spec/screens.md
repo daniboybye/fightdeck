@@ -179,7 +179,8 @@ The screen that is a black box in `03-sdk-rn` and `04-sdk-skip`, and hand-writte
 the other three. It must look and behave identically in all five, or the whole
 comparison collapses.
 
-**Steps.** A three-step flow inside one sheet:
+**Steps.** A three-step flow inside one presentation — a sheet on iOS, a pushed screen on
+Android:
 
 1. **Amount** — big numeric entry, quick chips (€10, €25, €50, €100), balance shown
    above, minimum €10 and maximum €2,000 enforced with inline validation

@@ -16,6 +16,9 @@ private enum Layout {
     static let secondaryActionPadding: CGFloat = 24
     static let actionBarGap: CGFloat = 12
     static let betSlipAccessoryHeight: CGFloat = 44
+    static let radioDiameter: CGFloat = 20
+    static let radioBorder: CGFloat = 2
+    static let radioInset: CGFloat = 5
 }
 
 private enum DepositLimits {
@@ -210,8 +213,7 @@ public struct DepositFlowView: View {
                     method = item
                 } label: {
                     HStack {
-                        Image(systemName: method == item ? "largecircle.fill.circle" : "circle")
-                            .foregroundStyle(theme.accent)
+                        methodMark(isSelected: method == item)
                         VStack(alignment: .leading) {
                             Text(item.title)
                                 .foregroundStyle(theme.textPrimary)
@@ -227,6 +229,27 @@ public struct DepositFlowView: View {
                 }
             }
         }
+    }
+
+    /// Drawn rather than named. SkipUI resolves `systemName` against a fixed table of Material
+    /// icons and falls back to a warning triangle for anything absent from it; "circle" and
+    /// "largecircle.fill.circle" are both absent, so on Android every method row wore the same
+    /// missing-icon triangle and the selected one was indistinguishable. Two shapes transpile,
+    /// and they render the same on iOS.
+    private func methodMark(isSelected: Bool) -> some View {
+        ZStack {
+            Circle()
+                .strokeBorder(
+                    isSelected ? theme.accent : theme.textSecondary,
+                    lineWidth: Layout.radioBorder
+                )
+            if isSelected {
+                Circle()
+                    .fill(theme.accent)
+                    .padding(Layout.radioInset)
+            }
+        }
+        .frame(width: Layout.radioDiameter, height: Layout.radioDiameter)
     }
 
     private var summarySection: some View {

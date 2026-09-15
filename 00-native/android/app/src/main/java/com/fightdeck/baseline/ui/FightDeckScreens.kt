@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
@@ -34,7 +32,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -70,7 +67,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -82,7 +78,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -233,26 +228,51 @@ fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
                 showProgress = false,
                 onRetry = viewModel::retryBootstrap,
             )
-            BootstrapState.Ready -> FightDeckMain(viewModel)
+            BootstrapState.Ready -> FightDeckNavHost(viewModel)
+        }
+    }
+}
+
+/**
+ * Deposit is a destination pushed over the tabs, not a bottom sheet. iOS presents it as a sheet
+ * because that is what a self-contained task looks like there; on Android the same flow is a
+ * screen, which is also what gives it the system back gesture and the platform's push
+ * transition for free.
+ */
+@Composable
+private fun FightDeckNavHost(viewModel: MainViewModel) {
+    val nav = rememberNavController()
+    NavHost(navController = nav, startDestination = "tabs") {
+        composable("tabs") {
+            FightDeckMain(viewModel, onDeposit = { nav.navigate("deposit") })
+        }
+        composable("deposit") {
+            val balance by viewModel.balance.collectAsStateWithLifecycle()
+            DepositScreen(
+                balance = balance,
+                onDone = {
+                    viewModel.deposit(it)
+                    nav.popBackStack()
+                },
+                onClose = { nav.popBackStack() },
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FightDeckMain(viewModel: MainViewModel) {
+private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
         val slip by viewModel.slip.collectAsStateWithLifecycle()
         val balance by viewModel.balance.collectAsStateWithLifecycle()
-        var showDepositSheet by remember { mutableStateOf(false) }
-        val onDepositFromToolbar = { showDepositSheet = true }
 
         var selectedTab by remember { mutableIntStateOf(UPCOMING_TAB) }
         val upcomingNav = rememberNavController()
         val pastNav = rememberNavController()
         val slipNav = rememberNavController()
-        // The bar is a shortcut into the slip on every tab while selections exist, and it
-        // hides while the deposit sheet is open — matching iOS tabViewBottomAccessory.
-        val showsSlipToolbar = slip.selections.isNotEmpty() && !showDepositSheet
+        // The bar is a shortcut into the slip on every tab while selections exist — matching
+        // iOS tabViewBottomAccessory.
+        val showsSlipToolbar = slip.selections.isNotEmpty()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -317,7 +337,7 @@ private fun FightDeckMain(viewModel: MainViewModel) {
                         mode = EventMode.Upcoming,
                         viewModel = viewModel,
                         balance = balance,
-                        onDeposit = onDepositFromToolbar,
+                        onDeposit = onDeposit,
                         modifier = Modifier.fillMaxSize(),
                     )
 
@@ -326,7 +346,7 @@ private fun FightDeckMain(viewModel: MainViewModel) {
                         mode = EventMode.Past,
                         viewModel = viewModel,
                         balance = balance,
-                        onDeposit = onDepositFromToolbar,
+                        onDeposit = onDeposit,
                         modifier = Modifier.fillMaxSize(),
                     )
 
@@ -334,50 +354,14 @@ private fun FightDeckMain(viewModel: MainViewModel) {
                         slipNav = slipNav,
                         viewModel = viewModel,
                         balance = balance,
-                        onDeposit = onDepositFromToolbar,
+                        onDeposit = onDeposit,
                         onBrowseEvents = { selectedTab = UPCOMING_TAB },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
         }
-
-        if (showDepositSheet) {
-            DepositSheet(
-                balance = balance,
-                onDeposit = { amount ->
-                    viewModel.deposit(amount)
-                    showDepositSheet = false
-                },
-                onDismiss = { showDepositSheet = false },
-            )
-        }
     }
-
-/**
- * A half-height sheet gives the keyboard the half it was using: the form's own bar clears the
- * keys correctly, but the sheet is not tall enough to show where it went, so the confirm button
- * lands below the sheet and the screen ends in a row of quick-amount chips. Going full height
- * when the keyboard arrives is what keeps the button — and the amount being typed — on screen.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DepositSheet(
-    balance: BigDecimal,
-    onDeposit: (BigDecimal) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val keyboard = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-    val sheetState = rememberModalBottomSheetState()
-    LaunchedEffect(keyboard > 0.dp) {
-        if (keyboard > 0.dp) {
-            sheetState.expand()
-        }
-    }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        DepositScreen(balance = balance, onDone = onDeposit, onClose = onDismiss)
-    }
-}
 
 @Composable
 private fun BetSlipToolbar(

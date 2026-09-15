@@ -66,8 +66,13 @@ Slip    ──▶ Bet slip
 The bet slip is also reachable from a persistent bar above the tab bar whenever the slip
 is non-empty, showing leg count and potential return. Tapping it switches to the Slip tab.
 
-**Deposit is presented as a sheet** from the balance toolbar on every screen. In the SDK
-approaches the deposit UI is supplied by the SDK, but the host still owns presentation:
-`sheet(isPresented:)` on iOS and `ModalBottomSheet` on Android. That keeps one entry path
-and matches how a real host would integrate a black-box deposit module without pushing
-it onto an existing navigation stack.
+**Deposit opens from the balance toolbar** on every screen, and each platform presents it
+the way that platform presents a self-contained task: `sheet(isPresented:)` on iOS, a
+pushed destination that covers the tab bar on Android. In the SDK approaches the deposit UI
+is supplied by the SDK, but the host still owns presentation — which is the point, since
+that is where the presentation difference has to be paid for twice.
+
+Android went through the sheet first, and the keyboard is why it did not stay one:
+`ModalBottomSheet` renders in its own window and does not hand the IME inset to its
+content, so the confirm button had to be chased with a forced `expand()` on every app. A
+pushed screen gets the inset from the same `Scaffold` every other screen uses.

@@ -24,8 +24,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -33,7 +31,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -69,7 +66,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -81,7 +77,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -233,26 +228,51 @@ fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
                 showProgress = false,
                 onRetry = viewModel::retryBootstrap,
             )
-            BootstrapState.Ready -> FightDeckMain(viewModel)
+            BootstrapState.Ready -> FightDeckNavHost(viewModel)
+        }
+    }
+}
+
+/**
+ * Deposit is a destination pushed over the tabs, not a bottom sheet. iOS presents it as a sheet
+ * because that is what a self-contained task looks like there; on Android the same flow is a
+ * screen, which is also what gives it the system back gesture and the platform's push
+ * transition for free.
+ */
+@Composable
+private fun FightDeckNavHost(viewModel: MainViewModel) {
+    val nav = rememberNavController()
+    NavHost(navController = nav, startDestination = "tabs") {
+        composable("tabs") {
+            FightDeckMain(viewModel, onDeposit = { nav.navigate("deposit") })
+        }
+        composable("deposit") {
+            val balance by viewModel.balance.collectAsStateWithLifecycle()
+            DepositDestination(
+                balance = balance,
+                onDeposit = {
+                    viewModel.deposit(it)
+                    nav.popBackStack()
+                },
+                onClose = { nav.popBackStack() },
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FightDeckMain(viewModel: MainViewModel) {
+private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
         val slip by viewModel.slip.collectAsStateWithLifecycle()
         val balance by viewModel.balance.collectAsStateWithLifecycle()
-        var showDepositSheet by remember { mutableStateOf(false) }
-        val onDepositFromToolbar = { showDepositSheet = true }
 
         var selectedTab by remember { mutableIntStateOf(UPCOMING_TAB) }
         val upcomingNav = rememberNavController()
         val pastNav = rememberNavController()
         val slipNav = rememberNavController()
-        // The bar is a shortcut into the slip on every tab while selections exist, and it
-        // hides while the deposit sheet is open — matching iOS tabViewBottomAccessory.
-        val showsSlipToolbar = slip.selections.isNotEmpty() && !showDepositSheet
+        // The bar is a shortcut into the slip on every tab while selections exist — matching
+        // iOS tabViewBottomAccessory.
+        val showsSlipToolbar = slip.selections.isNotEmpty()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -308,7 +328,7 @@ private fun FightDeckMain(viewModel: MainViewModel) {
                         mode = EventMode.Upcoming,
                         viewModel = viewModel,
                         balance = balance,
-                        onDeposit = onDepositFromToolbar,
+                        onDeposit = onDeposit,
                         modifier = Modifier.fillMaxSize(),
                     )
 
@@ -317,14 +337,14 @@ private fun FightDeckMain(viewModel: MainViewModel) {
                         mode = EventMode.Past,
                         viewModel = viewModel,
                         balance = balance,
-                        onDeposit = onDepositFromToolbar,
+                        onDeposit = onDeposit,
                         modifier = Modifier.fillMaxSize(),
                     )
 
                     else -> SlipNavHost(
                         slipNav = slipNav,
                         viewModel = viewModel,
-                        onDeposit = onDepositFromToolbar,
+                        onDeposit = onDeposit,
                         onBrowseEvents = { selectedTab = UPCOMING_TAB },
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -332,51 +352,53 @@ private fun FightDeckMain(viewModel: MainViewModel) {
             }
         }
 
-        if (showDepositSheet) {
-            DepositSheet(
-                balance = balance,
-                onDeposit = { amount ->
-                    viewModel.deposit(amount)
-                    showDepositSheet = false
-                },
-                onDismiss = { showDepositSheet = false },
-            )
-        }
     }
 
 /**
- * A half-height sheet gives the keyboard the half it was using, which leaves the React form
- * taller than the sheet showing it: the confirm button drops below the sheet's edge. Going full
- * height when the keyboard arrives keeps it, and the amount being typed, on screen.
- *
- * The React surface draws the form but no chrome, so the sheet's title and its way out live
+ * The React surface draws the form but no chrome, so the screen's title and its way out live
  * here — the same split the iOS host makes with its navigation bar.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DepositSheet(
+private fun DepositDestination(
     balance: BigDecimal,
     onDeposit: (BigDecimal) -> Unit,
-    onDismiss: () -> Unit,
+    onClose: () -> Unit,
 ) {
     var depositConfirmed by remember { mutableStateOf(false) }
-    val keyboard = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-    val sheetState = rememberModalBottomSheetState()
-    LaunchedEffect(keyboard > 0.dp) {
-        if (keyboard > 0.dp) {
-            sheetState.expand()
-        }
+    // React hands its results back on the bridge thread, and popping the back stack moves a
+    // lifecycle registry that only the main thread may touch — calling onDeposit straight from
+    // the callback throws. Parking the amount in snapshot state, which any thread may write,
+    // lets the composition make the call. The sheet this replaced never noticed: flipping a
+    // boolean and updating a StateFlow are both fine off the main thread.
+    var completedAmount by remember { mutableStateOf<BigDecimal?>(null) }
+    LaunchedEffect(completedAmount) {
+        completedAmount?.let(onDeposit)
     }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        TopAppBar(
-            title = { Text(if (depositConfirmed) "Confirmed" else "Deposit") },
-            navigationIcon = { if (!depositConfirmed) CloseButton(onDismiss) },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-        )
+
+    Scaffold(
+        containerColor = Tokens.background,
+        topBar = {
+            // The money has already moved by the time the confirmation shows, so that screen
+            // leaves through Done only: closing it would offer to spend the deposit twice. With
+            // no way out and nothing to name — the confirmation says what happened, in the
+            // middle of the screen where the eye already is — the bar has nothing left to hold.
+            if (!depositConfirmed) {
+                TopAppBar(
+                    title = { Text("Deposit") },
+                    navigationIcon = { CloseButton(onClose) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                )
+            }
+        },
+    ) { padding ->
+        // The surface reads its own keyboard inset, so it is handed the space the system bars
+        // leave and nothing else: Scaffold's insets do not include the IME.
         RNDepositScreen(
             balance = balance,
-            onCompleted = onDeposit,
+            onCompleted = { completedAmount = it },
             onConfirmed = { depositConfirmed = true },
+            modifier = Modifier.padding(padding),
         )
     }
 }

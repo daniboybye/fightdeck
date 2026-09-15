@@ -210,6 +210,12 @@ fun FightDeckApp(viewModel: MainViewModel = viewModel()) {
             primary = Tokens.accent,
             onPrimary = Tokens.onAccent,
             secondary = Tokens.accent,
+            // The selected navigation item takes its label from secondary but its icon and
+            // pill from these two, so leaving them out left a stock lavender icon beside a
+            // gold label. FilledTonalButton reads the same pair, so the preset amount chips
+            // lose the same lavender.
+            secondaryContainer = Tokens.surfaceElevated,
+            onSecondaryContainer = Tokens.accent,
             background = Tokens.background,
             surface = Tokens.surface,
             surfaceContainer = Tokens.surface,

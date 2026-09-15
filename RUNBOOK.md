@@ -252,8 +252,8 @@ build_android() {
 build_android 00-native        ':app:assembleDebug'      "$REPO/00-native/android/app/build/outputs/apk/debug/app-debug.apk"
 build_android 01-core-swift    ':app:assembleDebug'      "$REPO/01-core-swift/android/app/build/outputs/apk/debug/app-debug.apk"
 build_android 02-core-rust     ':app:assembleDebug'      "$REPO/02-core-rust/android/app/build/outputs/apk/debug/app-debug.apk"
-build_android 03-sdk-rn        ':app:assembleBothDebug'  "$REPO/03-sdk-rn/android/app/build/outputs/apk/both/debug/app-both-debug.apk"
-build_android 04-sdk-skip      ':app:assembleBothDebug'  "$REPO/04-sdk-skip/android/app/build/outputs/apk/both/debug/app-both-debug.apk"
+build_android 03-sdk-rn        ':app:assembleAllDebug'   "$REPO/03-sdk-rn/android/app/build/outputs/apk/all/debug/app-all-debug.apk"
+build_android 04-sdk-skip      ':app:assembleAllDebug'   "$REPO/04-sdk-skip/android/app/build/outputs/apk/all/debug/app-all-debug.apk"
 ```
 
 ### Release builds and R8
@@ -282,9 +282,9 @@ Build **all measurement flavours** (optional):
 
 ```bash
 cd "$REPO/03-sdk-rn/android"
-./gradlew :app:assembleRuntimeDebug :app:assembleDepositDebug :app:assembleBothDebug
+./gradlew :app:assembleRuntimeDebug :app:assembleDepositDebug :app:assembleBothDebug :app:assembleAllDebug
 cd "$REPO/04-sdk-skip/android"
-./gradlew :app:assembleRuntimeDebug :app:assembleDepositDebug :app:assembleBothDebug
+./gradlew :app:assembleRuntimeDebug :app:assembleDepositDebug :app:assembleBothDebug :app:assembleAllDebug
 ```
 
 ---

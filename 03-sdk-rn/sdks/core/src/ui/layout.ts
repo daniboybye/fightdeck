@@ -24,8 +24,8 @@ export interface SurfaceLayoutProps {
 export function readSurfaceLayout(props: SurfaceLayoutProps) {
   return {
     safeAreaTop: Math.max(0, Number(props.safeAreaTop ?? 0)),
-    // No upper clamp: the Android host reports 168px of tab-bar clearance, and capping below
-    // that put the pinned action bar underneath the tab bar.
+    // No upper clamp: hosts report chrome in the same density-independent units these styles
+    // use, and the Android tab bar is deeper than anything worth hard-coding here.
     safeAreaBottom: Math.max(0, Number(props.safeAreaBottom ?? 0)),
     keyboardBottomInset: Math.min(400, Math.max(0, Number(props.keyboardBottomInset ?? 0))),
     chromeBackground: String(props.chromeBackground ?? '').trim(),

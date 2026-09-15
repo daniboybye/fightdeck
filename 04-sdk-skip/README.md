@@ -255,6 +255,22 @@ Install: `brew install skiptools/skip/skip`
     as *xmark* on Android, because SkipUI uses the symbol name as the content description
     instead of the button's label. Symbols it cannot map at all (the radio circles in the
     deposit method rows) draw as a warning triangle described as *missing icon*.
+16. **Keyboard avoidance is free on iOS and absent on Android** — the slip's `safeAreaBar`
+    rides above the keyboard on iOS without a line about it, while the transpiled screen has
+    no keyboard awareness at all: the `ZStack`'s bottom-aligned bar stayed where it was and
+    the keys covered *Place bet* outright. The host now lifts the whole surface
+    (`Modifier.imePadding()` on the slip destination in `FightDeckScreens.kt`), which is glue
+    per screen rather than per control, and the SDK's own `ToolbarItemGroup(placement:
+    .keyboard)` still renders nowhere — so Android has no *Done* button beside *Place bet*
+    where the other four apps do. What SwiftUI gives you implicitly is exactly what does not
+    survive transpilation, because there is no API call to translate.
+17. **A scroll view that does not grow for the keyboard** — the deposit form's *Confirm
+    deposit* button sat inline at the end of a `ScrollView`, which is the natural way to write
+    it and works on iOS: the keyboard shrinks the scroll viewport and the button scrolls into
+    reach. On Android the transpiled `ScrollView` kept its old content height, so the last
+    rows were behind the keys with nothing left to scroll. The button is now pinned in a
+    `ZStack(alignment: .bottom)` like the slip's action bar — a layout the SDK did not need
+    for its own sake, adopted so one platform can reach it.
 
 ## Architecture
 

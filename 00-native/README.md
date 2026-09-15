@@ -5,7 +5,7 @@ Two apps, zero shared code. SwiftUI on iOS 26 and Jetpack Compose on Android 17,
 ## What this demonstrates
 
 - **Fair comparison.** The product, data, screens and golden fixtures are identical. Only the sharing mechanism differs in the other four folders.
-- **Real native quality.** Not a straw man: `@Observable` and strict concurrency on iOS, Material 3 + edge-to-edge + predictive back on Android, Kingfisher and Coil for real HTTP image loads, PiP/AirPlay/Now Playing on the iOS-only video screen.
+- **Real native quality.** Not a straw man: `@Observable` and strict concurrency on iOS, Material 3 + edge-to-edge + predictive back on Android, Kingfisher and Coil for real HTTP image loads, Picture in Picture on both video screens and AirPlay/Now Playing on the iOS one.
 - **Duplication cost.** FightCore — odds, slip math, validation, settlement, cash-out — is implemented twice (~600 lines Swift, ~550 lines Kotlin). Deposit is hand-written twice behind the same `DepositParams`/`DepositResult` contract the SDK approaches carry across their runtime boundary.
 
 ## Build commands
@@ -58,9 +58,9 @@ Both platforms start a **localhost HTTP server on port 8765** at launch, serving
 
 Both platforms load the same JSON from disk in unit tests and assert every case.
 
-## iOS-only screens
+## Platform-only behaviour
 
-Fighter profile, news feed and video (with PiP, AirPlay route picker, background audio session and Now Playing metadata) exist only under `00-native/ios`, per the shared UI spec.
+The AirPlay route picker, the background audio session and the Now Playing metadata on the video screen exist only under `00-native/ios`; Android has no counterpart in the same model. Picture in Picture exists on both, written twice — see `shared-ui-spec/screens.md`.
 
 ## Honest duplication cost
 

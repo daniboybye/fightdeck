@@ -16,9 +16,11 @@ struct SlipTabView: View {
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        BetSlipView(state: state, onBrowseEvents: onBrowseEvents)
-            .navigationTitle("Bet Slip")
+        NavigationStack {
+            BetSlipView(state: state, onBrowseEvents: onBrowseEvents)
+                .navigationTitle("Bet Slip")
                 .balanceToolbar(state: state)
+        }
     }
 }
 

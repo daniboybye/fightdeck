@@ -23,6 +23,7 @@ import java.math.BigDecimal
 fun RNDepositScreen(
     balance: BigDecimal,
     onCompleted: (BigDecimal) -> Unit,
+    onConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -48,8 +49,12 @@ fun RNDepositScreen(
                     layoutStamp = 1.0,
                 ),
             ) { result ->
-                if (result is DepositResult.Completed) {
-                    onCompleted(result.amount)
+                when (result) {
+                    // The confirmation screen means the money has moved; the host drops its
+                    // Close button so the sheet cannot leave without crediting the account.
+                    is DepositResult.Confirmed -> onConfirmed()
+                    is DepositResult.Completed -> onCompleted(result.amount)
+                    else -> Unit
                 }
             }
         },

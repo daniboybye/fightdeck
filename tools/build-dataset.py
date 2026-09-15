@@ -313,31 +313,76 @@ def build_news() -> list[dict[str, Any]]:
 # A YouTube link is not usable here: playing it in AVPlayer means extracting the stream,
 # which breaks YouTube's terms, and the compliant alternative is an iframe in a WebView,
 # which would defeat the entire point of the "never share this screen" argument. So the
-# video screen plays genuine HLS and MP4 from long-lived public test hosts.
+# video screen plays MP4 from long-lived public test hosts.
 #
-# Apple's BipBop is the reference HLS stream AVPlayer is tested against and ExoPlayer
-# handles it without configuration. The W3C-hosted MP4 is the progressive-download
-# fallback for anything that cannot do HLS.
+# Every clip is progressive H.264/AAC MP4: that is the one format both AVPlayer and
+# Android's platform MediaPlayer play without a streaming engine, which keeps the two
+# video screens comparable. Durations below are the files' real durations.
+#
+# Every clip also has even pixel dimensions. Android's decoders declare a 2x2 alignment
+# limit, so a 853x480 file — a perfectly ordinary 16:9 480p encode, and what the W3C
+# "bunny" clips are — makes MediaCodec refuse to configure: the audio plays, the picture
+# stays black, and logcat says only "Failed to create video/avc decoder". AVPlayer and
+# desktop browsers play those files, which is what makes the trap so easy to ship.
 
 MEDIA = [
     {
         "id": "freedom-250-presser",
         "eventId": "ufc-freedom-250",
         "title": "Post-fight press conference",
-        "kind": "hls",
-        "url": "https://devstreaming-cdn.apple.com/videos/streaming/examples/"
-               "img_bipbop_adv_example_fmp4/master.m3u8",
-        "poster": "assets/events/ufc-freedom-250.jpg",
-        "durationSeconds": 1800,
-        "note": "Public HLS test stream standing in for licensed footage",
+        "kind": "mp4",
+        "url": "https://media.w3.org/2010/05/video/movie_300.mp4",
+        "poster": "assets/video/freedom-250-presser.jpg",
+        "durationSeconds": 300,
+        "note": "Public MP4 test asset standing in for licensed footage",
+    },
+    {
+        "id": "freedom-250-gaethje-recap",
+        "eventId": "ufc-freedom-250",
+        "title": "Gaethje unifies the belt: fight recap",
+        "kind": "mp4",
+        "url": "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4",
+        "poster": "assets/video/freedom-250-gaethje-recap.jpg",
+        "durationSeconds": 52,
+        "note": "Public MP4 test asset standing in for licensed footage",
+    },
+    {
+        "id": "freedom-250-finishes",
+        "eventId": "ufc-freedom-250",
+        "title": "Every finish from the South Lawn",
+        "kind": "mp4",
+        "url": "https://media.w3.org/2010/05/video/movie_300.mp4",
+        "poster": "assets/video/freedom-250-finishes.jpg",
+        "durationSeconds": 300,
+        "note": "Public MP4 test asset standing in for licensed footage",
     },
     {
         "id": "ufc-328-presser",
         "eventId": "ufc-328",
         "title": "Post-fight press conference",
         "kind": "mp4",
+        "url": "https://download.blender.org/durian/trailer/sintel_trailer-720p.mp4",
+        "poster": "assets/video/ufc-328-presser.jpg",
+        "durationSeconds": 52,
+        "note": "Public MP4 test asset standing in for licensed footage",
+    },
+    {
+        "id": "ufc-328-strickland-upset",
+        "eventId": "ufc-328",
+        "title": "Strickland shocks Chimaev: the final round",
+        "kind": "mp4",
         "url": "https://media.w3.org/2010/05/sintel/trailer.mp4",
-        "poster": "assets/events/ufc-328.jpg",
+        "poster": "assets/video/ufc-328-strickland-upset.jpg",
+        "durationSeconds": 52,
+        "note": "Public MP4 test asset standing in for licensed footage",
+    },
+    {
+        "id": "ufc-328-weigh-ins",
+        "eventId": "ufc-328",
+        "title": "Ceremonial weigh-ins at the Prudential Center",
+        "kind": "mp4",
+        "url": "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4",
+        "poster": "assets/video/ufc-328-weigh-ins.jpg",
         "durationSeconds": 52,
         "note": "Public MP4 test asset standing in for licensed footage",
     },

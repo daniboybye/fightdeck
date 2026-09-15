@@ -79,10 +79,18 @@ public struct DepositFlowView: View {
             }
         }
         .navigationTitle(didSucceed ? "Confirmed" : "Deposit")
+        #if !SKIP
         .navigationBarTitleDisplayMode(NavigationBarItem.TitleDisplayMode.inline)
-        // The money has already moved by the time this screen appears, so going back to the
-        // amount field would offer to spend it a second time.
-        .navigationBarBackButtonHidden(didSucceed)
+        #endif
+        .toolbar {
+            // The money has already moved by the time the confirmation shows, so that screen
+            // leaves through Done only: closing it would offer to spend the deposit twice.
+            if !didSucceed {
+                ToolbarItem(placement: ToolbarItemPlacement.topBarLeading) {
+                    Button("Close", systemImage: "xmark") { onResult(DepositResult.cancelled) }
+                }
+            }
+        }
     }
 
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
@@ -103,33 +111,39 @@ public struct DepositFlowView: View {
     }
 
     #if SKIP
+    // The confirm button rides above the scroll rather than at the end of it, the same shape the
+    // slip screen uses: as the last row of a scroll it ends up behind the keyboard the amount
+    // field raises, and SkipUI's scroll view will not extend its range far enough to reach it.
     private var skipFormContent: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: theme.spacingLG) {
-                amountSection
-                methodSection
-                summarySection
-                Button {
-                    didSucceed = true
-                } label: {
-                    Text("Confirm deposit")
-                        .font(Typography.semibold(theme.fontCallout))
-                        .foregroundStyle(theme.onAccent)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: theme.spacingLG) {
+                    amountSection
+                    methodSection
+                    summarySection
                 }
-                .frame(height: Layout.primaryActionHeight)
-                .background(theme.accent)
-                .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
-                .disabled(amountValidationMessage != nil || amountText.isEmpty)
+                .padding(theme.spacingLG)
+                .padding(.bottom, Layout.primaryActionHeight + theme.spacingLG)
             }
-            .padding(theme.spacingLG)
+            skipConfirmButton
+                .padding(.horizontal, theme.spacingLG)
+                .padding(.bottom, theme.spacingLG)
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { amountFocused = false }
-            }
+    }
+
+    private var skipConfirmButton: some View {
+        Button {
+            didSucceed = true
+        } label: {
+            Text("Confirm deposit")
+                .font(Typography.semibold(theme.fontCallout))
+                .foregroundStyle(theme.onAccent)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(height: Layout.primaryActionHeight)
+        .background(theme.accent)
+        .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+        .disabled(amountValidationMessage != nil || amountText.isEmpty)
     }
     #endif
 
@@ -149,7 +163,7 @@ public struct DepositFlowView: View {
             Text("Amount")
                 .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.textPrimary)
-            TextField("€0.00", text: $amountText)
+            TextField("€10 – €2,000", text: $amountText)
                 .keyboardType(.decimalPad)
                 .font(Typography.bold(theme.fontDisplay))
                 .focused($amountFocused)

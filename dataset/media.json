@@ -4,38 +4,38 @@
       "id": "freedom-250-presser",
       "eventId": "ufc-freedom-250",
       "title": "Post-fight press conference",
-      "kind": "hls",
-      "url": "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8",
+      "kind": "mp4",
+      "url": "https://media.w3.org/2010/05/video/movie_300.mp4",
       "poster": "assets/video/freedom-250-presser.jpg",
-      "durationSeconds": 1800,
-      "note": "Public HLS test stream standing in for licensed footage"
+      "durationSeconds": 300,
+      "note": "Public MP4 test asset standing in for licensed footage"
     },
     {
       "id": "freedom-250-gaethje-recap",
       "eventId": "ufc-freedom-250",
       "title": "Gaethje unifies the belt: fight recap",
       "kind": "mp4",
-      "url": "https://media.w3.org/2010/05/bunny/trailer.mp4",
+      "url": "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4",
       "poster": "assets/video/freedom-250-gaethje-recap.jpg",
-      "durationSeconds": 61,
+      "durationSeconds": 52,
       "note": "Public MP4 test asset standing in for licensed footage"
     },
     {
       "id": "freedom-250-finishes",
       "eventId": "ufc-freedom-250",
       "title": "Every finish from the South Lawn",
-      "kind": "hls",
-      "url": "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8",
+      "kind": "mp4",
+      "url": "https://media.w3.org/2010/05/video/movie_300.mp4",
       "poster": "assets/video/freedom-250-finishes.jpg",
-      "durationSeconds": 420,
-      "note": "Public HLS test stream standing in for licensed footage"
+      "durationSeconds": 300,
+      "note": "Public MP4 test asset standing in for licensed footage"
     },
     {
       "id": "ufc-328-presser",
       "eventId": "ufc-328",
       "title": "Post-fight press conference",
       "kind": "mp4",
-      "url": "https://media.w3.org/2010/05/sintel/trailer.mp4",
+      "url": "https://download.blender.org/durian/trailer/sintel_trailer-720p.mp4",
       "poster": "assets/video/ufc-328-presser.jpg",
       "durationSeconds": 52,
       "note": "Public MP4 test asset standing in for licensed footage"
@@ -45,9 +45,9 @@
       "eventId": "ufc-328",
       "title": "Strickland shocks Chimaev: the final round",
       "kind": "mp4",
-      "url": "https://media.w3.org/2010/05/bunny/movie.mp4",
+      "url": "https://media.w3.org/2010/05/sintel/trailer.mp4",
       "poster": "assets/video/ufc-328-strickland-upset.jpg",
-      "durationSeconds": 596,
+      "durationSeconds": 52,
       "note": "Public MP4 test asset standing in for licensed footage"
     },
     {
@@ -55,9 +55,9 @@
       "eventId": "ufc-328",
       "title": "Ceremonial weigh-ins at the Prudential Center",
       "kind": "mp4",
-      "url": "https://download.blender.org/peach/trailer/trailer_480p.mov",
+      "url": "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4",
       "poster": "assets/video/ufc-328-weigh-ins.jpg",
-      "durationSeconds": 33,
+      "durationSeconds": 52,
       "note": "Public MP4 test asset standing in for licensed footage"
     }
   ]

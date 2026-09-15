@@ -14,6 +14,7 @@ import java.math.BigDecimal
 fun RNDepositScreen(
     balance: BigDecimal,
     onCompleted: (BigDecimal) -> Unit,
+    onConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     UnavailableFeature(label = "Deposit (runtime-only build)", modifier = modifier)

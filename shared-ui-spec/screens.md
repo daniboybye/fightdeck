@@ -249,23 +249,42 @@ demo-written copy sitting next to real results should say which is which.
 
 ---
 
-## 8. Video — iOS only
+## 8. Video — the screen written twice
 
 The screen the talk names as the one you would never share.
 
-**Player.** `AVPlayer` in a `VideoPlayer`, 16:9, poster shown until playback starts.
-Source from `media.json` — real HLS.
+**Player.** `AVPlayer` in an `AVPlayerViewController` on iOS, `VideoView` on Android, 16:9,
+poster shown until playback starts. Source from `media.json` — progressive MP4, the one
+format both platform players accept without a streaming engine.
+
+**Clips need even pixel dimensions.** Android's decoders declare a 2x2 alignment limit, so
+a 853x480 file — an ordinary 16:9 480p encode — makes MediaCodec refuse to configure: the
+audio plays, the picture stays black, and logcat says `Failed to create video/avc decoder`
+and nothing else. The same file plays on iOS and in desktop browsers, so the only way to
+catch it is to run the Android app. `dataset/README.md` carries the `ffprobe` check.
 
 **What it must demonstrate**, and the reason it is unshareable:
 
-- Picture in Picture
+- Picture in Picture, entered by itself when the app is minimised
 - AirPlay via the system route picker
 - Background audio with the correct `AVAudioSession` category
 - Now Playing info in Control Center and on the Lock Screen
 
-Every one of these is an iOS system integration with an Android counterpart that is not
-merely different in API but different in model — ExoPlayer, `MediaSession`, Cast. A
-cross-platform abstraction over this pair either leaks both or serves neither, which is
-exactly the point being made.
+Picture in Picture is the sharpest of these, because both platforms have it and the two
+implementations share nothing. iOS asks for `allowsPictureInPicturePlayback`, the `audio`
+background mode, and a delegate that outlives the screen the player was on; the player
+itself keeps playing, so there is nothing to hand over. Android asks for
+`android:supportsPictureInPicture`, the resize `configChanges` so the activity is not
+recreated, `PictureInPictureParams.setAutoEnterEnabled`, and the app's own chrome hidden
+while the window is up — and then, because the composable tree is rebuilt on the way in
+and `VideoView` drops its `MediaPlayer` along with its surface, the playback position has
+to be carried across by hand. Twice over: the replacement surface is composed before the
+old one is released, so the position has to be sampled while the clip is still playing
+rather than read on the way out, and the resume needs `MediaPlayer.SEEK_CLOSEST`, because
+the default seek lands on the nearest keyframe and drops the viewer up to ten seconds back.
+
+The rest are iOS system integrations whose Android counterparts differ not merely in API
+but in model — ExoPlayer, `MediaSession`, Cast. A cross-platform abstraction over such a
+pair either leaks both or serves neither, which is exactly the point being made.
 
 **Below the player.** Title, event, duration, and a plain-text transcript placeholder.

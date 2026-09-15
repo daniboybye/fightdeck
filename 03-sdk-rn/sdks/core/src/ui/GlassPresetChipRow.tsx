@@ -92,6 +92,10 @@ const styles = StyleSheet.create({
   },
   fallbackRow: {
     flexDirection: 'row',
+    // Same full width the native row claims. Without it, a host that lays the row out inside
+    // another row gives it the chips' intrinsic width — and `flex: 1` chips measure as zero,
+    // so the row arrives on screen as four hairlines.
+    width: '100%',
   },
   fallbackChip: {
     flex: 1,

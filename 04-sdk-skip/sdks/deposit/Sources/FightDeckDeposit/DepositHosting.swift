@@ -78,11 +78,16 @@ public struct DepositComposeEntry: View {
     }
 
     public var body: some View {
-        DepositFlowView(
-            params: params,
-            theme: ThemeTokens.parse(params.themeJSON),
-            onResult: onResult
-        )
+        // The iOS host presents this inside its own navigation stack; the Compose host drops it
+        // straight into a bottom sheet. Carrying a stack here is what puts the screen's toolbar
+        // — its title and its Close button — on the Android side too.
+        NavigationStack {
+            DepositFlowView(
+                params: params,
+                theme: ThemeTokens.parse(params.themeJSON),
+                onResult: onResult
+            )
+        }
     }
 }
 #endif

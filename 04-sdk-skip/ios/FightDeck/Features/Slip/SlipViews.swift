@@ -15,14 +15,15 @@ struct SlipTabView: View {
     let onBrowseEvents: () -> Void
 
     var body: some View {
-        BetslipBridgeView(
-            state: state,
-            onBrowseEvents: onBrowseEvents,
-            onDeposit: state.presentDeposit
-        )
-        .navigationTitle("Bet Slip")
-        .navigationBarTitleDisplayMode(.inline)
-        .balanceToolbar(state: state)
+        NavigationStack {
+            BetslipBridgeView(
+                state: state,
+                onBrowseEvents: onBrowseEvents,
+                onDeposit: state.presentDeposit
+            )
+            .navigationTitle("Bet Slip")
+            .balanceToolbar(state: state)
+        }
     }
 }
 

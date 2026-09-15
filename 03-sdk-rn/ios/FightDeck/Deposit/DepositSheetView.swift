@@ -30,7 +30,15 @@ struct DepositSheetView: View {
             }
             .navigationTitle(depositConfirmed ? "Confirmed" : "Deposit")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(depositConfirmed)
+            .toolbar {
+                // The money has already moved by the time the confirmation shows, so that
+                // screen leaves through Done only: closing it would spend the deposit twice.
+                if !depositConfirmed {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Close", systemImage: "xmark", action: onDismiss)
+                    }
+                }
+            }
             .tracksTextInput($textInputActive)
         }
     }

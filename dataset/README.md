@@ -99,10 +99,23 @@ Regenerate art after editing `tools/image-sources.json`:
 python3 tools/fetch-real-art.py
 ```
 
-Video is likewise public test media: Apple's BipBop HLS stream and a W3C-hosted MP4.
+Video is likewise public test media, hosted by the W3C and the Blender Foundation. Every
+clip is progressive H.264/AAC MP4, the one format both AVPlayer and Android's platform
+MediaPlayer play without a streaming engine, so the two video screens stay comparable.
 A YouTube link would not work — playing it through AVPlayer requires extracting the
 stream, which breaks YouTube's terms, and the compliant route is an iframe in a WebView,
 which would gut the point the video screen exists to make.
+
+Every clip also has even pixel dimensions, and that is not a detail. Android's decoders
+declare a 2x2 alignment limit, so an ordinary 16:9 480p encode at 853x480 — the size of
+the W3C "bunny" clips this dataset used to carry — makes MediaCodec refuse to configure.
+The audio decodes, the picture stays black, and the only clue is `Failed to create
+video/avc decoder` in logcat. AVPlayer and desktop browsers play the same file, so the
+trap survives every check that does not run on Android. Before adding a clip:
+
+```bash
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 <url>
+```
 
 ## Sources
 

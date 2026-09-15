@@ -102,9 +102,15 @@ struct DepositFlowView: View {
         }
         .navigationTitle(form.didSucceed ? "Confirmed" : "Deposit")
         .navigationBarTitleDisplayMode(.inline)
-        // The money has already moved by the time this screen appears, so going back to the
-        // amount field would offer to spend it a second time.
-        .navigationBarBackButtonHidden(form.didSucceed)
+        .toolbar {
+            // The money has already moved by the time the confirmation shows, so that screen
+            // leaves through Done only: closing it would offer to spend the deposit twice.
+            if !form.didSucceed {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close", systemImage: "xmark") { onResult(.cancelled) }
+                }
+            }
+        }
     }
 
     private var formContent: some View {
@@ -119,7 +125,7 @@ struct DepositFlowView: View {
 
     private var amountSection: some View {
         Section("Amount") {
-            TextField("€0.00", text: $form.amountText)
+            TextField("€10 – €2,000", text: $form.amountText)
                 .keyboardType(.decimalPad)
                 .font(.largeTitle.bold())
                 .focused($amountFocused)

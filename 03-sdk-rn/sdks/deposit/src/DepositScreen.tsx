@@ -150,7 +150,7 @@ function DepositScreenContent(props: Record<string, unknown>) {
           // by hanging its own Done toolbar off the keyboard — which lands on top of the
           // action bar. Done lives in the bar instead.
           keyboardType="decimal-pad"
-          placeholder="€0.00"
+          placeholder="€10 – €2,000"
           placeholderTextColor={theme.colors.textSecondary}
           value={amountText}
           onPressIn={() => setAmountFocused(true)}

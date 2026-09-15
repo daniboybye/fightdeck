@@ -100,23 +100,23 @@ its original build column was dominated by Rust packaging rather than by the app
 
 | Approach | iOS | Android | Shared | Config | Total | Shared |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 3,099 | 3,168 | 0 | 160 | 6,427 | 0% |
-| `01-core-swift` | 2,387 | 3,045 | 1,922 | 338 | 7,692 | 25% |
-| `02-core-rust` | 2,645 | 2,623 | 2,368 | 394 | 8,030 | 29% |
-| `04-sdk-skip` | 2,082 | 2,812 | 3,179 | 793 | 8,866 | 36% |
-| `03-sdk-rn` | 3,383 | 3,683 | 4,164 | 849 | 12,079 | 34% |
+| `00-native` baseline | 3,113 | 3,282 | 0 | 226 | 6,621 | 0% |
+| `01-core-swift` | 2,389 | 3,159 | 2,122 | 405 | 8,075 | 26% |
+| `02-core-rust` | 2,660 | 2,737 | 2,375 | 421 | 8,193 | 29% |
+| `04-sdk-skip` | 2,087 | 2,920 | 3,224 | 707 | 8,938 | 36% |
+| `03-sdk-rn` | 3,402 | 3,863 | 4,168 | 757 | 12,190 | 34% |
 
 Hand-written lines only, from `python3 tools/count-lines.py`. Generated bindings and
 transpiler output are excluded — counting them would credit a code generator for typing.
 The same script reports them separately, next to the hand-written boundary code, because
-the ratio between the two is the case for using a generator at all: skipstone writes 3,512
-lines and leaves 447, UniFFI writes 12,271 and leaves 967, jextract writes 322 and leaves
-524 — the only generator here that hands back more work than it does.
+the ratio between the two is the case for using a generator at all: skipstone writes 3,557
+lines and leaves 447, UniFFI writes 12,271 and leaves 967, jextract writes 321 and leaves
+536 — the only generator here that hands back more work than it does.
 
 Read the per-platform columns before the shared one. Every approach that shares logic
 takes work *out* of the hosts, except React Native, which is the only one where the
-platform-specific code goes **up**: 7,066 lines across the two hosts against the
-baseline's 6,267, because embedding a surface, sizing it and feeding it the host's layout
+platform-specific code goes **up**: 7,265 lines across the two hosts against the
+baseline's 6,395, because embedding a surface, sizing it and feeding it the host's layout
 is code that only exists because the SDK is there. A bigger shared column is not the same
 as a smaller job.
 
@@ -126,7 +126,7 @@ many times each approach implements the same betting contract:
 | Approach | Times the contract is implemented |
 | --- | --- |
 | `00-native` baseline | twice — 449 lines of Swift, 297 of Kotlin |
-| `01-core-swift` | twice — 357 shared, 138 more in Kotlin |
+| `01-core-swift` | twice — 411 shared, 138 more in Kotlin |
 | `02-core-rust` | three times — 240 shared, 78 in Swift, 72 in Kotlin |
 | `03-sdk-rn` | three times — 378 in TypeScript, plus both hosts in full |
 | `04-sdk-skip` | **once** — 581 lines, and nothing else |

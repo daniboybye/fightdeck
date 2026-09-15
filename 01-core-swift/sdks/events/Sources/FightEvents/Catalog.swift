@@ -7,7 +7,11 @@
 //
 
 import FightCore
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public enum CatalogError: Error, Sendable {
     case decoding(field: String)

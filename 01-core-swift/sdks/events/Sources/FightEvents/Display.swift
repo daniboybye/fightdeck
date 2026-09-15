@@ -6,7 +6,11 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public enum Display {
     public static let segmentOrder = [
@@ -19,13 +23,30 @@ public enum Display {
     ]
 
     public static func humanise(_ raw: String) -> String {
-        let spaced = raw.replacingOccurrences(of: "_", with: " ")
+        let spaced = underscoresToSpaces(raw)
         guard let first = spaced.first else { return "" }
         return String(first).uppercased() + spaced.dropFirst()
     }
 
     public static func duration(totalSeconds: Int) -> String {
-        String(format: "%d:%02d", totalSeconds / 60, totalSeconds % 60)
+        let seconds = totalSeconds % 60
+        #if os(Android)
+        // String(format:) is another piece of Foundation that Android would pay ICU for.
+        // Seconds never exceed two digits, so the padding is a single comparison.
+        return "\(totalSeconds / 60):\(seconds < 10 ? "0" : "")\(seconds)"
+        #else
+        return String(format: "%d:%02d", totalSeconds / 60, seconds)
+        #endif
+    }
+
+    /// `replacingOccurrences(of:with:)` comes from Foundation's NSString bridge, which is on
+    /// the far side of the ICU line on Android. One character for another is a map.
+    private static func underscoresToSpaces(_ raw: String) -> String {
+        #if os(Android)
+        return String(raw.map { $0 == "_" ? " " : $0 })
+        #else
+        return raw.replacingOccurrences(of: "_", with: " ")
+        #endif
     }
 
     public static func weightClass(_ raw: String) -> String {
@@ -33,7 +54,7 @@ public enum Display {
     }
 
     public static func boutHeadline(weightClassRaw: String, titleFight: Bool, scheduledRounds: Int) -> String {
-        let base = weightClassRaw.replacingOccurrences(of: "_", with: " ").uppercased()
+        let base = underscoresToSpaces(weightClassRaw).uppercased()
         let title = titleFight ? " · TITLE" : ""
         return "\(base)\(title) · \(scheduledRounds) RNDS"
     }

@@ -6,7 +6,11 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public struct ContractLimits: Sendable {
     public static let minStake = Decimal(string: "1.00")!

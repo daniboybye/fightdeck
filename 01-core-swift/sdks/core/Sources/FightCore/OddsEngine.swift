@@ -6,12 +6,22 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public enum OddsEngine {
     public static func decimalToFractional(_ decimalOdds: Decimal) -> String {
         let profit = decimalOdds - 1
+        // NSDecimalNumber is the other half of Foundation that Android cannot afford; the
+        // bridge it offers here is one truncation, which Money spells out itself.
+        #if os(Android)
+        let scaled = Money.truncated(profit * 10_000)
+        #else
         let scaled = NSDecimalNumber(decimal: profit * 10_000).intValue
+        #endif
         let divisor = gcd(abs(scaled), 10_000)
         return "\(scaled / divisor)/\(10_000 / divisor)"
     }

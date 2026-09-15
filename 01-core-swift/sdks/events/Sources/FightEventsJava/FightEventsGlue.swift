@@ -8,7 +8,11 @@
 
 import FightCore
 import FightEvents
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public func humaniseCode(_ raw: String) -> String {
     Display.humanise(raw)

@@ -81,8 +81,12 @@ larger and nobody downloads it.
 > **The Android column predates R8.** Release builds are minified now; these rows are not.
 > Re-measure before quoting them.
 
-† `01-core-swift`'s Android figure is what a Swift core actually costs on Android: 273 KB
-of logic pulling 68 MB of Swift runtime behind it, of which three fifths is ICU. Its
+† `01-core-swift`'s Android figure is what a Swift core actually costs on Android: 590 KB of
+logic across three SDKs, pulling 19.1 MB of Swift runtime behind it. **This row predates the
+ICU removal and must be re-measured** — it was taken when the runtime was 65.2 MB per ABI,
+three fifths of it `lib_FoundationICU.so`, which arrived because the sources said
+`import Foundation`. They now say `FoundationEssentials` on Android and format the digits
+themselves; `01-core-swift/README.md` has the before and after. Its
 Android build time is the cross-compile of both ABIs plus jextract binding generation, and
 is not comparable to the Gradle-only figures in the other rows — jextract reruns on every
 build and cascades a recompile, so this is also the per-change cost, not just the first
@@ -238,7 +242,7 @@ three of the four ABIs, so the download saving is smaller than the column below:
 | Approach | APK unminified | APK minified | dex unminified | dex minified |
 | --- | ---: | ---: | ---: | ---: |
 | `00-native` | 46.32 MB | 3.02 MB | 45.65 MB | 2.71 MB |
-| `01-core-swift` | 178.01 MB | 134.76 MB | 45.68 MB | 2.77 MB |
+| `01-core-swift` § | 178.01 MB | 134.76 MB | 45.68 MB | 2.77 MB |
 | `02-core-rust` | 52.06 MB | 8.70 MB | 46.08 MB | 3.06 MB |
 | `03-sdk-rn` | 105.29 MB | 54.90 MB | 53.03 MB | 3.73 MB |
 | `04-sdk-skip` | 67.72 MB | 17.78 MB | 62.23 MB | 12.82 MB |
@@ -249,6 +253,11 @@ noise to precisely the comparison this repository exists to make, and drowning t
 payload that actually distinguishes the approaches: before the aggregate `.so` change,
 `02-core-rust` shipped 5.23 MB of Rust and was reporting a 52 MB APK. The current
 `libfightdeck.so` layout must be re-measured before quoting this row.
+
+§ `01-core-swift`'s two APK columns also predate the ICU removal. The minified universal APK
+measures **44.40 MB** now, against the 134.76 MB below, because 46 MB per ABI of Foundation
+internationalisation left the build; the dex columns are unaffected, since none of it was
+dex. The arm64 download is 7.86 MB.
 
 The one row that does not collapse to about 3 MB of dex is Skip's, and that is the finding.
 Transpiled Swift needs 12.82 MB kept, four times any other host, because `Codable` transpiles

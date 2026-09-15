@@ -7,7 +7,11 @@
 //
 
 import FightCore
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public struct SlipEngine: Sendable {
     public let bouts: [String: BoutIndex]

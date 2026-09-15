@@ -7,7 +7,11 @@
 //
 
 import FightCore
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Slip state and the mutations over it, with no Observation and no actor isolation.
 ///

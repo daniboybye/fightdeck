@@ -7,7 +7,11 @@
 //
 
 import FightCore
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 // jextract maps Int, String, Bool, arrays and imported types, but has no mapping for
 // Decimal — the type every amount and every odd in FightCore is written in. Money

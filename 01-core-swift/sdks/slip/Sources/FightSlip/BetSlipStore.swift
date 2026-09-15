@@ -7,7 +7,11 @@
 //
 
 import FightCore
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Observation
 
 /// SwiftUI's view of a `SlipSession`. The mutations live in the session; this type adds

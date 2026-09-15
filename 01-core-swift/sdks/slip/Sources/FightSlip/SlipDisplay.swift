@@ -7,7 +7,11 @@
 //
 
 import FightCore
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public enum SlipDisplay {
     public static func slipSummary(state: SlipState) -> [(label: String, value: String)] {

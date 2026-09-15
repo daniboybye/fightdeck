@@ -227,27 +227,55 @@ Per ABI, as packaged in the debug APK (stripped by AGP):
 
 | Library | Size |
 | --- | --- |
-| `libfightcore.so` — the core **and** its JNI thunks | **273 KB** |
-| `lib_FoundationICU.so` | 40.2 MB |
-| `libswiftCore.so` | 6.6 MB |
-| `libFoundation.so` | 6.2 MB |
-| `libFoundationEssentials.so` | 6.2 MB |
-| `libSwiftJava.so` — the swift-java runtime | 2.4 MB |
-| `libc++_shared.so` | 1.3 MB |
-| 12 more runtime libraries | 4.9 MB |
-| **Total, 19 libraries** | **68.0 MB** |
+| `libfightcore.so` — the core **and** its JNI thunks | **91 KB** |
+| `libfightslip.so` | 208 KB |
+| `libfightevents.so` | 291 KB |
+| `libswiftCore.so` | 6.3 MB |
+| `libFoundationEssentials.so` | 5.9 MB |
+| `libSwiftJava.so` — the swift-java runtime | 2.2 MB |
+| `libc++_shared.so` | 1.2 MB |
+| 10 more runtime libraries | 2.9 MB |
+| **Total, 17 libraries** | **19.1 MB** |
 
-Unstripped, as they leave the linker, the same libraries total 93.6 MB and `libSwiftJava.so`
-alone is 10.0 MB; the AAR carrying both ABIs is 59 MB. The Java side is a rounding error by
+Unstripped, as they leave the linker, the same libraries total 37.2 MB and `libSwiftJava.so`
+alone is 9.6 MB; the AAR carrying both ABIs is 19 MB. The Java side is a rounding error by
 comparison: 22 KB of generated bindings plus the 72 KB SwiftKit jar.
 
-Two numbers are worth arguing about. The bindings themselves are cheap: unstripped,
-`libfightcore.so` grew from **615 KB to 923 KB** when the thunks and the facade moved in.
-The runtime is not cheap: **273 KB of shared
-logic arrives with 68 MB behind it**, three fifths of that ICU, because the core touches
-`Decimal` and date formatting. A core written against nothing but the standard library
-links a fraction of this, and that is a design decision rather than a toolchain limit.
-Android App Bundle splits per ABI, so a device downloads one column rather than both.
+### The 46 MB that is not in that table
+
+The list above is what the runtime costs *after* the SDKs were moved off ICU. Before that,
+three more libraries sat in it and dwarfed everything else:
+
+| Library | Size | Why it was there |
+| --- | ---: | --- |
+| `lib_FoundationICU.so` | 38.4 MB | locale tables, none of which this app reads |
+| `libFoundation.so` | 5.9 MB | the module that `import Foundation` names |
+| `libFoundationInternationalization.so` | 1.6 MB | the link between the two |
+
+**46 MB per ABI, 17 MB of it compressed download, and one `import` put it there.** Android
+is the only platform that pays: Apple has ICU in the OS, and Skip's transpiled Kotlin binds
+to Android's own `android.icu`, so both get locale data for nothing. The Swift Android SDK
+cannot reach the platform's copy, so it brings its own.
+
+Deleting the library alone does not work — `libFoundation.so` carries a hard `DT_NEEDED` on
+it, so the loader wants it whether or not a line of code does, and the app dies on the
+first `System.loadLibrary` with `dlopen failed: library "lib_FoundationICU.so" not found`.
+The chain has to stop earlier: `libFoundationEssentials.so` needs no ICU, so the Android
+build imports `FoundationEssentials` instead and does without what only the full module has.
+For this SDK that came to one thing — `NumberFormatter` — because all three of its
+formatters are POSIX with grouping off and a fixed number of fraction digits, which is digit
+arithmetic rather than internationalisation. `MoneyDigits.swift` is that arithmetic: about
+90 lines, HALF_UP as the contract requires, verified against the same 72 contract fixtures
+on the device. `NSDecimalNumber`, `String(format:)` and `replacingOccurrences` went the same
+way, for a few lines each, and 16 files carry a five-line conditional import.
+
+So the honest pair of numbers for a Swift core on Android is **19.1 MB if you watch what you
+import, 65.2 MB if you do not** — and the second is the default, because `import Foundation`
+is what every Swift file starts with.
+
+The bindings themselves stay cheap either way: unstripped, `libfightcore.so` grew from
+**615 KB to 923 KB** when the thunks and the facade moved in. Android App Bundle splits per
+ABI, so a device downloads one column rather than both.
 
 ### Iteration cost
 

@@ -8,7 +8,11 @@
 
 import FightCore
 import FightSlip
+#if os(Android)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public enum SlipValidationError: String {
     case emptySlip = "empty_slip"

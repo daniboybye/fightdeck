@@ -214,7 +214,10 @@ Pod::Spec.new do |s|
     'runtime/BundledFrameworks/hermesvm.xcframework',
     'runtime/BundledFrameworks/ReactNativeDependencies.xcframework',
   ]
-  s.resources = ['runtime/Resources/fightdeck.hbc']
+  # Must stay a resource bundle with this exact name: FightDeckRNHost.mm resolves the Hermes
+  # bytecode through `FightDeckRNRuntime.bundle`, so plain `s.resources` drops the file at the
+  # app root where the lookup misses it and React Native asks for a Metro packager instead.
+  s.resource_bundles = { 'FightDeckRNRuntime' => ['runtime/Resources/fightdeck.hbc'] }
   s.pod_target_xcconfig = { 'OTHER_LDFLAGS' => '-ObjC' }
 end
 RUBY

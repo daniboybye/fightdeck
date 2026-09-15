@@ -118,20 +118,6 @@ private func fixtureSlipEngine() -> SlipEngine {
     return SlipEngine(bouts: catalog.boutIndex())
 }
 
-private enum FixtureLoader {
-    static func loadJSON(named name: String) throws -> Data {
-        try Data(contentsOf: fixturesDirectory.appendingPathComponent("\(name).json"))
-    }
-
-    static var fixturesDirectory: URL {
-        URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("contract/fixtures", isDirectory: true)
-    }
-}
-
 private struct OddsConversionRoot: Decodable {
     let cases: [OddsConversionCase]
 }

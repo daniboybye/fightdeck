@@ -11,10 +11,6 @@ import Foundation
 /// The deposit feature's input and output. The SDK approaches hand exactly these two types
 /// across their runtime boundary; the baseline writes the screen by hand behind them.
 struct DepositParams: Sendable {
-    let accessToken: String
-    let environment: String
-    let locale: String
-    let themeJSON: String
     let currentBalance: Decimal
 }
 

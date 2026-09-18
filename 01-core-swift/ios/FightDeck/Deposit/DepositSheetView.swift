@@ -25,12 +25,6 @@ struct DepositSheetView: View {
     }
 
     private var depositParams: DepositParams {
-        DepositParams(
-            accessToken: "demo-token",
-            environment: "demo",
-            locale: Locale.current.identifier,
-            themeJSON: DatasetLocator.tokensJSON(),
-            currentBalance: state.balance
-        )
+        DepositParams(currentBalance: state.balance)
     }
 }

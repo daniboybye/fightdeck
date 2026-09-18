@@ -10,10 +10,6 @@ import SwiftUI
 import UIKit
 
 struct DepositParams: Sendable {
-    let accessToken: String
-    let environment: String
-    let locale: String
-    let themeJSON: String
     let currentBalance: Decimal
 }
 

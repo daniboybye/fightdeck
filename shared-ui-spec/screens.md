@@ -202,19 +202,17 @@ protocol DepositHosting {
 }
 ```
 
+The params carry only what the screen reads: `currentBalance`. An earlier draft also
+passed `accessToken`, `environment` and `locale`, which looked like a realistic SDK
+boundary and were never read by a single line of the screens behind it. Hand-written
+hosts (`00`–`02`) never needed `themeJSON` either — they style from their own tokens.
+React Native still serialises theme across the bridge; Skip passes a typed
+`ThemeTokens` struct from `FightDeckCore` instead.
+
 ```
-DepositParams  { themeJSON, currentBalance }
+DepositParams  { currentBalance }
 DepositResult  = completed(amount) | cancelled | failed(reason)
 ```
-
-The params carry only what the screen reads. An earlier draft also passed `accessToken`,
-`environment` and `locale`, which looked like a realistic SDK boundary and were never read
-by a single line of the screens behind it.
-
-`themeJSON` is `tokens.json` serialised and handed across the boundary. That is not
-incidental: it is the "share tokens, not components" argument applied to an entire
-screen, and it is why the SDK-supplied deposit screen can match the host's theme
-without the SDK importing a single one of the host's types.
 
 **What the host must never do.** It must not import React Native, Skip, or anything the
 SDK depends on. It sees `DepositHosting` and nothing else, and it must remain unit

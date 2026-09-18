@@ -202,12 +202,4 @@ enum DatasetLocator {
     private static func holdsDataset(_ url: URL) -> Bool {
         FileManager.default.fileExists(atPath: url.appendingPathComponent("events.json").path)
     }
-
-    /// Design tokens sit next to the dataset, so locating one locates the other.
-    static func tokensJSON() -> String {
-        let url = datasetRoot()
-            .deletingLastPathComponent()
-            .appendingPathComponent("shared-ui-spec/tokens.json")
-        return (try? String(contentsOf: url, encoding: .utf8)) ?? "{}"
-    }
 }

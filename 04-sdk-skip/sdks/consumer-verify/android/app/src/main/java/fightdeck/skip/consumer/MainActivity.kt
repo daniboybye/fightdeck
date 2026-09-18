@@ -8,11 +8,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import fight.deck.betslip.BetslipComposeEntry
-import fight.deck.betslip.BetslipTheme
 import fight.deck.betslip.BetSlipStore
 import fight.deck.betslip.SlipDisplayContext
 import fight.deck.core.FightCore
 import fight.deck.core.Selection
+import fight.deck.core.ThemeTokens
 import skip.lib.Array as SkipArray
 
 private object StubSlipDisplay : SlipDisplayContext {
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val fightCore = FightCore(bouts = SkipArray(emptyList()))
         val store = BetSlipStore(fightCore = fightCore)
-        val theme = BetslipTheme.parse("{}")
+        val theme = ThemeTokens.defaults
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {

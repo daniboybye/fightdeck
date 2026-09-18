@@ -56,7 +56,7 @@ struct BetslipBridgeView: View {
         BetSlipRootView(
             store: store,
             display: HostSlipDisplayContext(state: state),
-            theme: BetslipTheme.parse(ThemeLoader.tokensJSON()),
+            theme: ThemeTokens.defaults,
             onDeposit: { onDeposit() },
             onBrowseEvents: onBrowseEvents,
             onHostSync: { slip, balance, message in

@@ -13,18 +13,15 @@ import UIKit
 #endif
 
 public struct BetslipParams: Sendable {
-    public let themeJSON: String
     public let fightCore: FightCore
     public let initialSlip: BetSlip
     public let initialBalance: Decimal
 
     public init(
-        themeJSON: String,
         fightCore: FightCore,
         initialSlip: BetSlip,
         initialBalance: Decimal
     ) {
-        self.themeJSON = themeJSON
         self.fightCore = fightCore
         self.initialSlip = initialSlip
         self.initialBalance = initialBalance
@@ -45,6 +42,7 @@ public protocol BetslipHosting: AnyObject {
     func makeViewController(
         params: BetslipParams,
         display: SlipDisplayContext,
+        theme: ThemeTokens,
         onDeposit: @escaping @Sendable () -> Void,
         onBrowseEvents: @escaping @Sendable () -> Void,
         onHostSync: @escaping @Sendable (BetSlip, Decimal, String?) -> Void
@@ -60,6 +58,7 @@ public final class SkipBetslipHosting: BetslipHosting {
     public func makeViewController(
         params: BetslipParams,
         display: SlipDisplayContext,
+        theme: ThemeTokens,
         onDeposit: @escaping @Sendable () -> Void,
         onBrowseEvents: @escaping @Sendable () -> Void,
         onHostSync: @escaping @Sendable (BetSlip, Decimal, String?) -> Void
@@ -69,7 +68,6 @@ public final class SkipBetslipHosting: BetslipHosting {
             slip: params.initialSlip,
             balance: params.initialBalance
         )
-        let theme = BetslipTheme.parse(params.themeJSON)
         let view = BetSlipRootView(
             store: store,
             display: display,
@@ -87,7 +85,7 @@ public final class SkipBetslipHosting: BetslipHosting {
 public struct BetslipComposeEntry: View {
     public let store: BetSlipStore
     public let display: SlipDisplayContext
-    public let theme: BetslipTheme
+    public let theme: ThemeTokens
     public let onDeposit: @Sendable () -> Void
     public let onBrowseEvents: @Sendable () -> Void
     public let onHostSync: @Sendable (BetSlip, Decimal, String?) -> Void
@@ -95,7 +93,7 @@ public struct BetslipComposeEntry: View {
     public init(
         store: BetSlipStore,
         display: SlipDisplayContext,
-        theme: BetslipTheme,
+        theme: ThemeTokens,
         onDeposit: @escaping @Sendable () -> Void,
         onBrowseEvents: @escaping @Sendable () -> Void,
         onHostSync: @escaping @Sendable (BetSlip, Decimal, String?) -> Void

@@ -16,13 +16,7 @@ import SwiftUI
 struct HarnessRootView: View {
     var body: some View {
         DepositFlowView(
-            params: DepositParams(
-                accessToken: "demo-token",
-                environment: "demo",
-                locale: "en_US",
-                themeJSON: "{}",
-                currentBalance: Money.parse("500.00")
-            ),
+            params: DepositParams(currentBalance: Money.parse("500.00")),
             theme: ThemeTokens.defaults,
             onResult: { _ in }
         )

@@ -17,9 +17,9 @@ private enum Layout {
 
 public struct FighterRootView: View {
     public let params: FighterParams
-    public let theme: FighterTheme
+    public let theme: ThemeTokens
 
-    public init(params: FighterParams, theme: FighterTheme) {
+    public init(params: FighterParams, theme: ThemeTokens) {
         self.params = params
         self.theme = theme
     }
@@ -141,7 +141,7 @@ public struct FighterRootView: View {
     }
 
     private struct SkipGroupedRow<Content: View>: View {
-        let theme: FighterTheme
+        let theme: ThemeTokens
         let isLast: Bool
         @ViewBuilder let content: () -> Content
 

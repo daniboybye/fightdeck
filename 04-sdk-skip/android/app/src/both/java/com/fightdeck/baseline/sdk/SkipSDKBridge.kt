@@ -12,15 +12,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetslipComposeEntry
-import fight.deck.betslip.BetslipTheme
+import fight.deck.core.ThemeTokens
 import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
-import java.util.Locale
 
 object SkipSDKBridge {
     @Composable
@@ -31,7 +29,6 @@ object SkipSDKBridge {
         onBrowseEvents: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        val context = LocalContext.current
         val slip by viewModel.slip.collectAsStateWithLifecycle()
         val balance by viewModel.balance.collectAsStateWithLifecycle()
         val betPlacedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
@@ -42,7 +39,6 @@ object SkipSDKBridge {
         val events by viewModel.events.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
-            val themeJSON = remember { ThemeLoader.tokensJSON(context) }
             val store = SdkBetSlipStoreRegistry.store(viewModel)
             LaunchedEffect(slip) {
                 store.slip = slip
@@ -56,7 +52,7 @@ object SkipSDKBridge {
                 store.betPlacedMessage = betPlacedMessage
             }
             val display = remember(fighters, events) { HostSlipDisplayContext(fighters, events) }
-            val theme = remember(themeJSON) { BetslipTheme.parse(themeJSON) }
+            val theme = remember { ThemeTokens.defaults }
             BetslipComposeEntry(
                 store = store,
                 display = display,
@@ -96,22 +92,16 @@ object SkipSDKBridge {
         onDone: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        val context = LocalContext.current
         val balance by viewModel.balance.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
-            val themeJSON = remember { ThemeLoader.tokensJSON(context) }
-            val params = remember(balance, themeJSON) {
-                DepositParams(
-                    accessToken = "demo-token",
-                    environment = "demo",
-                    locale = Locale.getDefault().toLanguageTag(),
-                    themeJSON = themeJSON,
-                    currentBalance = balance,
-                )
+            val theme = remember { ThemeTokens.defaults }
+            val params = remember(balance) {
+                DepositParams(currentBalance = balance)
             }
             DepositComposeEntry(
                 params = params,
+                theme = theme,
                 onResult = { result ->
                     when (result) {
                         is DepositResult.CompletedCase -> viewModel.deposit(result.amount)

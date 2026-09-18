@@ -34,7 +34,6 @@
 		B6D9AD2AAC514D4E6A09798F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42A7D4655065DF81DD8E152C /* Assets.xcassets */; };
 		B7CCACB5780A03933477148D /* HarnessApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0647ED8C093622F890944CA4 /* HarnessApp.swift */; };
 		BD8A54855872C0545FFA048D /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C2CE32F376B39F2683C273 /* HarnessRootView.swift */; };
-		C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */; };
 		C4CA6A81A1FF9EEF26C24A03 /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C893901A338D23A9ED33B5FA /* HarnessRootView.swift */; };
 		C9FE804A18590BE2B67D3CDA /* HarnessRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41381468C24B4370929B7F4 /* HarnessRootView.swift */; };
 		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
@@ -90,7 +89,6 @@
 		C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotTour.swift; sourceTree = "<group>"; };
 		C46D3800643B3F42EBC14C65 /* DepositSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositSheetView.swift; sourceTree = "<group>"; };
 		C893901A338D23A9ED33B5FA /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
-		D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKBootstrap.swift; sourceTree = "<group>"; };
 		D83B2FF9D94616387CC70FFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		DE5AB7C32DFB35889C1F056E /* FightDeckHarnessRuntime.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessRuntime.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -168,7 +166,6 @@
 				FC9A8117960E37A37439C968 /* App */,
 				AC106BAA8D8C9E35E88A5DB7 /* Design */,
 				BB2ACDBD1A29E5EB7A4575B7 /* Features */,
-				F8E622B7794169669381AB5A /* SDK */,
 				FE9EE388C310ED4AB6AE0712 /* Services */,
 				42A7D4655065DF81DD8E152C /* Assets.xcassets */,
 				D83B2FF9D94616387CC70FFE /* Info.plist */,
@@ -325,14 +322,6 @@
 				C3E6747490AF1A6EB8397803 /* ScreenshotTour.swift */,
 			);
 			path = FightDeckUITests;
-			sourceTree = "<group>";
-		};
-		F8E622B7794169669381AB5A /* SDK */ = {
-			isa = PBXGroup;
-			children = (
-				D1A404DE6EFEBAE3F21E69C2 /* SDKBootstrap.swift */,
-			);
-			path = SDK;
 			sourceTree = "<group>";
 		};
 		FC9A8117960E37A37439C968 /* App */ = {
@@ -572,7 +561,6 @@
 				1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */,
 				B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */,
 				DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */,
-				C219E2D43031698375BF6850 /* SDKBootstrap.swift in Sources */,
 				4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */,
 				CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */,
 				D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */,

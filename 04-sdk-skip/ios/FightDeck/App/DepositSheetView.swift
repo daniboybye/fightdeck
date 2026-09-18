@@ -17,8 +17,8 @@ struct DepositSheetView: View {
     var body: some View {
         NavigationStack {
             DepositFlowView(
-                params: depositParams,
-                theme: ThemeTokens.parse(ThemeLoader.tokensJSON()),
+                params: DepositParams(currentBalance: state.balance),
+                theme: ThemeTokens.defaults,
                 onResult: { result in
                     if case .completed(let amount) = result {
                         state.deposit(amount: amount)
@@ -27,15 +27,5 @@ struct DepositSheetView: View {
                 }
             )
         }
-    }
-
-    private var depositParams: DepositParams {
-        DepositParams(
-            accessToken: "demo-token",
-            environment: "demo",
-            locale: Locale.current.identifier,
-            themeJSON: ThemeLoader.tokensJSON(),
-            currentBalance: state.balance
-        )
     }
 }

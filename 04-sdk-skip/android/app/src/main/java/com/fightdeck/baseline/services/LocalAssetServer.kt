@@ -127,15 +127,6 @@ object DatasetLocator {
         return extractBundledDataset(context)
     }
 
-    /** The SDK screens are themed from tokens.json, which ships in the APK when no dataset is pushed. */
-    fun tokensJSON(context: Context): String {
-        val bundled = datasetRoot(context).resolve("tokens.json")
-        if (bundled.exists()) {
-            return bundled.readText()
-        }
-        return context.assets.open("tokens.json").bufferedReader().use { it.readText() }
-    }
-
     private fun extractBundledDataset(context: Context): File {
         val cache = File(context.filesDir, "dataset")
         if (cache.resolve("events.json").exists()) {

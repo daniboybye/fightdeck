@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightDeckCore
 import FightDeckFighter
 import SwiftUI
 
@@ -18,7 +19,7 @@ struct FighterBridgeView: View {
             if state.fighter(fighterID) != nil {
                 FighterRootView(
                     params: fighterParams(),
-                    theme: FighterTheme.parse(ThemeLoader.tokensJSON())
+                    theme: ThemeTokens.defaults
                 )
             } else {
                 ProgressView()
@@ -33,7 +34,6 @@ struct FighterBridgeView: View {
         let fighterJSON = fighter.flatMap { try? String(data: JSONEncoder().encode($0), encoding: .utf8) } ?? "{}"
         let portraitURL = fighter.flatMap { state.imageURL($0.portrait)?.absoluteString } ?? ""
         return FighterParams(
-            themeJSON: ThemeLoader.tokensJSON(),
             fighterJSON: fighterJSON,
             portraitURL: portraitURL
         )

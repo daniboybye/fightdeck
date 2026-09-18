@@ -22,7 +22,7 @@ private enum Layout {
 public struct BetSlipRootView: View {
     @Bindable var store: BetSlipStore
     let display: SlipDisplayContext
-    let theme: BetslipTheme
+    let theme: ThemeTokens
     let onDeposit: @Sendable () -> Void
     let onBrowseEvents: @Sendable () -> Void
     let onHostSync: @Sendable (BetSlip, Decimal, String?) -> Void
@@ -33,7 +33,7 @@ public struct BetSlipRootView: View {
     public init(
         store: BetSlipStore,
         display: SlipDisplayContext,
-        theme: BetslipTheme,
+        theme: ThemeTokens,
         onDeposit: @escaping @Sendable () -> Void,
         onBrowseEvents: @escaping @Sendable () -> Void,
         onHostSync: @escaping @Sendable (BetSlip, Decimal, String?) -> Void
@@ -106,7 +106,6 @@ public struct BetSlipRootView: View {
         #endif
     }
 
-    @ViewBuilder
     private var placedIcon: some View {
         #if !SKIP
         Image(systemName: "checkmark.seal.fill")
@@ -263,7 +262,7 @@ public struct BetSlipRootView: View {
     }
 
     private struct SkipGroupedRow<Content: View>: View {
-        let theme: BetslipTheme
+        let theme: ThemeTokens
         let isLast: Bool
         var compact = false
         @ViewBuilder let content: () -> Content
@@ -483,7 +482,6 @@ public struct BetSlipRootView: View {
         onHostSync(synced, store.balance, nil)
     }
 
-    @ViewBuilder
     private var stakeChipRow: some View {
         #if SKIP
         HStack(spacing: theme.spacingSM) {
@@ -504,7 +502,6 @@ public struct BetSlipRootView: View {
         #endif
     }
 
-    @ViewBuilder
     private func secondaryBrowseButton(action: @escaping @Sendable () -> Void) -> some View {
         #if SKIP
         Button(action: action) {
@@ -575,7 +572,7 @@ private struct SlipPresentationModifier: ViewModifier {
 }
 
 private struct SlipBottomBarModifier: ViewModifier {
-    let theme: BetslipTheme
+    let theme: ThemeTokens
     let stakeFocused: Bool
     let isEnabled: Bool
     let onPlaceBet: () -> Void

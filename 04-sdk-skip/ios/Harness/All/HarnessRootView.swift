@@ -20,33 +20,26 @@ struct HarnessRootView: View {
     var body: some View {
         TabView {
             DepositFlowView(
-                params: DepositParams(
-                    accessToken: "demo-token",
-                    environment: "demo",
-                    locale: "en_US",
-                    themeJSON: "{}",
-                    currentBalance: Money.parse("500.00")
-                ),
+                params: DepositParams(currentBalance: Money.parse("500.00")),
                 theme: ThemeTokens.defaults,
                 onResult: { _ in }
             )
             BetSlipRootView(
                 store: store,
                 display: HarnessSlipDisplay(),
-                theme: BetslipTheme.defaults,
+                theme: ThemeTokens.defaults,
                 onDeposit: {},
                 onBrowseEvents: {},
                 onHostSync: { _, _, _ in }
             )
             FighterRootView(
                 params: FighterParams(
-                    themeJSON: "{}",
                     fighterJSON: """
                     {"id":"sample","name":"Sample Fighter","record":{"wins":20,"losses":2,"draws":0,"noContests":0,"display":"20-2-0"},"portrait":"assets/fighters/sample.jpg"}
                     """,
                     portraitURL: ""
                 ),
-                theme: FighterTheme.defaults
+                theme: ThemeTokens.defaults
             )
         }
     }

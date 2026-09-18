@@ -13,23 +13,9 @@ import UIKit
 #endif
 
 public struct DepositParams: Sendable {
-    public let accessToken: String
-    public let environment: String
-    public let locale: String
-    public let themeJSON: String
     public let currentBalance: Decimal
 
-    public init(
-        accessToken: String,
-        environment: String,
-        locale: String,
-        themeJSON: String,
-        currentBalance: Decimal
-    ) {
-        self.accessToken = accessToken
-        self.environment = environment
-        self.locale = locale
-        self.themeJSON = themeJSON
+    public init(currentBalance: Decimal) {
         self.currentBalance = currentBalance
     }
 }
@@ -46,6 +32,7 @@ public protocol DepositHosting: AnyObject {
     @MainActor
     func makeViewController(
         params: DepositParams,
+        theme: ThemeTokens,
         onResult: @escaping @Sendable (DepositResult) -> Void
     ) -> UIViewController
 }
@@ -58,9 +45,9 @@ public final class SkipDepositHosting: DepositHosting {
     @MainActor
     public func makeViewController(
         params: DepositParams,
+        theme: ThemeTokens,
         onResult: @escaping @Sendable (DepositResult) -> Void
     ) -> UIViewController {
-        let theme = ThemeTokens.parse(params.themeJSON)
         let view = DepositFlowView(params: params, theme: theme, onResult: onResult)
         return UIHostingController(rootView: view)
     }
@@ -70,21 +57,27 @@ public final class SkipDepositHosting: DepositHosting {
 #if SKIP
 public struct DepositComposeEntry: View {
     public let params: DepositParams
+    public let theme: ThemeTokens
     public let onResult: @Sendable (DepositResult) -> Void
 
-    public init(params: DepositParams, onResult: @escaping @Sendable (DepositResult) -> Void) {
+    public init(
+        params: DepositParams,
+        theme: ThemeTokens,
+        onResult: @escaping @Sendable (DepositResult) -> Void
+    ) {
         self.params = params
+        self.theme = theme
         self.onResult = onResult
     }
 
     public var body: some View {
         // The iOS host presents this inside its own navigation stack; the Compose host drops it
-        // straight into a bottom sheet. Carrying a stack here is what puts the screen's toolbar
+        // straight into a destination. Carrying a stack here is what puts the screen's toolbar
         // — its title and its Close button — on the Android side too.
         NavigationStack {
             DepositFlowView(
                 params: params,
-                theme: ThemeTokens.parse(params.themeJSON),
+                theme: theme,
                 onResult: onResult
             )
         }

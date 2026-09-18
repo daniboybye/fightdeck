@@ -13,12 +13,10 @@ import UIKit
 #endif
 
 public struct FighterParams: Sendable {
-    public let themeJSON: String
     public let fighterJSON: String
     public let portraitURL: String
 
-    public init(themeJSON: String, fighterJSON: String, portraitURL: String) {
-        self.themeJSON = themeJSON
+    public init(fighterJSON: String, portraitURL: String) {
         self.fighterJSON = fighterJSON
         self.portraitURL = portraitURL
     }
@@ -28,7 +26,7 @@ public struct FighterParams: Sendable {
 public protocol FighterHosting: AnyObject {
     func configure()
     @MainActor
-    func makeViewController(params: FighterParams) -> UIViewController
+    func makeViewController(params: FighterParams, theme: ThemeTokens) -> UIViewController
 }
 
 public final class SkipFighterHosting: FighterHosting {
@@ -37,8 +35,7 @@ public final class SkipFighterHosting: FighterHosting {
     public func configure() {}
 
     @MainActor
-    public func makeViewController(params: FighterParams) -> UIViewController {
-        let theme = FighterTheme.parse(params.themeJSON)
+    public func makeViewController(params: FighterParams, theme: ThemeTokens) -> UIViewController {
         let view = FighterRootView(params: params, theme: theme)
         return UIHostingController(rootView: view)
     }
@@ -48,9 +45,9 @@ public final class SkipFighterHosting: FighterHosting {
 #if SKIP
 public struct FighterComposeEntry: View {
     public let params: FighterParams
-    public let theme: FighterTheme
+    public let theme: ThemeTokens
 
-    public init(params: FighterParams, theme: FighterTheme) {
+    public init(params: FighterParams, theme: ThemeTokens) {
         self.params = params
         self.theme = theme
     }

@@ -69,6 +69,10 @@ public struct FighterRootView: View {
             .overlay(alignment: .bottomLeading) {
                 heroCaption(fighter)
             }
+            // Clipped again, outside the overlay: the caption's scrim is taller than the
+            // caption, and on Android it spilled past the photo as a dark band behind the
+            // first section heading.
+            .clipped()
     }
 
     private func heroCaption(_ fighter: Fighter) -> some View {
@@ -183,40 +187,57 @@ extension FighterRootView {
         }
     }
 
-    // Computed properties holding a stored array, not functions taking one: under SkipUI a
-    // `ForEach` whose collection arrives as a function parameter composes to nothing, and both
-    // sections came out as a heading over an empty card.
-    // KNOWN BROKEN ON ANDROID: neither section renders its rows. The same thing happens to the
-    // betslip's selection and summary sections, so it is `GroupedSection`, not this screen —
-    // the transpiled section calls its `@ViewBuilder` content once and composes a single view,
-    // and every row inside is dropped. iOS is unaffected; it uses the `List` branch below.
     private var profileSection: some View {
-        GroupedSection(theme: theme, title: "Profile") {
-            ForEach(profileRows) { row in
-                GroupedRow(theme: theme, isLast: row.id == profileRows.last?.id) {
-                    detailRow(row)
-                }
-            }
-        }
+        section(title: "Profile", rows: profileRows)
     }
 
     private var physicalsSection: some View {
-        GroupedSection(theme: theme, title: "Physicals") {
-            ForEach(physicalRows) { row in
-                GroupedRow(theme: theme, isLast: row.id == physicalRows.last?.id) {
-                    detailRow(row)
+        section(title: "Physicals", rows: physicalRows)
+    }
+
+    /// Built out of SkipUI's own `VStack`, `ForEach` and modifiers, with the pieces as local
+    /// functions returning SkipUI primitives. Neither a container of ours taking `@ViewBuilder`
+    /// content nor a `View` struct of ours placed among siblings survives transpilation — see
+    /// `GroupedList.swift` for the whole trail.
+    private func section(title: String, rows: [FighterDetailRow]) -> some View {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionTitle(title)
+            VStack(spacing: 0) {
+                ForEach(rows) { row in
+                    detailRow(row, isLast: row.id == rows.last?.id)
                 }
             }
+            .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
         }
     }
 
-    private func detailRow(_ row: FighterDetailRow) -> some View {
-        GroupedLabeledRow(
-            theme: theme,
-            label: row.label,
-            value: row.value,
-            valueStyle: theme.textSecondary
-        )
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(Typography.body(theme.fontCallout))
+            .foregroundStyle(theme.textSecondary)
+            .padding(.horizontal, theme.spacingLG)
+    }
+
+    private func detailRow(_ row: FighterDetailRow, isLast: Bool) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(row.label)
+                    .foregroundStyle(theme.textPrimary)
+                Spacer()
+                Text(row.value)
+                    .foregroundStyle(theme.textSecondary)
+            }
+            .font(Typography.body(theme.fontBody))
+            .padding(.horizontal, theme.spacingLG)
+            .padding(.vertical, theme.spacingMD)
+            if !isLast {
+                Rectangle()
+                    .fill(theme.textSecondary.opacity(0.25))
+                    .frame(height: 1)
+                    .padding(.leading, theme.spacingLG)
+            }
+        }
     }
 }
 #endif

@@ -206,60 +206,88 @@ extension BetSlipRootView {
         }
     }
 
+    // Every section is SkipUI's own `VStack` and `ForEach` with the card styling applied as
+    // modifiers. A container of our own taking `@ViewBuilder` content does not survive
+    // transpilation — see `GroupedList.swift`.
     private var selectionsSection: some View {
-        GroupedSection(theme: theme, title: betTypeTitle) {
-            ForEach(store.slip.selections) { selection in
-                GroupedRow(
-                    theme: theme,
-                    isLast: selection.id == store.slip.selections.last?.id
-                ) {
-                    selectionRow(selection)
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionTitle(betTypeTitle)
+            VStack(spacing: 0) {
+                ForEach(store.slip.selections) { selection in
+                    VStack(spacing: 0) {
+                        selectionRow(selection)
+                            .padding(.horizontal, theme.spacingLG)
+                            .padding(.vertical, theme.spacingMD)
+                        if selection.id != store.slip.selections.last?.id {
+                            rowDivider
+                        }
+                    }
                 }
             }
+            .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
         }
     }
 
     private var stakeSection: some View {
-        GroupedSection(theme: theme, title: "Stake") {
-            GroupedRow(theme: theme, isLast: false) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionTitle("Stake")
+            VStack(spacing: 0) {
                 stakeField
-            }
-            GroupedRow(theme: theme, isLast: true, compact: true) {
+                    .padding(.horizontal, theme.spacingLG)
+                    .padding(.vertical, theme.spacingMD)
+                rowDivider
                 stakeChipRow
+                    .padding(.horizontal, theme.spacingLG)
+                    .padding(.vertical, theme.spacingSM)
             }
+            .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
         }
     }
 
     private var summarySection: some View {
         let rows = FightCoreDisplay.slipSummary(state: store.slipState)
-        return GroupedSection(theme: theme) {
-            ForEach(0 ..< rows.count, id: \.self) { index in
-                GroupedRow(theme: theme, isLast: index == rows.count - 1) {
-                    labeledRow(rows[index].label, rows[index].value, valueStyle: theme.textSecondary)
+        return VStack(spacing: 0) {
+            ForEach(rows) { row in
+                VStack(spacing: 0) {
+                    labeledRow(row.label, row.value, valueStyle: theme.textSecondary)
+                    if row.id != rows.last?.id {
+                        rowDivider
+                    }
                 }
             }
         }
+        .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
     }
 
     private var errorsSection: some View {
-        GroupedSection(theme: theme) {
-            ForEach(0 ..< errorMessages.count, id: \.self) { index in
-                GroupedRow(theme: theme, isLast: index == errorMessages.count - 1) {
-                    Text(errorMessages[index])
+        VStack(spacing: 0) {
+            ForEach(errorMessages, id: \.self) { message in
+                VStack(spacing: 0) {
+                    Text(message)
                         .foregroundStyle(theme.negative)
                         .font(Typography.body(theme.fontCaption))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, theme.spacingLG)
+                        .padding(.vertical, theme.spacingMD)
+                    if message != errorMessages.last {
+                        rowDivider
+                    }
                 }
             }
         }
+        .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
     }
 
     private var depositSection: some View {
-        GroupedSection(theme: theme, title: "Deposit") {
-            GroupedRow(theme: theme, isLast: false) {
+        VStack(alignment: .leading, spacing: theme.spacingSM) {
+            sectionTitle("Deposit")
+            VStack(spacing: 0) {
                 labeledRow("Balance", Money.formatCurrency(store.balance), valueStyle: theme.textPrimary)
-            }
-            GroupedRow(theme: theme, isLast: true) {
+                rowDivider
                 Button(action: onDeposit) {
                     Text("Add funds")
                         .font(Typography.body(theme.fontBody))
@@ -267,7 +295,11 @@ extension BetSlipRootView {
                         .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
                 }
                 .buttonStyle(.plain)
+                .padding(.horizontal, theme.spacingLG)
+                    .padding(.vertical, theme.spacingMD)
             }
+            .background(theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
         }
     }
 
@@ -335,8 +367,34 @@ extension BetSlipRootView {
         .frame(minHeight: Layout.minTapTarget)
     }
 
+    /// The grouped-list pieces are local functions returning SkipUI primitives, not view types
+    /// of their own. A `View` struct declared in `FightDeckCore` and placed among siblings here
+    /// composes to nothing on Android — see `GroupedList.swift` for the whole trail.
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(Typography.body(theme.fontCallout))
+            .foregroundStyle(theme.textSecondary)
+            .padding(.horizontal, theme.spacingLG)
+    }
+
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(theme.textSecondary.opacity(0.25))
+            .frame(height: 1)
+            .padding(.leading, theme.spacingLG)
+    }
+
     private func labeledRow(_ label: String, _ value: String, valueStyle: Color) -> some View {
-        GroupedLabeledRow(theme: theme, label: label, value: value, valueStyle: valueStyle)
+        HStack {
+            Text(label)
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Text(value)
+                .foregroundStyle(valueStyle)
+        }
+        .font(Typography.body(theme.fontBody))
+        .padding(.horizontal, theme.spacingLG)
+        .padding(.vertical, theme.spacingMD)
     }
 
     fileprivate var stakeChipRow: some View {

@@ -1,5 +1,6 @@
 package com.fightdeck.baseline.sdk
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -118,10 +119,15 @@ object SkipSDKBridge {
                     portraitURL = viewModel.imageUrl(fighter.portrait).orEmpty(),
                 )
             }
-            FighterComposeEntry(
-                params = params,
-                theme = theme,
-            ).Compose()
+            // The SDK view composes into whatever box it is given, and it reads no window
+            // insets of its own, so the host's top inset has to be a real box around it.
+            // Dropping the modifier is what let the hero slide up under the toolbar.
+            Box(modifier) {
+                FighterComposeEntry(
+                    params = params,
+                    theme = theme,
+                ).Compose()
+            }
             DisposableEffect(saveKey) {
                 onDispose {
                     stateHolder.removeState(saveKey)

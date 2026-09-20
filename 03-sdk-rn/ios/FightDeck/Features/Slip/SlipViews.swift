@@ -12,7 +12,7 @@ import FightDeckRNRuntime
 import SwiftUI
 
 struct SlipTabView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let onBrowseEvents: () -> Void
 
     var body: some View {
@@ -29,7 +29,7 @@ struct SlipTabView: View {
 }
 
 struct BetslipBridgeView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let onBrowseEvents: () -> Void
     let onDeposit: @MainActor @Sendable () -> Void
     @State private var layoutMetrics = RNSurfaceLayoutMetrics()
@@ -50,7 +50,7 @@ struct BetslipBridgeView: View {
 }
 
 struct BetslipSDKView: UIViewControllerRepresentable {
-    @Bindable var state: AppState
+    let state: AppState
     let onBrowseEvents: () -> Void
     let onDeposit: @MainActor @Sendable () -> Void
     var layoutMetrics: RNSurfaceLayoutMetrics
@@ -148,7 +148,9 @@ struct BetslipSDKView: UIViewControllerRepresentable {
             if fingerprint.data != lastPushed?.data {
                 SDKBootstrap.shared.betslipHosting.update(params: params)
             }
-            guard fingerprint.layout != lastPushed?.layout || lastPushed == nil else {
+            // A nil `lastPushed` makes this true on its own: `layout` is never optional, so the
+            // first push always gets through.
+            guard fingerprint.layout != lastPushed?.layout else {
                 lastPushed = fingerprint
                 return
             }
@@ -169,7 +171,7 @@ struct BetslipSDKView: UIViewControllerRepresentable {
 }
 
 struct DepositSDKView: UIViewControllerRepresentable {
-    @Bindable var state: AppState
+    let state: AppState
     var onDismiss: () -> Void
     var onConfirmed: () -> Void
     var layoutMetrics: RNSurfaceLayoutMetrics
@@ -256,7 +258,9 @@ struct DepositSDKView: UIViewControllerRepresentable {
             if fingerprint.data != lastPushed?.data {
                 SDKBootstrap.shared.depositHosting.update(params: params)
             }
-            guard fingerprint.layout != lastPushed?.layout || lastPushed == nil else {
+            // A nil `lastPushed` makes this true on its own: `layout` is never optional, so the
+            // first push always gets through.
+            guard fingerprint.layout != lastPushed?.layout else {
                 lastPushed = fingerprint
                 return
             }

@@ -10,7 +10,7 @@ import FightEvents
 import SwiftUI
 
 struct BoutDetailView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let event: EventSummary
     let bout: BoutSummary
     @Binding var path: [EventsRoute]

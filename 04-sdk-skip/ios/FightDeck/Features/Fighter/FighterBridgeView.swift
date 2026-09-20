@@ -11,7 +11,7 @@ import FightDeckFighter
 import SwiftUI
 
 struct FighterBridgeView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let fighterID: String
 
     var body: some View {

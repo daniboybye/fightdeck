@@ -16,5 +16,4 @@ protocol HostFightRepository {
 enum RepositoryError: Error, Sendable {
     case network(retryable: Bool)
     case decoding(field: String)
-    case notFound
 }

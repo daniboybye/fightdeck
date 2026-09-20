@@ -8,6 +8,21 @@
 
 import Foundation
 
+/// One line of the slip summary. A named type rather than a labelled tuple because Skip
+/// transpiles `(label:value:)` to a `Tuple2` whose accessors are `internal` to the module
+/// that declared them — reading `.label` from another SDK stops the Kotlin compile dead.
+public struct SlipSummaryRow: Identifiable, Sendable {
+    public let label: String
+    public let value: String
+
+    public var id: String { label }
+
+    public init(label: String, value: String) {
+        self.label = label
+        self.value = value
+    }
+}
+
 public enum FightCoreDisplay {
     public static func formatOdds(_ odds: Decimal) -> String {
         Money.format(odds)
@@ -22,15 +37,15 @@ public enum FightCoreDisplay {
         return formatWithFormatter(probability, minimumFractionDigits: 4, maximumFractionDigits: 4, fallback: "0.0000")
     }
 
-    public static func slipSummary(state: SlipState) -> [(label: String, value: String)] {
-        var rows: [(String, String)] = [
-            ("Total stake", Money.formatCurrency(state.totalStake)),
+    public static func slipSummary(state: SlipState) -> [SlipSummaryRow] {
+        var rows = [
+            SlipSummaryRow(label: "Total stake", value: Money.formatCurrency(state.totalStake)),
         ]
         if let display = state.combinedOddsDisplay {
-            rows.append(("Combined odds", Money.format(display)))
+            rows.append(SlipSummaryRow(label: "Combined odds", value: Money.format(display)))
         }
-        rows.append(("Potential return", Money.formatCurrency(state.potentialReturn)))
-        rows.append(("Potential profit", Money.formatCurrency(state.potentialProfit)))
+        rows.append(SlipSummaryRow(label: "Potential return", value: Money.formatCurrency(state.potentialReturn)))
+        rows.append(SlipSummaryRow(label: "Potential profit", value: Money.formatCurrency(state.potentialProfit)))
         return rows
     }
 
@@ -46,10 +61,6 @@ public enum FightCoreDisplay {
         formatter.minimumFractionDigits = minimumFractionDigits
         formatter.maximumFractionDigits = maximumFractionDigits
         formatter.groupingSeparator = ""
-        #if SKIP
-        return formatter.string(from: value as NSNumber) ?? fallback
-        #else
-        return formatter.string(from: value as NSDecimalNumber) ?? fallback
-        #endif
+        return formatter.string(from: Money.asNumber(value)) ?? fallback
     }
 }

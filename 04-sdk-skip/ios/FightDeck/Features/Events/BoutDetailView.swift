@@ -11,7 +11,7 @@ import FightDeckEvents
 import SwiftUI
 
 struct BoutDetailView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let event: Event
     let bout: Bout
     @Binding var path: [EventsRoute]

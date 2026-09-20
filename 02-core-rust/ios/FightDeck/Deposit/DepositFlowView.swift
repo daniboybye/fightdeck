@@ -67,6 +67,10 @@ struct DepositFlowView: View {
         }
         // Nothing to name once it has happened: the confirmation says so in the middle of the
         // screen, where the eye already is, and a title would only repeat it in the corner.
+        // The haptic rides the root rather than the confirmation it belongs to: `sensoryFeedback`
+        // only fires on a change, and a modifier mounted together with the confirmation has
+        // already missed the one that put it on screen.
+        .sensoryFeedback(.success, trigger: didSucceed)
         .navigationTitle(didSucceed ? "" : "Deposit")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -169,7 +173,6 @@ struct DepositFlowView: View {
         } actions: {
             SecondaryActionButton(title: "Done") { onResult(.completed(amount: parsedAmount)) }
         }
-        .sensoryFeedback(.success, trigger: didSucceed)
         .transition(.scale(scale: 0.92).combined(with: .opacity))
     }
 

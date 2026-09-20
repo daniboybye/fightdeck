@@ -11,8 +11,8 @@ import FightDeckCore
 import SwiftUI
 
 struct SlipTabView: View {
-    @Bindable var state: AppState
-    let onBrowseEvents: () -> Void
+    let state: AppState
+    let onBrowseEvents: @MainActor @Sendable () -> Void
 
     var body: some View {
         NavigationStack {
@@ -29,17 +29,20 @@ struct SlipTabView: View {
 
 struct BetslipBridgeView: View {
     let state: AppState
-    let onBrowseEvents: () -> Void
+    let onBrowseEvents: @MainActor @Sendable () -> Void
     let onDeposit: @MainActor @Sendable () -> Void
 
     // Built in `init`, not in `onAppear`. An optional store leaves the `if let` branch empty
     // on first render, and SwiftUI drops lifecycle modifiers attached to an empty view — so
     // the store was never created and the tab stayed blank.
     @State private var store: BetSlipStore
+    // The SDK holds the display context by reference, so a fresh one per body pass would
+    // hand it a new identity on every render for a lookup table that never changes.
+    @State private var display: HostSlipDisplayContext
 
     init(
         state: AppState,
-                onBrowseEvents: @escaping () -> Void,
+        onBrowseEvents: @escaping @MainActor @Sendable () -> Void,
         onDeposit: @escaping @MainActor @Sendable () -> Void
     ) {
         self.state = state
@@ -50,17 +53,23 @@ struct BetslipBridgeView: View {
             slip: state.slip,
             balance: state.balance
         ))
+        _display = State(initialValue: HostSlipDisplayContext(state: state))
     }
 
     var body: some View {
+        // The SDK's callbacks are `@Sendable` because they also have to cross into Kotlin, so
+        // they arrive with no actor. Everything they touch here is main-actor state, which is
+        // what the hop is for.
         BetSlipRootView(
             store: store,
-            display: HostSlipDisplayContext(state: state),
+            display: display,
             theme: ThemeTokens.defaults,
-            onDeposit: { onDeposit() },
-            onBrowseEvents: onBrowseEvents,
+            onDeposit: { Task { @MainActor in onDeposit() } },
+            onBrowseEvents: { Task { @MainActor in onBrowseEvents() } },
             onHostSync: { slip, balance, message in
-                state.applySdkSlip(slip, balance: balance, betPlacedMessage: message)
+                Task { @MainActor in
+                    state.applySdkSlip(slip, balance: balance, betPlacedMessage: message)
+                }
             }
         )
         .onChange(of: state.slip) { _, newSlip in

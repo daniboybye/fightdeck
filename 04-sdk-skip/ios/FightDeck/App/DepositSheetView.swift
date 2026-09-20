@@ -11,7 +11,7 @@ import FightDeckDeposit
 import SwiftUI
 
 struct DepositSheetView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let onDismiss: () -> Void
 
     var body: some View {
@@ -20,10 +20,12 @@ struct DepositSheetView: View {
                 params: DepositParams(currentBalance: state.balance),
                 theme: ThemeTokens.defaults,
                 onResult: { result in
-                    if case .completed(let amount) = result {
-                        state.deposit(amount: amount)
+                    Task { @MainActor in
+                        if case .completed(let amount) = result {
+                            state.deposit(amount: amount)
+                        }
+                        onDismiss()
                     }
-                    onDismiss()
                 }
             )
         }

@@ -10,7 +10,7 @@ import FightEvents
 import SwiftUI
 
 struct EventsTabView: View {
-    @Bindable var state: AppState
+    let state: AppState
     @Binding var path: [EventsRoute]
     let mode: EventMode
 
@@ -112,7 +112,7 @@ struct EventsTabView: View {
         case .video(let id):
             if case .loaded(let media) = state.mediaState,
                let item = media.first(where: { $0.id == id }) {
-                VideoScreenView(item: item, posterURL: state.imageURL(item.poster))
+                VideoScreenView(item: item)
             }
         }
     }
@@ -130,24 +130,32 @@ private struct EventRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             RemoteImageTile(url: posterURL)
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                Text(event.name)
-                    .font(.headline)
-                Text(event.locationLine)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                    Text(event.date.formattedEventDate)
-                    Text("·")
-                    Text("^[\(event.boutCount) fight](inflect: true)")
-                    Spacer()
-                    statusBadge
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+            eventCopy
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    private var eventCopy: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            Text(event.name)
+                .font(.headline)
+            Text(event.locationLine)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            metaRow
+        }
+    }
+
+    private var metaRow: some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Text(event.date.formattedEventDate)
+            Text("·")
+            Text("^[\(event.boutCount) fight](inflect: true)")
+            Spacer()
+            statusBadge
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 
     private var statusBadge: some View {
@@ -163,7 +171,7 @@ private struct EventRow: View {
 }
 
 struct EventDetailView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let event: EventSummary
     let mode: EventMode
 
@@ -195,27 +203,31 @@ struct EventDetailView: View {
                 Section("Video") {
                     ForEach(clips) { clip in
                         NavigationLink(value: EventsRoute.video(clip.id)) {
-                            Label {
-                                VStack(alignment: .leading) {
-                                    Text(clip.title)
-                                    Text(clip.durationSeconds.formattedDuration)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            } icon: {
-                                Image(systemName: "play.circle.fill")
-                                    .foregroundStyle(DesignTokens.ColorToken.accent)
-                            }
+                            clipLabel(clip)
                         }
                     }
                 }
             }
         }
     }
+
+    private func clipLabel(_ clip: MediaItem) -> some View {
+        Label {
+            VStack(alignment: .leading) {
+                Text(clip.title)
+                Text(clip.durationSeconds.formattedDuration)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: "play.circle.fill")
+                .foregroundStyle(DesignTokens.ColorToken.accent)
+        }
+    }
 }
 
 struct BoutRowView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let bout: BoutSummary
     let mode: EventMode
 
@@ -227,12 +239,16 @@ struct BoutRowView: View {
             cornerRow(bout.red, ring: DesignTokens.ColorToken.cornerRed)
             cornerRow(bout.blue, ring: DesignTokens.ColorToken.cornerBlue)
             if mode.showsResults {
-                Label(bout.resultLine, systemImage: "checkmark.seal.fill")
-                    .font(.caption)
-                    .foregroundStyle(DesignTokens.ColorToken.positive)
+                resultLabel
             }
         }
         .padding(.vertical, DesignTokens.Spacing.xs)
+    }
+
+    private var resultLabel: some View {
+        Label(bout.resultLine, systemImage: "checkmark.seal.fill")
+            .font(.caption)
+            .foregroundStyle(DesignTokens.ColorToken.positive)
     }
 
     private func cornerRow(_ corner: CornerSummary, ring: Color) -> some View {
@@ -268,35 +284,47 @@ struct VideoRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            ZStack {
-                RemoteImageTile(url: posterURL)
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(.white, .ultraThinMaterial)
-                    .shadow(radius: 8)
-            }
-            .overlay(alignment: .bottomTrailing) {
-                Text(item.durationSeconds.formattedDuration)
-                    .font(.caption2.weight(.semibold))
-                    .monospacedDigit()
-                    .padding(.horizontal, DesignTokens.Spacing.sm)
-                    .padding(.vertical, DesignTokens.Spacing.xs)
-                    .background(.black.opacity(0.6), in: .capsule)
-                    .foregroundStyle(.white)
-                    .padding(DesignTokens.Spacing.sm)
-            }
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                if !eventName.isEmpty {
-                    Text(eventName.uppercased())
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(DesignTokens.ColorToken.accent)
-                }
-                Text(item.title)
-                    .font(.headline)
-                    .lineLimit(2)
-            }
+            poster
+            captions
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    private var poster: some View {
+        ZStack {
+            RemoteImageTile(url: posterURL)
+            Image(systemName: "play.circle.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(.white, .ultraThinMaterial)
+                .shadow(radius: 8)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            durationBadge
+        }
+    }
+
+    private var durationBadge: some View {
+        Text(item.durationSeconds.formattedDuration)
+            .font(.caption2.weight(.semibold))
+            .monospacedDigit()
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(.black.opacity(0.6), in: .capsule)
+            .foregroundStyle(.white)
+            .padding(DesignTokens.Spacing.sm)
+    }
+
+    private var captions: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            if !eventName.isEmpty {
+                Text(eventName.uppercased())
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(DesignTokens.ColorToken.accent)
+            }
+            Text(item.title)
+                .font(.headline)
+                .lineLimit(2)
+        }
     }
 }
 

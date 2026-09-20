@@ -11,7 +11,7 @@ import FightEvents
 import SwiftUI
 
 struct FighterProfileView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let fighterID: String
 
     var body: some View {

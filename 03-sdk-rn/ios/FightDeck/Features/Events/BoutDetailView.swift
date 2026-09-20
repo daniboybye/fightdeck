@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct BoutDetailView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let event: EventItem
     let bout: BoutItem
     @Binding var path: [EventsRoute]

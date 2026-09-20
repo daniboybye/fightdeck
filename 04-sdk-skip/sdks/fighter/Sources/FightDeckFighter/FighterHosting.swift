@@ -8,9 +8,6 @@
 
 import FightDeckCore
 import SwiftUI
-#if !SKIP
-import UIKit
-#endif
 
 public struct FighterParams: Sendable {
     public let fighterJSON: String
@@ -22,25 +19,7 @@ public struct FighterParams: Sendable {
     }
 }
 
-#if !SKIP
-public protocol FighterHosting: AnyObject {
-    func configure()
-    @MainActor
-    func makeViewController(params: FighterParams, theme: ThemeTokens) -> UIViewController
-}
-
-public final class SkipFighterHosting: FighterHosting {
-    public init() {}
-
-    public func configure() {}
-
-    @MainActor
-    public func makeViewController(params: FighterParams, theme: ThemeTokens) -> UIViewController {
-        let view = FighterRootView(params: params, theme: theme)
-        return UIHostingController(rootView: view)
-    }
-}
-#endif
+// MARK: - Compose (Android)
 
 #if SKIP
 public struct FighterComposeEntry: View {

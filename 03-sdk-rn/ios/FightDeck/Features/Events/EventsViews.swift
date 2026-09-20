@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct EventsTabView: View {
-    @Bindable var state: AppState
+    let state: AppState
     @Binding var path: [EventsRoute]
     let mode: EventMode
 
@@ -111,7 +111,7 @@ struct EventsTabView: View {
         case .video(let id):
             if case .loaded(let media) = state.mediaState,
                let item = media.first(where: { $0.id == id }) {
-                VideoScreenView(item: item, posterURL: state.imageURL(item.poster))
+                VideoScreenView(item: item)
             }
         }
     }
@@ -129,24 +129,32 @@ private struct EventRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             RemoteImageTile(url: posterURL)
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                Text(event.name)
-                    .font(.headline)
-                Text("\(event.venue) · \(event.city)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                    Text(event.date.formattedEventDate)
-                    Text("·")
-                    Text("^[\(event.bouts.count) fight](inflect: true)")
-                    Spacer()
-                    statusBadge
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+            eventCopy
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    private var eventCopy: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            Text(event.name)
+                .font(.headline)
+            Text("\(event.venue) · \(event.city)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            metaRow
+        }
+    }
+
+    private var metaRow: some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Text(event.date.formattedEventDate)
+            Text("·")
+            Text("^[\(event.bouts.count) fight](inflect: true)")
+            Spacer()
+            statusBadge
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 
     private var statusBadge: some View {
@@ -162,22 +170,18 @@ private struct EventRow: View {
 }
 
 struct EventDetailView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let event: EventItem
     let mode: EventMode
 
+    private static let segmentOrder = [
+        "main", "main_card", "prelim", "prelims", "early_prelim", "early_prelims",
+    ]
+
     var body: some View {
         List {
-            ForEach(segmentOrder, id: \.self) { segment in
-                if let bouts = grouped[segment], !bouts.isEmpty {
-                    Section(segmentTitle(segment)) {
-                        ForEach(bouts) { bout in
-                            NavigationLink(value: EventsRoute.bout(eventID: event.id, boutID: bout.id)) {
-                                BoutRowView(state: state, bout: bout, mode: mode)
-                            }
-                        }
-                    }
-                }
+            ForEach(cardSections, id: \.title) { section in
+                boutSection(section.title, bouts: section.bouts)
             }
             if mode.showsResults {
                 mediaSection
@@ -188,6 +192,31 @@ struct EventDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    private func boutSection(_ title: String, bouts: [BoutItem]) -> some View {
+        Section(title) {
+            ForEach(bouts) { bout in
+                NavigationLink(value: EventsRoute.bout(eventID: event.id, boutID: bout.id)) {
+                    BoutRowView(state: state, bout: bout, mode: mode)
+                }
+            }
+        }
+    }
+
+    /// The card, split into the sections a fight night is billed as. Built once per render
+    /// rather than read from a computed property per segment, which re-grouped and re-sorted
+    /// the whole card for every heading on screen.
+    private var cardSections: [(title: String, bouts: [BoutItem])] {
+        var grouped: [String: [BoutItem]] = [:]
+        for bout in event.bouts {
+            grouped[bout.segment, default: []].append(bout)
+        }
+        return Self.segmentOrder.compactMap { segment in
+            guard var bouts = grouped[segment], !bouts.isEmpty else { return nil }
+            bouts.sort { $0.order < $1.order }
+            return (Self.segmentTitle(segment), bouts)
+        }
+    }
+
     @ViewBuilder
     private var mediaSection: some View {
         if case .loaded(let media) = state.mediaState {
@@ -196,17 +225,7 @@ struct EventDetailView: View {
                 Section("Video") {
                     ForEach(clips) { clip in
                         NavigationLink(value: EventsRoute.video(clip.id)) {
-                            Label {
-                                VStack(alignment: .leading) {
-                                    Text(clip.title)
-                                    Text(clip.durationSeconds.formattedDuration)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            } icon: {
-                                Image(systemName: "play.circle.fill")
-                                    .foregroundStyle(DesignTokens.ColorToken.accent)
-                            }
+                            clipLabel(clip)
                         }
                     }
                 }
@@ -214,15 +233,21 @@ struct EventDetailView: View {
         }
     }
 
-    private var grouped: [String: [BoutItem]] {
-        Dictionary(grouping: event.bouts.sorted { $0.order < $1.order }, by: \.segment)
+    private func clipLabel(_ clip: MediaItem) -> some View {
+        Label {
+            VStack(alignment: .leading) {
+                Text(clip.title)
+                Text(clip.durationSeconds.formattedDuration)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: "play.circle.fill")
+                .foregroundStyle(DesignTokens.ColorToken.accent)
+        }
     }
 
-    private var segmentOrder: [String] {
-        ["main", "main_card", "prelim", "prelims", "early_prelim", "early_prelims"]
-    }
-
-    private func segmentTitle(_ segment: String) -> String {
+    private static func segmentTitle(_ segment: String) -> String {
         switch segment {
         case "main": "Main Event"
         case "main_card": "Main Card"
@@ -233,27 +258,37 @@ struct EventDetailView: View {
 }
 
 struct BoutRowView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let bout: BoutItem
     let mode: EventMode
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text("\(bout.weightClass.replacingOccurrences(of: "_", with: " ").uppercased())\(bout.titleFight ? " · TITLE" : "") · \(bout.scheduledRounds) RNDS")
+            Text(boutHeader)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             cornerRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
             cornerRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
             if mode.showsResults {
-                Label(
-                    "\(bout.result.winnerName) · \(bout.result.method.displayMethod) · R\(bout.result.endRound) \(bout.result.endTime)",
-                    systemImage: "checkmark.seal.fill"
-                )
-                .font(.caption)
-                .foregroundStyle(DesignTokens.ColorToken.positive)
+                resultLabel
             }
         }
         .padding(.vertical, DesignTokens.Spacing.xs)
+    }
+
+    private var boutHeader: String {
+        let weight = bout.weightClass.replacingOccurrences(of: "_", with: " ").uppercased()
+        let title = bout.titleFight ? " · TITLE" : ""
+        return "\(weight)\(title) · \(bout.scheduledRounds) RNDS"
+    }
+
+    private var resultLabel: some View {
+        Label(
+            "\(bout.result.winnerName) · \(bout.result.method.displayMethod) · R\(bout.result.endRound) \(bout.result.endTime)",
+            systemImage: "checkmark.seal.fill"
+        )
+        .font(.caption)
+        .foregroundStyle(DesignTokens.ColorToken.positive)
     }
 
     private func cornerRow(_ corner: CornerItem, ring: Color) -> some View {
@@ -289,35 +324,47 @@ struct VideoRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            ZStack {
-                RemoteImageTile(url: posterURL)
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(.white, .ultraThinMaterial)
-                    .shadow(radius: 8)
-            }
-            .overlay(alignment: .bottomTrailing) {
-                Text(item.durationSeconds.formattedDuration)
-                    .font(.caption2.weight(.semibold))
-                    .monospacedDigit()
-                    .padding(.horizontal, DesignTokens.Spacing.sm)
-                    .padding(.vertical, DesignTokens.Spacing.xs)
-                    .background(.black.opacity(0.6), in: .capsule)
-                    .foregroundStyle(.white)
-                    .padding(DesignTokens.Spacing.sm)
-            }
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                if !eventName.isEmpty {
-                    Text(eventName.uppercased())
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(DesignTokens.ColorToken.accent)
-                }
-                Text(item.title)
-                    .font(.headline)
-                    .lineLimit(2)
-            }
+            poster
+            captions
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    private var poster: some View {
+        ZStack {
+            RemoteImageTile(url: posterURL)
+            Image(systemName: "play.circle.fill")
+                .font(.system(size: 44))
+                .foregroundStyle(.white, .ultraThinMaterial)
+                .shadow(radius: 8)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            durationBadge
+        }
+    }
+
+    private var durationBadge: some View {
+        Text(item.durationSeconds.formattedDuration)
+            .font(.caption2.weight(.semibold))
+            .monospacedDigit()
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(.black.opacity(0.6), in: .capsule)
+            .foregroundStyle(.white)
+            .padding(DesignTokens.Spacing.sm)
+    }
+
+    private var captions: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            if !eventName.isEmpty {
+                Text(eventName.uppercased())
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(DesignTokens.ColorToken.accent)
+            }
+            Text(item.title)
+                .font(.headline)
+                .lineLimit(2)
+        }
     }
 }
 

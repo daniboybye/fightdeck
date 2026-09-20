@@ -71,10 +71,6 @@ final class AppState {
         }
     }
 
-    func retryBootstrap() async {
-        await bootstrap()
-    }
-
     func refreshAll() async {
         await loadEvents()
         await loadFighters()
@@ -143,11 +139,6 @@ final class AppState {
 
     func isSelected(boutID: String, fighterID: String) -> Bool {
         slip.selections.contains { $0.boutID == boutID && $0.fighterID == fighterID }
-    }
-
-    func removeSelection(id: String) {
-        slip.selections.removeAll { $0.id == id }
-        betPlacedMessage = nil
     }
 
     func applySdkSlip(_ updatedSlip: BetSlip, balance: Decimal, betPlacedMessage: String?) {

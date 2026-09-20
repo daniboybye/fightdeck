@@ -68,10 +68,6 @@ final class AppState {
         }
     }
 
-    func retryBootstrap() async {
-        await bootstrap()
-    }
-
     func refreshAll() async {
         await loadEvents()
         await loadFighters()
@@ -144,12 +140,6 @@ final class AppState {
         slip.selections.contains { $0.boutID == boutID && $0.fighterID == fighterID }
     }
 
-    func removeSelection(id: String) {
-        slip.selections.removeAll { $0.id == id }
-        syncMode()
-        betPlacedMessage = nil
-    }
-
     func applySlipJSON(_ json: String) {
         guard let data = json.data(using: .utf8),
               let payload = try? JSONDecoder().decode(SlipPayload.self, from: data) else {
@@ -202,8 +192,7 @@ final class AppState {
             BoutIndex(
                 id: bout.id,
                 redFighterID: bout.redCorner.fighterId,
-                blueFighterID: bout.blueCorner.fighterId,
-                winnerID: bout.result.winnerId
+                blueFighterID: bout.blueCorner.fighterId
             )
         }
         return FightCore(bouts: bouts)

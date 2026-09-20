@@ -46,7 +46,7 @@ Every bout on one event, in card order.
 **Header.** Poster as a stretchy background, collapsing on scroll. Event name, venue,
 date overlaid with a bottom gradient scrim for legibility.
 
-**Segments.** Bouts grouped under sticky headers: Main Event, Main Card, Prelims, Early
+**Segments.** Bouts grouped under section headers: Main Event, Main Card, Prelims, Early
 Prelims. Segment comes from the bout's `segment` field.
 
 **Bout row** — `component.card`, `spacing.md` internal:

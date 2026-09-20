@@ -79,52 +79,6 @@ struct RemoteImage: View {
     }
 }
 
-/// The one action a screen exists for. Full width, `.glassProminent`, and never shorter than
-/// the 44pt tap target — a bare `Button` sizes to its label and lands around 34pt.
-struct PrimaryActionButton: View {
-    let title: String
-    var systemImage: String?
-    var isEnabled = true
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            label
-                .font(.headline)
-                .frame(maxWidth: .infinity, minHeight: DesignTokens.Layout.primaryActionHeight)
-        }
-        .buttonStyle(.glassProminent)
-        .tint(DesignTokens.ColorToken.accent)
-        .disabled(!isEnabled)
-    }
-
-    @ViewBuilder
-    private var label: some View {
-        if let systemImage {
-            Label(title, systemImage: systemImage)
-        } else {
-            Text(title)
-        }
-    }
-}
-
-/// Sits next to the primary action while a number pad is up. The keyboard toolbar placement
-/// would draw this on top of the action bar instead of beside it.
-struct KeyboardDoneButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text("Done")
-                .font(.headline)
-                .padding(.horizontal, DesignTokens.Spacing.sm)
-                .frame(minHeight: DesignTokens.Layout.primaryActionHeight)
-        }
-        .buttonStyle(.glass)
-        .tint(DesignTokens.ColorToken.accent)
-    }
-}
-
 struct RemoteImageTile: View {
     let url: URL?
     var aspectRatio: CGFloat = DesignTokens.Layout.mediaTileAspectRatio

@@ -80,10 +80,6 @@ final class AppState {
         }
     }
 
-    func retryBootstrap() async {
-        await bootstrap()
-    }
-
     func refreshAll() async {
         loadEvents()
         await loadNews()

@@ -106,9 +106,3 @@ struct CashOutOffer: Sendable {
     let amount: Decimal
     let reason: String?
 }
-
-enum FightCoreError: Error, Sendable {
-    case network(retryable: Bool)
-    case decoding(field: String)
-    case validation(errors: [ValidationError])
-}

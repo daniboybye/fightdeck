@@ -8,9 +8,6 @@
 
 import FightDeckCore
 import SwiftUI
-#if !SKIP
-import UIKit
-#endif
 
 public struct DepositParams: Sendable {
     public let currentBalance: Decimal
@@ -26,33 +23,7 @@ public enum DepositResult: Sendable {
     case failed(reason: String)
 }
 
-#if !SKIP
-public protocol DepositHosting: AnyObject {
-    func configure()
-    @MainActor
-    func makeViewController(
-        params: DepositParams,
-        theme: ThemeTokens,
-        onResult: @escaping @Sendable (DepositResult) -> Void
-    ) -> UIViewController
-}
-
-public final class SkipDepositHosting: DepositHosting {
-    public init() {}
-
-    public func configure() {}
-
-    @MainActor
-    public func makeViewController(
-        params: DepositParams,
-        theme: ThemeTokens,
-        onResult: @escaping @Sendable (DepositResult) -> Void
-    ) -> UIViewController {
-        let view = DepositFlowView(params: params, theme: theme, onResult: onResult)
-        return UIHostingController(rootView: view)
-    }
-}
-#endif
+// MARK: - Compose (Android)
 
 #if SKIP
 public struct DepositComposeEntry: View {

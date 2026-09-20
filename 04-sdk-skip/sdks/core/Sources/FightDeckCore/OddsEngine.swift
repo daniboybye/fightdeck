@@ -45,10 +45,6 @@ public enum OddsEngine {
     }
 
     private static func decimalScaledInt(_ value: Decimal) -> Int {
-        #if SKIP
-        return (value as NSNumber).intValue
-        #else
-        return NSDecimalNumber(decimal: value).intValue
-        #endif
+        Money.asNumber(value).intValue
     }
 }

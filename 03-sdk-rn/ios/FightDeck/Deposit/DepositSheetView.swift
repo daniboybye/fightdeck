@@ -10,7 +10,7 @@ import DepositSDK
 import SwiftUI
 
 struct DepositSheetView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let onDismiss: () -> Void
 
     @State private var depositConfirmed = false

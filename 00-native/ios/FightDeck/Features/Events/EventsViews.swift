@@ -113,7 +113,7 @@ struct EventsTabView: View {
         case .video(let id):
             if case .loaded(let media) = state.mediaState,
                let item = media.first(where: { $0.id == id }) {
-                VideoScreenView(item: item, posterURL: state.imageURL(item.poster))
+                VideoScreenView(item: item)
             }
         }
     }
@@ -140,24 +140,32 @@ private struct EventRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             RemoteImageTile(url: posterURL)
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                Text(event.name)
-                    .font(.headline)
-                Text("\(event.venue) · \(event.city)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                HStack(spacing: DesignTokens.Spacing.sm) {
-                    Text(event.date.formattedEventDate)
-                    Text("·")
-                    Text("^[\(event.bouts.count) fight](inflect: true)")
-                    Spacer()
-                    statusBadge
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
+            eventCopy
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
+    }
+
+    private var eventCopy: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            Text(event.name)
+                .font(.headline)
+            Text("\(event.venue) · \(event.city)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            metaRow
+        }
+    }
+
+    private var metaRow: some View {
+        HStack(spacing: DesignTokens.Spacing.sm) {
+            Text(event.date.formattedEventDate)
+            Text("·")
+            Text("^[\(event.bouts.count) fight](inflect: true)")
+            Spacer()
+            statusBadge
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
     }
 
     private var statusBadge: some View {
@@ -183,8 +191,8 @@ struct EventDetailView: View {
 
     var body: some View {
         List {
-            ForEach(Self.segmentOrder, id: \.self) { segment in
-                boutSection(segment)
+            ForEach(cardSections, id: \.title) { section in
+                boutSection(section.title, bouts: section.bouts)
             }
             if mode.showsResults {
                 mediaSection
@@ -195,16 +203,28 @@ struct EventDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    @ViewBuilder
-    private func boutSection(_ segment: String) -> some View {
-        if let bouts = grouped[segment], !bouts.isEmpty {
-            Section(Self.segmentTitle(segment)) {
-                ForEach(bouts) { bout in
-                    NavigationLink(value: EventsRoute.bout(eventID: event.id, boutID: bout.id)) {
-                        BoutRowView(state: state, bout: bout, mode: mode)
-                    }
+    private func boutSection(_ title: String, bouts: [BoutItem]) -> some View {
+        Section(title) {
+            ForEach(bouts) { bout in
+                NavigationLink(value: EventsRoute.bout(eventID: event.id, boutID: bout.id)) {
+                    BoutRowView(state: state, bout: bout, mode: mode)
                 }
             }
+        }
+    }
+
+    /// The card, split into the sections a fight night is billed as. Built once per render
+    /// rather than read from a computed property per segment, which re-grouped and re-sorted
+    /// the whole card for every heading on screen.
+    private var cardSections: [(title: String, bouts: [BoutItem])] {
+        var grouped: [String: [BoutItem]] = [:]
+        for bout in event.bouts {
+            grouped[bout.segment, default: []].append(bout)
+        }
+        return Self.segmentOrder.compactMap { segment in
+            guard var bouts = grouped[segment], !bouts.isEmpty else { return nil }
+            bouts.sort { $0.order < $1.order }
+            return (Self.segmentTitle(segment), bouts)
         }
     }
 
@@ -236,10 +256,6 @@ struct EventDetailView: View {
             Image(systemName: "play.circle.fill")
                 .foregroundStyle(DesignTokens.ColorToken.accent)
         }
-    }
-
-    private var grouped: [String: [BoutItem]] {
-        Dictionary(grouping: event.bouts.sorted { $0.order < $1.order }, by: \.segment)
     }
 
     private static func segmentTitle(_ segment: String) -> String {
@@ -318,16 +334,7 @@ struct VideoRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
             poster
-            VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
-                if !eventName.isEmpty {
-                    Text(eventName.uppercased())
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(DesignTokens.ColorToken.accent)
-                }
-                Text(item.title)
-                    .font(.headline)
-                    .lineLimit(2)
-            }
+            captions
         }
         .padding(.vertical, DesignTokens.Spacing.sm)
     }
@@ -341,14 +348,31 @@ struct VideoRow: View {
                 .shadow(radius: 8)
         }
         .overlay(alignment: .bottomTrailing) {
-            Text(item.durationSeconds.formattedDuration)
-                .font(.caption2.weight(.semibold))
-                .monospacedDigit()
-                .padding(.horizontal, DesignTokens.Spacing.sm)
-                .padding(.vertical, DesignTokens.Spacing.xs)
-                .background(.black.opacity(0.6), in: .capsule)
-                .foregroundStyle(.white)
-                .padding(DesignTokens.Spacing.sm)
+            durationBadge
+        }
+    }
+
+    private var durationBadge: some View {
+        Text(item.durationSeconds.formattedDuration)
+            .font(.caption2.weight(.semibold))
+            .monospacedDigit()
+            .padding(.horizontal, DesignTokens.Spacing.sm)
+            .padding(.vertical, DesignTokens.Spacing.xs)
+            .background(.black.opacity(0.6), in: .capsule)
+            .foregroundStyle(.white)
+            .padding(DesignTokens.Spacing.sm)
+    }
+
+    private var captions: some View {
+        VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
+            if !eventName.isEmpty {
+                Text(eventName.uppercased())
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(DesignTokens.ColorToken.accent)
+            }
+            Text(item.title)
+                .font(.headline)
+                .lineLimit(2)
         }
     }
 }

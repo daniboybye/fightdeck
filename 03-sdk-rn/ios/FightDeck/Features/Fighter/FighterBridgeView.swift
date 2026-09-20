@@ -11,7 +11,7 @@ import FightDeckRNRuntime
 import SwiftUI
 
 struct FighterBridgeView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let fighterID: String
     @State private var layoutMetrics = RNSurfaceLayoutMetrics()
 
@@ -35,7 +35,7 @@ struct FighterBridgeView: View {
 }
 
 struct FighterSDKView: UIViewControllerRepresentable {
-    @Bindable var state: AppState
+    let state: AppState
     let fighterID: String
     var layoutMetrics: RNSurfaceLayoutMetrics
 

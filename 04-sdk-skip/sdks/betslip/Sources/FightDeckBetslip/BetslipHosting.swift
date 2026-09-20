@@ -8,25 +8,6 @@
 
 import FightDeckCore
 import SwiftUI
-#if !SKIP
-import UIKit
-#endif
-
-public struct BetslipParams: Sendable {
-    public let fightCore: FightCore
-    public let initialSlip: BetSlip
-    public let initialBalance: Decimal
-
-    public init(
-        fightCore: FightCore,
-        initialSlip: BetSlip,
-        initialBalance: Decimal
-    ) {
-        self.fightCore = fightCore
-        self.initialSlip = initialSlip
-        self.initialBalance = initialBalance
-    }
-}
 
 @MainActor
 public protocol SlipDisplayContext: AnyObject {
@@ -35,51 +16,7 @@ public protocol SlipDisplayContext: AnyObject {
     func eventName(for selection: Selection) -> String
 }
 
-#if !SKIP
-public protocol BetslipHosting: AnyObject {
-    func configure()
-    @MainActor
-    func makeViewController(
-        params: BetslipParams,
-        display: SlipDisplayContext,
-        theme: ThemeTokens,
-        onDeposit: @escaping @Sendable () -> Void,
-        onBrowseEvents: @escaping @Sendable () -> Void,
-        onHostSync: @escaping @Sendable (BetSlip, Decimal, String?) -> Void
-    ) -> UIViewController
-}
-
-public final class SkipBetslipHosting: BetslipHosting {
-    public init() {}
-
-    public func configure() {}
-
-    @MainActor
-    public func makeViewController(
-        params: BetslipParams,
-        display: SlipDisplayContext,
-        theme: ThemeTokens,
-        onDeposit: @escaping @Sendable () -> Void,
-        onBrowseEvents: @escaping @Sendable () -> Void,
-        onHostSync: @escaping @Sendable (BetSlip, Decimal, String?) -> Void
-    ) -> UIViewController {
-        let store = BetSlipStore(
-            fightCore: params.fightCore,
-            slip: params.initialSlip,
-            balance: params.initialBalance
-        )
-        let view = BetSlipRootView(
-            store: store,
-            display: display,
-            theme: theme,
-            onDeposit: onDeposit,
-            onBrowseEvents: onBrowseEvents,
-            onHostSync: onHostSync
-        )
-        return UIHostingController(rootView: view)
-    }
-}
-#endif
+// MARK: - Compose (Android)
 
 #if SKIP
 public struct BetslipComposeEntry: View {

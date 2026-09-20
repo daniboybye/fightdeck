@@ -52,19 +52,26 @@ public enum Money {
         parse(String(value))
     }
 
+    /// The one place the platforms' number bridging differs: Skip maps `Decimal` onto
+    /// `java.math.BigDecimal`, which is already an `NSNumber`, while Foundation wants the
+    /// `NSDecimalNumber` wrapper. Everything that formats or reads a `Decimal` goes through
+    /// here, so the `#if` is written once instead of at each call.
+    public static func asNumber(_ value: Decimal) -> NSNumber {
+        #if SKIP
+        return value as NSNumber
+        #else
+        return NSDecimalNumber(decimal: value)
+        #endif
+    }
+
     public static func format(_ value: Decimal) -> String {
-        let rounded = money(value)
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
         formatter.groupingSeparator = ""
-        #if SKIP
-        return formatter.string(from: rounded as NSNumber) ?? "0.00"
-        #else
-        return formatter.string(from: rounded as NSDecimalNumber) ?? "0.00"
-        #endif
+        return formatter.string(from: asNumber(money(value))) ?? "0.00"
     }
 
     public static func formatCurrency(_ value: Decimal) -> String {

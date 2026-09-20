@@ -97,6 +97,7 @@ enum SurfaceChrome {
     /// the window's safe area but the part of the surface that hangs below it. SwiftUI already
     /// keeps this surface clear of the tab bar and the home indicator, which makes that
     /// overlap zero; reporting the window inset instead would push the bar up twice.
+    @MainActor
     static func resolve(
         _ metrics: RNSurfaceLayoutMetrics,
         for controller: UIViewController?
@@ -122,6 +123,7 @@ enum SurfaceChrome {
     }
 
     /// Floating and split keyboards leave the bar where it is; only a docked one covers it.
+    @MainActor
     static func isKeyboardDocked(_ keyboardFrame: CGRect, in window: UIWindow) -> Bool {
         keyboardFrame.height > 120
             && keyboardFrame.maxY >= window.bounds.maxY - 2
@@ -155,16 +157,13 @@ struct RNSurfaceLayoutReader<Content: View>: View {
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { note in
-                applyKeyboardNotification(note)
+                applyKeyboardFrame(note)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardDidShowNotification)) { note in
-                applyKeyboardNotification(note)
+                applyKeyboardFrame(note)
             }
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-                var next = metrics
-                next.keyboardVisible = false
-                next.keyboardFrameInWindow = .zero
-                metrics = next
+                clearKeyboardFrame()
             }
     }
 
@@ -179,27 +178,23 @@ struct RNSurfaceLayoutReader<Content: View>: View {
         metrics = next
     }
 
-    private func applyKeyboardNotification(_ note: Notification) {
-        if note.name == UIResponder.keyboardWillHideNotification {
-            var next = metrics
-            next.keyboardVisible = false
-            next.keyboardFrameInWindow = .zero
-            metrics = next
+    private func clearKeyboardFrame() {
+        var next = metrics
+        next.keyboardVisible = false
+        next.keyboardFrameInWindow = .zero
+        metrics = next
+    }
+
+    private func applyKeyboardFrame(_ note: Notification) {
+        guard let frameValue = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue,
+              let window = UIApplication.shared.connectedScenes
+                  .compactMap({ $0 as? UIWindowScene })
+                  .flatMap(\.windows)
+                  .first(where: \.isKeyWindow) else {
             return
         }
 
-        guard let frameValue = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else {
-            return
-        }
-        let screenFrame = frameValue.cgRectValue
-        guard let window = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow) else {
-            return
-        }
-
-        let keyboardFrame = window.convert(screenFrame, from: nil)
+        let keyboardFrame = window.convert(frameValue.cgRectValue, from: nil)
         let keyboardVisible = SurfaceChrome.isKeyboardDocked(keyboardFrame, in: window)
 
         var next = metrics
@@ -234,6 +229,7 @@ extension View {
 }
 
 enum RNSurfaceLayoutProbe {
+    @MainActor
     static func isTextInputActive(for controller: UIViewController?) -> Bool {
         guard let wrapper = controller as? RNSurfaceWrapperViewController,
               let window = wrapper.view.window,
@@ -272,6 +268,7 @@ enum RNSurfaceLayoutPush {
 }
 
 private extension UIView {
+    @MainActor
     func containsActiveTextInput(in window: UIWindow) -> Bool {
         guard let firstResponder = window.findFirstResponder() as? UIView else {
             return false
@@ -281,10 +278,12 @@ private extension UIView {
 }
 
 private extension UIWindow {
+    @MainActor
     func findFirstResponder() -> UIResponder? {
         findFirstResponder(in: self)
     }
 
+    @MainActor
     private func findFirstResponder(in view: UIView) -> UIResponder? {
         if view.isFirstResponder {
             return view
@@ -330,13 +329,29 @@ final class RNSurfaceWrapperViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// Every one of these moves the surface's usable box, and the answer to all of them is the
+    /// same: re-measure and push. They were registered against two selectors with identical
+    /// bodies, which read as if the editing case did something different.
+    private static let layoutTriggers: [Notification.Name] = [
+        UITextField.textDidBeginEditingNotification,
+        UITextField.textDidEndEditingNotification,
+        UIResponder.keyboardWillChangeFrameNotification,
+        UIResponder.keyboardDidShowNotification,
+        UIResponder.keyboardWillHideNotification,
+    ]
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor.systemGroupedBackground
-        // The React Native host caches one surface per module, so the same controller comes
-        // back every time SwiftUI rebuilds this screen. Adopting a child that still belongs to
-        // the previous wrapper leaves its view in a hierarchy that is no longer on screen —
-        // which is what a blank surface looks like.
+        adoptChildController()
+        observeLayoutTriggers()
+    }
+
+    /// The React Native host caches one surface per module, so the same controller comes back
+    /// every time SwiftUI rebuilds this screen. Adopting a child that still belongs to the
+    /// previous wrapper leaves its view in a hierarchy that is no longer on screen — which is
+    /// what a blank surface looks like.
+    private func adoptChildController() {
         if childController.parent != nil {
             childController.willMove(toParent: nil)
             childController.view.removeFromSuperview()
@@ -353,36 +368,17 @@ final class RNSurfaceWrapperViewController: UIViewController {
             childController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
         childController.didMove(toParent: self)
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleTextInputEditingChanged),
-            name: UITextField.textDidBeginEditingNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleTextInputEditingChanged),
-            name: UITextField.textDidEndEditingNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleKeyboardFrameChanged),
-            name: UIResponder.keyboardWillChangeFrameNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleKeyboardFrameChanged),
-            name: UIResponder.keyboardDidShowNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleKeyboardFrameChanged),
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
+    }
+
+    private func observeLayoutTriggers() {
+        for name in Self.layoutTriggers {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleLayoutTrigger),
+                name: name,
+                object: nil
+            )
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -394,11 +390,7 @@ final class RNSurfaceWrapperViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
 
-    @objc private func handleTextInputEditingChanged() {
-        onLayout?()
-    }
-
-    @objc private func handleKeyboardFrameChanged() {
+    @objc private func handleLayoutTrigger() {
         onLayout?()
     }
 

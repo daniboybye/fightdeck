@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Presents deposit as a full-screen sheet so every tab can reach it without a slip-stack push.
 struct DepositSheetView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let onDismiss: () -> Void
 
     var body: some View {

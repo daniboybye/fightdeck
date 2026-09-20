@@ -59,14 +59,6 @@ enum DesignTokens {
     }
 }
 
-extension View {
-    /// Grows a control to the 44pt tap-target floor without changing how it looks.
-    func minimumTapTarget() -> some View {
-        frame(minHeight: DesignTokens.Layout.minTapTarget)
-            .contentShape(.rect)
-    }
-}
-
 private extension Color {
     init(hex: String) {
         let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

@@ -15,7 +15,6 @@ enum DesignTokens {
     enum ColorToken {
         static let accent = Color(hex: "#E8B33C")
         static let positive = Color(hex: "#3DD68C")
-        static let negative = Color(hex: "#F2545B")
         static let cornerRed = Color(hex: "#D94A4A")
         static let cornerBlue = Color(hex: "#4A7FD9")
     }
@@ -38,13 +37,8 @@ enum DesignTokens {
         /// The floor the Human Interface Guidelines put on any control you can tap. Button
         /// styles size to their label, which lands well under it for a one-line title.
         static let minTapTarget: CGFloat = 44
-        /// A full-width call to action reads as a button, not a label, at this height.
-        static let primaryActionHeight: CGFloat = 50
         static let mediaTileAspectRatio: CGFloat = 16 / 9
         static let betSlipAccessoryHeight: CGFloat = 44
-        /// The floating tab bar's capsule rises above the safe area it reports, so a bar
-        /// sitting on it needs more than a plain gap to read as separate.
-        static let tabBarActionGap: CGFloat = 20
     }
 }
 

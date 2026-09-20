@@ -11,31 +11,10 @@ import DepositSDK
 import FighterSDK
 import FightDeckRNRuntime
 import Foundation
-import UIKit
 
 enum ThemeLoader {
     static func tokensJSON() -> String {
         DatasetLocator.tokensJSON()
-    }
-}
-
-@MainActor
-enum DepositLauncherHost {
-    static func launch(
-        navigationController: UINavigationController,
-        hosting: DepositHosting,
-        balance: Decimal,
-        onResult: @escaping @Sendable (DepositResult) -> Void
-    ) {
-        DepositLauncher.launch(
-            from: navigationController,
-            hosting: hosting,
-            params: DepositParams(
-                themeJSON: ThemeLoader.tokensJSON(),
-                currentBalance: balance
-            ),
-            onResult: onResult
-        )
     }
 }
 

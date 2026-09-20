@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightDeckCore
 import Foundation
 
 /// The strings both apps put on screen for a bout, an event date or a clip length.
@@ -95,7 +96,36 @@ public enum Display {
         }
     }
 
-    public static func segmentRank(_ segment: String) -> Int {
+    private static func segmentRank(_ segment: String) -> Int {
         segmentOrder.firstIndex(of: segment) ?? segmentOrder.count
+    }
+
+    /// The card, split into the sections a fight night is actually billed as. Grouping once
+    /// here rather than in the screen is what keeps the sort off the render path: a view that
+    /// asks a computed property per segment re-groups and re-sorts the whole card each time.
+    public static func cardSections(for bouts: [Bout]) -> [CardSection] {
+        var grouped: [String: [Bout]] = [:]
+        for bout in bouts {
+            grouped[bout.segment, default: []].append(bout)
+        }
+        let segments = grouped.keys.sorted { segmentRank($0) < segmentRank($1) }
+        return segments.compactMap { segment in
+            guard var section = grouped[segment], !section.isEmpty else { return nil }
+            section.sort { $0.order < $1.order }
+            return CardSection(title: segmentTitle(segment), bouts: section)
+        }
+    }
+}
+
+/// One billed block of a card — "Main Event", "Prelims" — with its bouts already in order.
+public struct CardSection: Identifiable, Sendable {
+    public let title: String
+    public let bouts: [Bout]
+
+    public var id: String { title }
+
+    public init(title: String, bouts: [Bout]) {
+        self.title = title
+        self.bouts = bouts
     }
 }

@@ -31,7 +31,7 @@ struct RootView: View {
                 bootstrapView(message: "Starting…", showsProgress: true)
             case .failed(let message):
                 bootstrapView(message: message, showsProgress: false) {
-                    Task { await state.retryBootstrap() }
+                    Task { await state.bootstrap() }
                 }
             case .ready:
                 mainTabs

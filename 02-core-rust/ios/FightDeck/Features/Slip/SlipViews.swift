@@ -10,7 +10,7 @@ import FightSlip
 import SwiftUI
 
 struct SlipTabView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let onBrowseEvents: () -> Void
 
     var body: some View {
@@ -23,7 +23,7 @@ struct SlipTabView: View {
 }
 
 struct BetSlipView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let onBrowseEvents: () -> Void
 
     @FocusState private var stakeFocused: Bool

@@ -134,16 +134,16 @@ stateHolder.SaveableStateProvider("myKey") {
 }
 ```
 
-Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/all/java/com/fightdeck/baseline/sdk/SkipSDKBridge.kt). Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositComposeEntry`, `BetslipComposeEntry`, `FighterComposeEntry`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. iOS uses ordinary `UIHostingController` via `DepositHosting` / `BetslipHosting` / `FighterHosting` — no seam there.
+Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/all/java/com/fightdeck/baseline/sdk/SkipSDKBridge.kt). Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositComposeEntry`, `BetslipComposeEntry`, `FighterComposeEntry`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. iOS has no seam at all: the host puts `DepositFlowView`, `BetSlipRootView` and `FighterRootView` straight into its own SwiftUI tree, so there is nothing to bridge and nothing to wrap.
 
 ## Host split
 
 | Screen | iOS | Android |
 | --- | --- | --- |
 | Event list / card / bout | Native SwiftUI | Native Compose |
-| Bet slip | **FightDeckBetslip** SDK | **SkipSDKBridge** → `BetslipComposeEntry(...).Compose()` |
-| Deposit | **FightDeckDeposit** SDK | **SkipSDKBridge** → `DepositComposeEntry(...).Compose()` |
-| Fighter profile | **FightDeckFighter** SDK | **SkipSDKBridge** → `FighterComposeEntry(...).Compose()` |
+| Bet slip | **FightDeckBetslip** SDK → `BetSlipRootView` | **SkipSDKBridge** → `BetslipComposeEntry(...).Compose()` |
+| Deposit | **FightDeckDeposit** SDK → `DepositFlowView` | **SkipSDKBridge** → `DepositComposeEntry(...).Compose()` |
+| Fighter profile | **FightDeckFighter** SDK → `FighterRootView` | **SkipSDKBridge** → `FighterComposeEntry(...).Compose()` |
 
 ## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
 
@@ -276,7 +276,7 @@ Install: `brew install skiptools/skip/skip`
 
 ```
 Host (SwiftUI / Compose)
-  │  DepositHosting / BetslipHosting / FighterHosting  ← mockable, UIKit adapters on iOS
+  │  iOS: the SwiftUI view directly · Android: *ComposeEntry via SkipSDKBridge
   ▼
 FightDeckDeposit / FightDeckBetslip / FightDeckFighter  (SwiftPM + skipstone)
   │  SkipUI Swift → Kotlin (Compose)

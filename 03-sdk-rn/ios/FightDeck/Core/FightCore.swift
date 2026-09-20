@@ -12,7 +12,6 @@ struct BoutIndex: Sendable {
     let id: String
     let redFighterID: String
     let blueFighterID: String
-    let winnerID: String
 }
 
 struct FightCore: Sendable {
@@ -21,7 +20,6 @@ struct FightCore: Sendable {
     static let maxSelections = 12
     static let minAccaLegs = 2
     static let maxPayout = Decimal(string: "100000.00")!
-    static let cashOutMargin = Decimal(string: "0.05")!
 
     let bouts: [String: BoutIndex]
 
@@ -100,96 +98,6 @@ struct FightCore: Sendable {
         return ValidationError.allCases.filter { found.contains($0) }
     }
 
-    func settle(slip: BetSlip, voidedBouts: Set<String> = []) -> Settlement {
-        let outcomes = slip.selections.map { legOutcome(selection: $0, voidedBouts: voidedBouts) }
-
-        switch slip.mode {
-        case .accumulator:
-            let totalStake = slip.stake
-            if outcomes.contains(.lost) {
-                return makeSettlement(
-                    slip: slip,
-                    outcomes: outcomes,
-                    returned: 0,
-                    totalStake: totalStake,
-                    status: .lost
-                )
-            }
-            let product = zip(slip.selections, outcomes).reduce(Decimal(1)) { partial, pair in
-                let (selection, outcome) = pair
-                let factor: Decimal = outcome == .void ? 1 : selection.odds
-                return partial * factor
-            }
-            return makeSettlement(
-                slip: slip,
-                outcomes: outcomes,
-                returned: Money.money(slip.stake * product),
-                totalStake: totalStake,
-                status: .won
-            )
-
-        case .single:
-            let totalStake = slip.stake * Decimal(slip.selections.count)
-            var returned = Decimal(0)
-            for (selection, outcome) in zip(slip.selections, outcomes) {
-                switch outcome {
-                case .won:
-                    returned += Money.money(slip.stake * selection.odds)
-                case .void:
-                    returned += slip.stake
-                case .lost:
-                    break
-                }
-            }
-            let wonCount = outcomes.filter { $0 == .won }.count
-            let status: SettlementStatus
-            if wonCount == outcomes.count {
-                status = .won
-            } else if wonCount == 0 {
-                status = .lost
-            } else {
-                status = .partiallyWon
-            }
-            return makeSettlement(
-                slip: slip,
-                outcomes: outcomes,
-                returned: returned,
-                totalStake: totalStake,
-                status: status
-            )
-        }
-    }
-
-    func cashOutOffer(slip: BetSlip, settledBouts: Set<String>) -> CashOutOffer {
-        guard slip.mode == .accumulator else {
-            return CashOutOffer(available: false, amount: 0, reason: "not_an_accumulator")
-        }
-
-        var outcomes: [String: LegOutcome] = [:]
-        for selection in slip.selections where settledBouts.contains(selection.boutID) {
-            outcomes[selection.boutID] = legOutcome(selection: selection, voidedBouts: [])
-        }
-
-        if outcomes.values.contains(.lost) {
-            return CashOutOffer(available: false, amount: 0, reason: "bet_already_lost")
-        }
-
-        let allBoutIDs = Set(slip.selections.map(\.boutID))
-        if settledBouts.intersection(allBoutIDs) == allBoutIDs {
-            return CashOutOffer(available: false, amount: 0, reason: "bet_already_settled")
-        }
-
-        var fairValue = slip.stake
-        for selection in slip.selections {
-            if outcomes[selection.boutID] == .won {
-                fairValue *= selection.odds
-            }
-        }
-
-        let amount = Money.money(fairValue * (1 - Self.cashOutMargin))
-        return CashOutOffer(available: true, amount: amount, reason: nil)
-    }
-
     private struct SlipMath {
         let combinedExact: Decimal?
         let combinedDisplay: Decimal?
@@ -225,34 +133,5 @@ struct FightCore: Sendable {
                 potentialProfit: Money.money(potentialReturn - totalStake)
             )
         }
-    }
-
-    private func legOutcome(selection: Selection, voidedBouts: Set<String>) -> LegOutcome {
-        if voidedBouts.contains(selection.boutID) {
-            return .void
-        }
-        guard let bout = bouts[selection.boutID] else {
-            return .lost
-        }
-        return bout.winnerID == selection.fighterID ? .won : .lost
-    }
-
-    private func makeSettlement(
-        slip: BetSlip,
-        outcomes: [LegOutcome],
-        returned: Decimal,
-        totalStake: Decimal,
-        status: SettlementStatus
-    ) -> Settlement {
-        let legs = zip(slip.selections, outcomes).map { selection, outcome in
-            LegResult(boutID: selection.boutID, fighterID: selection.fighterID, outcome: outcome)
-        }
-        let roundedReturn = Money.money(returned)
-        return Settlement(
-            legs: legs,
-            returned: roundedReturn,
-            profit: Money.money(roundedReturn - totalStake),
-            status: status
-        )
     }
 }

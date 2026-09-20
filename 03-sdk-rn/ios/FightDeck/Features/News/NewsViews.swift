@@ -39,7 +39,7 @@ struct NewsRow: View {
 }
 
 struct NewsArticleView: View {
-    @Bindable var state: AppState
+    let state: AppState
     let item: NewsItem
     let imageURL: URL?
 

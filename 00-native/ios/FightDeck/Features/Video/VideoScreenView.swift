@@ -13,12 +13,11 @@ import UIKit
 
 struct VideoScreenView: View {
     let item: MediaItem
-    let posterURL: URL?
 
     var body: some View {
         List {
             Section {
-                VideoPlayerContainer(item: item, posterURL: posterURL)
+                VideoPlayerContainer(item: item)
                     .aspectRatio(DesignTokens.Layout.mediaTileAspectRatio, contentMode: .fit)
                     .listRowInsets(.init())
                     .listRowBackground(Color.clear)
@@ -45,7 +44,6 @@ struct VideoScreenView: View {
 
 struct VideoPlayerContainer: UIViewControllerRepresentable {
     let item: MediaItem
-    let posterURL: URL?
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         Self.activateAudioSession()

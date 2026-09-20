@@ -72,10 +72,6 @@ final class AppState {
         }
     }
 
-    func retryBootstrap() async {
-        await bootstrap()
-    }
-
     func refreshAll() async {
         loadEvents()
         await loadNews()
@@ -171,15 +167,15 @@ private extension BoutIndexRecord {
     }
 }
 
-extension EventSummary: Identifiable {}
-
-extension BoutSummary: Identifiable {}
-
-extension FighterSummary: Identifiable {}
-
-// Retroactive because the record is FightSlip's and Identifiable is the standard library's.
+// Retroactive because the records are the SDKs' and Identifiable is the standard library's.
 // UniFFI will not emit the conformance, so the app has to own it and accept that a future
-// version of the SDK could add its own.
+// version of an SDK could add its own.
+extension EventSummary: @retroactive Identifiable {}
+
+extension BoutSummary: @retroactive Identifiable {}
+
+extension FighterSummary: @retroactive Identifiable {}
+
 extension ValidationErrorRecord: @retroactive Identifiable {
     public var id: String { validationErrorCode(error: self) }
 }

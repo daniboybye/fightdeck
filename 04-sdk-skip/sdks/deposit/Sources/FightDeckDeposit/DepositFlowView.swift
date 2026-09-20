@@ -10,12 +10,10 @@ import FightDeckCore
 import SwiftUI
 
 private enum Layout {
-    static let minTapTarget: CGFloat = 44
     static let primaryActionHeight: CGFloat = 44
     static let secondaryActionHeight: CGFloat = 44
     static let secondaryActionPadding: CGFloat = 24
     static let actionBarGap: CGFloat = 12
-    static let betSlipAccessoryHeight: CGFloat = 44
     static let radioDiameter: CGFloat = 20
     static let radioBorder: CGFloat = 2
     static let radioInset: CGFloat = 5
@@ -74,19 +72,18 @@ public struct DepositFlowView: View {
     }
 
     public var body: some View {
-        Group {
-            if didSucceed {
-                successContent
-            } else {
-                formContent
+        platformChrome(
+            Group {
+                if didSucceed {
+                    successContent
+                } else {
+                    formContent
+                }
             }
-        }
+        )
         // Nothing to name once it has happened: the confirmation says so in the middle of the
         // screen, where the eye already is, and a title would only repeat it in the corner.
         .navigationTitle(didSucceed ? "" : "Deposit")
-        #if !SKIP
-        .navigationBarTitleDisplayMode(NavigationBarItem.TitleDisplayMode.inline)
-        #endif
         .toolbar {
             // The money has already moved by the time the confirmation shows, so that screen
             // leaves through Done only: closing it would offer to spend the deposit twice.
@@ -100,59 +97,7 @@ public struct DepositFlowView: View {
 
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
     // and stepping through them only hides the total from the person approving it.
-    private var formContent: some View {
-        #if SKIP
-        skipFormContent
-        #else
-        formScroll
-            .modifier(DepositBottomBarModifier(
-                theme: theme,
-                amountFocused: amountFocused,
-                isEnabled: amountValidationMessage == nil && !amountText.isEmpty,
-                onConfirm: { withAnimation(.smooth(duration: 0.35)) { didSucceed = true } },
-                onDismissKeyboard: { amountFocused = false }
-            ))
-        #endif
-    }
-
-    #if SKIP
-    // The confirm button rides above the scroll rather than at the end of it, the same shape the
-    // slip screen uses: as the last row of a scroll it ends up behind the keyboard the amount
-    // field raises, and SkipUI's scroll view will not extend its range far enough to reach it.
-    private var skipFormContent: some View {
-        ZStack(alignment: .bottom) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: theme.spacingLG) {
-                    amountSection
-                    methodSection
-                    summarySection
-                }
-                .padding(theme.spacingLG)
-                .padding(.bottom, Layout.primaryActionHeight + theme.spacingLG)
-            }
-            skipConfirmButton
-                .padding(.horizontal, theme.spacingLG)
-                .padding(.bottom, theme.spacingLG)
-        }
-    }
-
-    private var skipConfirmButton: some View {
-        Button {
-            didSucceed = true
-        } label: {
-            Text("Confirm deposit")
-                .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.onAccent)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .frame(height: Layout.primaryActionHeight)
-        .background(theme.accent)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
-        .disabled(amountValidationMessage != nil || amountText.isEmpty)
-    }
-    #endif
-
-    private var formScroll: some View {
+    private func formScroll(bottomPadding: CGFloat = 0) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: theme.spacingLG) {
                 amountSection
@@ -160,6 +105,7 @@ public struct DepositFlowView: View {
                 summarySection
             }
             .padding(theme.spacingLG)
+            .padding(.bottom, bottomPadding)
         }
     }
 
@@ -186,23 +132,6 @@ public struct DepositFlowView: View {
         }
     }
 
-    @ViewBuilder
-    private var amountChipRow: some View {
-        #if SKIP
-        HStack {
-            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                amountChip("€\(chip)") { amountText = chip }
-            }
-        }
-        #else
-        PresetChipRow(theme: theme.chipTheme) {
-            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                PresetChipButton(title: "€\(chip)", theme: theme.chipTheme) { amountText = chip }
-            }
-        }
-        #endif
-    }
-
     private var methodSection: some View {
         VStack(alignment: .leading, spacing: theme.spacingSM) {
             Text("Method")
@@ -212,23 +141,27 @@ public struct DepositFlowView: View {
                 Button {
                     method = item
                 } label: {
-                    HStack {
-                        methodMark(isSelected: method == item)
-                        VStack(alignment: .leading) {
-                            Text(item.title)
-                                .foregroundStyle(theme.textPrimary)
-                            Text(item.feeNote)
-                                .font(Typography.body(theme.fontCaption))
-                                .foregroundStyle(theme.textSecondary)
-                        }
-                        Spacer()
-                    }
-                    .padding(theme.spacingLG)
-                    .background(theme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
+                    methodRow(item)
                 }
             }
         }
+    }
+
+    private func methodRow(_ item: DepositMethod) -> some View {
+        HStack {
+            methodMark(isSelected: method == item)
+            VStack(alignment: .leading) {
+                Text(item.title)
+                    .foregroundStyle(theme.textPrimary)
+                Text(item.feeNote)
+                    .font(Typography.body(theme.fontCaption))
+                    .foregroundStyle(theme.textSecondary)
+            }
+            Spacer()
+        }
+        .padding(theme.spacingLG)
+        .background(theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
     }
 
     /// Drawn rather than named. SkipUI resolves `systemName` against a fixed table of Material
@@ -269,32 +202,17 @@ public struct DepositFlowView: View {
     }
 
     private var successContent: some View {
-        VStack(spacing: theme.spacingLG) {
-            successIcon
-            Text("Deposit successful")
-                .font(Typography.bold(theme.fontTitle))
-            Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
-                .foregroundStyle(theme.textSecondary)
-            secondaryDoneButton
-        }
-        .padding(theme.spacingXL)
-        #if !SKIP
-        .modifier(SuccessPresentationModifier(trigger: didSucceed))
-        #endif
-    }
-
-    @ViewBuilder
-    private var successIcon: some View {
-        #if !SKIP
-        Image(systemName: "checkmark.circle.fill")
-            .font(Typography.body(64.0))
-            .foregroundStyle(theme.positive)
-            .symbolEffect(.bounce, options: .nonRepeating)
-        #else
-        Image(systemName: "checkmark.circle.fill")
-            .font(Typography.body(64.0))
-            .foregroundStyle(theme.positive)
-        #endif
+        successChrome(
+            VStack(spacing: theme.spacingLG) {
+                successIcon
+                Text("Deposit successful")
+                    .font(Typography.bold(theme.fontTitle))
+                Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
+                    .foregroundStyle(theme.textSecondary)
+                secondaryDoneButton
+            }
+            .padding(theme.spacingXL)
+        )
     }
 
     private var parsedAmount: Decimal {
@@ -313,6 +231,10 @@ public struct DepositFlowView: View {
         return nil
     }
 
+    private var canConfirm: Bool {
+        amountValidationMessage == nil && !amountText.isEmpty
+    }
+
     private func summaryRow(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
@@ -322,10 +244,73 @@ public struct DepositFlowView: View {
                 .foregroundStyle(theme.textPrimary)
         }
     }
+}
 
-    @ViewBuilder
-    private var secondaryDoneButton: some View {
-        #if SKIP
+// MARK: - Skip (Android)
+
+#if SKIP
+extension DepositFlowView {
+    /// Compose supplies the screen's own chrome; nothing to add here.
+    fileprivate func platformChrome(_ content: some View) -> some View {
+        content
+    }
+
+    fileprivate func successChrome(_ content: some View) -> some View {
+        content
+    }
+
+    // The confirm button rides above the scroll rather than at the end of it, the same shape the
+    // slip screen uses: as the last row of a scroll it ends up behind the keyboard the amount
+    // field raises, and SkipUI's scroll view will not extend its range far enough to reach it.
+    fileprivate var formContent: some View {
+        ZStack(alignment: .bottom) {
+            formScroll(bottomPadding: Layout.primaryActionHeight + theme.spacingLG)
+            confirmButton
+                .padding(.horizontal, theme.spacingLG)
+                .padding(.bottom, theme.spacingLG)
+        }
+    }
+
+    private var confirmButton: some View {
+        Button {
+            didSucceed = true
+        } label: {
+            Text("Confirm deposit")
+                .font(Typography.semibold(theme.fontCallout))
+                .foregroundStyle(theme.onAccent)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(height: Layout.primaryActionHeight)
+        .background(theme.accent)
+        .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+        .disabled(!canConfirm)
+    }
+
+    fileprivate var amountChipRow: some View {
+        HStack {
+            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
+                Button {
+                    amountText = chip
+                } label: {
+                    Text("€\(chip)")
+                        .font(Typography.medium(theme.fontCaption))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .frame(height: Layout.secondaryActionHeight)
+                .background(theme.surfaceElevated)
+                .foregroundStyle(theme.accent)
+                .clipShape(Capsule())
+            }
+        }
+    }
+
+    fileprivate var successIcon: some View {
+        Image(systemName: "checkmark.circle.fill")
+            .font(Typography.body(64.0))
+            .foregroundStyle(theme.positive)
+    }
+
+    fileprivate var secondaryDoneButton: some View {
         Button("Done") { onResult(DepositResult.completed(amount: parsedAmount)) }
             .font(Typography.semibold(theme.fontCallout))
             .foregroundStyle(theme.onAccent)
@@ -333,7 +318,55 @@ public struct DepositFlowView: View {
             .frame(height: Layout.secondaryActionHeight)
             .background(theme.accent)
             .clipShape(Capsule())
-        #else
+    }
+}
+#endif
+
+// MARK: - Native (iOS)
+
+#if !SKIP
+extension DepositFlowView {
+    /// The haptic rides the root rather than the confirmation it belongs to: `sensoryFeedback`
+    /// only fires on a change, and a modifier mounted together with the confirmation has
+    /// already missed the one that put it on screen.
+    fileprivate func platformChrome(_ content: some View) -> some View {
+        content
+            .navigationBarTitleDisplayMode(NavigationBarItem.TitleDisplayMode.inline)
+            .animation(.smooth(duration: 0.35), value: didSucceed)
+            .sensoryFeedback(.success, trigger: didSucceed)
+    }
+
+    fileprivate func successChrome(_ content: some View) -> some View {
+        content.transition(.scale(scale: 0.92).combined(with: .opacity))
+    }
+
+    fileprivate var formContent: some View {
+        formScroll()
+            .modifier(DepositBottomBarModifier(
+                theme: theme,
+                amountFocused: amountFocused,
+                isEnabled: canConfirm,
+                onConfirm: { didSucceed = true },
+                onDismissKeyboard: { amountFocused = false }
+            ))
+    }
+
+    fileprivate var amountChipRow: some View {
+        PresetChipRow(theme: theme.chipTheme) {
+            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
+                PresetChipButton(title: "€\(chip)", theme: theme.chipTheme) { amountText = chip }
+            }
+        }
+    }
+
+    fileprivate var successIcon: some View {
+        Image(systemName: "checkmark.circle.fill")
+            .font(Typography.body(64.0))
+            .foregroundStyle(theme.positive)
+            .symbolEffect(.bounce, options: .nonRepeating)
+    }
+
+    fileprivate var secondaryDoneButton: some View {
         Button {
             onResult(DepositResult.completed(amount: parsedAmount))
         } label: {
@@ -346,36 +379,9 @@ public struct DepositFlowView: View {
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.tint(theme.accent).interactive(), in: .capsule)
-        #endif
-    }
-
-    @ViewBuilder
-    private func amountChip(_ title: String, action: @escaping () -> Void) -> some View {
-        #if SKIP
-        Button(action: action) {
-            Text(title)
-                .font(Typography.medium(theme.fontCaption))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .frame(height: Layout.secondaryActionHeight)
-        .background(theme.surfaceElevated)
-        .foregroundStyle(theme.accent)
-        .clipShape(Capsule())
-        #else
-        Button(action: action) {
-            Text(title)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(.rect)
-        }
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.capsule)
-        .tint(theme.accent)
-        .frame(height: Layout.secondaryActionHeight)
-        #endif
     }
 }
 
-#if !SKIP
 private struct DepositBottomBarModifier: ViewModifier {
     let theme: ThemeTokens
     let amountFocused: Bool
@@ -432,18 +438,6 @@ private struct DepositBottomBarModifier: ViewModifier {
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: .capsule)
-    }
-}
-#endif
-
-#if !SKIP
-private struct SuccessPresentationModifier: ViewModifier {
-    let trigger: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .sensoryFeedback(.success, trigger: trigger)
-            .transition(.scale(scale: 0.92).combined(with: .opacity))
     }
 }
 #endif

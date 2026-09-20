@@ -408,7 +408,8 @@ struct OddsButton: View {
             Text(showFractional ? fractional : label)
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()
-                .frame(minWidth: 64, minHeight: DesignTokens.Layout.minTapTarget)
+                .frame(minWidth: 64, minHeight: DesignTokens.Layout.oddsLabelHeight)
+                .contentShape(.rect)
         }
         .tint(DesignTokens.ColorToken.accent)
         .buttonBorderShape(.roundedRectangle(radius: DesignTokens.Radius.sm))

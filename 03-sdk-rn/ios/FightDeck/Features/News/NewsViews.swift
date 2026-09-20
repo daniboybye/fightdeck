@@ -77,6 +77,8 @@ struct NewsArticleView: View {
                 ForEach(clips) { clip in
                     NavigationLink(value: EventsRoute.video(clip.id)) {
                         Label(clip.title, systemImage: "play.circle.fill")
+                            .frame(maxWidth: .infinity, minHeight: DesignTokens.Layout.minTapTarget, alignment: .leading)
+                            .contentShape(.rect)
                     }
                     .buttonStyle(.glass)
                 }

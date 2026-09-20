@@ -16,9 +16,12 @@ struct FighterBridgeView: View {
 
     var body: some View {
         Group {
-            if state.fighter(fighterID) != nil {
+            if let fighter = state.fighter(fighterID) {
                 FighterRootView(
-                    params: fighterParams(),
+                    params: FighterParams(
+                        fighter: fighter,
+                        portraitURL: state.imageURL(fighter.portrait)?.absoluteString ?? ""
+                    ),
                     theme: ThemeTokens.defaults
                 )
             } else {
@@ -27,15 +30,5 @@ struct FighterBridgeView: View {
         }
         .navigationTitle(state.fighter(fighterID)?.name ?? "Fighter")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func fighterParams() -> FighterParams {
-        let fighter = state.fighter(fighterID)
-        let fighterJSON = fighter.flatMap { try? String(data: JSONEncoder().encode($0), encoding: .utf8) } ?? "{}"
-        let portraitURL = fighter.flatMap { state.imageURL($0.portrait)?.absoluteString } ?? ""
-        return FighterParams(
-            fighterJSON: fighterJSON,
-            portraitURL: portraitURL
-        )
     }
 }

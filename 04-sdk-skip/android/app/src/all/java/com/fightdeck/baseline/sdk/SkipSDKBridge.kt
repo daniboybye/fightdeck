@@ -17,8 +17,6 @@ import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
 import fight.deck.fighter.FighterComposeEntry
 import fight.deck.fighter.FighterParams
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 object SkipSDKBridge {
     @Composable
@@ -116,7 +114,7 @@ object SkipSDKBridge {
             val theme = remember { ThemeTokens.defaults }
             val params = remember(fighter) {
                 FighterParams(
-                    fighterJSON = fighterJson.encodeToString(fighter),
+                    fighter = fighter,
                     portraitURL = viewModel.imageUrl(fighter.portrait).orEmpty(),
                 )
             }
@@ -131,6 +129,4 @@ object SkipSDKBridge {
             }
         }
     }
-
-    private val fighterJson = Json { ignoreUnknownKeys = true }
 }

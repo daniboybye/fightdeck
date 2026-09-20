@@ -10,11 +10,11 @@ import FightDeckCore
 import SwiftUI
 
 public struct FighterParams: Sendable {
-    public let fighterJSON: String
+    public let fighter: Fighter
     public let portraitURL: String
 
-    public init(fighterJSON: String, portraitURL: String) {
-        self.fighterJSON = fighterJSON
+    public init(fighter: Fighter, portraitURL: String) {
+        self.fighter = fighter
         self.portraitURL = portraitURL
     }
 }

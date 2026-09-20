@@ -15,40 +15,50 @@ private enum Layout {
     static let heroScrimHeight: CGFloat = 200
 }
 
+/// One label/value line of the profile. Both sections are lists whose length depends on what
+/// the dataset carries, so both are built as data and rendered once. Deciding which row is
+/// last from the list beats spelling the condition out at each row and getting it wrong when
+/// one more becomes optional.
+struct FighterDetailRow: Identifiable, Sendable {
+    let label: String
+    let value: String
+
+    var id: String { label }
+}
+
+#if SKIP
+/// Plain casing, not `localizedCapitalized`: the Android build links FoundationEssentials to
+/// keep ICU out, and locale-aware casing lives on the other side of that line.
+func displayStance(_ stance: String) -> String {
+    guard let first = stance.first else { return stance }
+    return String(first).uppercased() + stance.dropFirst()
+}
+#else
+func displayStance(_ stance: String) -> String {
+    stance.localizedCapitalized
+}
+#endif
+
 public struct FighterRootView: View {
     public let params: FighterParams
     public let theme: ThemeTokens
 
-    /// Decoded once here rather than read from a computed property: `body` runs on every
-    /// state change, and on Android every recomposition, so a computed decode re-parses the
-    /// payload each pass for a value that cannot change.
-    private let fighter: Fighter?
+    /// Built in the initialiser rather than read from a function inside `body`: `body` runs on
+    /// every state change, and on Android on every recomposition, so building the rows there
+    /// rebuilds a value that cannot change.
+    private let profileRows: [FighterDetailRow]
+    private let physicalRows: [FighterDetailRow]
 
     public init(params: FighterParams, theme: ThemeTokens) {
         self.params = params
         self.theme = theme
-        self.fighter = Self.decode(params.fighterJSON)
-    }
-
-    private static func decode(_ json: String) -> Fighter? {
-        guard let data = json.data(using: String.Encoding.utf8) else { return nil }
-        return try? JSONDecoder().decode(Fighter.self, from: data)
+        self.profileRows = Self.profileRows(for: params.fighter)
+        self.physicalRows = Self.physicalRows(for: params.fighter)
     }
 
     public var body: some View {
-        Group {
-            if let fighter {
-                profile(fighter)
-            } else {
-                loadingState
-            }
-        }
-        .background(theme.background)
-    }
-
-    private var loadingState: some View {
-        ProgressView()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        profile(params.fighter)
+            .background(theme.background)
     }
 
     private func hero(_ fighter: Fighter) -> some View {
@@ -114,42 +124,31 @@ public struct FighterRootView: View {
         Rectangle().fill(theme.surface)
     }
 
-    /// Both sections are lists of label/value pairs whose length depends on what the dataset
-    /// carries, so both are built as data and rendered once. Deciding which row is last from
-    /// the list beats spelling the condition out at each row and getting it wrong when one
-    /// more becomes optional.
-    private struct DetailRow: Identifiable, Sendable {
-        let label: String
-        let value: String
-
-        var id: String { label }
-    }
-
-    private func profileRows(for fighter: Fighter) -> [DetailRow] {
+    private static func profileRows(for fighter: Fighter) -> [FighterDetailRow] {
         var rows = [
-            DetailRow(label: "Record", value: fighter.recordDisplay),
-            DetailRow(label: "Wins", value: "\(fighter.record.wins)"),
-            DetailRow(label: "Losses", value: "\(fighter.record.losses)"),
+            FighterDetailRow(label: "Record", value: fighter.recordDisplay),
+            FighterDetailRow(label: "Wins", value: "\(fighter.record.wins)"),
+            FighterDetailRow(label: "Losses", value: "\(fighter.record.losses)"),
         ]
         if fighter.record.noContests > 0 {
-            rows.append(DetailRow(label: "No contests", value: "\(fighter.record.noContests)"))
+            rows.append(FighterDetailRow(label: "No contests", value: "\(fighter.record.noContests)"))
         }
         return rows
     }
 
-    private func physicalRows(for fighter: Fighter) -> [DetailRow] {
-        var rows: [DetailRow] = []
+    private static func physicalRows(for fighter: Fighter) -> [FighterDetailRow] {
+        var rows: [FighterDetailRow] = []
         if let height = fighter.heightCm {
-            rows.append(DetailRow(label: "Height", value: "\(height) cm"))
+            rows.append(FighterDetailRow(label: "Height", value: "\(height) cm"))
         }
         if let reach = fighter.reachIn {
-            rows.append(DetailRow(label: "Reach", value: "\(reach) in"))
+            rows.append(FighterDetailRow(label: "Reach", value: "\(reach) in"))
         }
         if let stance = fighter.stance {
-            rows.append(DetailRow(label: "Stance", value: displayStance(stance)))
+            rows.append(FighterDetailRow(label: "Stance", value: displayStance(stance)))
         }
         if let country = fighter.country {
-            rows.append(DetailRow(label: "Country", value: country))
+            rows.append(FighterDetailRow(label: "Country", value: country))
         }
         return rows
     }
@@ -171,45 +170,53 @@ extension FighterRootView {
         Typography.medium(theme.fontCaption)
     }
 
-    fileprivate func displayStance(_ stance: String) -> String {
-        guard let first = stance.first else { return stance }
-        return String(first).uppercased() + stance.dropFirst()
-    }
-
     fileprivate func profile(_ fighter: Fighter) -> some View {
         ScrollView {
             VStack(spacing: theme.spacingLG) {
                 hero(fighter)
-                profileSection(fighter)
-                if !physicalRows(for: fighter).isEmpty {
-                    physicalsSection(fighter)
+                profileSection
+                if !physicalRows.isEmpty {
+                    physicalsSection
                 }
             }
             .padding(theme.spacingLG)
         }
     }
 
-    private func profileSection(_ fighter: Fighter) -> some View {
-        detailSection(title: "Profile", rows: profileRows(for: fighter))
-    }
-
-    private func physicalsSection(_ fighter: Fighter) -> some View {
-        detailSection(title: "Physicals", rows: physicalRows(for: fighter))
-    }
-
-    private func detailSection(title: String, rows: [DetailRow]) -> some View {
-        GroupedSection(theme: theme, title: title) {
-            ForEach(0 ..< rows.count, id: \.self) { index in
-                GroupedRow(theme: theme, isLast: index == rows.count - 1) {
-                    GroupedLabeledRow(
-                        theme: theme,
-                        label: rows[index].label,
-                        value: rows[index].value,
-                        valueStyle: theme.textSecondary
-                    )
+    // Computed properties holding a stored array, not functions taking one: under SkipUI a
+    // `ForEach` whose collection arrives as a function parameter composes to nothing, and both
+    // sections came out as a heading over an empty card.
+    // KNOWN BROKEN ON ANDROID: neither section renders its rows. The same thing happens to the
+    // betslip's selection and summary sections, so it is `GroupedSection`, not this screen —
+    // the transpiled section calls its `@ViewBuilder` content once and composes a single view,
+    // and every row inside is dropped. iOS is unaffected; it uses the `List` branch below.
+    private var profileSection: some View {
+        GroupedSection(theme: theme, title: "Profile") {
+            ForEach(profileRows) { row in
+                GroupedRow(theme: theme, isLast: row.id == profileRows.last?.id) {
+                    detailRow(row)
                 }
             }
         }
+    }
+
+    private var physicalsSection: some View {
+        GroupedSection(theme: theme, title: "Physicals") {
+            ForEach(physicalRows) { row in
+                GroupedRow(theme: theme, isLast: row.id == physicalRows.last?.id) {
+                    detailRow(row)
+                }
+            }
+        }
+    }
+
+    private func detailRow(_ row: FighterDetailRow) -> some View {
+        GroupedLabeledRow(
+            theme: theme,
+            label: row.label,
+            value: row.value,
+            valueStyle: theme.textSecondary
+        )
     }
 }
 #endif
@@ -230,10 +237,6 @@ extension FighterRootView {
         .subheadline.weight(.medium)
     }
 
-    fileprivate func displayStance(_ stance: String) -> String {
-        stance.localizedCapitalized
-    }
-
     fileprivate func profile(_ fighter: Fighter) -> some View {
         List {
             Section {
@@ -242,13 +245,13 @@ extension FighterRootView {
                     .listRowBackground(Color.clear)
             }
             Section("Profile") {
-                ForEach(profileRows(for: fighter)) { row in
+                ForEach(profileRows) { row in
                     LabeledContent(row.label, value: row.value)
                 }
             }
-            if !physicalRows(for: fighter).isEmpty {
+            if !physicalRows.isEmpty {
                 Section("Physicals") {
-                    ForEach(physicalRows(for: fighter)) { row in
+                    ForEach(physicalRows) { row in
                         LabeledContent(row.label, value: row.value)
                     }
                 }

@@ -46,6 +46,13 @@ data class FighterCard(
     val nickname: String,
     val country: String,
     val recordDisplay: String,
+    val wins: Int,
+    val losses: Int,
+    val noContests: Int,
+    /** Already formatted by the core; empty means the dataset carries no value. */
+    val heightDisplay: String,
+    val reachDisplay: String,
+    val stanceDisplay: String,
     val portraitPath: String,
 )
 
@@ -108,5 +115,11 @@ fun EventCatalogBridge.fighterCard(id: String): FighterCard =
         nickname = fighterNickname(id),
         country = fighterCountry(id),
         recordDisplay = fighterRecordDisplay(id),
+        wins = fighterWins(id).toInt(),
+        losses = fighterLosses(id).toInt(),
+        noContests = fighterNoContests(id).toInt(),
+        heightDisplay = fighterHeightDisplay(id),
+        reachDisplay = fighterReachDisplay(id),
+        stanceDisplay = fighterStanceDisplay(id),
         portraitPath = fighterPortraitPath(id),
     )

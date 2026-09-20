@@ -231,6 +231,36 @@ public final class EventCatalogBridge {
         catalog.fighter(id: id)?.record.display ?? "—"
     }
 
+    public func fighterWins(id: String) -> Int {
+        catalog.fighter(id: id)?.record.wins ?? 0
+    }
+
+    public func fighterLosses(id: String) -> Int {
+        catalog.fighter(id: id)?.record.losses ?? 0
+    }
+
+    public func fighterNoContests(id: String) -> Int {
+        catalog.fighter(id: id)?.record.noContests ?? 0
+    }
+
+    // The three measurements are optional in the dataset and jextract carries no optionals, so
+    // they cross already formatted, with an empty string standing for absent — the same
+    // convention `fighterNickname` and `fighterCountry` already use.
+    public func fighterHeightDisplay(id: String) -> String {
+        catalog.fighter(id: id)?.heightCm.map { "\($0) cm" } ?? ""
+    }
+
+    public func fighterReachDisplay(id: String) -> String {
+        catalog.fighter(id: id)?.reachIn.map { "\($0) in" } ?? ""
+    }
+
+    // `Display.humanise`, not `localizedCapitalized`: the Android build links
+    // FoundationEssentials precisely to keep ICU out, and the locale-aware casing lives on the
+    // other side of that line.
+    public func fighterStanceDisplay(id: String) -> String {
+        catalog.fighter(id: id)?.stance.map(Display.humanise) ?? ""
+    }
+
     public func fighterPortraitPath(id: String) -> String {
         catalog.fighter(id: id)?.portrait ?? "assets/fighters/\(id).jpg"
     }

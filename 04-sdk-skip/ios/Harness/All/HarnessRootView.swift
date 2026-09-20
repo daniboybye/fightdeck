@@ -34,9 +34,17 @@ struct HarnessRootView: View {
             )
             FighterRootView(
                 params: FighterParams(
-                    fighterJSON: """
-                    {"id":"sample","name":"Sample Fighter","record":{"wins":20,"losses":2,"draws":0,"noContests":0,"display":"20-2-0"},"portrait":"assets/fighters/sample.jpg"}
-                    """,
+                    fighter: Fighter(
+                        id: "sample",
+                        name: "Sample Fighter",
+                        nickname: nil,
+                        country: nil,
+                        heightCm: nil,
+                        reachIn: nil,
+                        stance: nil,
+                        record: FighterRecord(wins: 20, losses: 2, draws: 0, noContests: 0, display: "20-2-0"),
+                        portrait: "assets/fighters/sample.jpg"
+                    ),
                     portraitURL: ""
                 ),
                 theme: ThemeTokens.defaults

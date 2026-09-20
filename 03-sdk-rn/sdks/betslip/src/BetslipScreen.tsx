@@ -491,6 +491,7 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: 
     },
     chipRow: {
       paddingHorizontal: s.lg ?? 16,
+      paddingTop: s.md ?? 12,
       paddingBottom: s.md ?? 12,
     },
     chip: {

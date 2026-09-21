@@ -55,6 +55,17 @@ public struct DepositFlowView: View {
             }
         }
 
+        /// Read only by the iOS `Picker`. SkipUI resolves `systemName` against a fixed table of
+        /// Material icons, and none of these three are in it, so the Android rows draw their
+        /// own mark instead.
+        var symbol: String {
+            switch self {
+            case DepositMethod.card: "creditcard"
+            case DepositMethod.bank: "building.columns"
+            case DepositMethod.wallet: "wallet.bifold"
+            }
+        }
+
         var feeNote: String {
             switch self {
             case DepositMethod.card: "Instant · 0% fee"
@@ -97,53 +108,112 @@ public struct DepositFlowView: View {
 
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
     // and stepping through them only hides the total from the person approving it.
-    private func formScroll(bottomPadding: CGFloat = 0) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: theme.spacingLG) {
-                amountSection
-                methodSection
-                summarySection
-            }
-            .padding(theme.spacingLG)
-            .padding(.bottom, bottomPadding)
+    //
+    // One `Form` for both platforms. `Form`, `Section` and `Picker` are all supported by SkipUI,
+    // so the grouped structure is shared and each platform's own styling draws it — inset-grouped
+    // on iOS, a Material list on Android. Only the rows that have no SkipUI mapping differ.
+    private var depositForm: some View {
+        Form {
+            amountSection
+            methodSection
+            summarySection
         }
     }
 
     private var amountSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingMD) {
-            Text("Amount")
-                .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.textPrimary)
+        Section("Amount") {
             TextField("€10 – €2,000", text: $amountText)
                 .keyboardType(.decimalPad)
-                .font(Typography.bold(theme.fontDisplay))
+                .font(amountFont)
                 .focused($amountFocused)
-                .padding(theme.spacingLG)
-                .background(theme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
-
             if let message = amountValidationMessage {
                 Text(message)
                     .foregroundStyle(theme.negative)
                     .font(Typography.body(theme.fontCaption))
             }
-
             amountChipRow
         }
     }
 
     private var methodSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            Text("Method")
-                .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.textPrimary)
-            ForEach(DepositMethod.allCases) { item in
-                Button {
-                    method = item
-                } label: {
-                    methodRow(item)
-                }
+        Section("Method") {
+            methodPicker
+        }
+    }
+
+    private var summarySection: some View {
+        Section("Summary") {
+            summaryRow("Amount", Money.formatCurrency(parsedAmount))
+            summaryRow("Method", method.title)
+            summaryRow("Fee", Money.formatCurrency(feeAmount))
+            summaryRow("Total", Money.formatCurrency(parsedAmount + feeAmount))
+            summaryRow("New balance", Money.formatCurrency(params.currentBalance + parsedAmount))
+        }
+    }
+
+    private var successContent: some View {
+        successChrome(
+            VStack(spacing: theme.spacingLG) {
+                successIcon
+                Text("Deposit successful")
+                    .font(Typography.bold(theme.fontTitle))
+                Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
+                    .foregroundStyle(theme.textSecondary)
+                secondaryDoneButton
             }
+            .padding(theme.spacingXL)
+        )
+    }
+
+    private var parsedAmount: Decimal {
+        Money.parse(amountText.isEmpty ? "0" : amountText)
+    }
+
+    private var feeAmount: Decimal {
+        Money.money(parsedAmount * method.feeRate)
+    }
+
+    private var amountValidationMessage: String? {
+        let amount = parsedAmount
+        if amountText.isEmpty { return nil }
+        if amount < DepositLimits.minimum { return "Minimum deposit is €10" }
+        if amount > DepositLimits.maximum { return "Maximum deposit is €2,000" }
+        return nil
+    }
+
+    private var canConfirm: Bool {
+        amountValidationMessage == nil && !amountText.isEmpty
+    }
+
+}
+
+// MARK: - Skip (Android)
+
+#if SKIP
+extension DepositFlowView {
+    fileprivate var amountFont: Font {
+        Typography.bold(theme.fontDisplay)
+    }
+
+    /// `.pickerStyle(.inline)` is unsupported by SkipUI, so the method list is drawn as rows.
+    /// They sit inside the shared `Section`, so the grouping still comes from SkipUI.
+    fileprivate var methodPicker: some View {
+        ForEach(DepositMethod.allCases) { item in
+            Button {
+                method = item
+            } label: {
+                methodRow(item)
+            }
+        }
+    }
+
+    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(theme.textSecondary)
+            Spacer()
+            Text(value)
+                .foregroundStyle(theme.textPrimary)
         }
     }
 
@@ -185,71 +255,6 @@ public struct DepositFlowView: View {
         .frame(width: Layout.radioDiameter, height: Layout.radioDiameter)
     }
 
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingMD) {
-            Text("Summary")
-                .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.textPrimary)
-            summaryRow("Amount", Money.formatCurrency(parsedAmount))
-            summaryRow("Method", method.title)
-            summaryRow("Fee", Money.formatCurrency(feeAmount))
-            summaryRow("Total", Money.formatCurrency(parsedAmount + feeAmount))
-            summaryRow("New balance", Money.formatCurrency(params.currentBalance + parsedAmount))
-        }
-        .padding(theme.spacingLG)
-        .background(theme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
-    }
-
-    private var successContent: some View {
-        successChrome(
-            VStack(spacing: theme.spacingLG) {
-                successIcon
-                Text("Deposit successful")
-                    .font(Typography.bold(theme.fontTitle))
-                Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
-                    .foregroundStyle(theme.textSecondary)
-                secondaryDoneButton
-            }
-            .padding(theme.spacingXL)
-        )
-    }
-
-    private var parsedAmount: Decimal {
-        Money.parse(amountText.isEmpty ? "0" : amountText)
-    }
-
-    private var feeAmount: Decimal {
-        Money.money(parsedAmount * method.feeRate)
-    }
-
-    private var amountValidationMessage: String? {
-        let amount = parsedAmount
-        if amountText.isEmpty { return nil }
-        if amount < DepositLimits.minimum { return "Minimum deposit is €10" }
-        if amount > DepositLimits.maximum { return "Maximum deposit is €2,000" }
-        return nil
-    }
-
-    private var canConfirm: Bool {
-        amountValidationMessage == nil && !amountText.isEmpty
-    }
-
-    private func summaryRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label)
-                .foregroundStyle(theme.textSecondary)
-            Spacer()
-            Text(value)
-                .foregroundStyle(theme.textPrimary)
-        }
-    }
-}
-
-// MARK: - Skip (Android)
-
-#if SKIP
-extension DepositFlowView {
     /// Compose supplies the screen's own chrome; nothing to add here.
     fileprivate func platformChrome(_ content: some View) -> some View {
         content
@@ -264,10 +269,38 @@ extension DepositFlowView {
     // field raises, and SkipUI's scroll view will not extend its range far enough to reach it.
     fileprivate var formContent: some View {
         ZStack(alignment: .bottom) {
-            formScroll(bottomPadding: Layout.primaryActionHeight + theme.spacingLG)
+            depositForm
+            actionBar
+        }
+    }
+
+    /// Done sits beside Confirm rather than on a keyboard toolbar: `ToolbarItemGroup` is
+    /// supported, but its `.keyboard` placement draws nothing on Android, so the button would
+    /// simply never appear. This is the shape the native screen uses anyway.
+    private var actionBar: some View {
+        HStack(spacing: theme.spacingSM) {
             confirmButton
-                .padding(.horizontal, theme.spacingLG)
-                .padding(.bottom, theme.spacingLG)
+            if amountFocused {
+                doneButton
+            }
+        }
+        .padding(.horizontal, theme.spacingLG)
+        .padding(.bottom, theme.spacingLG)
+    }
+
+    /// The one place this SDK drops to Compose. Setting `@FocusState` to false does clear
+    /// SkipUI's focus — the button hides itself on the next pass — but it does not dismiss the
+    /// Android IME. Only Compose's own focus manager does that, and reaching it needs a
+    /// composable scope, which `ComposeView` is the documented way to open under Skip Lite.
+    private var doneButton: some View {
+        ComposeView { _ in
+            let focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+            androidx.compose.material3.TextButton(onClick: {
+                focusManager.clearFocus()
+                amountFocused = false
+            }) {
+                androidx.compose.material3.Text("Done")
+            }
         }
     }
 
@@ -326,6 +359,34 @@ extension DepositFlowView {
 
 #if !SKIP
 extension DepositFlowView {
+    fileprivate var amountFont: Font {
+        .largeTitle.bold()
+    }
+
+    fileprivate var methodPicker: some View {
+        Picker("Method", selection: $method) {
+            ForEach(DepositMethod.allCases) { item in
+                Label {
+                    VStack(alignment: .leading) {
+                        Text(item.title)
+                        Text(item.feeNote)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    Image(systemName: item.symbol)
+                }
+                .tag(item)
+            }
+        }
+        .pickerStyle(.inline)
+        .labelsHidden()
+    }
+
+    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
+        LabeledContent(label, value: value)
+    }
+
     /// The haptic rides the root rather than the confirmation it belongs to: `sensoryFeedback`
     /// only fires on a change, and a modifier mounted together with the confirmation has
     /// already missed the one that put it on screen.
@@ -341,7 +402,8 @@ extension DepositFlowView {
     }
 
     fileprivate var formContent: some View {
-        formScroll()
+        depositForm
+            .scrollDismissesKeyboard(.interactively)
             .modifier(DepositBottomBarModifier(
                 theme: theme,
                 amountFocused: amountFocused,

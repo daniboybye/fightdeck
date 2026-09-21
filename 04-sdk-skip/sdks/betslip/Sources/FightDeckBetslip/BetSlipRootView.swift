@@ -49,17 +49,21 @@ public struct BetSlipRootView: View {
     public var body: some View {
         platformChrome(rootContent)
             .background(theme.background)
-            .onAppear { stakeText = Money.format(store.slip.stake) }
+            .onAppear { stakeText = Money.formatCurrency(store.slip.stake) }
             .onChange(of: store.slip.stake) { _, newValue in
                 // Only adopt the model's formatting when the user is not mid-edit.
                 if !stakeFocused {
-                    stakeText = Money.format(newValue)
+                    stakeText = Money.formatCurrency(newValue)
                 }
             }
             .onChange(of: stakeFocused) { _, focused in
-                if !focused {
-                    stakeText = Money.format(store.slip.stake)
-                }
+                // Out of focus the field shows currency, in focus it shows the bare number the
+                // user types. `TextField(value:format:)` would do this on its own, but that
+                // initialiser rests on Foundation's `FormatStyle`, which needs the ICU the
+                // Android build deliberately leaves out — so the swap is explicit.
+                stakeText = focused
+                    ? Money.format(store.slip.stake)
+                    : Money.formatCurrency(store.slip.stake)
             }
     }
 
@@ -198,12 +202,6 @@ extension BetSlipRootView {
             }
             placeBetBar
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") { stakeFocused = false }
-            }
-        }
     }
 
     // Every section is SkipUI's own `VStack` and `ForEach` with the card styling applied as
@@ -303,7 +301,21 @@ extension BetSlipRootView {
         }
     }
 
+    /// Done sits beside Place bet rather than on a keyboard toolbar: `ToolbarItemGroup` is
+    /// supported by SkipUI, but its `.keyboard` placement draws nothing on Android, so the
+    /// button simply never appeared. This is the shape the native screen uses anyway.
     private var placeBetBar: some View {
+        HStack(spacing: theme.spacingSM) {
+            placeBetButton
+            if stakeFocused {
+                doneButton
+            }
+        }
+        .padding(.horizontal, theme.spacingLG)
+        .padding(.bottom, Layout.tabBarActionGap)
+    }
+
+    private var placeBetButton: some View {
         Button(action: placeBetAndSync) {
             // Text, not a Label: SF Symbol names have no Material equivalent, and SkipUI
             // substitutes a warning triangle announced as "missing icon".
@@ -316,8 +328,22 @@ extension BetSlipRootView {
         .background(theme.accent)
         .clipShape(Capsule())
         .disabled(!store.slipState.errors.isEmpty)
-        .padding(.horizontal, theme.spacingLG)
-        .padding(.bottom, Layout.tabBarActionGap)
+    }
+
+    /// The one place this SDK drops to Compose. Setting `@FocusState` to false does clear
+    /// SkipUI's focus — the button hides itself on the next pass — but it does not dismiss the
+    /// Android IME. Only Compose's own focus manager does that, and reaching it needs a
+    /// composable scope, which `ComposeView` is the documented way to open under Skip Lite.
+    private var doneButton: some View {
+        ComposeView { _ in
+            let focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+            androidx.compose.material3.TextButton(onClick: {
+                focusManager.clearFocus()
+                stakeFocused = false
+            }) {
+                androidx.compose.material3.Text("Done")
+            }
+        }
     }
 
     private var errorMessages: [String] {

@@ -61,6 +61,30 @@ public struct FighterRootView: View {
             .background(theme.background)
     }
 
+    /// One `List` for both platforms. `Form`, `List` and `Section` are all supported by SkipUI,
+    /// so the grouped structure itself is shared and each platform's own list styling draws it —
+    /// inset-grouped cards on iOS, a Material list on Android. Only the row's contents differ,
+    /// because `LabeledContent` has no SkipUI mapping.
+    private func profile(_ fighter: Fighter) -> some View {
+        listChrome(List {
+            Section {
+                heroRow(fighter)
+            }
+            Section("Profile") {
+                ForEach(profileRows) { row in
+                    detailRow(row)
+                }
+            }
+            if !physicalRows.isEmpty {
+                Section("Physicals") {
+                    ForEach(physicalRows) { row in
+                        detailRow(row)
+                    }
+                }
+            }
+        })
+    }
+
     private func hero(_ fighter: Fighter) -> some View {
         portraitImage
             .frame(height: Layout.heroHeight)
@@ -174,70 +198,27 @@ extension FighterRootView {
         Typography.medium(theme.fontCaption)
     }
 
-    fileprivate func profile(_ fighter: Fighter) -> some View {
-        ScrollView {
-            VStack(spacing: theme.spacingLG) {
-                hero(fighter)
-                profileSection
-                if !physicalRows.isEmpty {
-                    physicalsSection
-                }
-            }
-            .padding(theme.spacingLG)
+    /// `.listStyle(.insetGrouped)` and `.listRowInsets` are both unsupported by SkipUI, so the
+    /// list keeps Compose's own Material styling — which is the Android-native look anyway.
+    fileprivate func listChrome(_ content: some View) -> some View {
+        content
+    }
+
+    fileprivate func heroRow(_ fighter: Fighter) -> some View {
+        hero(fighter)
+    }
+
+    /// `LabeledContent` has no SkipUI mapping, so the row is an `HStack` here. The grouped
+    /// styling around it comes from `List`/`Section`, which SkipUI does support.
+    fileprivate func detailRow(_ row: FighterDetailRow) -> some View {
+        HStack {
+            Text(row.label)
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Text(row.value)
+                .foregroundStyle(theme.textSecondary)
         }
-    }
-
-    private var profileSection: some View {
-        section(title: "Profile", rows: profileRows)
-    }
-
-    private var physicalsSection: some View {
-        section(title: "Physicals", rows: physicalRows)
-    }
-
-    /// Built out of SkipUI's own `VStack`, `ForEach` and modifiers, with the pieces as local
-    /// functions returning SkipUI primitives. Neither a container of ours taking `@ViewBuilder`
-    /// content nor a `View` struct of ours placed among siblings survives transpilation — see
-    /// `GroupedList.swift` for the whole trail.
-    private func section(title: String, rows: [FighterDetailRow]) -> some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            sectionTitle(title)
-            VStack(spacing: 0) {
-                ForEach(rows) { row in
-                    detailRow(row, isLast: row.id == rows.last?.id)
-                }
-            }
-            .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
-        }
-    }
-
-    private func sectionTitle(_ title: String) -> some View {
-        Text(title)
-            .font(Typography.body(theme.fontCallout))
-            .foregroundStyle(theme.textSecondary)
-            .padding(.horizontal, theme.spacingLG)
-    }
-
-    private func detailRow(_ row: FighterDetailRow, isLast: Bool) -> some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(row.label)
-                    .foregroundStyle(theme.textPrimary)
-                Spacer()
-                Text(row.value)
-                    .foregroundStyle(theme.textSecondary)
-            }
-            .font(Typography.body(theme.fontBody))
-            .padding(.horizontal, theme.spacingLG)
-            .padding(.vertical, theme.spacingMD)
-            if !isLast {
-                Rectangle()
-                    .fill(theme.textSecondary.opacity(0.25))
-                    .frame(height: 1)
-                    .padding(.leading, theme.spacingLG)
-            }
-        }
+        .font(Typography.body(theme.fontBody))
     }
 }
 #endif
@@ -258,27 +239,18 @@ extension FighterRootView {
         .subheadline.weight(.medium)
     }
 
-    fileprivate func profile(_ fighter: Fighter) -> some View {
-        List {
-            Section {
-                hero(fighter)
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-            }
-            Section("Profile") {
-                ForEach(profileRows) { row in
-                    LabeledContent(row.label, value: row.value)
-                }
-            }
-            if !physicalRows.isEmpty {
-                Section("Physicals") {
-                    ForEach(physicalRows) { row in
-                        LabeledContent(row.label, value: row.value)
-                    }
-                }
-            }
-        }
-        .listStyle(.insetGrouped)
+    fileprivate func listChrome(_ content: some View) -> some View {
+        content.listStyle(.insetGrouped)
+    }
+
+    fileprivate func heroRow(_ fighter: Fighter) -> some View {
+        hero(fighter)
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+    }
+
+    fileprivate func detailRow(_ row: FighterDetailRow) -> some View {
+        LabeledContent(row.label, value: row.value)
     }
 }
 #endif

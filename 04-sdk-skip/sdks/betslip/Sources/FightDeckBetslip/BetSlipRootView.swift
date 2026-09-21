@@ -410,6 +410,10 @@ extension BetSlipRootView {
             .padding(.leading, theme.spacingLG)
     }
 
+    /// Its own row, not the shared `LabeledRow` from the core: that one renders when it is a
+    /// direct child of a `Section`, as the fighter and deposit screens use it, but composes to
+    /// nothing once it is wrapped and modified — which is what this screen's hand-drawn cards
+    /// need. Converting these sections to `Form`/`Section` would remove the difference.
     private func labeledRow(_ label: String, _ value: String, valueStyle: Color) -> some View {
         HStack {
             Text(label)

@@ -191,6 +191,10 @@ public struct DepositFlowView: View {
 
 #if SKIP
 extension DepositFlowView {
+    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
+        LabeledRow(theme: theme, label: label, value: value, valueStyle: theme.textPrimary)
+    }
+
     fileprivate var amountFont: Font {
         Typography.bold(theme.fontDisplay)
     }
@@ -204,16 +208,6 @@ extension DepositFlowView {
             } label: {
                 methodRow(item)
             }
-        }
-    }
-
-    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
-        HStack {
-            Text(label)
-                .foregroundStyle(theme.textSecondary)
-            Spacer()
-            Text(value)
-                .foregroundStyle(theme.textPrimary)
         }
     }
 
@@ -359,6 +353,10 @@ extension DepositFlowView {
 
 #if !SKIP
 extension DepositFlowView {
+    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
+        LabeledRow(theme: theme, label: label, value: value, valueStyle: theme.textPrimary)
+    }
+
     fileprivate var amountFont: Font {
         .largeTitle.bold()
     }
@@ -381,10 +379,6 @@ extension DepositFlowView {
         }
         .pickerStyle(.inline)
         .labelsHidden()
-    }
-
-    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
-        LabeledContent(label, value: value)
     }
 
     /// The haptic rides the root rather than the confirmation it belongs to: `sensoryFeedback`

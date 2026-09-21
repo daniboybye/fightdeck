@@ -208,17 +208,8 @@ extension FighterRootView {
         hero(fighter)
     }
 
-    /// `LabeledContent` has no SkipUI mapping, so the row is an `HStack` here. The grouped
-    /// styling around it comes from `List`/`Section`, which SkipUI does support.
     fileprivate func detailRow(_ row: FighterDetailRow) -> some View {
-        HStack {
-            Text(row.label)
-                .foregroundStyle(theme.textPrimary)
-            Spacer()
-            Text(row.value)
-                .foregroundStyle(theme.textSecondary)
-        }
-        .font(Typography.body(theme.fontBody))
+        LabeledRow(theme: theme, label: row.label, value: row.value, valueStyle: theme.textSecondary)
     }
 }
 #endif
@@ -250,7 +241,7 @@ extension FighterRootView {
     }
 
     fileprivate func detailRow(_ row: FighterDetailRow) -> some View {
-        LabeledContent(row.label, value: row.value)
+        LabeledRow(theme: theme, label: row.label, value: row.value, valueStyle: theme.textSecondary)
     }
 }
 #endif

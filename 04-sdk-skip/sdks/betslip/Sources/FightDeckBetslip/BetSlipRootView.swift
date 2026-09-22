@@ -362,16 +362,26 @@ extension BetSlipRootView {
     /// SkipUI's focus — the button hides itself on the next pass — but it does not dismiss the
     /// Android IME. Only Compose's own focus manager does that, and reaching it needs a
     /// composable scope, which `ComposeView` is the documented way to open under Skip Lite.
+    ///
+    /// `FilledTonalButton`, not `TextButton`: a text button paints no container, so beside the
+    /// filled Place bet button it read as floating loose text over the list. This is also the
+    /// component `00-native` uses for the same button, and it takes its colours from
+    /// `secondaryContainer`/`onSecondaryContainer` — which now resolve to the FightDeck palette
+    /// because `platformChrome` hands SkipUI the host's scheme.
     private var doneButton: some View {
         ComposeView { _ in
             let focusManager = androidx.compose.ui.platform.LocalFocusManager.current
-            androidx.compose.material3.TextButton(onClick: {
-                focusManager.clearFocus()
-                stakeFocused = false
-            }) {
+            androidx.compose.material3.FilledTonalButton(
+                onClick: {
+                    focusManager.clearFocus()
+                    stakeFocused = false
+                },
+                shape: androidx.compose.foundation.shape.RoundedCornerShape(percent: 50)
+            ) {
                 androidx.compose.material3.Text("Done")
             }
         }
+        .frame(height: Layout.secondaryActionHeight)
     }
 
     private func selectionRow(_ selection: Selection) -> some View {

@@ -211,6 +211,8 @@ extension DepositFlowView {
         }
     }
 
+    /// No background or corner radius of its own: the row is a child of the shared `Section`, so
+    /// the card behind it is SkipUI's. Painting one here as well stacked two surfaces.
     private func methodRow(_ item: DepositMethod) -> some View {
         HStack {
             methodMark(isSelected: method == item)
@@ -223,9 +225,6 @@ extension DepositFlowView {
             }
             Spacer()
         }
-        .padding(theme.spacingLG)
-        .background(theme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
     }
 
     /// Drawn rather than named. SkipUI resolves `systemName` against a fixed table of Material
@@ -249,9 +248,13 @@ extension DepositFlowView {
         .frame(width: Layout.radioDiameter, height: Layout.radioDiameter)
     }
 
-    /// Compose supplies the screen's own chrome; nothing to add here.
+    /// Compose supplies the screen's own chrome. What it does not supply is the host's palette:
+    /// SkipUI wraps every screen in a `MaterialTheme` of its own, so the scheme is handed in
+    /// here or the Form comes back in Material You's wallpaper colours. See
+    /// `fightDeckColorScheme`.
     fileprivate func platformChrome(_ content: some View) -> some View {
         content
+            .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
     fileprivate func successChrome(_ content: some View) -> some View {
@@ -263,7 +266,10 @@ extension DepositFlowView {
     // field raises, and SkipUI's scroll view will not extend its range far enough to reach it.
     fileprivate var formContent: some View {
         ZStack(alignment: .bottom) {
+            // Without this the form paints its own container — `surfaceColorAtElevation(3dp)` —
+            // over the root's background, on a slightly different shade from the rest of the app.
             depositForm
+                .scrollContentBackground(.hidden)
             actionBar
         }
     }

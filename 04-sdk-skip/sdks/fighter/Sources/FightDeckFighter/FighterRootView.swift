@@ -200,12 +200,23 @@ extension FighterRootView {
 
     /// `.listStyle(.insetGrouped)` and `.listRowInsets` are both unsupported by SkipUI, so the
     /// list keeps Compose's own Material styling — which is the Android-native look anyway.
+    /// That styling reads `MaterialTheme.colorScheme`, and the scheme SkipUI installs is not the
+    /// host's, so the palette has to be handed in here. See `fightDeckColorScheme`.
     fileprivate func listChrome(_ content: some View) -> some View {
         content
+            // Without this the list paints its own container — `surfaceColorAtElevation(3dp)` —
+            // over the root's background, on a slightly different shade from the rest of the app.
+            .scrollContentBackground(.hidden)
+            .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
+    /// The same `.listRowBackground(Color.clear)` iOS uses, and for the same reason: the photo is
+    /// the row, so a row background behind it draws a card frame around the picture. iOS also
+    /// zeroes `.listRowInsets`, which SkipUI has no mapping for — the row keeps SkipUI's own
+    /// item inset here.
     fileprivate func heroRow(_ fighter: Fighter) -> some View {
         hero(fighter)
+            .listRowBackground(Color.clear)
     }
 
     fileprivate func detailRow(_ row: FighterDetailRow) -> some View {

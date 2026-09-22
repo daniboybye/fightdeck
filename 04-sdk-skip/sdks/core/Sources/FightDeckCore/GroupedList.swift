@@ -6,12 +6,18 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
-// SkipUI maps `List` to a plain Compose list with no grouped style, so the betslip and fighter
-// screens draw the inset-grouped look by hand. This file used to hold that as shared views.
-// It holds nothing now, and the note is why — the same trap is worth one read before anyone
-// tries to factor those screens' sections out again.
+// This file used to hold shared "grouped card" views, because the betslip screen drew the
+// inset-grouped look by hand on Android. It holds nothing now, and the note is why — both
+// halves are worth one read before anyone factors a screen's sections out again.
 //
-// Three shapes were tried on Android, in this order:
+// The premise was wrong. `List` and `Section` are 🟢 in SkipUI's support table and `Form` is ✅,
+// so the grouping never needed drawing: every screen now writes one `List`/`Form` for both
+// platforms and lets each side's own styling draw it — inset-grouped cards on iOS, a Material
+// list on Android. What genuinely has no SkipUI mapping is small and specific: `LabeledContent`
+// (see `LabeledRow`), `.listRowInsets`, `.contentMargins` and `.pickerStyle(.inline)`.
+//
+// The other half is the trap that sent the first attempt down the hand-drawing road. A *container
+// of our own* does not survive transpilation. Three shapes were tried, in this order:
 //
 //   1. `GroupedSection { row; row }` — a view of ours taking `@ViewBuilder` content. `skipstone`
 //      turns a stored `@ViewBuilder` closure into a plain Kotlin lambda, and a Kotlin lambda
@@ -25,6 +31,22 @@
 //      one also failed transpilation outright: "unable to determine the owning type for member
 //      'horizontal'".
 //
-// What does work, and what both screens now do: SkipUI's own `VStack`, `ForEach` and modifiers,
-// with each piece a local function returning SkipUI primitives. The duplication between the two
-// screens is the price, and it is smaller than it looks — about twenty lines each.
+// The way out of (3) is `Renderable` — implement `Render(context:)` instead of leaving the work
+// to `body`, which is how SkipUI writes its own components. `LabeledRow` does exactly that, and
+// it is now a direct child of a `Section` on all three screens.
+//
+// One more rule, learned the hard way and worth more than the three above, because it is
+// mechanical and easy to check. **Reach a view of yours through a function, never as a bare
+// initialiser inside a `@ViewBuilder`.** `skipstone` emits
+//
+//     errorRow("...").Compose(composectx)        // a call that returns a view — composed
+//     LabeledRow(theme = theme, label = "…", …)  // a constructor statement — result dropped
+//
+// so the row is built and thrown away. Nothing warns: the Swift compiles, the transpile
+// succeeds, the Android build succeeds, and the section simply comes out empty. The fighter and
+// deposit screens only ever worked because they happened to route through `detailRow` and
+// `summaryRow`; the betslip screen called `LabeledRow(...)` directly and lost its whole summary.
+//
+// To check a screen, read the generated Kotlin under
+// `.build/plugins/outputs/<sdk>/…/src/main/kotlin/` and look for a capitalised call inside a
+// `ComposeBuilder` with no `.Compose(` after it.

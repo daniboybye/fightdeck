@@ -15,6 +15,7 @@ import SwiftUI
 /// conform to `Renderable` and implement `Render(context:)` rather than leaving the work to
 /// `body`. A view of ours that only implemented `body` composed to nothing when placed among
 /// siblings — which is what sent the earlier attempt at shared rows back into each screen.
+/// See `GroupedList.swift` for that trail; this type is the way out of it.
 #if SKIP
 public struct LabeledRow: View, Renderable {
     let theme: ThemeTokens

@@ -162,15 +162,92 @@ public struct BetSlipRootView: View {
         store.placeBet()
         onHostSync(store.slip, store.balance, store.betPlacedMessage)
     }
+
+    // MARK: - Shared list
+
+    /// One `List` for both platforms, the same shape the fighter and deposit screens use.
+    /// `List` and `Section` are 🟢 in SkipUI's support table and `.onDelete` is ✅, so the
+    /// grouped structure itself is shared and each platform's own list styling draws it —
+    /// inset-grouped cards on iOS, a Material list on Android. Only the rows that have no
+    /// SkipUI mapping are written twice.
+    ///
+    /// This screen used to draw its cards by hand on Android — `VStack`s with a `surface`
+    /// background, a hand-rolled divider and a hand-placed section title. That was the last
+    /// hand-drawn screen in the SDK, and the reason it could not use the shared `LabeledRow`.
+    private var slipList: some View {
+        List {
+            selectionsSection
+            stakeSection
+            summarySection
+            errorsSection
+            depositSection
+            listFooter
+        }
+    }
+
+    private var selectionsSection: some View {
+        Section(betTypeTitle) {
+            selectionRows
+        }
+    }
+
+    private var stakeSection: some View {
+        Section("Stake") {
+            stakeAmountRow
+            stakeChipRow
+        }
+    }
+
+    /// Through a function, never as a bare `LabeledRow(...)` in the builder. `skipstone` emits
+    /// `foo(...).Compose(context)` for a call that returns a view, but a struct initialiser
+    /// written straight into a `@ViewBuilder` transpiles to a bare constructor statement whose
+    /// result is dropped — the row is built and never composed, and the section comes out empty
+    /// with no error anywhere. The fighter and deposit screens only ever worked because they
+    /// happened to route through `detailRow`/`summaryRow`.
+    private func labeledRow(_ label: String, _ value: String, valueStyle: Color) -> some View {
+        LabeledRow(theme: theme, label: label, value: value, valueStyle: valueStyle)
+    }
+
+    /// Fully shared: every row is the core's `LabeledRow`, which renders on Android because it
+    /// conforms to `Renderable` rather than leaving the work to `body`.
+    private var summarySection: some View {
+        Section {
+            ForEach(FightCoreDisplay.slipSummary(state: store.slipState)) { row in
+                labeledRow(row.label, row.value, valueStyle: theme.textSecondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var errorsSection: some View {
+        if !store.slipState.errors.isEmpty {
+            Section {
+                ForEach(store.slipState.errors, id: \.self) { error in
+                    errorRow(error.rawValue.replacingOccurrences(of: "_", with: " "))
+                }
+            }
+        }
+    }
+
+    private var depositSection: some View {
+        Section("Deposit") {
+            labeledRow("Balance", Money.formatCurrency(store.balance), valueStyle: theme.textPrimary)
+            addFundsButton
+        }
+    }
 }
 
 // MARK: - Skip (Android)
 
 #if SKIP
 extension BetSlipRootView {
-    /// Compose animates its own state changes and has no haptic to arm.
+    /// Compose animates its own state changes and has no haptic to arm. What it does need is the
+    /// host's palette: SkipUI wraps every screen in a `MaterialTheme` of its own, built from
+    /// Material You's dynamic colours, so the `List` below would otherwise be drawn in the
+    /// device wallpaper's scheme. See `fightDeckColorScheme`.
     fileprivate func platformChrome(_ content: some View) -> some View {
         content
+            .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
     fileprivate func placedChrome(_ content: some View) -> some View {
@@ -187,118 +264,69 @@ extension BetSlipRootView {
 
     fileprivate var slipContent: some View {
         ZStack(alignment: .bottom) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: theme.spacingLG) {
-                    selectionsSection
-                    stakeSection
-                    summarySection
-                    if !errorMessages.isEmpty {
-                        errorsSection
-                    }
-                    depositSection
-                }
-                .padding(theme.spacingLG)
-                .padding(.bottom, Layout.primaryActionHeight + Layout.tabBarActionGap + theme.spacingLG)
-            }
+            // Without this the list paints its own container — `surfaceColorAtElevation(3dp)` —
+            // over the root's background, which is why the slip sat on a slightly different
+            // shade from the rest of the app.
+            slipList
+                .scrollContentBackground(.hidden)
             placeBetBar
         }
     }
 
-    // Every section is SkipUI's own `VStack` and `ForEach` with the card styling applied as
-    // modifiers. A container of our own taking `@ViewBuilder` content does not survive
-    // transpilation — see `GroupedList.swift`.
-    private var selectionsSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            sectionTitle(betTypeTitle)
-            VStack(spacing: 0) {
-                ForEach(store.slip.selections) { selection in
-                    VStack(spacing: 0) {
-                        selectionRow(selection)
-                            .padding(.horizontal, theme.spacingLG)
-                            .padding(.vertical, theme.spacingMD)
-                        if selection.id != store.slip.selections.last?.id {
-                            rowDivider
-                        }
-                    }
-                }
-            }
-            .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
+    /// `.contentMargins` — the modifier iOS uses to keep the last row clear of the pinned bar —
+    /// has no SkipUI mapping, and a `VStack` with the list flexible and the bar fixed came out
+    /// with the list filling the whole column and the bar drawn over its last rows. An empty
+    /// trailing row is the shape that survives: it scrolls like content, because it is content.
+    fileprivate var listFooter: some View {
+        Color.clear
+            .frame(height: Layout.primaryActionHeight + Layout.tabBarActionGap)
+            // Otherwise the spacer is drawn as an empty card, because a list row gets a row
+            // background whether or not it has anything in it.
+            .listRowBackground(Color.clear)
+    }
+
+    private var selectionRows: some View {
+        ForEach(store.slip.selections) { selection in
+            selectionRow(selection)
         }
     }
 
-    private var stakeSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            sectionTitle("Stake")
-            VStack(spacing: 0) {
-                stakeField
-                    .padding(.horizontal, theme.spacingLG)
-                    .padding(.vertical, theme.spacingMD)
-                rowDivider
-                stakeChipRow
-                    .padding(.horizontal, theme.spacingLG)
-                    .padding(.vertical, theme.spacingSM)
-            }
-            .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
+    /// `LabeledContent` has no SkipUI mapping, so the row is an `HStack` here and the real thing
+    /// on iOS. Everything around it — the `Section`, the divider, the card — now comes from
+    /// SkipUI's `List`.
+    private var stakeAmountRow: some View {
+        HStack {
+            Text("Amount")
+                .font(Typography.body(theme.fontBody))
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            TextField("Stake", text: stakeBinding)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .focused($stakeFocused)
+                .foregroundStyle(theme.textPrimary)
         }
+        .frame(minHeight: Layout.minTapTarget)
     }
 
-    private var summarySection: some View {
-        let rows = FightCoreDisplay.slipSummary(state: store.slipState)
-        return VStack(spacing: 0) {
-            ForEach(rows) { row in
-                VStack(spacing: 0) {
-                    labeledRow(row.label, row.value, valueStyle: theme.textSecondary)
-                    if row.id != rows.last?.id {
-                        rowDivider
-                    }
-                }
-            }
-        }
-        .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
+    /// Text, not a `Label`: SkipUI resolves `systemName` against a fixed table of Material icons
+    /// and draws a warning triangle announced as "missing icon" for anything absent from it,
+    /// which `exclamationmark.triangle.fill` is.
+    private func errorRow(_ message: String) -> some View {
+        Text(message)
+            .foregroundStyle(theme.negative)
+            .font(Typography.body(theme.fontCallout))
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var errorsSection: some View {
-        VStack(spacing: 0) {
-            ForEach(errorMessages, id: \.self) { message in
-                VStack(spacing: 0) {
-                    Text(message)
-                        .foregroundStyle(theme.negative)
-                        .font(Typography.body(theme.fontCaption))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, theme.spacingLG)
-                        .padding(.vertical, theme.spacingMD)
-                    if message != errorMessages.last {
-                        rowDivider
-                    }
-                }
-            }
+    private var addFundsButton: some View {
+        Button(action: onDeposit) {
+            Text("Add funds")
+                .font(Typography.body(theme.fontBody))
+                .foregroundStyle(theme.accent)
+                .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
         }
-        .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
-    }
-
-    private var depositSection: some View {
-        VStack(alignment: .leading, spacing: theme.spacingSM) {
-            sectionTitle("Deposit")
-            VStack(spacing: 0) {
-                labeledRow("Balance", Money.formatCurrency(store.balance), valueStyle: theme.textPrimary)
-                rowDivider
-                Button(action: onDeposit) {
-                    Text("Add funds")
-                        .font(Typography.body(theme.fontBody))
-                        .foregroundStyle(theme.accent)
-                        .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, theme.spacingLG)
-                    .padding(.vertical, theme.spacingMD)
-            }
-            .background(theme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: theme.radiusLG))
-        }
+        .buttonStyle(.plain)
     }
 
     /// Done sits beside Place bet rather than on a keyboard toolbar: `ToolbarItemGroup` is
@@ -346,10 +374,6 @@ extension BetSlipRootView {
         }
     }
 
-    private var errorMessages: [String] {
-        store.slipState.errors.map { $0.rawValue.replacingOccurrences(of: "_", with: " ") }
-    }
-
     private func selectionRow(_ selection: Selection) -> some View {
         HStack(alignment: .top, spacing: theme.spacingMD) {
             VStack(alignment: .leading) {
@@ -376,55 +400,6 @@ extension BetSlipRootView {
             }
             .frame(width: Layout.minTapTarget, height: Layout.minTapTarget)
         }
-    }
-
-    private var stakeField: some View {
-        HStack {
-            Text("Amount")
-                .font(Typography.body(theme.fontBody))
-                .foregroundStyle(theme.textPrimary)
-            Spacer()
-            TextField("Stake", text: stakeBinding)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .focused($stakeFocused)
-                .foregroundStyle(theme.textPrimary)
-        }
-        .frame(minHeight: Layout.minTapTarget)
-    }
-
-    /// The grouped-list pieces are local functions returning SkipUI primitives, not view types
-    /// of their own. A `View` struct declared in `FightDeckCore` and placed among siblings here
-    /// composes to nothing on Android — see `GroupedList.swift` for the whole trail.
-    private func sectionTitle(_ title: String) -> some View {
-        Text(title)
-            .font(Typography.body(theme.fontCallout))
-            .foregroundStyle(theme.textSecondary)
-            .padding(.horizontal, theme.spacingLG)
-    }
-
-    private var rowDivider: some View {
-        Rectangle()
-            .fill(theme.textSecondary.opacity(0.25))
-            .frame(height: 1)
-            .padding(.leading, theme.spacingLG)
-    }
-
-    /// Its own row, not the shared `LabeledRow` from the core: that one renders when it is a
-    /// direct child of a `Section`, as the fighter and deposit screens use it, but composes to
-    /// nothing once it is wrapped and modified — which is what this screen's hand-drawn cards
-    /// need. Converting these sections to `Form`/`Section` would remove the difference.
-    private func labeledRow(_ label: String, _ value: String, valueStyle: Color) -> some View {
-        HStack {
-            Text(label)
-                .foregroundStyle(theme.textPrimary)
-            Spacer()
-            Text(value)
-                .foregroundStyle(valueStyle)
-        }
-        .font(Typography.body(theme.fontBody))
-        .padding(.horizontal, theme.spacingLG)
-        .padding(.vertical, theme.spacingMD)
     }
 
     fileprivate var stakeChipRow: some View {
@@ -487,87 +462,62 @@ extension BetSlipRootView {
     }
 
     fileprivate var slipContent: some View {
-        List {
-            selectionsSection
-            stakeSection
-            summarySection
-            errorsSection
-            depositSection
-        }
-        .listStyle(.insetGrouped)
-        // safeAreaBar clears the Place bet button; the tab accessory sits below that bar and
-        // still needs its own scroll margin or the Deposit rows scroll into its glass slot.
-        .contentMargins(.bottom, Layout.betSlipAccessoryHeight, for: .scrollContent)
-        .scrollDismissesKeyboard(.interactively)
-        .modifier(SlipBottomBarModifier(
-            theme: theme,
-            stakeFocused: stakeFocused,
-            isEnabled: store.slipState.errors.isEmpty,
-            onPlaceBet: placeBetAndSync,
-            onDismissKeyboard: { stakeFocused = false }
-        ))
+        slipList
+            .listStyle(.insetGrouped)
+            // safeAreaBar clears the Place bet button; the tab accessory sits below that bar and
+            // still needs its own scroll margin or the Deposit rows scroll into its glass slot.
+            .contentMargins(.bottom, Layout.betSlipAccessoryHeight, for: .scrollContent)
+            .scrollDismissesKeyboard(.interactively)
+            .modifier(SlipBottomBarModifier(
+                theme: theme,
+                stakeFocused: stakeFocused,
+                isEnabled: store.slipState.errors.isEmpty,
+                onPlaceBet: placeBetAndSync,
+                onDismissKeyboard: { stakeFocused = false }
+            ))
     }
 
-    private var selectionsSection: some View {
-        Section(betTypeTitle) {
-            ForEach(store.slip.selections) { selection in
-                selectionRow(selection)
-            }
-            .onDelete { offsets in
-                for id in offsets.map({ store.slip.selections[$0].id }) {
-                    syncRemoval(of: id)
-                }
+    /// Swipe to delete, which is the iOS gesture for it. Android gets an explicit ✕ in the row
+    /// instead — `.onDelete` is ✅ in SkipUI, but a hidden swipe is not how a Compose list
+    /// removes a row.
+    private var selectionRows: some View {
+        ForEach(store.slip.selections) { selection in
+            selectionRow(selection)
+        }
+        .onDelete { offsets in
+            for id in offsets.map({ store.slip.selections[$0].id }) {
+                syncRemoval(of: id)
             }
         }
     }
 
-    private var stakeSection: some View {
-        Section("Stake") {
-            LabeledContent("Amount") {
-                TextField("Stake", text: stakeBinding)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .focused($stakeFocused)
-            }
-            stakeChipRow
+    private var stakeAmountRow: some View {
+        LabeledContent("Amount") {
+            TextField("Stake", text: stakeBinding)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .focused($stakeFocused)
         }
     }
 
-    private var summarySection: some View {
-        Section {
-            ForEach(FightCoreDisplay.slipSummary(state: store.slipState)) { row in
-                LabeledContent(row.label, value: row.value)
-            }
+    private func errorRow(_ message: String) -> some View {
+        Label(message, systemImage: "exclamationmark.triangle.fill")
+            .font(.callout)
+            .foregroundStyle(theme.negative)
+    }
+
+    private var addFundsButton: some View {
+        Button(action: onDeposit) {
+            Text("Add funds")
+                .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
+                .contentShape(.rect)
         }
     }
 
-    @ViewBuilder
-    private var errorsSection: some View {
-        if !store.slipState.errors.isEmpty {
-            Section {
-                ForEach(store.slipState.errors, id: \.self) { error in
-                    Label(
-                        error.rawValue.replacingOccurrences(of: "_", with: " "),
-                        systemImage: "exclamationmark.triangle.fill"
-                    )
-                    .font(.callout)
-                    .foregroundStyle(theme.negative)
-                }
-            }
-        }
-    }
-
-    private var depositSection: some View {
-        Section("Deposit") {
-            LabeledContent("Balance") {
-                Text(Money.formatCurrency(store.balance))
-            }
-            Button(action: onDeposit) {
-                Text("Add funds")
-                    .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
-                    .contentShape(.rect)
-            }
-        }
+    /// iOS reserves the bar's space with `.contentMargins`, so nothing is needed at the end of
+    /// the list.
+    fileprivate var listFooter: some View {
+        EmptyView()
     }
 
     private func selectionRow(_ selection: Selection) -> some View {

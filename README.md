@@ -98,27 +98,50 @@ its original build column was dominated by Rust packaging rather than by the app
 
 ### What it costs to write
 
-| Approach | iOS | Android | Shared | Config | Total | Shared |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 3,113 | 3,282 | 0 | 226 | 6,621 | 0% |
-| `01-core-swift` | 2,389 | 3,159 | 2,122 | 405 | 8,075 | 26% |
-| `02-core-rust` | 2,660 | 2,737 | 2,375 | 421 | 8,193 | 29% |
-| `04-sdk-skip` | 2,087 | 2,920 | 3,224 | 707 | 8,938 | 36% |
-| `03-sdk-rn` | 3,402 | 3,863 | 4,168 | 757 | 12,190 | 34% |
+| Approach | iOS | Android | Shared | iOS adapter | Android adapter | Generated | Total | Total + adapters |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `00-native` baseline | 1,904 | 2,604 | 0 | 0 | 0 | — | **4,508** | **4,508** |
+| `04-sdk-skip` | 1,095 | 1,722 | 1,878 | 18 | 343 | 2,425 | **4,695** | **5,056** |
+| `01-core-swift` | 1,429 | 2,284 | 1,254 | 0 | 200 | 3,017 | **4,967** | **5,167** |
+| `02-core-rust` | 1,445 | 2,249 | 1,557 | 51 | 58 | 8,304 | **5,251** | **5,360** |
+| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 1,081 | — | **5,529** | **7,752** |
 
-Hand-written lines only, from `python3 tools/count-lines.py`. Generated bindings and
-transpiler output are excluded — counting them would credit a code generator for typing.
-The same script reports them separately, next to the hand-written boundary code, because
-the ratio between the two is the case for using a generator at all: skipstone writes 3,557
-lines and leaves 447, UniFFI writes 12,271 and leaves 967, jextract writes 321 and leaves
-536 — the only generator here that hands back more work than it does.
+**Measured at `0c0f451`** by `python3 tools/count-significant-lines.py`. To refresh it,
+read the commits since that hash rather than the whole tree; `--audit` prints every file
+and the column it landed in.
 
-Read the per-platform columns before the shared one. Every approach that shares logic
-takes work *out* of the hosts, except React Native, which is the only one where the
-platform-specific code goes **up**: 7,265 lines across the two hosts against the
-baseline's 6,395, because embedding a surface, sizing it and feeding it the host's layout
-is code that only exists because the SDK is there. A bigger shared column is not the same
-as a smaller job.
+A line counts when something executes or declares. Blank lines, `//` and `/* */` comments
+and lines made only of punctuation are dropped — that is about a third of a Swift file, and
+it is the third nobody writes twice. Also excluded, because keeping them would compare
+different things: tests, manifests (`Package.swift`, `*.gradle.kts`, `Podfile`),
+`04-sdk-skip`'s measurement harnesses, and the iOS SDK sources `03-sdk-rn` commits twice —
+once for SwiftPM and once for CocoaPods — which are counted once.
+
+*Adapter* means code whose only reason to exist is reaching the shared SDK: it declares
+what crosses, adapts types the generator cannot carry, mounts the surface, or reconnects
+change notification on the far side. *Generated* is build output — jextract's Java and
+Swift, UniFFI's bindings, skipstone's Kotlin. Nobody maintains a line of it, and no line of
+it is in the totals.
+
+Three things to read off it. First, **the iOS adapter column is the whole argument.**
+`01-core-swift` and `04-sdk-skip` need essentially none — 0 and 18 lines — because the
+shared artefact is Swift and the host is Swift, so `EventsViews.swift` just says
+`import FightCore`. `03-sdk-rn` needs 1,142, because the shared artefact is JavaScript and
+something has to embed a surface, size it and feed it the host's layout.
+
+Second, **every approach does take work out of the hosts.** Against the baseline's 4,508
+lines of host code, Skip's two hosts hold 2,817 (−38%), Swift's and Rust's 3,713 and 3,694
+(−18%), React Native's 4,001 (−11%). But React Native then adds 2,223 lines of adapter back,
+so its hosts end up carrying 6,224 — more than writing both apps natively. A bigger shared
+column is not the same as a smaller job.
+
+Third, and this is the one worth saying out loud: **not one approach writes fewer total
+lines than the baseline.** Skip is the closest and it is still 4% above; with adapters
+counted, 12%. Rust is +16%, React Native +23% and +72%. Sharing code did not reduce how
+much code exists here — it moved it, and it cut how many times the betting contract is
+implemented from two to one. If the argument for any of these is "less code", this table
+does not support it. The arguments that survive are in the next two sections: what a
+change costs once it only has to be made once, and what it costs to ship.
 
 The sharpest number in this section is not in the table. `count-lines.py` also counts how
 many times each approach implements the same betting contract:
@@ -134,8 +157,14 @@ many times each approach implements the same betting contract:
 Only Skip gets to one, and the reason is narrow enough to be worth saying plainly: its
 shared artefact is source in each host's own language, so a host can consume the SDK's own
 types. Rust ships a `.so` behind FFI and React Native ships JavaScript, so in both the host
-can call shared *behaviour* but cannot hold a shared *type* — which is why `02-core-rust`
-hand-writes 967 lines of glue and `03-sdk-rn` 1,011, against Skip's 447.
+can call shared *behaviour* but cannot hold a shared *type*.
+
+Where that costs you differs, and the adapter columns above say so more precisely than an
+earlier version of this section did. React Native pays it in hand-written adapter — 2,223
+lines across the two hosts. `02-core-rust` pays almost none in adapter (109 lines), because
+UniFFI generates the bindings; it pays 8,304 lines of generated code instead, and pays
+again in what the shared code is allowed to be, since every type that crosses has to be
+expressible in the FFI.
 
 Holding a shared type is also what lets Skip share the layer above the contract. `04-sdk-skip`
 is the only approach where the fight catalogue — reading the dataset, indexing it, and

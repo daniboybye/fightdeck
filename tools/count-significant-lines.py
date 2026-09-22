@@ -235,12 +235,25 @@ def main() -> int:
         )
         table[approach] = counts
 
-    print(f"\nSignificant hand-written lines — measured at {head}\n")
     cols = [
         ("iOS", "ios"), ("Android", "android"), ("Shared", "shared"),
         ("iOS adapt.", "ios-adapter"), ("Andr. adapt.", "android-adapter"),
         ("Generated", "generated"), ("Total", "total"), ("Total+adapt.", "total+adapters"),
     ]
+
+    # Tab-separated, for pasting into a spreadsheet and on into a slide.
+    if "--tsv" in sys.argv:
+        print("\t".join(["Approach"] + [label for label, _ in cols]))
+        for approach in sorted(APPROACHES, key=lambda a: table[a]["total"]):
+            row = table[approach]
+            cells = [
+                f"{row[key]:,}" if row[key] or key != "generated" else "—"
+                for _, key in cols
+            ]
+            print("\t".join([approach] + cells))
+        return 0
+
+    print(f"\nSignificant hand-written lines — measured at {head}\n")
     header = f"{'approach':<16}" + "".join(f"{label:>14}" for label, _ in cols)
     print(header)
     print("-" * len(header))

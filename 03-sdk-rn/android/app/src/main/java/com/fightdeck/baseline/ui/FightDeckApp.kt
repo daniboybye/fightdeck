@@ -55,6 +55,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.fightdeck.baseline.core.Money
+import com.fightdeck.baseline.design.BalanceMenuAction
 import com.fightdeck.baseline.design.Tokens
 import java.math.BigDecimal
 import kotlinx.serialization.json.Json
@@ -499,6 +500,7 @@ private fun EventsNavHost(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SlipNavHost(
     slipNav: NavHostController,
@@ -512,16 +514,36 @@ private fun SlipNavHost(
 
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {
-            RNBetslipScreen(
-                balance = balance,
-                slipJSON = viewModel.slipJSON(),
-                eventsJSON = viewModel.eventsJSON(),
-                betPlacedMessage = betPlacedMessage.orEmpty(),
-                onBrowseEvents = onBrowseEvents,
-                onDeposit = onDeposit,
-                onUpdated = viewModel::applySlipJSON,
-                onPlaced = viewModel::placeBetFromSDK,
-            )
+            // The title and the balance action are the host's, not the SDK's — the same split
+            // the events and fighter screens use, and the same bar `00-native` gives this
+            // screen. The React Native surface owns the list below it and nothing above it.
+            Scaffold(
+                containerColor = Color.Transparent,
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Bet Slip", style = MaterialTheme.typography.headlineMedium) },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                        actions = {
+                            BalanceMenuAction(
+                                balanceLabel = Money.formatCurrency(balance),
+                                onDeposit = onDeposit,
+                            )
+                        },
+                    )
+                },
+            ) { padding ->
+                RNBetslipScreen(
+                    balance = balance,
+                    slipJSON = viewModel.slipJSON(),
+                    eventsJSON = viewModel.eventsJSON(),
+                    betPlacedMessage = betPlacedMessage.orEmpty(),
+                    onBrowseEvents = onBrowseEvents,
+                    onDeposit = onDeposit,
+                    onUpdated = viewModel::applySlipJSON,
+                    onPlaced = viewModel::placeBetFromSDK,
+                    modifier = Modifier.padding(padding),
+                )
+            }
         }
     }
 }

@@ -32,6 +32,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -53,6 +56,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.fightdeck.baseline.design.BalanceMenuAction
 import com.fightdeck.baseline.design.Tokens
 import fight.deck.core.Money
 import java.math.BigDecimal
@@ -466,6 +470,7 @@ private fun EventsNavHost(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SlipNavHost(
     slipNav: NavHostController,
@@ -474,15 +479,38 @@ private fun SlipNavHost(
     onBrowseEvents: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val balance by viewModel.balance.collectAsStateWithLifecycle()
+
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {
-            com.fightdeck.baseline.sdk.SkipSDKBridge.BetslipScreen(
-                viewModel = viewModel,
-                saveKey = "betslip-root",
-                onDeposit = onDeposit,
-                onBrowseEvents = onBrowseEvents,
-                modifier = Modifier.fillMaxSize(),
-            )
+            // The title and the balance action are the host's, not the SDK's — the same split
+            // the events and fighter screens use, and the same bar `00-native` gives this
+            // screen. The SDK view owns the list below it and nothing above it.
+            Scaffold(
+                containerColor = Color.Transparent,
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Bet Slip", style = MaterialTheme.typography.headlineMedium) },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                        actions = {
+                            BalanceMenuAction(
+                                balanceLabel = Money.formatCurrency(balance),
+                                onDeposit = onDeposit,
+                            )
+                        },
+                    )
+                },
+            ) { padding ->
+                com.fightdeck.baseline.sdk.SkipSDKBridge.BetslipScreen(
+                    viewModel = viewModel,
+                    saveKey = "betslip-root",
+                    onDeposit = onDeposit,
+                    onBrowseEvents = onBrowseEvents,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                )
+            }
         }
     }
 }

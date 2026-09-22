@@ -47,20 +47,25 @@ object SkipSDKBridge {
             }
             val display = remember(fighters, events) { HostSlipDisplayContext(fighters, events) }
             val theme = remember { ThemeTokens.defaults }
-            BetslipComposeEntry(
-                store = store,
-                display = display,
-                theme = theme,
-                onDeposit = onDeposit,
-                onBrowseEvents = onBrowseEvents,
-                onHostSync = { sdkSlip, sdkBalance, message ->
-                    viewModel.applySdkSlip(
-                        sdkSlip,
-                        sdkBalance,
-                        message,
-                    )
-                },
-            ).Compose()
+            // Same reason as the fighter screen below: the SDK view composes into whatever box
+            // it is given and reads no insets of its own, so the host's top-bar padding has to
+            // be a real box around it. Without one the list scrolls under the Bet Slip toolbar.
+            Box(modifier) {
+                BetslipComposeEntry(
+                    store = store,
+                    display = display,
+                    theme = theme,
+                    onDeposit = onDeposit,
+                    onBrowseEvents = onBrowseEvents,
+                    onHostSync = { sdkSlip, sdkBalance, message ->
+                        viewModel.applySdkSlip(
+                            sdkSlip,
+                            sdkBalance,
+                            message,
+                        )
+                    },
+                ).Compose()
+            }
             DisposableEffect(saveKey) {
                 onDispose {
                     stateHolder.removeState(saveKey)

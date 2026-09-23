@@ -98,13 +98,13 @@ its original build column was dominated by Rust packaging rather than by the app
 
 ### What it costs to write
 
-| Approach | iOS | Android | Shared | iOS adapter | Android adapter | Config | Generated | Total | Total + adapters |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 1,904 | 2,604 | 0 | 0 | 0 | 229 | — | **4,508** | **4,508** |
-| `04-sdk-skip` | 1,087 | 1,724 | 1,881 | 18 | 150 | 732 | 2,441 | **4,692** | **4,860** |
-| `01-core-swift` | 1,429 | 2,284 | 1,254 | 0 | 200 | 617 | 3,017 | **4,967** | **5,167** |
-| `02-core-rust` | 1,445 | 2,249 | 1,557 | 51 | 58 | 585 | 8,304 | **5,251** | **5,360** |
-| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 778 | 1,209 | — | **5,529** | **7,449** |
+| Approach | iOS | Android | Shared | Decrease hosts | Total | iOS adapters | Android adapters | Total + adapters | Generated | Config |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `00-native` baseline | 1,904 | 2,604 | — | — | **4,508** | — | — | **4,508** | — | 229 |
+| `02-core-rust` | 1,445 | 2,249 | 1,557 | −18% | **5,251** | 51 | 58 | **5,360** | 8,304 | 585 |
+| `01-core-swift` | 1,429 | 2,284 | 931 | −18% | **4,644** | — | 500 | **5,144** | 3,017 | 617 |
+| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | −11% | **5,529** | 1,142 | 778 | **7,449** | — | 1,209 |
+| `04-sdk-skip` | 1,087 | 1,724 | 1,228 | −38% | **4,039** | 305 | 482 | **4,826** | 2,441 | 732 |
 
 **Measured at `3352757`** by `python3 tools/count-significant-lines.py`. To refresh it,
 read the commits since that hash rather than the whole tree; `--audit` prints every file
@@ -119,9 +119,12 @@ measurement harnesses on both platforms — `ios/Harness/**` and the `both`/`dep
 weigh one feature at a time — and the iOS SDK sources `03-sdk-rn` commits twice, once for
 SwiftPM and once for CocoaPods, which are counted once.
 
-*Adapter* means code whose only reason to exist is reaching the shared SDK: it declares
-what crosses, adapts types the generator cannot carry, mounts the surface, or reconnects
-change notification on the far side. *Generated* is build output — jextract's Java and
+*Adapter* means a wrapper with no logic of its own that makes shared code fit one platform
+— and, crucially, **it is counted by which platform runs it, not by where the file sits.**
+Rust's adapters happen to live in the hosts; Swift's `*Java` targets and Skip's `#if SKIP`
+branches live inside the SDK and are adapters all the same, because they compile for one
+platform and never run on the other. Counting those as shared was flattering the two
+approaches that put the most platform code inside their shared module. *Generated* is build output — jextract's Java and
 Swift, UniFFI's bindings, skipstone's Kotlin. Nobody maintains a line of it, and no line of
 it is in the totals.
 
@@ -131,28 +134,30 @@ build script at all and the SDK approaches need between 174 and 537 lines of the
 a real cost of choosing one. Lockfiles are excluded — `package-lock.json` alone would charge
 React Native 9,300 lines nobody typed.
 
-Three things to read off it. First, **the iOS adapter column is the whole argument.**
-`01-core-swift` and `04-sdk-skip` need essentially none — 0 and 18 lines — because the
-shared artefact is Swift and the host is Swift, so `EventsViews.swift` just says
-`import FightCore`. `03-sdk-rn` needs 1,142, because the shared artefact is JavaScript and
-something has to embed a surface, size it and feed it the host's layout.
+Three things to read off it. First, **`Total` and `Total + adapters` tell opposite
+stories, and both are true.** Counting only host code and genuinely shared code, Skip is
+**10% below** writing both apps natively — the number you would expect from sharing three
+screens and a betting core. Counting the platform adapters that shared code needs in order
+to run, it is **7% above**. Everything interesting about these approaches lives in that gap.
 
-Second, **every approach does take work out of the hosts.** Against the baseline's 4,508
-lines of host code, Skip's two hosts hold 2,811 (−38%), Swift's and Rust's 3,713 and 3,694
-(−18%), React Native's 4,001 (−11%). But React Native then adds 1,920 lines of adapter back,
-so its hosts end up carrying 5,921 — more than writing both apps natively. A bigger shared
-column is not the same as a smaller job.
+Second, **the adapter columns say where each technology puts its platform code, and the
+answer differs more than the totals do.** Rust barely has adapters (109) because UniFFI
+generates the bindings — it pays 8,304 generated lines instead. Swift has none on iOS,
+because the host imports the core directly, and 500 on Android, all of it the `*Java`
+facade that jextract needs. Skip has 787 split across both, nearly all of it `#if` branches
+*inside* the shared files. React Native has 1,920, all of it hand-written host code to
+embed, size and feed a surface.
 
-Third, and this is the one worth saying out loud: **not one approach writes fewer total
-lines than the baseline.** Skip is the closest and it is still 4% above; with adapters
-counted, 8%. Rust is +16%, React Native +23% and +65%. Sharing code did not reduce how much
-code exists here — it moved it, and it cut how many times the betting contract is
-implemented from two to one.
+Third, **every approach takes work out of the hosts, but only Skip takes out a lot.** Skip's
+two hosts hold 2,811 lines against the baseline's 4,508 (−38%); Swift's and Rust's 3,713 and
+3,694 (−18%); React Native's 4,001 (−11%), and it then adds 1,920 lines of adapter back, so
+its hosts end up carrying more than writing both apps natively.
 
-#### Why sharing does not pay off at this size
+#### Where the gap between the two totals comes from
 
-Skip is the interesting row, because it shares the most and still loses. Comparing the same
-features — what the baseline writes across both platforms, against what Skip writes once:
+Skip is the interesting row, because it is both the best and the worst answer depending on
+which total you read. Comparing the same features — what the baseline writes across both
+platforms, against what Skip writes once:
 
 | | `00-native`, both platforms | `04-sdk-skip`, shared | |
 | --- | ---: | ---: | --- |
@@ -175,12 +180,13 @@ The rest is fixed overhead that does not shrink with the app: the palette is dec
 times (`ThemeTokens` for the boundary, plus each host's own token file), types are
 re-declared to cross it, and every module carries a hosting seam.
 
-So the break-even is arithmetic. Skip's overhead is roughly 580 lines, and it saves about a
-third of whatever logic it shares — which means it needs **around 1,800 lines of shared
-logic** before the total drops below writing both apps natively. This demo has 585. Adding
-more *screens* would not change the table under the current rule; adding more *logic* —
-cash-out, settlement, limits, free bets, odds movement — is what would, and that is the kind
-of code a real betting app has far more of than this one.
+So the break-even is arithmetic. Skip carries roughly 580 lines of overhead that does not
+shrink with the app, and saves about a third of whatever logic it shares — which means it
+needs **around 1,800 lines of shared logic** before `Total + adapters` drops below writing
+both apps natively. This demo has 585. Adding more *screens* would not change that under the
+current rule, because a screen arrives as two implementations in one file; adding more
+*logic* — cash-out, settlement, limits, free bets, odds movement — is what would, and that
+is the kind of code a real betting app has far more of than this one.
 
 The arguments that survive at this size are in the next two sections: what a change costs
 once it only has to be made once, and what it costs to ship.

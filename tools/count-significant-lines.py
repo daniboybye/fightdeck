@@ -44,6 +44,14 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 APPROACHES = ["00-native", "01-core-swift", "02-core-rust", "03-sdk-rn", "04-sdk-skip"]
 
+# Presentation order and names: the talk introduces the headless cores first, then the two
+# UI-bearing SDKs, with the baseline on top as the thing everything is measured against.
+ORDER = ["00-native", "02-core-rust", "01-core-swift", "03-sdk-rn", "04-sdk-skip"]
+LABELS = {
+    "00-native": "Native", "02-core-rust": "Rust", "01-core-swift": "Swift",
+    "03-sdk-rn": "React Native", "04-sdk-skip": "Skip Lite",
+}
+
 CODE_SUFFIXES = {".swift", ".kt", ".rs", ".ts", ".tsx", ".java", ".m", ".mm", ".h", ".cpp"}
 
 # Manifests that happen to be written in a counted language. `Package.swift` is Swift and
@@ -143,6 +151,51 @@ def significant_lines(path: pathlib.Path) -> int:
     return count
 
 
+def regions(path: pathlib.Path) -> tuple[int, int, int]:
+    """(both platforms, Android only, iOS only) significant lines in one file.
+
+    Skip's shared sources carry each platform's own version behind `#if SKIP` / `#if !SKIP`.
+    Those branches are not shared code: they compile for one platform and never run on the
+    other, which makes them that platform's adapter wherever the file happens to live.
+    """
+    try:
+        text = (ROOT / path).read_text(errors="ignore")
+    except (OSError, UnicodeDecodeError):
+        return 0, 0, 0
+    text = BLOCK_COMMENT.sub("", text)
+    both = android = ios = 0
+    mode: str | None = None
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line.startswith("#if SKIP"):
+            mode = "android"
+            continue
+        if line.startswith("#if !SKIP"):
+            mode = "ios"
+            continue
+        if line.startswith("#else") and mode:
+            mode = "ios" if mode == "android" else "android"
+            continue
+        if line.startswith("#endif"):
+            mode = None
+            continue
+        if line.startswith("//") or line.startswith("*"):
+            continue
+        if "//" in line and line.count('"') % 2 == 0:
+            head = line.split("//", 1)[0]
+            if head.count('"') % 2 == 0:
+                line = head.strip()
+        if not line or PUNCTUATION_ONLY.match(line):
+            continue
+        if mode == "android":
+            android += 1
+        elif mode == "ios":
+            ios += 1
+        else:
+            both += 1
+    return both, android, ios
+
+
 def tracked_files() -> list[pathlib.Path]:
     listing = subprocess.run(
         ["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True
@@ -217,10 +270,7 @@ def generated_lines(approach: str) -> int:
 
 
 def measure(approach: str, files: list[pathlib.Path], audit: bool) -> dict[str, int]:
-    counts = {
-        "ios": 0, "android": 0, "shared": 0,
-        "ios-adapter": 0, "android-adapter": 0, "shared-adapter": 0,
-    }
+    counts = {"ios": 0, "android": 0, "shared": 0, "ios-adapter": 0, "android-adapter": 0}
     seen: set[str] = set()
     rows: list[tuple[str, int, str]] = []
     for path in files:
@@ -231,18 +281,40 @@ def measure(approach: str, files: list[pathlib.Path], audit: bool) -> dict[str, 
         if verdict is None:
             continue
         platform, role = verdict
-        # 03-sdk-rn commits the same iOS sources for SwiftPM and CocoaPods. Count once.
         digest = hashlib.sha1((ROOT / path).read_bytes()).hexdigest()
         if digest in seen:
             if audit:
                 rows.append(("duplicate", 0, str(rel)))
             continue
         seen.add(digest)
-        n = significant_lines(path)
-        key = platform if role == "code" else f"{platform}-adapter"
-        counts[key] += n
-        if audit:
-            rows.append((key, n, str(rel)))
+
+        if platform != "shared":
+            key = platform if role == "code" else f"{platform}-adapter"
+            counts[key] += significant_lines(path)
+            if audit:
+                rows.append((key, significant_lines(path), str(rel)))
+            continue
+
+        # SDK-side. A whole file belongs to one platform when its target exists only for
+        # that platform: `*Java` targets are the jextract facade, `*Umbrella` is the SPM
+        # shim that lets Apple consumers import the binary framework.
+        if any(part.endswith("Java") for part in rel.parts[:-1]):
+            counts["android-adapter"] += significant_lines(path)
+            if audit:
+                rows.append(("android-adapter", significant_lines(path), str(rel)))
+            continue
+        if rel.stem.endswith("Umbrella"):
+            counts["ios-adapter"] += significant_lines(path)
+            if audit:
+                rows.append(("ios-adapter", significant_lines(path), str(rel)))
+            continue
+
+        both, android, ios = regions(path)
+        counts["shared"] += both
+        counts["android-adapter"] += android
+        counts["ios-adapter"] += ios
+        if audit and (both or android or ios):
+            rows.append(("shared", both, f"{rel}  (+{android} Android, +{ios} iOS)"))
     if audit:
         print(f"\n--- {approach}")
         for key, n, name in sorted(rows):
@@ -261,9 +333,6 @@ def main() -> int:
     table: dict[str, dict[str, int]] = {}
     for approach in APPROACHES:
         counts = measure(approach, files, audit)
-        # Shared adapters — a hosting seam written once for both platforms — belong with
-        # the shared code they gate, not with either host.
-        counts["shared"] += counts.pop("shared-adapter")
         counts["config"] = config_lines(approach, files)
         counts["generated"] = generated_lines(approach)
         counts["total"] = counts["ios"] + counts["android"] + counts["shared"]
@@ -272,26 +341,45 @@ def main() -> int:
         )
         table[approach] = counts
 
+    # The baseline's host total is what every "decrease hosts" figure is measured against.
+    base_hosts = table["00-native"]["ios"] + table["00-native"]["android"]
+    for approach in APPROACHES:
+        row = table[approach]
+        hosts = row["ios"] + row["android"]
+        row["decrease"] = round((hosts - base_hosts) / base_hosts * 100)
+
     cols = [
         ("iOS", "ios"), ("Android", "android"), ("Shared", "shared"),
-        ("iOS adapt.", "ios-adapter"), ("Andr. adapt.", "android-adapter"),
-        ("Config", "config"), ("Generated", "generated"),
-        ("Total", "total"), ("Total+adapt.", "total+adapters"),
+        ("Decrease hosts", "decrease"), ("Total", "total"),
+        ("iOS Adapters", "ios-adapter"), ("Android Adapters", "android-adapter"),
+        ("Total + Adapters", "total+adapters"),
+        ("Generated", "generated"), ("Config", "config"),
     ]
 
-    # Tab-separated, for pasting into a spreadsheet and on into a slide.
+    def cell(approach: str, key: str) -> str:
+        row = table[approach]
+        if key == "decrease":
+            return "X" if approach == "00-native" else f"{row[key]}%".replace("-", "\u2212")
+        if not row[key] and key in {"shared", "generated", "ios-adapter", "android-adapter"}:
+            return "X"
+        return f"{row[key]:,}"
+
     if "--tsv" in sys.argv:
         print("\t".join(["Approach"] + [label for label, _ in cols]))
-        for approach in sorted(APPROACHES, key=lambda a: table[a]["total"]):
-            row = table[approach]
-            cells = [
-                f"{row[key]:,}" if row[key] or key != "generated" else "—"
-                for _, key in cols
-            ]
-            print("\t".join([approach] + cells))
+        for approach in ORDER:
+            print("\t".join([LABELS[approach]] + [cell(approach, key) for _, key in cols]))
         return 0
 
     print(f"\nSignificant hand-written lines — measured at {head}\n")
+    header = f"{'approach':<16}" + "".join(f"{label:>18}" for label, _ in cols)
+    print(header)
+    print("-" * len(header))
+    for approach in ORDER:
+        cells = "".join(f"{cell(approach, key):>18}" for _, key in cols)
+        print(f"{LABELS[approach]:<16}{cells}")
+    print()
+    return 0
+    # (legacy renderer below, unreachable)
     header = f"{'approach':<16}" + "".join(f"{label:>14}" for label, _ in cols)
     print(header)
     print("-" * len(header))

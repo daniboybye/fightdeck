@@ -31,6 +31,15 @@ let fightDeckEventsLibrary: Product = buildFromSource
     ? .library(name: "FightDeckEvents", type: .dynamic, targets: ["FightDeckEvents"])
     : .library(name: "FightDeckEvents", targets: ["FightDeckEvents"])
 
+// Only the source path needs the transpiler's own packages; the binary path links a
+// compiled xcframework. No skip-ui here — this module draws nothing. See core/Package.swift.
+let skipDependencies: [Package.Dependency] = buildFromSource
+    ? [
+        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.8"),
+        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.4"),
+    ]
+    : []
+
 let package = Package(
     name: "FightDeckEvents",
     defaultLocalization: "en",
@@ -40,9 +49,8 @@ let package = Package(
     products: [
         fightDeckEventsLibrary,
     ],
-    dependencies: [
-        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.8"),
-        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.4"),
+    // FightDeckCore is needed in both modes: the umbrella target re-exports it either way.
+    dependencies: skipDependencies + [
         .package(name: "FightDeckCore", path: "../core"),
     ],
     targets: [

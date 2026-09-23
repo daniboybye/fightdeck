@@ -30,6 +30,19 @@ let coreLibrary: Product = buildFromSource
     ? .library(name: "FightDeckCore", type: .dynamic, targets: ["FightDeckCore"])
     : .library(name: "FightDeckCore", targets: ["FightDeckCore"])
 
+// The Skip packages are the transpiler's own toolchain. They are used by the source target
+// and its `skipstone` plugin, and by nothing at all on the binary path — the xcframework
+// carries the compiled result. Declared unconditionally they made Xcode warn "dependency is
+// not used by any target" nine times over a demo-app build, and clone roughly 10 MB of Skip
+// sources the app never compiles.
+let skipDependencies: [Package.Dependency] = buildFromSource
+    ? [
+        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.8"),
+        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.4"),
+        .package(url: "https://github.com/skiptools/skip-ui.git", exact: "1.59.3"),
+    ]
+    : []
+
 let package = Package(
     name: "FightDeckCore",
     defaultLocalization: "en",
@@ -39,11 +52,7 @@ let package = Package(
     products: [
         coreLibrary,
     ],
-    dependencies: [
-        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.8"),
-        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.4"),
-        .package(url: "https://github.com/skiptools/skip-ui.git", exact: "1.59.3"),
-    ],
+    dependencies: skipDependencies,
     targets: [
         coreBinary,
         .target(

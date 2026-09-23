@@ -152,6 +152,23 @@ public struct FighterRootView: View {
         Rectangle().fill(theme.surface)
     }
 
+    /// Identical on both platforms, so it is not behind an `#if`. It used to be, from when a
+    /// shared view of ours was thought not to render on Android.
+    private func detailRow(_ row: FighterDetailRow) -> some View {
+        LabeledRow(theme: theme, label: row.label, value: row.value, valueStyle: theme.textSecondary)
+    }
+
+    /// The photo *is* the row, so a row background behind it draws a card frame around the
+    /// picture — both platforms clear it. iOS also zeroes the row's insets so the image runs
+    /// edge to edge; `.listRowInsets` has no SkipUI mapping, so Android keeps its own inset.
+    private func heroRow(_ fighter: Fighter) -> some View {
+        hero(fighter)
+            .listRowBackground(Color.clear)
+        #if !SKIP
+            .listRowInsets(EdgeInsets())
+        #endif
+    }
+
     private static func profileRows(for fighter: Fighter) -> [FighterDetailRow] {
         var rows = [
             FighterDetailRow(label: "Record", value: fighter.recordDisplay),
@@ -210,18 +227,6 @@ extension FighterRootView {
             .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
-    /// The same `.listRowBackground(Color.clear)` iOS uses, and for the same reason: the photo is
-    /// the row, so a row background behind it draws a card frame around the picture. iOS also
-    /// zeroes `.listRowInsets`, which SkipUI has no mapping for — the row keeps SkipUI's own
-    /// item inset here.
-    fileprivate func heroRow(_ fighter: Fighter) -> some View {
-        hero(fighter)
-            .listRowBackground(Color.clear)
-    }
-
-    fileprivate func detailRow(_ row: FighterDetailRow) -> some View {
-        LabeledRow(theme: theme, label: row.label, value: row.value, valueStyle: theme.textSecondary)
-    }
 }
 #endif
 
@@ -245,14 +250,5 @@ extension FighterRootView {
         content.listStyle(.insetGrouped)
     }
 
-    fileprivate func heroRow(_ fighter: Fighter) -> some View {
-        hero(fighter)
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-    }
-
-    fileprivate func detailRow(_ row: FighterDetailRow) -> some View {
-        LabeledRow(theme: theme, label: row.label, value: row.value, valueStyle: theme.textSecondary)
-    }
 }
 #endif

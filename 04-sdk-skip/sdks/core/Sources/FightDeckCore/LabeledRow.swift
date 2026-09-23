@@ -11,38 +11,18 @@ import SwiftUI
 /// A label on the left, its value on the right — the `LabeledContent` row that SkipUI has no
 /// mapping for. All three SDK screens need it, so it lives here rather than three times over.
 ///
-/// On Android it is written the way SkipUI writes its own components, and that is the point:
-/// conform to `Renderable` and implement `Render(context:)` rather than leaving the work to
-/// `body`. A view of ours that only implemented `body` composed to nothing when placed among
-/// siblings — which is what sent the earlier attempt at shared rows back into each screen.
-/// See `GroupedList.swift` for that trail; this type is the way out of it.
-#if SKIP
-public struct LabeledRow: View, Renderable {
-    let theme: ThemeTokens
-    let label: String
-    let value: String
-    let valueStyle: Color
-
-    public init(theme: ThemeTokens, label: String, value: String, valueStyle: Color) {
-        self.theme = theme
-        self.label = label
-        self.value = value
-        self.valueStyle = valueStyle
-    }
-
-    @Composable public override func Render(context: ComposeContext) {
-        HStack {
-            Text(label)
-                .foregroundStyle(theme.textPrimary)
-            Spacer()
-            Text(value)
-                .foregroundStyle(valueStyle)
-        }
-        .font(Typography.body(theme.fontBody))
-        .Compose(context: context)
-    }
-}
-#else
+/// One struct with one `body`, and **no `Renderable`**. An earlier version of this file
+/// conformed to `Renderable` and implemented `Render(context:)`, on the belief that a view of
+/// ours implementing only `body` composed to nothing on Android. That belief was wrong: the
+/// real cause was `skipstone` dropping a bare initialiser written straight into a
+/// `@ViewBuilder` — see `GroupedList.swift`. Once every screen reaches this type through a
+/// function, a plain `body` renders on both platforms. Verified on a device, not assumed.
+///
+/// The `#if` is the whole of what is left, and it buys real iOS behaviour: `LabeledContent`
+/// reads its label and value to VoiceOver as one element and restacks them at large Dynamic
+/// Type sizes. `.accessibilityElement(children:)` — the portable way to get the first of
+/// those back — has no SkipUI mapping, so dropping the `#if` would trade a native iOS row
+/// for four fewer lines. Not a trade worth making.
 public struct LabeledRow: View {
     let theme: ThemeTokens
     let label: String
@@ -57,7 +37,17 @@ public struct LabeledRow: View {
     }
 
     public var body: some View {
+        #if SKIP
+        HStack {
+            Text(label)
+                .foregroundStyle(theme.textPrimary)
+            Spacer()
+            Text(value)
+                .foregroundStyle(valueStyle)
+        }
+        .font(Typography.body(theme.fontBody))
+        #else
         LabeledContent(label, value: value)
+        #endif
     }
 }
-#endif

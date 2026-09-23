@@ -30,7 +30,53 @@ public struct SkipChipTheme: Sendable {
     }
 }
 
-#if !SKIP && os(iOS)
+/// One chip, both platforms. Liquid Glass is iOS's and has no Android equivalent, so the
+/// Android branch draws the capsule the Material way — but the size, the label and the tap
+/// target are written once.
+///
+/// This used to be `#if !SKIP` in its entirety, with each Android screen drawing its own
+/// chips inline, on the belief that a shared view of ours would not render there. It renders.
+public struct PresetChipButton: View {
+    let title: String
+    let theme: SkipChipTheme
+    let action: () -> Void
+
+    public init(title: String, theme: SkipChipTheme, action: @escaping () -> Void) {
+        self.title = title
+        self.theme = theme
+        self.action = action
+    }
+
+    public var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(chipFont)
+                .foregroundStyle(theme.accent)
+                .frame(maxWidth: .infinity)
+                .frame(height: theme.secondaryActionHeight)
+            #if !SKIP
+                .contentShape(.capsule)
+            #endif
+        }
+        #if SKIP
+        .background(theme.surfaceElevated)
+        .clipShape(Capsule())
+        #else
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        #endif
+    }
+
+    #if SKIP
+    private var chipFont: Font { Typography.medium(theme.fontCaption) }
+    #else
+    private var chipFont: Font { .subheadline.weight(.semibold) }
+    #endif
+}
+
+/// The container stays iOS-only: `GlassEffectContainer` is what makes neighbouring chips
+/// share one glass surface, and Android has nothing to group.
+#if !SKIP
 public struct PresetChipRow<Content: View>: View {
     let theme: SkipChipTheme
     @ViewBuilder var content: () -> Content
@@ -46,31 +92,6 @@ public struct PresetChipRow<Content: View>: View {
                 content()
             }
         }
-    }
-}
-
-public struct PresetChipButton: View {
-    let title: String
-    let theme: SkipChipTheme
-    let action: () -> Void
-
-    public init(title: String, theme: SkipChipTheme, action: @escaping () -> Void) {
-        self.title = title
-        self.theme = theme
-        self.action = action
-    }
-
-    public var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(theme.accent)
-                .frame(maxWidth: .infinity)
-                .frame(height: theme.secondaryActionHeight)
-                .contentShape(.capsule)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .capsule)
     }
 }
 #endif

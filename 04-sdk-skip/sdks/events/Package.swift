@@ -36,7 +36,6 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [
         .iOS("26.0"),
-        .macOS(.v14),
     ],
     products: [
         fightDeckEventsLibrary,

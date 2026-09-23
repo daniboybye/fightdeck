@@ -106,6 +106,15 @@ public struct BetSlipRootView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    /// The confirmation replaces the content it sits on, so iOS scales it in. Compose animates
+    /// its own state changes, so Android needs nothing.
+    private func placedChrome(_ content: some View) -> some View {
+        content
+        #if !SKIP
+            .transition(.scale(scale: 0.92).combined(with: .opacity))
+        #endif
+    }
+
     /// One leg is a single, two or more is an accumulator. The user never picks — the slip
     /// just says which one it currently is.
     private var betTypeTitle: String {
@@ -159,6 +168,50 @@ public struct BetSlipRootView: View {
     private func placeBetAndSync() {
         store.placeBet()
         onHostSync(store.slip, store.balance, store.betPlacedMessage)
+    }
+
+    /// One icon, one size. `checkmark.seal.fill` has no Material mapping, so Android would draw
+    /// a warning triangle announced as "missing icon" — the circle is mapped on both. Only the
+    /// bounce is iOS's: symbol effects have no SkipUI mapping.
+    private var placedIcon: some View {
+        Image(systemName: "checkmark.circle.fill")
+            .font(Typography.body(48.0))
+            .foregroundStyle(theme.positive)
+        #if !SKIP
+            .symbolEffect(.bounce, options: .nonRepeating)
+        #endif
+    }
+
+    /// Shared but for the tap shape, which SkipUI has no mapping for. The row fills the width
+    /// so the whole line is the target on both.
+    private var addFundsButton: some View {
+        Button(action: onDeposit) {
+            Text("Add funds")
+                .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
+            #if !SKIP
+                .contentShape(.rect)
+            #endif
+        }
+        #if SKIP
+        // Without this the row takes Material's filled-button look instead of a list row.
+        .buttonStyle(.plain)
+        #endif
+    }
+
+    /// Swipe to delete is the iOS gesture for it; Android gets an explicit ✕ in the row
+    /// instead. `.onDelete` is ✅ in SkipUI, but a hidden swipe is not how a Compose list
+    /// removes a row.
+    private var selectionRows: some View {
+        ForEach(store.slip.selections) { selection in
+            selectionRow(selection)
+        }
+        #if !SKIP
+        .onDelete { offsets in
+            for id in offsets.map({ store.slip.selections[$0].id }) {
+                syncRemoval(of: id)
+            }
+        }
+        #endif
     }
 
     // MARK: - Shared list
@@ -248,18 +301,6 @@ extension BetSlipRootView {
             .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
-    fileprivate func placedChrome(_ content: some View) -> some View {
-        content
-    }
-
-    fileprivate var placedIcon: some View {
-        // SkipUI has no Material mapping for the seal and renders a warning triangle labelled
-        // "missing icon". A checkmark in a circle is mapped, and deposit confirmation uses it.
-        Image(systemName: "checkmark.circle.fill")
-            .font(Typography.body(48.0))
-            .foregroundStyle(theme.positive)
-    }
-
     fileprivate var slipContent: some View {
         ZStack(alignment: .bottom) {
             // Without this the list paints its own container — `surfaceColorAtElevation(3dp)` —
@@ -281,12 +322,6 @@ extension BetSlipRootView {
             // Otherwise the spacer is drawn as an empty card, because a list row gets a row
             // background whether or not it has anything in it.
             .listRowBackground(Color.clear)
-    }
-
-    private var selectionRows: some View {
-        ForEach(store.slip.selections) { selection in
-            selectionRow(selection)
-        }
     }
 
     /// `LabeledContent` has no SkipUI mapping, so the row is an `HStack` here and the real thing
@@ -315,16 +350,6 @@ extension BetSlipRootView {
             .foregroundStyle(theme.negative)
             .font(Typography.body(theme.fontCallout))
             .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var addFundsButton: some View {
-        Button(action: onDeposit) {
-            Text("Add funds")
-                .font(Typography.body(theme.fontBody))
-                .foregroundStyle(theme.accent)
-                .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
-        }
-        .buttonStyle(.plain)
     }
 
     /// Done sits beside Place bet rather than on a keyboard toolbar: `ToolbarItemGroup` is
@@ -410,24 +435,18 @@ extension BetSlipRootView {
         }
     }
 
+
+    /// Through a function, never as a bare `PresetChipButton(...)` in the builder: `skipstone`
+    /// emits a constructor written straight into a `@ViewBuilder` as a statement and drops the
+    /// result, so the chips came out invisible with no error anywhere. See `GroupedList.swift`.
+    private func chipButton(_ title: String, _ action: @escaping () -> Void) -> some View {
+        PresetChipButton(title: title, theme: theme.chipTheme, action: action)
+    }
+    /// No glass container on Android — the chips themselves are the shared `PresetChipButton`.
     fileprivate var stakeChipRow: some View {
         HStack(spacing: theme.spacingSM) {
             ForEach([5, 10, 25, 50], id: \.self) { chip in
-                Button {
-                    setStake(Money.fromInt(chip))
-                } label: {
-                    Text("€\(chip)")
-                        .font(Typography.medium(theme.fontCaption))
-                        .foregroundStyle(theme.accent)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .frame(height: Metrics.secondaryActionHeight)
-                .background(theme.surface)
-                .overlay {
-                    Capsule()
-                        .stroke(theme.textSecondary.opacity(0.35), lineWidth: 1)
-                }
-                .clipShape(Capsule())
+                chipButton("€\(chip)") { setStake(Money.fromInt(chip)) }
             }
         }
     }
@@ -458,17 +477,6 @@ extension BetSlipRootView {
             .sensoryFeedback(.success, trigger: store.betPlacedMessage) { _, new in new != nil }
     }
 
-    fileprivate func placedChrome(_ content: some View) -> some View {
-        content.transition(.scale(scale: 0.92).combined(with: .opacity))
-    }
-
-    fileprivate var placedIcon: some View {
-        Image(systemName: "checkmark.seal.fill")
-            .font(Typography.body(48.0))
-            .foregroundStyle(theme.positive)
-            .symbolEffect(.bounce, options: .nonRepeating)
-    }
-
     fileprivate var slipContent: some View {
         slipList
             .listStyle(.insetGrouped)
@@ -485,20 +493,6 @@ extension BetSlipRootView {
             ))
     }
 
-    /// Swipe to delete, which is the iOS gesture for it. Android gets an explicit ✕ in the row
-    /// instead — `.onDelete` is ✅ in SkipUI, but a hidden swipe is not how a Compose list
-    /// removes a row.
-    private var selectionRows: some View {
-        ForEach(store.slip.selections) { selection in
-            selectionRow(selection)
-        }
-        .onDelete { offsets in
-            for id in offsets.map({ store.slip.selections[$0].id }) {
-                syncRemoval(of: id)
-            }
-        }
-    }
-
     private var stakeAmountRow: some View {
         LabeledContent("Amount") {
             TextField("Stake", text: stakeBinding)
@@ -512,14 +506,6 @@ extension BetSlipRootView {
         Label(message, systemImage: "exclamationmark.triangle.fill")
             .font(.callout)
             .foregroundStyle(theme.negative)
-    }
-
-    private var addFundsButton: some View {
-        Button(action: onDeposit) {
-            Text("Add funds")
-                .frame(maxWidth: .infinity, minHeight: Layout.minTapTarget, alignment: .leading)
-                .contentShape(.rect)
-        }
     }
 
     /// iOS reserves the bar's space with `.contentMargins`, so nothing is needed at the end of

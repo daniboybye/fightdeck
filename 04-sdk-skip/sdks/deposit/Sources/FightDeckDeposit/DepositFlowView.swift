@@ -163,6 +163,32 @@ public struct DepositFlowView: View {
         )
     }
 
+    /// Identical on both platforms, so not behind an `#if`. It used to be, from when a shared
+    /// view of ours was thought not to render on Android.
+    private func summaryRow(_ label: String, _ value: String) -> some View {
+        LabeledRow(theme: theme, label: label, value: value, valueStyle: theme.textPrimary)
+    }
+
+    /// One icon, one size. Only the bounce is iOS's — SwiftUI's symbol effects have no SkipUI
+    /// mapping, and Compose animates its own state changes anyway.
+    private var successIcon: some View {
+        Image(systemName: "checkmark.circle.fill")
+            .font(Typography.body(64.0))
+            .foregroundStyle(theme.positive)
+        #if !SKIP
+            .symbolEffect(.bounce, options: .nonRepeating)
+        #endif
+    }
+
+    /// The confirmation replaces the content it sits on, so iOS scales it in. Compose animates
+    /// its own state changes, so Android needs nothing.
+    private func successChrome(_ content: some View) -> some View {
+        content
+        #if !SKIP
+            .transition(.scale(scale: 0.92).combined(with: .opacity))
+        #endif
+    }
+
     private var parsedAmount: Decimal {
         Money.parse(amountText.isEmpty ? "0" : amountText)
     }
@@ -189,10 +215,6 @@ public struct DepositFlowView: View {
 
 #if SKIP
 extension DepositFlowView {
-    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
-        LabeledRow(theme: theme, label: label, value: value, valueStyle: theme.textPrimary)
-    }
-
     fileprivate var amountFont: Font {
         Typography.bold(theme.fontDisplay)
     }
@@ -253,10 +275,6 @@ extension DepositFlowView {
     fileprivate func platformChrome(_ content: some View) -> some View {
         content
             .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
-    }
-
-    fileprivate func successChrome(_ content: some View) -> some View {
-        content
     }
 
     // The confirm button rides above the scroll rather than at the end of it, the same shape the
@@ -326,28 +344,20 @@ extension DepositFlowView {
         .disabled(!canConfirm)
     }
 
+
+    /// Through a function, never as a bare `PresetChipButton(...)` in the builder: `skipstone`
+    /// emits a constructor written straight into a `@ViewBuilder` as a statement and drops the
+    /// result, so the chips came out invisible with no error anywhere. See `GroupedList.swift`.
+    private func chipButton(_ title: String, _ action: @escaping () -> Void) -> some View {
+        PresetChipButton(title: title, theme: theme.chipTheme, action: action)
+    }
+    /// No glass container on Android — the chips themselves are the shared `PresetChipButton`.
     fileprivate var amountChipRow: some View {
-        HStack {
+        HStack(spacing: theme.spacingSM) {
             ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                Button {
-                    amountText = chip
-                } label: {
-                    Text("€\(chip)")
-                        .font(Typography.medium(theme.fontCaption))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .frame(height: Metrics.secondaryActionHeight)
-                .background(theme.surfaceElevated)
-                .foregroundStyle(theme.accent)
-                .clipShape(Capsule())
+                chipButton("€\(chip)") { amountText = chip }
             }
         }
-    }
-
-    fileprivate var successIcon: some View {
-        Image(systemName: "checkmark.circle.fill")
-            .font(Typography.body(64.0))
-            .foregroundStyle(theme.positive)
     }
 
     fileprivate var secondaryDoneButton: some View {
@@ -366,10 +376,6 @@ extension DepositFlowView {
 
 #if !SKIP
 extension DepositFlowView {
-    fileprivate func summaryRow(_ label: String, _ value: String) -> some View {
-        LabeledRow(theme: theme, label: label, value: value, valueStyle: theme.textPrimary)
-    }
-
     fileprivate var amountFont: Font {
         .largeTitle.bold()
     }
@@ -404,10 +410,6 @@ extension DepositFlowView {
             .sensoryFeedback(.success, trigger: didSucceed)
     }
 
-    fileprivate func successChrome(_ content: some View) -> some View {
-        content.transition(.scale(scale: 0.92).combined(with: .opacity))
-    }
-
     fileprivate var formContent: some View {
         depositForm
             .scrollDismissesKeyboard(.interactively)
@@ -426,13 +428,6 @@ extension DepositFlowView {
                 PresetChipButton(title: "€\(chip)", theme: theme.chipTheme) { amountText = chip }
             }
         }
-    }
-
-    fileprivate var successIcon: some View {
-        Image(systemName: "checkmark.circle.fill")
-            .font(Typography.body(64.0))
-            .foregroundStyle(theme.positive)
-            .symbolEffect(.bounce, options: .nonRepeating)
     }
 
     fileprivate var secondaryDoneButton: some View {

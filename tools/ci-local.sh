@@ -389,7 +389,13 @@ run_sdk_rn() {
 
 run_sdk_skip_apple() {
     pin_xcode
-    (cd 04-sdk-skip/sdks/core && FIGHTDECK_BUILDING_SDK=1 swift test)
+    # On a simulator, not `swift test`: the package is iOS-only, so there is no macOS
+    # destination to run on. Dropping macOS is what lets the shared UI use Liquid Glass
+    # without an `os(iOS)` guard, and the fixtures load from an absolute path either way.
+    (cd 04-sdk-skip/sdks/core && FIGHTDECK_BUILDING_SDK=1 xcodebuild test \
+        -scheme FightDeckCore \
+        -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+        -skipPackagePluginValidation)
     ./04-sdk-skip/sdks/build-apple.sh
 }
 

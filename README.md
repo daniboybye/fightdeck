@@ -101,21 +101,23 @@ its original build column was dominated by Rust packaging rather than by the app
 | Approach | iOS | Android | Shared | iOS adapter | Android adapter | Generated | Total | Total + adapters |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `00-native` baseline | 1,904 | 2,604 | 0 | 0 | 0 | — | **4,508** | **4,508** |
-| `04-sdk-skip` | 1,095 | 1,722 | 1,878 | 18 | 343 | 2,425 | **4,695** | **5,056** |
+| `04-sdk-skip` | 1,095 | 1,722 | 1,878 | 18 | 150 | 2,425 | **4,695** | **4,863** |
 | `01-core-swift` | 1,429 | 2,284 | 1,254 | 0 | 200 | 3,017 | **4,967** | **5,167** |
 | `02-core-rust` | 1,445 | 2,249 | 1,557 | 51 | 58 | 8,304 | **5,251** | **5,360** |
-| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 1,081 | — | **5,529** | **7,752** |
+| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 778 | — | **5,529** | **7,449** |
 
-**Measured at `0c0f451`** by `python3 tools/count-significant-lines.py`. To refresh it,
+**Measured at `1173a76`** by `python3 tools/count-significant-lines.py`. To refresh it,
 read the commits since that hash rather than the whole tree; `--audit` prints every file
 and the column it landed in.
 
 A line counts when something executes or declares. Blank lines, `//` and `/* */` comments
 and lines made only of punctuation are dropped — that is about a third of a Swift file, and
 it is the third nobody writes twice. Also excluded, because keeping them would compare
-different things: tests, manifests (`Package.swift`, `*.gradle.kts`, `Podfile`),
-`04-sdk-skip`'s measurement harnesses, and the iOS SDK sources `03-sdk-rn` commits twice —
-once for SwiftPM and once for CocoaPods — which are counted once.
+different things: tests, manifests (`Package.swift`, `*.gradle.kts`, `Podfile`), the
+measurement harnesses on both platforms — `ios/Harness/**` and the `both`/`deposit`/
+`runtime` Android flavours, which are cut-down bridges that exist so the size harness can
+weigh one feature at a time — and the iOS SDK sources `03-sdk-rn` commits twice, once for
+SwiftPM and once for CocoaPods, which are counted once.
 
 *Adapter* means code whose only reason to exist is reaching the shared SDK: it declares
 what crosses, adapts types the generator cannot carry, mounts the surface, or reconnects
@@ -131,17 +133,51 @@ something has to embed a surface, size it and feed it the host's layout.
 
 Second, **every approach does take work out of the hosts.** Against the baseline's 4,508
 lines of host code, Skip's two hosts hold 2,817 (−38%), Swift's and Rust's 3,713 and 3,694
-(−18%), React Native's 4,001 (−11%). But React Native then adds 2,223 lines of adapter back,
-so its hosts end up carrying 6,224 — more than writing both apps natively. A bigger shared
+(−18%), React Native's 4,001 (−11%). But React Native then adds 1,920 lines of adapter back,
+so its hosts end up carrying 5,921 — more than writing both apps natively. A bigger shared
 column is not the same as a smaller job.
 
 Third, and this is the one worth saying out loud: **not one approach writes fewer total
 lines than the baseline.** Skip is the closest and it is still 4% above; with adapters
-counted, 12%. Rust is +16%, React Native +23% and +72%. Sharing code did not reduce how
-much code exists here — it moved it, and it cut how many times the betting contract is
-implemented from two to one. If the argument for any of these is "less code", this table
-does not support it. The arguments that survive are in the next two sections: what a
-change costs once it only has to be made once, and what it costs to ship.
+counted, 8%. Rust is +16%, React Native +23% and +65%. Sharing code did not reduce how much
+code exists here — it moved it, and it cut how many times the betting contract is
+implemented from two to one.
+
+#### Why sharing does not pay off at this size
+
+Skip is the interesting row, because it shares the most and still loses. Comparing the same
+features — what the baseline writes across both platforms, against what Skip writes once:
+
+| | `00-native`, both platforms | `04-sdk-skip`, shared | |
+| --- | ---: | ---: | --- |
+| Betting core | 585 | 396 | **−32%** |
+| Bet slip screen | 405 | 405 | 0% |
+| Deposit screen | 346 | 309 | −11% |
+| Fighter screen | 147 | 142 | −3% |
+| Dataset and models | 214 | 302 | +41% |
+| Design tokens | 63 | 295 | +368% |
+
+**Logic shares almost perfectly and UI barely shares at all.** Splitting the shared files by
+`#if`, the three SDK screens are 42% genuinely shared — 336 common lines against 235 inside
+`#if SKIP` and 235 inside `#if !SKIP`, near-perfectly balanced, because each platform's UI is
+written separately inside one file. The logic files are 97% shared. That is not a Skip
+limitation; it is the house rule that an SDK screen must be 1:1 with iOS native and as close
+as it can get to Android native. Two native looks means two implementations, wherever they
+are stored.
+
+The rest is fixed overhead that does not shrink with the app: the palette is declared three
+times (`ThemeTokens` for the boundary, plus each host's own token file), types are
+re-declared to cross it, and every module carries a hosting seam.
+
+So the break-even is arithmetic. Skip's overhead is roughly 580 lines, and it saves about a
+third of whatever logic it shares — which means it needs **around 1,800 lines of shared
+logic** before the total drops below writing both apps natively. This demo has 585. Adding
+more *screens* would not change the table under the current rule; adding more *logic* —
+cash-out, settlement, limits, free bets, odds movement — is what would, and that is the kind
+of code a real betting app has far more of than this one.
+
+The arguments that survive at this size are in the next two sections: what a change costs
+once it only has to be made once, and what it costs to ship.
 
 The sharpest number in this section is not in the table. `count-lines.py` also counts how
 many times each approach implements the same betting contract:

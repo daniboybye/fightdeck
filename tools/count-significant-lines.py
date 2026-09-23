@@ -55,8 +55,15 @@ EXCLUDED_DIRS = {
     "target", "pkg", "dist", "generated", "Generated", "aar-staging",
 }
 
-# Not the demo app: measurement harnesses and a consumer smoke-test project.
-EXCLUDED_PREFIXES = ("ios/Harness/", "sdks/consumer-verify/")
+# Not the demo app: measurement harnesses and a consumer smoke-test project. The Android
+# product flavours are the same thing on the other platform — `both`, `deposit` and
+# `runtime` are cut-down bridges that exist so the size harness can weigh one feature at a
+# time. Only `all` is the app that gets demoed, and counting the other three would charge
+# the two SDK approaches for measuring themselves.
+EXCLUDED_PREFIXES = (
+    "ios/Harness/", "sdks/consumer-verify/",
+    "android/app/src/both/", "android/app/src/deposit/", "android/app/src/runtime/",
+)
 
 TEST_MARKERS = ("test", "Test", "__tests__", "androidTest")
 

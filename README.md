@@ -106,7 +106,7 @@ its original build column was dominated by Rust packaging rather than by the app
 | `02-core-rust` | 1,445 | 2,249 | 1,557 | 51 | 58 | 585 | 8,304 | **5,251** | **5,360** |
 | `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 778 | 1,209 | — | **5,529** | **7,449** |
 
-**Measured at `6619faf`** by `python3 tools/count-significant-lines.py`. To refresh it,
+**Measured at `3352757`** by `python3 tools/count-significant-lines.py`. To refresh it,
 read the commits since that hash rather than the whole tree; `--audit` prints every file
 and the column it landed in.
 

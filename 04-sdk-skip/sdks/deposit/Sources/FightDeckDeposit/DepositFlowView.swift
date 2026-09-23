@@ -314,6 +314,12 @@ extension DepositFlowView {
     /// Done sits beside Confirm rather than on a keyboard toolbar: `ToolbarItemGroup` is
     /// supported, but its `.keyboard` placement draws nothing on Android, so the button would
     /// simply never appear. This is the shape the native screen uses anyway.
+    ///
+    /// On a fill: this screen's native counterpart puts the row in a `Surface(surfaceContainer)`
+    /// so the form scrolls *under* a solid strip. The slip screen deliberately does not — three
+    /// stacked surface tones there stop the selections pill reading as part of the same bar —
+    /// which is why only this one has a background. Padding matches the native row: a smaller
+    /// gap above the button than below it.
     private var actionBar: some View {
         HStack(spacing: theme.spacingSM) {
             confirmButton
@@ -321,7 +327,11 @@ extension DepositFlowView {
                 doneButton
             }
         }
-        .padding(theme.spacingLG)
+        .padding(.horizontal, theme.spacingLG)
+        .padding(.top, theme.spacingSM)
+        .padding(.bottom, Metrics.actionBarGap)
+        .frame(maxWidth: .infinity)
+        .background(theme.surface)
     }
 
     /// The one place this SDK drops to Compose. Setting `@FocusState` to false does clear

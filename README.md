@@ -101,12 +101,12 @@ its original build column was dominated by Rust packaging rather than by the app
 | Approach | iOS | Android | Shared | iOS adapter | Android adapter | Generated | Total | Total + adapters |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `00-native` baseline | 1,904 | 2,604 | 0 | 0 | 0 | — | **4,508** | **4,508** |
-| `04-sdk-skip` | 1,095 | 1,722 | 1,878 | 18 | 150 | 2,425 | **4,695** | **4,863** |
+| `04-sdk-skip` | 1,087 | 1,724 | 1,890 | 18 | 150 | 2,441 | **4,701** | **4,869** |
 | `01-core-swift` | 1,429 | 2,284 | 1,254 | 0 | 200 | 3,017 | **4,967** | **5,167** |
 | `02-core-rust` | 1,445 | 2,249 | 1,557 | 51 | 58 | 8,304 | **5,251** | **5,360** |
 | `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 778 | — | **5,529** | **7,449** |
 
-**Measured at `1173a76`** by `python3 tools/count-significant-lines.py`. To refresh it,
+**Measured at `4104247`** by `python3 tools/count-significant-lines.py`. To refresh it,
 read the commits since that hash rather than the whole tree; `--audit` prints every file
 and the column it landed in.
 
@@ -132,7 +132,7 @@ shared artefact is Swift and the host is Swift, so `EventsViews.swift` just says
 something has to embed a surface, size it and feed it the host's layout.
 
 Second, **every approach does take work out of the hosts.** Against the baseline's 4,508
-lines of host code, Skip's two hosts hold 2,817 (−38%), Swift's and Rust's 3,713 and 3,694
+lines of host code, Skip's two hosts hold 2,811 (−38%), Swift's and Rust's 3,713 and 3,694
 (−18%), React Native's 4,001 (−11%). But React Native then adds 1,920 lines of adapter back,
 so its hosts end up carrying 5,921 — more than writing both apps natively. A bigger shared
 column is not the same as a smaller job.

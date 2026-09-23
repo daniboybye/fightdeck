@@ -98,13 +98,13 @@ its original build column was dominated by Rust packaging rather than by the app
 
 ### What it costs to write
 
-| Approach | iOS | Android | Shared | Decrease hosts | Total | iOS adapters | Android adapters | Total + adapters | Generated | Config |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 1,904 | 2,604 | — | — | **4,508** | — | — | **4,508** | — | 229 |
-| `02-core-rust` | 1,445 | 2,249 | 1,557 | −18% | **5,251** | 51 | 58 | **5,360** | 8,304 | 585 |
-| `01-core-swift` | 1,429 | 2,284 | 931 | −18% | **4,644** | — | 500 | **5,144** | 3,017 | 617 |
-| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | −11% | **5,529** | 1,142 | 778 | **7,449** | — | 1,209 |
-| `04-sdk-skip` | 1,087 | 1,724 | 1,228 | −38% | **4,039** | 305 | 482 | **4,826** | 2,441 | 732 |
+| Approach | iOS host | Android host | Shared | iOS specific | Android specific | Decrease hosts | Total | iOS adapters | Android adapters | Total + adapters | Generated | Config |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `00-native` baseline | 1,904 | 2,604 | — | — | — | — | **4,508** | — | — | **4,508** | — | 229 |
+| `02-core-rust` | 1,445 | 2,249 | 1,557 | — | — | −18% | **5,251** | 51 | 58 | **5,360** | 8,304 | 585 |
+| `01-core-swift` | 1,429 | 2,284 | 770 | — | — | −18% | **4,483** | 50 | 567 | **5,100** | 3,017 | 617 |
+| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | — | — | −11% | **5,529** | 1,142 | 778 | **7,449** | — | 1,209 |
+| `04-sdk-skip` | 1,087 | 1,724 | 1,228 | 274 | 221 | −38% | **4,534** | 31 | 261 | **4,826** | 2,441 | 732 |
 
 **Measured at `384187b`** by `python3 tools/count-significant-lines.py`. To refresh it,
 read the commits since that hash rather than the whole tree; `--audit` prints every file
@@ -119,12 +119,23 @@ measurement harnesses on both platforms — `ios/Harness/**` and the `both`/`dep
 weigh one feature at a time — and the iOS SDK sources `03-sdk-rn` commits twice, once for
 SwiftPM and once for CocoaPods, which are counted once.
 
-*Adapter* means a wrapper with no logic of its own that makes shared code fit one platform
-— and, crucially, **it is counted by which platform runs it, not by where the file sits.**
-Rust's adapters happen to live in the hosts; Swift's `*Java` targets and Skip's `#if SKIP`
-branches live inside the SDK and are adapters all the same, because they compile for one
-platform and never run on the other. Counting those as shared was flattering the two
-approaches that put the most platform code inside their shared module. *Generated* is build output — jextract's Java and
+Code that runs on one platform only is never *Shared*, wherever the file sits. It splits
+two ways.
+
+*Adapter* is a wrapper with no UI of its own: it translates a type, a theme or a runtime
+handle the other side has no representation for. `Money`'s `Decimal`-versus-`BigDecimal`
+branches, `MaterialScheme` mapping `ThemeTokens` into a Compose `ColorScheme`, the
+`ComposeEntry` types, `FoundationEssentials` standing in for `Foundation`, Swift's `*Java`
+targets, the `*Umbrella` SPM shim.
+
+*Platform specific* is real code for one platform: a different icon because the SF Symbol
+has no Material mapping, a hand-written layout because the modifier is missing, a different
+font API, Liquid Glass on one side and a capsule on the other.
+
+Only `04-sdk-skip` has anything in those columns, and the reason is structural rather than
+a fault: it is the only approach whose *shared module contains UI*. A headless core has no
+UI to make platform-specific, so every branch in it is translation — which is why Swift's
+567 Android lines are all adapter. *Generated* is build output — jextract's Java and
 Swift, UniFFI's bindings, skipstone's Kotlin. Nobody maintains a line of it, and no line of
 it is in the totals.
 

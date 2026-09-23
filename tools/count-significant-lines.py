@@ -113,6 +113,28 @@ GENERATED_GLOBS = {
     "04-sdk-skip": ["sdks/*/.build/plugins/outputs/**/skipstone/FightDeck*/**/*.kt"],
 }
 
+# Inside a shared module an `#if` branch is an *adapter* only when it is a wrapper with no
+# UI of its own: it translates a type, a theme or a runtime handle the other platform has no
+# representation for. A branch that draws something — a different icon because the SF Symbol
+# has no Material mapping, a hand-written layout because the modifier is missing, a different
+# font API — is platform-specific code, not a wrapper. Daniel ruled on those three groups.
+#
+# Whole files whose every `#if` branch is pure translation:
+SDK_ADAPTER_FILES = ("Money.swift", "MaterialScheme.swift")
+SDK_ADAPTER_FILE_SUFFIXES = ("Hosting.swift",)   # the `*ComposeEntry` Compose entry points
+# ...and the individual members in files that are otherwise UI.
+SDK_ADAPTER_MEMBERS = {
+    ("android", "platformChrome"),   # installs the host's Material scheme
+    ("android", "listChrome"),       # the same, plus scrollContentBackground
+    ("android", "doneButton"),       # ComposeView — the only reach to Compose's focus manager
+    ("android", "displayStance"),    # localizedCapitalized has no Kotlin representation
+    ("ios", "displayStance"),
+}
+
+MEMBER = re.compile(
+    r"(?:@\w+ )*(?:fileprivate |private |public |static |final )*(?:var|func|struct|let) (\w+)"
+)
+
 BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.S)
 PUNCTUATION_ONLY = re.compile(r"^[\s{}()\[\];,.:?<>&|]*$")
 
@@ -151,33 +173,45 @@ def significant_lines(path: pathlib.Path) -> int:
     return count
 
 
-def regions(path: pathlib.Path) -> tuple[int, int, int]:
-    """(both platforms, Android only, iOS only) significant lines in one file.
+def regions(path: pathlib.Path) -> dict[str, int]:
+    """Split one shared file into what runs on both platforms, and what runs on one.
 
-    Skip's shared sources carry each platform's own version behind `#if SKIP` / `#if !SKIP`.
-    Those branches are not shared code: they compile for one platform and never run on the
-    other, which makes them that platform's adapter wherever the file happens to live.
+    Code behind `#if SKIP` / `#if !SKIP` is not shared: it compiles for one platform and
+    never runs on the other. It splits again by whether it is a wrapper (adapter) or real
+    platform code — see SDK_ADAPTER_* above.
     """
+    out = {"shared": 0, "android-adapter": 0, "android-specific": 0,
+           "ios-adapter": 0, "ios-specific": 0}
     try:
         text = (ROOT / path).read_text(errors="ignore")
     except (OSError, UnicodeDecodeError):
-        return 0, 0, 0
+        return out
+    # A headless module has no UI, so none of its branches can be platform-specific *UI* —
+    # every one of them is translating a type or an API the other side lacks. That is the
+    # whole of 01-core-swift's and 02-core-rust's shared code, and it is why only Skip shows
+    # anything in the "specific" columns.
+    is_ui = "import SwiftUI" in text
+    whole_file_adapter = (
+        not is_ui
+        or path.name in SDK_ADAPTER_FILES
+        or path.name.endswith(SDK_ADAPTER_FILE_SUFFIXES)
+    )
     text = BLOCK_COMMENT.sub("", text)
-    both = android = ios = 0
     mode: str | None = None
+    member = ""
     for raw in text.splitlines():
         line = raw.strip()
-        if line.startswith("#if SKIP"):
-            mode = "android"
+        if line.startswith("#if SKIP") or line.startswith("#if os(Android)"):
+            mode, member = "android", ""
             continue
-        if line.startswith("#if !SKIP"):
-            mode = "ios"
+        if line.startswith("#if !SKIP") or line.startswith("#if !os(Android)"):
+            mode, member = "ios", ""
             continue
         if line.startswith("#else") and mode:
-            mode = "ios" if mode == "android" else "android"
+            mode, member = ("ios" if mode == "android" else "android"), ""
             continue
         if line.startswith("#endif"):
-            mode = None
+            mode, member = None, ""
             continue
         if line.startswith("//") or line.startswith("*"):
             continue
@@ -187,13 +221,21 @@ def regions(path: pathlib.Path) -> tuple[int, int, int]:
                 line = head.strip()
         if not line or PUNCTUATION_ONLY.match(line):
             continue
-        if mode == "android":
-            android += 1
-        elif mode == "ios":
-            ios += 1
-        else:
-            both += 1
-    return both, android, ios
+        if mode is None:
+            out["shared"] += 1
+            continue
+        # Only a declaration at the type's own indentation starts a new member; a `let`
+        # inside a body is a local, and treating it as one used to hand the rest of the
+        # member to the wrong bucket.
+        if len(raw) - len(raw.lstrip()) <= 4:
+            found = MEMBER.match(line)
+            if found:
+                member = found.group(1)
+        role = "adapter" if (
+            whole_file_adapter or (mode, member) in SDK_ADAPTER_MEMBERS
+        ) else "specific"
+        out[f"{mode}-{role}"] += 1
+    return out
 
 
 def tracked_files() -> list[pathlib.Path]:
@@ -270,7 +312,8 @@ def generated_lines(approach: str) -> int:
 
 
 def measure(approach: str, files: list[pathlib.Path], audit: bool) -> dict[str, int]:
-    counts = {"ios": 0, "android": 0, "shared": 0, "ios-adapter": 0, "android-adapter": 0}
+    counts = {"ios": 0, "android": 0, "shared": 0, "ios-adapter": 0, "android-adapter": 0,
+              "ios-specific": 0, "android-specific": 0}
     seen: set[str] = set()
     rows: list[tuple[str, int, str]] = []
     for path in files:
@@ -309,12 +352,12 @@ def measure(approach: str, files: list[pathlib.Path], audit: bool) -> dict[str, 
                 rows.append(("ios-adapter", significant_lines(path), str(rel)))
             continue
 
-        both, android, ios = regions(path)
-        counts["shared"] += both
-        counts["android-adapter"] += android
-        counts["ios-adapter"] += ios
-        if audit and (both or android or ios):
-            rows.append(("shared", both, f"{rel}  (+{android} Android, +{ios} iOS)"))
+        split = regions(path)
+        for key, n in split.items():
+            counts[key] += n
+        if audit and any(split.values()):
+            extra = " ".join(f"+{n} {k}" for k, n in split.items() if k != "shared" and n)
+            rows.append(("shared", split["shared"], f"{rel}  {extra}"))
     if audit:
         print(f"\n--- {approach}")
         for key, n, name in sorted(rows):
@@ -335,7 +378,10 @@ def main() -> int:
         counts = measure(approach, files, audit)
         counts["config"] = config_lines(approach, files)
         counts["generated"] = generated_lines(approach)
-        counts["total"] = counts["ios"] + counts["android"] + counts["shared"]
+        counts["total"] = (
+            counts["ios"] + counts["android"] + counts["shared"]
+            + counts["ios-specific"] + counts["android-specific"]
+        )
         counts["total+adapters"] = (
             counts["total"] + counts["ios-adapter"] + counts["android-adapter"]
         )
@@ -349,7 +395,8 @@ def main() -> int:
         row["decrease"] = round((hosts - base_hosts) / base_hosts * 100)
 
     cols = [
-        ("iOS", "ios"), ("Android", "android"), ("Shared", "shared"),
+        ("iOS host", "ios"), ("Android host", "android"), ("Shared", "shared"),
+        ("iOS specific", "ios-specific"), ("Android specific", "android-specific"),
         ("Decrease hosts", "decrease"), ("Total", "total"),
         ("iOS Adapters", "ios-adapter"), ("Android Adapters", "android-adapter"),
         ("Total + Adapters", "total+adapters"),
@@ -360,7 +407,8 @@ def main() -> int:
         row = table[approach]
         if key == "decrease":
             return "X" if approach == "00-native" else f"{row[key]}%".replace("-", "\u2212")
-        if not row[key] and key in {"shared", "generated", "ios-adapter", "android-adapter"}:
+        if not row[key] and key in {"shared", "generated", "ios-adapter", "android-adapter",
+                                    "ios-specific", "android-specific"}:
             return "X"
         return f"{row[key]:,}"
 

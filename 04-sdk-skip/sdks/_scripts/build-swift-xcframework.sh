@@ -77,21 +77,13 @@ EOF
     }
 
     local ios_framework
-    local sim_arm_framework
-    local sim_x64_framework
-    local sim_framework="$staging/ios-simulator/${binary_module}.framework"
+    local sim_framework
     ios_framework="$(build_framework iphoneos arm64-apple-ios ios-arm64)"
-    sim_arm_framework="$(build_framework iphonesimulator arm64-apple-ios-simulator ios-sim-arm64)"
-    sim_x64_framework="$(build_framework iphonesimulator x86_64-apple-ios-simulator ios-sim-x64)"
-
-    mkdir -p "$(dirname "$sim_framework")"
-    cp -R "$sim_arm_framework" "$sim_framework"
-    lipo -create \
-        "$sim_arm_framework/$binary_module" \
-        "$sim_x64_framework/$binary_module" \
-        -output "$sim_framework/$binary_module"
-    cp -R "$sim_x64_framework/Modules/${binary_module}.swiftmodule/." \
-        "$sim_framework/Modules/${binary_module}.swiftmodule/"
+    # Simulator: arm64 only. The x86_64 slice was a third of the packaging work and nothing
+    # consumes it — this machine is Apple Silicon and so is the macos-26 runner CI uses. A
+    # real SDK vendor would still ship it; put the triple back beside this line, with the
+    # `lipo -create` that merged the two into one binary, the day an Intel Mac has to run it.
+    sim_framework="$(build_framework iphonesimulator arm64-apple-ios-simulator ios-simulator)"
 
     xcodebuild -create-xcframework \
         -framework "$ios_framework" \

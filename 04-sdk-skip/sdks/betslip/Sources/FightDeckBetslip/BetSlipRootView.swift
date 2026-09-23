@@ -329,6 +329,10 @@ extension BetSlipRootView {
             // shade from the rest of the app.
             slipList
                 .scrollContentBackground(.hidden)
+                // The closest a SkipUI list gets to Material cards: `.listStyle(.insetGrouped)`
+                // is unavailable and the section radius is a constant inside SkipUI, so the
+                // slabs can only be moved off the screen edges from out here.
+                .padding(.horizontal, theme.spacingLG)
             placeBetBar
         }
     }

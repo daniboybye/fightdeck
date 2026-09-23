@@ -243,6 +243,13 @@ extension FighterRootView {
             // Without this the list paints its own container — `surfaceColorAtElevation(3dp)` —
             // over the root's background, on a slightly different shade from the rest of the app.
             .scrollContentBackground(.hidden)
+            // The closest a SkipUI list gets to Material cards. `.listStyle(.insetGrouped)` is
+            // unavailable and `listSectionCornerRadius` is a constant inside SkipUI, so the
+            // slabs cannot be inset or rounded from the row side — but padding the whole list
+            // moves them off the screen edges, which is the difference the eye actually reads.
+            // The cost is on this screen only: the hero row is inset with everything else,
+            // where `00-native` runs it edge to edge. Drop this line to get the photo back.
+            .padding(.horizontal, theme.spacingLG)
             .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 

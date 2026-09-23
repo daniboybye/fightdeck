@@ -387,19 +387,24 @@ extension BetSlipRootView {
         .padding(.bottom, Layout.tabBarActionGap)
     }
 
+    /// `.disabled()` stops the taps but changes nothing about how the button looks: the fill is
+    /// ours, painted by `.background`, and SkipUI has no reason to touch a colour we chose. A
+    /// slip that cannot be placed therefore showed a button at full strength. Material dims
+    /// both halves to 0.38, which is what `00-native`'s `PrimaryActionButton` does too.
     private var placeBetButton: some View {
-        Button(action: placeBetAndSync) {
+        let canPlace = store.slipState.errors.isEmpty
+        return Button(action: placeBetAndSync) {
             // Text, not a Label: SF Symbol names have no Material equivalent, and SkipUI
             // substitutes a warning triangle announced as "missing icon".
             Text("Place bet")
                 .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.onAccent)
+                .foregroundStyle(canPlace ? theme.onAccent : theme.onAccent.opacity(Metrics.disabledOpacity))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: Metrics.primaryActionHeight)
-        .background(theme.accent)
+        .background(canPlace ? theme.accent : theme.accent.opacity(Metrics.disabledOpacity))
         .clipShape(Capsule())
-        .disabled(!store.slipState.errors.isEmpty)
+        .disabled(!canPlace)
     }
 
     /// The one place this SDK drops to Compose. Setting `@FocusState` to false does clear

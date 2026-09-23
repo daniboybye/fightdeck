@@ -25,4 +25,9 @@ public enum Metrics {
     public static let secondaryActionHeight: CGFloat = 44
     public static let secondaryActionPadding: CGFloat = 24
     public static let actionBarGap: CGFloat = 12
+
+    /// Material's disabled alpha for a filled button — the same 0.38 `00-native` writes into
+    /// `ButtonDefaults.buttonColors(disabledContainerColor:)`. Only the Android branches read
+    /// it: on iOS a disabled button dims through `.disabled()` and the glass tint instead.
+    public static let disabledOpacity: Double = 0.38
 }

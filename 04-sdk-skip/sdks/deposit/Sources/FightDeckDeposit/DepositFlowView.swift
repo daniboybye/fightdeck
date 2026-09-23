@@ -350,18 +350,25 @@ extension DepositFlowView {
         .frame(height: Metrics.secondaryActionHeight)
     }
 
+    /// `.disabled()` stops the taps but changes nothing about how the button looks: the fill is
+    /// ours, painted by `.background`, and SkipUI has no reason to touch a colour we chose. So
+    /// a button with nothing typed in it sat there at full strength, reading as ready. Material
+    /// dims both halves to 0.38, which is what `00-native`'s `PrimaryActionButton` does too.
+    ///
+    /// A capsule, not a rounded rectangle, for the same reason: the native button is
+    /// `RoundedCornerShape(percent = 50)`, and so is the slip's Place bet beside it.
     private var confirmButton: some View {
         Button {
             didSucceed = true
         } label: {
             Text("Confirm deposit")
                 .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(theme.onAccent)
+                .foregroundStyle(canConfirm ? theme.onAccent : theme.onAccent.opacity(Metrics.disabledOpacity))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: Metrics.primaryActionHeight)
-        .background(theme.accent)
-        .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
+        .background(canConfirm ? theme.accent : theme.accent.opacity(Metrics.disabledOpacity))
+        .clipShape(Capsule())
         .disabled(!canConfirm)
     }
 

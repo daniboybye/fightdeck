@@ -6,18 +6,24 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightDeckCore
 import SwiftUI
 
 /// Only the values the system cannot supply live here. Type sizes come from `Font` so the
 /// app scales with Dynamic Type, and surfaces come from the grouped-list backgrounds so
 /// Liquid Glass has something real to sample.
+///
+/// The sizes below are the host's own and deliberately differ from Android's: 44pt is the
+/// Human Interface Guidelines' tap target, Material's is 48dp. The *colours* are not the
+/// host's — they come from the SDK's `Palette`, which is the only place a FightDeck colour
+/// is written down.
 enum DesignTokens {
     enum ColorToken {
-        static let accent = Color(hex: "#E8B33C")
-        static let onAccent = Color(hex: "#0B0E14")
-        static let positive = Color(hex: "#3DD68C")
-        static let cornerRed = Color(hex: "#D94A4A")
-        static let cornerBlue = Color(hex: "#4A7FD9")
+        static let accent = ThemeColor.fromHex(Palette.accent)
+        static let onAccent = ThemeColor.fromHex(Palette.onAccent)
+        static let positive = ThemeColor.fromHex(Palette.positive)
+        static let cornerRed = ThemeColor.fromHex(Palette.cornerRed)
+        static let cornerBlue = ThemeColor.fromHex(Palette.cornerBlue)
     }
 
     enum Spacing {
@@ -47,17 +53,5 @@ enum DesignTokens {
         static let oddsLabelHeight: CGFloat = 30
         static let mediaTileAspectRatio: CGFloat = 16 / 9
         static let betSlipAccessoryHeight: CGFloat = 44
-    }
-}
-
-private extension Color {
-    init(hex: String) {
-        let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var value: UInt64 = 0
-        Scanner(string: cleaned).scanHexInt64(&value)
-        let red = Double((value >> 16) & 0xFF) / 255
-        let green = Double((value >> 8) & 0xFF) / 255
-        let blue = Double(value & 0xFF) / 255
-        self.init(red: red, green: green, blue: blue)
     }
 }

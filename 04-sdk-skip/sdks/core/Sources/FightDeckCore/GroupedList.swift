@@ -31,11 +31,13 @@
 //      one also failed transpilation outright: "unable to determine the owning type for member
 //      'horizontal'".
 //
-// The way out of (3) is `Renderable` — implement `Render(context:)` instead of leaving the work
-// to `body`, which is how SkipUI writes its own components. `LabeledRow` does exactly that, and
-// it is now a direct child of a `Section` on all three screens.
+// (3) was misdiagnosed at the time. The conclusion drawn from it was that a view of ours has to
+// implement `Renderable.Render(context:)` rather than leave the work to `body`, and `LabeledRow`
+// was written that way for a while. That was never the cause — see `LabeledRow.swift`, which is
+// now one struct with a plain `body` and renders on both platforms. The real cause is the rule
+// below, and every symptom in (1) to (3) is a face of it.
 //
-// One more rule, learned the hard way and worth more than the three above, because it is
+// The rule, worth more than the three attempts above, because it is
 // mechanical and easy to check. **Reach a view of yours through a function, never as a bare
 // initialiser inside a `@ViewBuilder`.** `skipstone` emits
 //

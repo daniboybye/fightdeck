@@ -278,8 +278,8 @@ public struct BetSlipRootView: View {
         #endif
     }
 
-    /// Fully shared: every row is the core's `LabeledRow`, which renders on Android because it
-    /// conforms to `Renderable` rather than leaving the work to `body`.
+    /// Fully shared: every row is the core's `LabeledRow`, reached through `labeledRow` so the
+    /// transpiler composes it rather than dropping a bare initialiser.
     private var summarySection: some View {
         Section {
             ForEach(FightCoreDisplay.slipSummary(state: store.slipState)) { row in

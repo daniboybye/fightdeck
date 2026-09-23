@@ -119,7 +119,7 @@ public struct DepositFlowView: View {
     }
 
     private var amountSection: some View {
-        Section("Amount") {
+        Section {
             TextField("€10 – €2,000", text: $amountText)
                 .keyboardType(.decimalPad)
                 .font(amountFont)
@@ -130,22 +130,28 @@ public struct DepositFlowView: View {
                     .font(Typography.body(theme.fontCaption))
             }
             amountChipRow
+        } header: {
+            sectionTitle("Amount")
         }
     }
 
     private var methodSection: some View {
-        Section("Method") {
+        Section {
             methodPicker
+        } header: {
+            sectionTitle("Method")
         }
     }
 
     private var summarySection: some View {
-        Section("Summary") {
+        Section {
             summaryRow("Amount", Money.formatCurrency(parsedAmount))
             summaryRow("Method", method.title)
             summaryRow("Fee", Money.formatCurrency(feeAmount))
             summaryRow("Total", Money.formatCurrency(parsedAmount + feeAmount))
             summaryRow("New balance", Money.formatCurrency(params.currentBalance + parsedAmount))
+        } header: {
+            sectionTitle("Summary")
         }
     }
 
@@ -161,6 +167,21 @@ public struct DepositFlowView: View {
             }
             .padding(theme.spacingXL)
         )
+    }
+
+    /// A section header, through a function — never `Text(…)` carrying a modifier of *ours* at
+    /// the call site. A `View` extension of our own transpiles to a Kotlin extension function
+    /// that `skipstone` does not recognise as producing a view: it emits the call with no
+    /// `.Compose(context)` after it and the header silently renders nothing. That is attempt (2)
+    /// in `GroupedList.swift`, reached by a different road. A plain function call is composed.
+    ///
+    /// The font is the whole of the Android fix — see `Typography.sectionHeader`. iOS gets a
+    /// bare `Text` and therefore exactly the header SwiftUI drew before.
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+        #if SKIP
+            .font(Typography.sectionHeader(theme))
+        #endif
     }
 
     /// Identical on both platforms, so not behind an `#if`. It used to be, from when a shared

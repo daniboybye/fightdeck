@@ -70,16 +70,20 @@ public struct FighterRootView: View {
             Section {
                 heroRow(fighter)
             }
-            Section("Profile") {
+            Section {
                 ForEach(profileRows) { row in
                     detailRow(row)
                 }
+            } header: {
+                sectionTitle("Profile")
             }
             if !physicalRows.isEmpty {
-                Section("Physicals") {
+                Section {
                     ForEach(physicalRows) { row in
                         detailRow(row)
                     }
+                } header: {
+                    sectionTitle("Physicals")
                 }
             }
         })
@@ -150,6 +154,21 @@ public struct FighterRootView: View {
 
     private var portraitPlaceholder: some View {
         Rectangle().fill(theme.surface)
+    }
+
+    /// A section header, through a function — never `Text(…)` carrying a modifier of *ours* at
+    /// the call site. A `View` extension of our own transpiles to a Kotlin extension function
+    /// that `skipstone` does not recognise as producing a view: it emits the call with no
+    /// `.Compose(context)` after it and the header silently renders nothing. That is attempt (2)
+    /// in `GroupedList.swift`, reached by a different road. A plain function call is composed.
+    ///
+    /// The font is the whole of the Android fix — see `Typography.sectionHeader`. iOS gets a
+    /// bare `Text` and therefore exactly the header SwiftUI drew before.
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+        #if SKIP
+            .font(Typography.sectionHeader(theme))
+        #endif
     }
 
     /// Identical on both platforms, so it is not behind an `#if`. It used to be, from when a

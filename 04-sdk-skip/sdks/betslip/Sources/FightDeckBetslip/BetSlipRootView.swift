@@ -237,15 +237,19 @@ public struct BetSlipRootView: View {
     }
 
     private var selectionsSection: some View {
-        Section(betTypeTitle) {
+        Section {
             selectionRows
+        } header: {
+            sectionTitle(betTypeTitle)
         }
     }
 
     private var stakeSection: some View {
-        Section("Stake") {
+        Section {
             stakeAmountRow
             stakeChipRow
+        } header: {
+            sectionTitle("Stake")
         }
     }
 
@@ -257,6 +261,21 @@ public struct BetSlipRootView: View {
     /// happened to route through `detailRow`/`summaryRow`.
     private func labeledRow(_ label: String, _ value: String, valueStyle: Color) -> some View {
         LabeledRow(theme: theme, label: label, value: value, valueStyle: valueStyle)
+    }
+
+    /// A section header, and the same rule again: through a function, never `Text(…)` carrying
+    /// a modifier of *ours* at the call site. A `View` extension of our own transpiles to a
+    /// Kotlin extension function that `skipstone` does not recognise as producing a view, so it
+    /// emits the call with no `.Compose(context)` after it and the header silently renders
+    /// nothing — attempt (2) in `GroupedList.swift`, reached by a different road.
+    ///
+    /// The font is the whole of the Android fix — see `Typography.sectionHeader`. iOS gets a
+    /// bare `Text` and therefore exactly the header SwiftUI drew before.
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+        #if SKIP
+            .font(Typography.sectionHeader(theme))
+        #endif
     }
 
     /// Fully shared: every row is the core's `LabeledRow`, which renders on Android because it
@@ -281,9 +300,11 @@ public struct BetSlipRootView: View {
     }
 
     private var depositSection: some View {
-        Section("Deposit") {
+        Section {
             labeledRow("Balance", Money.formatCurrency(store.balance), valueStyle: theme.textPrimary)
             addFundsButton
+        } header: {
+            sectionTitle("Deposit")
         }
     }
 }

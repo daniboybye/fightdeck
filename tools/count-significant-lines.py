@@ -14,6 +14,8 @@ Six measured columns, then two totals:
   iOS adapter    code that exists only to reach the shared SDK from iOS
   Android adapt. the same, on the other side
   generated      what a binding tool wrote; build output, never hand-maintained
+  config         build scripts, manifests and settings — ships no behaviour, but somebody
+                 wrote it, so it is shown rather than dropped
 
   total          iOS + Android + shared — the code somebody wrote and keeps
   total+adapters the same plus both adapter columns
@@ -21,7 +23,6 @@ Six measured columns, then two totals:
 Deliberately excluded, because including them would compare different things:
 
   tests          not shipped; `00-native` carries UI tests the SDK demos do not
-  config         Package.swift, *.gradle.kts, Podfile — asked for code, not manifests
   harnesses      04-sdk-skip's ios/Harness/** and sdks/consumer-verify/** measure the
                  SDK, they are not the demo app
   duplicates     03-sdk-rn ships its iOS SDK sources twice, once for SwiftPM and once
@@ -49,6 +50,17 @@ CODE_SUFFIXES = {".swift", ".kt", ".rs", ".ts", ".tsx", ".java", ".m", ".mm", ".
 # `*.d.ts` is TypeScript, but neither is code anyone wrote to make the app behave.
 CONFIG_FILES = ("Package.swift",)
 CONFIG_SUFFIXES = (".d.ts",)
+
+# Configuration gets its own column rather than being silently dropped: an approach that
+# needs 537 lines of build script to produce its artefacts is not free, and hiding that
+# flatters exactly the approaches with the most packaging.
+BUILD_SUFFIXES = (".sh",)
+MANIFEST_SUFFIXES = (".gradle.kts", ".toml", ".podspec")
+MANIFEST_FILES = ("Package.swift", "Podfile")
+SETTINGS_SUFFIXES = (".yml", ".yaml", ".json", ".properties", ".pro", ".xcconfig")
+# npm writes these; counting them would charge React Native ~9,300 lines for a dependency
+# graph nobody typed.
+GENERATED_CONFIG = ("package-lock.json", "Cargo.lock", "Podfile.lock", "yarn.lock")
 
 EXCLUDED_DIRS = {
     "node_modules", "build", ".build", "out", "DerivedData", "Pods", ".gradle",
@@ -177,6 +189,23 @@ def classify(rel: pathlib.Path) -> tuple[str, str] | None:
     return platform, ("adapter" if is_adapter else "code")
 
 
+def config_lines(approach: str, files: list[pathlib.Path]) -> int:
+    """Build scripts, manifests and settings — everything that ships no behaviour."""
+    total = 0
+    for path in files:
+        if path.parts[0] != approach or path.name in GENERATED_CONFIG:
+            continue
+        name = str(path)
+        if (
+            name.endswith(BUILD_SUFFIXES)
+            or name.endswith(MANIFEST_SUFFIXES)
+            or path.name in MANIFEST_FILES
+            or name.endswith(SETTINGS_SUFFIXES)
+        ):
+            total += significant_lines(path)
+    return total
+
+
 def generated_lines(approach: str) -> int:
     unique: dict[str, pathlib.Path] = {}
     for pattern in GENERATED_GLOBS.get(approach, []):
@@ -235,6 +264,7 @@ def main() -> int:
         # Shared adapters — a hosting seam written once for both platforms — belong with
         # the shared code they gate, not with either host.
         counts["shared"] += counts.pop("shared-adapter")
+        counts["config"] = config_lines(approach, files)
         counts["generated"] = generated_lines(approach)
         counts["total"] = counts["ios"] + counts["android"] + counts["shared"]
         counts["total+adapters"] = (
@@ -245,7 +275,8 @@ def main() -> int:
     cols = [
         ("iOS", "ios"), ("Android", "android"), ("Shared", "shared"),
         ("iOS adapt.", "ios-adapter"), ("Andr. adapt.", "android-adapter"),
-        ("Generated", "generated"), ("Total", "total"), ("Total+adapt.", "total+adapters"),
+        ("Config", "config"), ("Generated", "generated"),
+        ("Total", "total"), ("Total+adapt.", "total+adapters"),
     ]
 
     # Tab-separated, for pasting into a spreadsheet and on into a slide.

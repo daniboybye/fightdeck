@@ -9,11 +9,9 @@
 import FightDeckCore
 import SwiftUI
 
+/// Only what this screen alone needs. The action-button numbers it shares with the bet slip
+/// live in the core's `Metrics`.
 private enum Layout {
-    static let primaryActionHeight: CGFloat = 44
-    static let secondaryActionHeight: CGFloat = 44
-    static let secondaryActionPadding: CGFloat = 24
-    static let actionBarGap: CGFloat = 12
     static let radioDiameter: CGFloat = 20
     static let radioBorder: CGFloat = 2
     static let radioInset: CGFloat = 5
@@ -284,8 +282,7 @@ extension DepositFlowView {
                 doneButton
             }
         }
-        .padding(.horizontal, theme.spacingLG)
-        .padding(.bottom, theme.spacingLG)
+        .padding(theme.spacingLG)
     }
 
     /// The one place this SDK drops to Compose. Setting `@FocusState` to false does clear
@@ -311,7 +308,7 @@ extension DepositFlowView {
                 androidx.compose.material3.Text("Done")
             }
         }
-        .frame(height: Layout.secondaryActionHeight)
+        .frame(height: Metrics.secondaryActionHeight)
     }
 
     private var confirmButton: some View {
@@ -323,7 +320,7 @@ extension DepositFlowView {
                 .foregroundStyle(theme.onAccent)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(height: Layout.primaryActionHeight)
+        .frame(height: Metrics.primaryActionHeight)
         .background(theme.accent)
         .clipShape(RoundedRectangle(cornerRadius: theme.radiusMD))
         .disabled(!canConfirm)
@@ -339,7 +336,7 @@ extension DepositFlowView {
                         .font(Typography.medium(theme.fontCaption))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(height: Layout.secondaryActionHeight)
+                .frame(height: Metrics.secondaryActionHeight)
                 .background(theme.surfaceElevated)
                 .foregroundStyle(theme.accent)
                 .clipShape(Capsule())
@@ -357,8 +354,8 @@ extension DepositFlowView {
         Button("Done") { onResult(DepositResult.completed(amount: parsedAmount)) }
             .font(Typography.semibold(theme.fontCallout))
             .foregroundStyle(theme.onAccent)
-            .padding(.horizontal, Layout.secondaryActionPadding)
-            .frame(height: Layout.secondaryActionHeight)
+            .padding(.horizontal, Metrics.secondaryActionPadding)
+            .frame(height: Metrics.secondaryActionHeight)
             .background(theme.accent)
             .clipShape(Capsule())
     }
@@ -445,8 +442,8 @@ extension DepositFlowView {
             Text("Done")
                 .font(.headline)
                 .foregroundStyle(theme.onAccent)
-                .padding(.horizontal, Layout.secondaryActionPadding)
-                .frame(height: Layout.secondaryActionHeight)
+                .padding(.horizontal, Metrics.secondaryActionPadding)
+                .frame(height: Metrics.secondaryActionHeight)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
@@ -476,7 +473,7 @@ private struct DepositBottomBarModifier: ViewModifier {
             }
         }
         .padding(.horizontal, theme.spacingLG)
-        .padding(.bottom, Layout.actionBarGap)
+        .padding(.bottom, Metrics.actionBarGap)
         .animation(.snappy(duration: 0.25), value: amountFocused)
     }
 
@@ -486,7 +483,7 @@ private struct DepositBottomBarModifier: ViewModifier {
                 .font(.headline)
                 .foregroundStyle(isEnabled ? theme.onAccent : Color.secondary)
                 .frame(maxWidth: .infinity)
-                .frame(height: Layout.primaryActionHeight)
+                .frame(height: Metrics.primaryActionHeight)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
@@ -505,7 +502,7 @@ private struct DepositBottomBarModifier: ViewModifier {
                 .font(.headline)
                 .foregroundStyle(theme.accent)
                 .padding(.horizontal, theme.spacingLG)
-                .frame(height: Layout.primaryActionHeight)
+                .frame(height: Metrics.primaryActionHeight)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)

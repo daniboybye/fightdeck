@@ -9,12 +9,10 @@
 import FightDeckCore
 import SwiftUI
 
+/// Only what this screen alone needs. The action-button numbers it shares with the deposit
+/// screen live in the core's `Metrics`.
 private enum Layout {
     static let minTapTarget: CGFloat = 44
-    static let primaryActionHeight: CGFloat = 44
-    static let secondaryActionHeight: CGFloat = 44
-    static let secondaryActionPadding: CGFloat = 24
-    static let actionBarGap: CGFloat = 12
     static let tabBarActionGap: CGFloat = 20
     static let betSlipAccessoryHeight: CGFloat = 44
 }
@@ -279,7 +277,7 @@ extension BetSlipRootView {
     /// trailing row is the shape that survives: it scrolls like content, because it is content.
     fileprivate var listFooter: some View {
         Color.clear
-            .frame(height: Layout.primaryActionHeight + Layout.tabBarActionGap)
+            .frame(height: Metrics.primaryActionHeight + Layout.tabBarActionGap)
             // Otherwise the spacer is drawn as an empty card, because a list row gets a row
             // background whether or not it has anything in it.
             .listRowBackground(Color.clear)
@@ -352,7 +350,7 @@ extension BetSlipRootView {
                 .foregroundStyle(theme.onAccent)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(height: Layout.primaryActionHeight)
+        .frame(height: Metrics.primaryActionHeight)
         .background(theme.accent)
         .clipShape(Capsule())
         .disabled(!store.slipState.errors.isEmpty)
@@ -381,7 +379,7 @@ extension BetSlipRootView {
                 androidx.compose.material3.Text("Done")
             }
         }
-        .frame(height: Layout.secondaryActionHeight)
+        .frame(height: Metrics.secondaryActionHeight)
     }
 
     private func selectionRow(_ selection: Selection) -> some View {
@@ -423,7 +421,7 @@ extension BetSlipRootView {
                         .foregroundStyle(theme.accent)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(height: Layout.secondaryActionHeight)
+                .frame(height: Metrics.secondaryActionHeight)
                 .background(theme.surface)
                 .overlay {
                     Capsule()
@@ -439,10 +437,10 @@ extension BetSlipRootView {
             Text("Browse Events")
                 .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.onAccent)
-                .padding(.horizontal, Layout.secondaryActionPadding)
+                .padding(.horizontal, Metrics.secondaryActionPadding)
                 .frame(maxHeight: .infinity)
         }
-        .frame(height: Layout.secondaryActionHeight)
+        .frame(height: Metrics.secondaryActionHeight)
         .background(theme.accent)
         .clipShape(Capsule())
     }
@@ -561,8 +559,8 @@ extension BetSlipRootView {
             Text("Browse Events")
                 .font(.headline)
                 .foregroundStyle(theme.onAccent)
-                .padding(.horizontal, Layout.secondaryActionPadding)
-                .frame(height: Layout.secondaryActionHeight)
+                .padding(.horizontal, Metrics.secondaryActionPadding)
+                .frame(height: Metrics.secondaryActionHeight)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
@@ -593,7 +591,7 @@ private struct SlipBottomBarModifier: ViewModifier {
         }
         .padding(.horizontal, theme.spacingLG)
         // Host tab accessory now owns tab-bar clearance; tabBarActionGap would double up.
-        .padding(.bottom, Layout.actionBarGap)
+        .padding(.bottom, Metrics.actionBarGap)
         .animation(.snappy(duration: 0.25), value: stakeFocused)
     }
 
@@ -603,7 +601,7 @@ private struct SlipBottomBarModifier: ViewModifier {
                 .font(.headline)
                 .foregroundStyle(isEnabled ? theme.onAccent : Color.secondary)
                 .frame(maxWidth: .infinity)
-                .frame(height: Layout.primaryActionHeight)
+                .frame(height: Metrics.primaryActionHeight)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
@@ -622,7 +620,7 @@ private struct SlipBottomBarModifier: ViewModifier {
                 .font(.headline)
                 .foregroundStyle(theme.accent)
                 .padding(.horizontal, theme.spacingLG)
-                .frame(height: Layout.primaryActionHeight)
+                .frame(height: Metrics.primaryActionHeight)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)

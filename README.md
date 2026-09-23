@@ -98,15 +98,15 @@ its original build column was dominated by Rust packaging rather than by the app
 
 ### What it costs to write
 
-| Approach | iOS | Android | Shared | iOS adapter | Android adapter | Generated | Total | Total + adapters |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 1,904 | 2,604 | 0 | 0 | 0 | — | **4,508** | **4,508** |
-| `04-sdk-skip` | 1,087 | 1,724 | 1,890 | 18 | 150 | 2,441 | **4,701** | **4,869** |
-| `01-core-swift` | 1,429 | 2,284 | 1,254 | 0 | 200 | 3,017 | **4,967** | **5,167** |
-| `02-core-rust` | 1,445 | 2,249 | 1,557 | 51 | 58 | 8,304 | **5,251** | **5,360** |
-| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 778 | — | **5,529** | **7,449** |
+| Approach | iOS | Android | Shared | iOS adapter | Android adapter | Config | Generated | Total | Total + adapters |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `00-native` baseline | 1,904 | 2,604 | 0 | 0 | 0 | 229 | — | **4,508** | **4,508** |
+| `04-sdk-skip` | 1,087 | 1,724 | 1,881 | 18 | 150 | 732 | 2,441 | **4,692** | **4,860** |
+| `01-core-swift` | 1,429 | 2,284 | 1,254 | 0 | 200 | 617 | 3,017 | **4,967** | **5,167** |
+| `02-core-rust` | 1,445 | 2,249 | 1,557 | 51 | 58 | 585 | 8,304 | **5,251** | **5,360** |
+| `03-sdk-rn` | 1,738 | 2,263 | 1,528 | 1,142 | 778 | 1,209 | — | **5,529** | **7,449** |
 
-**Measured at `4104247`** by `python3 tools/count-significant-lines.py`. To refresh it,
+**Measured at `6619faf`** by `python3 tools/count-significant-lines.py`. To refresh it,
 read the commits since that hash rather than the whole tree; `--audit` prints every file
 and the column it landed in.
 
@@ -124,6 +124,12 @@ what crosses, adapts types the generator cannot carry, mounts the surface, or re
 change notification on the far side. *Generated* is build output — jextract's Java and
 Swift, UniFFI's bindings, skipstone's Kotlin. Nobody maintains a line of it, and no line of
 it is in the totals.
+
+*Config* is build scripts, manifests and settings. It is outside the totals too, because it
+ships no behaviour, but it gets a column rather than being dropped: the baseline needs no
+build script at all and the SDK approaches need between 174 and 537 lines of them, which is
+a real cost of choosing one. Lockfiles are excluded — `package-lock.json` alone would charge
+React Native 9,300 lines nobody typed.
 
 Three things to read off it. First, **the iOS adapter column is the whole argument.**
 `01-core-swift` and `04-sdk-skip` need essentially none — 0 and 18 lines — because the

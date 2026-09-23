@@ -156,6 +156,14 @@ pin_xcode() {
     xcodebuild -version
 }
 
+# The simulator every iOS step runs on, pinned to the SDK in versions.lock.toml rather than
+# left to `OS:latest`. iOS 27 shipped after this project started and carries no "iPhone 17
+# Pro", so an unpinned destination resolves to 27, finds no device, and fails the step.
+# Absolute, because the callers run inside `(cd <project> && …)` subshells.
+sim_destination() {
+    echo "platform=iOS Simulator,name=iPhone 17 Pro,OS=$("$SOURCE_REPO/tools/versions.py" apple.ios_sdk)"
+}
+
 ensure_rust() {
     local toolchain
     toolchain="$(./tools/versions.py rust.toolchain)"
@@ -224,10 +232,12 @@ run_contract_native() {
     guard_ios_app 00-native/ios || return 0
     # FightDeckUITests is a screenshot helper, not a gate, and the workflow skips it too —
     # running it here is what made a green pipeline report a red contract check.
+    local destination
+    destination="$(sim_destination)"
     (cd 00-native/ios && xcodebuild test \
         -scheme FightDeck \
         -skip-testing:FightDeckUITests \
-        -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+        -destination "$destination" \
         CODE_SIGNING_ALLOWED=NO)
 }
 
@@ -394,7 +404,7 @@ run_sdk_skip_apple() {
     # without an `os(iOS)` guard, and the fixtures load from an absolute path either way.
     (cd 04-sdk-skip/sdks/core && FIGHTDECK_BUILDING_SDK=1 xcodebuild test \
         -scheme FightDeckCore \
-        -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+        -destination "$(sim_destination)" \
         -skipPackagePluginValidation)
     ./04-sdk-skip/sdks/build-apple.sh
 }
@@ -476,7 +486,7 @@ run_ios_app() {
                 fi
                 xcodebuild test \
                     "${args[@]}" \
-                    -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+                    -destination "$(sim_destination)" \
                     -skipPackagePluginValidation \
                     -skipMacroValidation \
                     CODE_SIGNING_ALLOWED=NO \

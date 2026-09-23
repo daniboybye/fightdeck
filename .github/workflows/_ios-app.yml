@@ -144,9 +144,12 @@ jobs:
           if [[ -d "${{ inputs.scheme }}UITests" ]]; then
             ARGS+=(-skip-testing:"${{ inputs.scheme }}UITests")
           fi
+          # Pinned to the SDK in versions.lock.toml, never left to `OS:latest`: iOS 27
+          # ships no "iPhone 17 Pro", so an unpinned destination finds no device at all.
+          IOS_SDK="$("$GITHUB_WORKSPACE/tools/versions.py" apple.ios_sdk)"
           xcodebuild test \
             "${ARGS[@]}" \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=$IOS_SDK" \
             -skipPackagePluginValidation \
             -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \

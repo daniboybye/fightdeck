@@ -103,10 +103,13 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         working-directory: 00-native/ios
         run: |
+          # Pinned to the SDK in versions.lock.toml, never left to `OS:latest`: iOS 27
+          # ships no "iPhone 17 Pro", so an unpinned destination finds no device at all.
+          IOS_SDK="$("$GITHUB_WORKSPACE/tools/versions.py" apple.ios_sdk)"
           xcodebuild test \
             -scheme FightDeck \
             -skip-testing:FightDeckUITests \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+            -destination "platform=iOS Simulator,name=iPhone 17 Pro,OS=$IOS_SDK" \
             CODE_SIGNING_ALLOWED=NO
 
   summarise:

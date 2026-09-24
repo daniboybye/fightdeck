@@ -2,7 +2,6 @@ package com.fightdeck.swiftcore.core
 
 import com.fightdeck.fightcore.FightCoreJava
 import com.fightdeck.fightslip.SlipEngine
-import com.fightdeck.fightslip.SlipValidationError
 import java.math.BigDecimal
 
 object Money {
@@ -28,8 +27,9 @@ object OddsEngine {
         FightCoreJava.impliedProbability(odds.toPlainString())
 }
 
-class SwiftSlipStore(boutIDs: List<BoutIndex>) {
-    private val engine = SlipEngine.init()
+/** [boutIndexJSON] is `EventCatalogBridge.boutIndexJSON`, handed over untouched. */
+class SwiftSlipStore(boutIndexJSON: String) {
+    private val engine = SlipEngine.init(boutIndexJSON)
 
     var slip: BetSlip = BetSlip(BetMode.single, emptyList(), BigDecimal("10.00"))
         private set
@@ -42,7 +42,6 @@ class SwiftSlipStore(boutIDs: List<BoutIndex>) {
         private set
 
     init {
-        boutIDs.forEach { engine.registerBout(it.id, it.redFighterId, it.blueFighterId, it.winnerId) }
         readBack()
     }
 
@@ -90,23 +89,9 @@ class SwiftSlipStore(boutIDs: List<BoutIndex>) {
             totalStake = BigDecimal(engine.totalStakeText),
             potentialReturn = BigDecimal(engine.potentialReturnText),
             potentialProfit = BigDecimal(engine.potentialProfitText),
-            errors = engine.errors.map(::toValidationError),
+            errors = engine.errorCodes.toList(),
         )
     }
 
     private fun String.toBigDecimalOrNull(): BigDecimal? = if (isEmpty()) null else BigDecimal(this)
-
-    private fun toValidationError(error: SlipValidationError): ValidationError =
-        when (error.discriminator) {
-            SlipValidationError.Discriminator.EMPTYSLIP -> ValidationError.EMPTY_SLIP
-            SlipValidationError.Discriminator.STAKEBELOWMINIMUM -> ValidationError.STAKE_BELOW_MINIMUM
-            SlipValidationError.Discriminator.STAKEABOVEMAXIMUM -> ValidationError.STAKE_ABOVE_MAXIMUM
-            SlipValidationError.Discriminator.INSUFFICIENTBALANCE -> ValidationError.INSUFFICIENT_BALANCE
-            SlipValidationError.Discriminator.TOOMANYSELECTIONS -> ValidationError.TOO_MANY_SELECTIONS
-            SlipValidationError.Discriminator.ACCUMULATORNEEDSTWOLEGS -> ValidationError.ACCUMULATOR_NEEDS_TWO_LEGS
-            SlipValidationError.Discriminator.DUPLICATEBOUT -> ValidationError.DUPLICATE_BOUT
-            SlipValidationError.Discriminator.UNKNOWNBOUT -> ValidationError.UNKNOWN_BOUT
-            SlipValidationError.Discriminator.FIGHTERNOTINBOUT -> ValidationError.FIGHTER_NOT_IN_BOUT
-            SlipValidationError.Discriminator.PAYOUTEXCEEDSLIMIT -> ValidationError.PAYOUT_EXCEEDS_LIMIT
-        }
 }

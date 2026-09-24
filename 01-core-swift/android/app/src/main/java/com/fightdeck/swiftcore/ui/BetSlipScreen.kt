@@ -276,7 +276,7 @@ internal fun BetSlipScreen(
                         }
                     }
                     item { SummaryBlock(state) }
-                    items(state.errors, key = { it.code }) { error ->
+                    items(state.errors, key = { it }) { error ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Warning,
@@ -286,7 +286,7 @@ internal fun BetSlipScreen(
                             )
                             Spacer(Modifier.width(Tokens.spacingSm))
                             Text(
-                                error.code.displayMethod,
+                                error.displayMethod,
                                 color = Tokens.negative,
                                 style = MaterialTheme.typography.labelMedium,
                             )

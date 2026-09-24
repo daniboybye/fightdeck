@@ -50,20 +50,6 @@ public final class TaleOfTheTapeBridge {
     }
 }
 
-public final class BoutIndexEntryBridge {
-    public let id: String
-    public let redFighterID: String
-    public let blueFighterID: String
-    public let winnerID: String
-
-    init(_ entry: BoutIndex) {
-        id = entry.id
-        redFighterID = entry.redFighterID
-        blueFighterID = entry.blueFighterID
-        winnerID = entry.winnerID
-    }
-}
-
 public final class LegContextBridge {
     public let fighterName: String
     public let opponentName: String
@@ -262,7 +248,9 @@ public final class EventCatalogBridge {
         LegContextBridge(catalog.legContext(boutID: boutID, fighterID: fighterID))
     }
 
-    public var boutIndexEntries: [BoutIndexEntryBridge] {
-        catalog.boutIndex().map(BoutIndexEntryBridge.init)
+    /// Handed straight to the slip glue's `SlipEngine`, which decodes it on its own side.
+    public var boutIndexJSON: String {
+        let data = (try? JSONEncoder().encode(catalog.boutIndex())) ?? Data("[]".utf8)
+        return String(decoding: data, as: UTF8.self)
     }
 }

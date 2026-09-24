@@ -16,7 +16,6 @@ import com.fightdeck.swiftcore.catalog.fighterCard
 import com.fightdeck.swiftcore.catalog.loadEvents
 import com.fightdeck.swiftcore.core.BetSlip
 import com.fightdeck.swiftcore.core.BetMode
-import com.fightdeck.swiftcore.core.BoutIndex
 import com.fightdeck.swiftcore.core.Money
 import com.fightdeck.swiftcore.core.SlipState
 import com.fightdeck.swiftcore.core.SwiftSlipStore
@@ -110,7 +109,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 onSuccess = { engine ->
                     repository = engine.repository
                     catalog = engine.catalog
-                    slipStore = SwiftSlipStore(engine.bouts)
+                    slipStore = SwiftSlipStore(engine.catalog.boutIndexJSON)
                     publishSlipState()
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
@@ -129,7 +128,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private data class Engine(
         val repository: JsonFileRepository,
         val catalog: EventCatalogBridge,
-        val bouts: List<BoutIndex>,
     )
 
     private fun bootstrapEngine(application: Application): Engine {
@@ -141,10 +139,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             root.resolve("events.json").readText(),
             root.resolve("fighters.json").readText(),
         )
-        val bouts = catalog.boutIndexEntries.map {
-            BoutIndex(it.id, it.redFighterID, it.blueFighterID, it.winnerID)
-        }
-        return Engine(JsonFileRepository(root), catalog, bouts)
+        return Engine(JsonFileRepository(root), catalog)
     }
 
     fun refreshEvents() {

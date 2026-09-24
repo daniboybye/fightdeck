@@ -143,12 +143,12 @@ The constraint is the toolchain, not the operating system: swift.org supports ma
 Each package carries its own `Sources/*Java/swift-java.config` with a distinct
 `nativeLibraryName` and Java package. The `JExtractSwiftPlugin` build plugin runs during
 `swift build` and writes Java classes plus matching Swift JNI thunks into that package's
-`.so`. `FightSlipJava` is the largest surface — slip engine, session, validation enums:
+`.so`. `FightSlipJava` is the slip engine and the results it hands back:
 
 ```
-[swift-java] Generated: SlipEngine.java, SlipSelection.java, SlipValidationError.java,
-             SettlementResult.java, CashOutResult.java, FightSlipJava.java
-[swift-java] Generated linker export list (57 symbols)
+[swift-java] Generated: SlipEngine.java, SlipSelection.java, SettlementResult.java,
+             CashOutResult.java, FightSlipJava.java
+[swift-java] Generated linker export list (37 symbols)
 ```
 
 The Java it emits is unremarkable in the best way — the Swift doc comments come across,
@@ -161,9 +161,10 @@ public void toggleSelection(String boutID, String fighterID, String odds) {
 private static native void $toggleSelection(String boutID, String fighterID, String odds, long selfPointer);
 ```
 
-Swift enums are the nicest surprise: `SlipValidationError` arrives as a Java class with a
-nested `Discriminator` enum **and** a `sealed interface Case` of records, so Kotlin can
-`when` over it exhaustively instead of comparing strings.
+Swift enums come across well too — a Java class with a nested `Discriminator` enum **and** a
+`sealed interface Case` of records, which Kotlin can `when` over exhaustively. The slip's
+validation errors used one until it turned out Kotlin only ever wanted the contract's code:
+`errorCodes` now hands over the strings, and the ten-case mapping on the Kotlin side is gone.
 
 ### What the tool writes, and what you still write
 
@@ -172,9 +173,9 @@ nested `Discriminator` enum **and** a `sealed interface Case` of records, so Kot
 | Generated Java classes (three packages) | 1,300+ | nobody |
 | Generated JNI thunks (Swift, three packages) | 2,378+ | nobody |
 | `FightCoreGlue.swift` — money, odds and deposit facade | 100 | us |
-| `FightSlipGlue.swift` — slip engine facade | 200 | us |
+| `FightSlipGlue.swift` — slip engine facade | 173 | us |
 | `FightEventsGlue.swift` — catalog facade | 250 | us |
-| `FightCoreGlue.kt` — marshalling and read-back | 109 | us |
+| `FightCoreGlue.kt` — marshalling and read-back | 97 | us |
 | `SwiftCoreBridge.kt` — loads the `.so` files | 15 | us |
 
 Three quarters of the boundary is written by a tool, and none of the part that is left is

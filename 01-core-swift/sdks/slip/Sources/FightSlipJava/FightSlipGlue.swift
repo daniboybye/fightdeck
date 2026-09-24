@@ -14,19 +14,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-public enum SlipValidationError: String {
-    case emptySlip = "empty_slip"
-    case stakeBelowMinimum = "stake_below_minimum"
-    case stakeAboveMaximum = "stake_above_maximum"
-    case insufficientBalance = "insufficient_balance"
-    case tooManySelections = "too_many_selections"
-    case accumulatorNeedsTwoLegs = "accumulator_needs_two_legs"
-    case duplicateBout = "duplicate_bout"
-    case unknownBout = "unknown_bout"
-    case fighterNotInBout = "fighter_not_in_bout"
-    case payoutExceedsLimit = "payout_exceeds_limit"
-}
-
 public final class SettlementResult {
     public let status: String
     public let returnedText: String
@@ -72,30 +59,12 @@ public final class SlipSelection {
 /// re-reads the getters after every mutating call instead.
 public final class SlipEngine {
     private var session: SlipSession
-    private var bouts: [BoutIndex] = []
 
-    public init() {
-        session = SlipSession(slipEngine: FightSlip.SlipEngine(bouts: []))
-    }
-
-    /// Bouts arrive from the dataset on the Kotlin side, one call per bout, because
-    /// handing jextract a `[BoutIndex]` would mean extracting FightCore itself — and its
-    /// public API is Decimal from end to end.
-    public func registerBout(
-        id: String,
-        redFighterID: String,
-        blueFighterID: String,
-        winnerID: String
-    ) {
-        bouts.append(
-            BoutIndex(
-                id: id,
-                redFighterID: redFighterID,
-                blueFighterID: blueFighterID,
-                winnerID: winnerID
-            )
-        )
-        session.slipEngine = FightSlip.SlipEngine(bouts: bouts)
+    /// Takes `EventCatalogBridge.boutIndexJSON` as it is. Handing jextract a `[BoutIndex]`
+    /// would mean extracting FightCore itself — and its public API is Decimal from end to end.
+    public init(boutIndexJSON: String) {
+        let bouts = (try? JSONDecoder().decode([BoutIndex].self, from: Data(boutIndexJSON.utf8))) ?? []
+        session = SlipSession(slipEngine: FightSlip.SlipEngine(bouts: bouts))
     }
 
     /// Replaces the slip wholesale. `toggleSelection` derives the mode from the leg count,
@@ -197,7 +166,8 @@ public final class SlipEngine {
         return Money.formatExactOdds(exact)
     }
 
-    public var errors: [SlipValidationError] {
-        session.slipState.errors.compactMap { SlipValidationError(rawValue: $0.rawValue) }
+    /// The contract's codes, in the contract's order.
+    public var errorCodes: [String] {
+        session.slipState.errors.map(\.rawValue)
     }
 }

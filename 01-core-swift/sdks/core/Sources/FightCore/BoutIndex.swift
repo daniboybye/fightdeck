@@ -12,7 +12,9 @@ import FoundationEssentials
 import Foundation
 #endif
 
-public struct BoutIndex: Sendable {
+/// Codable because on Android the catalogue and the slip are separate libraries, each with its
+/// own copy of this type, so the index crosses from one to the other as JSON.
+public struct BoutIndex: Codable, Sendable {
     public let id: String
     public let redFighterID: String
     public let blueFighterID: String

@@ -2,6 +2,7 @@ package com.fightdeck.swiftcore.core
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fightdeck.fightcore.FightCoreJava
+import com.fightdeck.fightevents.EventCatalogBridge
 import com.fightdeck.fightslip.SlipEngine
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -18,7 +19,7 @@ import kotlin.test.assertEquals
  * statically. Push the inputs first:
  *
  *   adb push contract/fixtures /data/local/tmp/fightdeck/fixtures
- *   adb push dataset/events.json /data/local/tmp/fightdeck/dataset/events.json
+ *   adb push dataset /data/local/tmp/fightdeck/dataset
  */
 @RunWith(AndroidJUnit4::class)
 class SwiftCoreFixtureTests {
@@ -63,8 +64,7 @@ class SwiftCoreFixtureTests {
         root.cases.forEach { case ->
             val engine = engineForFixtures()
             case.load(engine, balance = case.balance)
-            val errors = engine.errors.map { CODES[it.discriminator.ordinal] }
-            assertEquals(case.expect.errors, errors, case.id)
+            assertEquals(case.expect.errors, engine.errorCodes.toList(), case.id)
         }
     }
 
@@ -108,12 +108,11 @@ class SwiftCoreFixtureTests {
     }
 
     private fun engineForFixtures(): SlipEngine {
-        val engine = SlipEngine.init()
-        val events = json.decodeFromString<EventsFile>(File(DATASET_ROOT, "events.json").readText())
-        events.events.flatMap { it.bouts }.forEach {
-            engine.registerBout(it.id, it.redCorner.fighterId, it.blueCorner.fighterId, it.result.winnerId)
-        }
-        return engine
+        val catalog = EventCatalogBridge.`init`(
+            File(DATASET_ROOT, "events.json").readText(),
+            File(DATASET_ROOT, "fighters.json").readText(),
+        )
+        return SlipEngine.init(catalog.boutIndexJSON)
     }
 
     private fun fixture(name: String): String {
@@ -125,20 +124,6 @@ class SwiftCoreFixtureTests {
     private companion object {
         const val FIXTURES_ROOT = "/data/local/tmp/fightdeck/fixtures"
         const val DATASET_ROOT = "/data/local/tmp/fightdeck/dataset"
-
-        /** Discriminator ordinals follow the Swift case order, which is the contract's order. */
-        val CODES = listOf(
-            "empty_slip",
-            "stake_below_minimum",
-            "stake_above_maximum",
-            "insufficient_balance",
-            "too_many_selections",
-            "accumulator_needs_two_legs",
-            "duplicate_bout",
-            "unknown_bout",
-            "fighter_not_in_bout",
-            "payout_exceeds_limit",
-        )
     }
 }
 
@@ -262,23 +247,3 @@ private data class SelectionDto(
     @SerialName("fighterId") val fighterId: String,
     val odds: String,
 )
-
-@Serializable
-private data class EventsFile(val events: List<EventDto>)
-
-@Serializable
-private data class EventDto(val bouts: List<BoutDto>)
-
-@Serializable
-private data class BoutDto(
-    val id: String,
-    val redCorner: CornerDto,
-    val blueCorner: CornerDto,
-    val result: ResultDto,
-)
-
-@Serializable
-private data class CornerDto(@SerialName("fighterId") val fighterId: String)
-
-@Serializable
-private data class ResultDto(@SerialName("winnerId") val winnerId: String)

@@ -8,12 +8,13 @@
 
 import Foundation
 
+/// Amounts are decimal strings, the form the Rust core reads and writes them in.
 struct DepositParams: Sendable {
-    let currentBalance: Decimal
+    let currentBalance: String
 }
 
 enum DepositResult: Sendable {
-    case completed(amount: Decimal)
+    case completed(amount: String)
     case cancelled
     case failed(reason: String)
 }

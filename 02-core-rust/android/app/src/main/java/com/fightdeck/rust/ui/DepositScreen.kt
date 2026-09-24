@@ -54,29 +54,21 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.design.Tokens
-import java.math.BigDecimal
-import java.math.RoundingMode
+import uniffi.fightcore.depositMethods
+import uniffi.fightcore.depositPresets
+import uniffi.fightcore.depositQuote
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: () -> Unit) {
+    val methods = remember { depositMethods() }
     var amountText by remember { mutableStateOf("") }
-    var method by remember { mutableStateOf(DepositMethod.Card) }
+    var method by remember { mutableStateOf(methods.first()) }
     var didSucceed by remember { mutableStateOf(false) }
     var amountFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-
-    val balanceAmount = runCatching { BigDecimal(balance) }.getOrDefault(BigDecimal.ZERO)
-    val amount = runCatching { BigDecimal(amountText.ifBlank { "0" }) }.getOrDefault(BigDecimal.ZERO)
-    val validationMessage = when {
-        amountText.isBlank() -> null
-        amount < BigDecimal("10") -> "Minimum deposit is €10"
-        amount > BigDecimal("2000") -> "Maximum deposit is €2,000"
-        else -> null
-    }
-    val fee = amount.multiply(method.feeRate).setScale(2, RoundingMode.HALF_UP)
+    val quote = depositQuote(amountText, method.id, balance)
 
     Scaffold(
         containerColor = Tokens.background,
@@ -112,7 +104,7 @@ internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: (
                         PrimaryActionButton(
                             title = "Confirm deposit",
                             onClick = { didSucceed = true },
-                            enabled = validationMessage == null && amountText.isNotBlank(),
+                            enabled = quote.canConfirm,
                             modifier = Modifier.weight(1f),
                         )
                         AnimatedVisibility(visible = amountFocused) {
@@ -149,12 +141,12 @@ internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: (
                     )
                     Text("Deposit successful", style = MaterialTheme.typography.headlineSmall)
                     Text(
-                        "New balance: ${formatDepositCurrency(balanceAmount.add(amount))}",
+                        "New balance: ${quote.newBalanceDisplay}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     SecondaryActionButton(
                         title = "Done",
-                        onClick = { onDone(amount.setScale(2, RoundingMode.HALF_UP).toPlainString()) },
+                        onClick = { onDone(quote.amount) },
                     )
                 }
             }
@@ -180,8 +172,8 @@ internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: (
                     // one appearance on the limits instead.
                     placeholder = { Text("€10 – €2,000") },
                     singleLine = true,
-                    isError = validationMessage != null,
-                    supportingText = validationMessage?.let { { Text(it) } },
+                    isError = quote.validationMessage != null,
+                    supportingText = quote.validationMessage?.let { { Text(it) } },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal,
                         imeAction = ImeAction.Done,
@@ -194,7 +186,7 @@ internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: (
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm)) {
-                    listOf("10", "25", "50", "100").forEach { chip ->
+                    depositPresets().forEach { chip ->
                         PresetChipButton(
                             title = "€$chip",
                             onClick = { amountText = chip },
@@ -204,7 +196,7 @@ internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: (
                 }
             }
             item { SectionHeader("Method") }
-            items(DepositMethod.entries, key = { it.name }) { item ->
+            items(methods, key = { it.id }) { item ->
                 ListItem(
                     headlineContent = { Text(item.title) },
                     supportingContent = { Text(item.feeNote) },
@@ -231,25 +223,14 @@ internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: (
                         Modifier.padding(Tokens.spacingLg),
                         verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
                     ) {
-                        DetailRow("Amount", formatDepositCurrency(amount))
+                        DetailRow("Amount", quote.amountDisplay)
                         DetailRow("Method", method.title)
-                        DetailRow("Fee", formatDepositCurrency(fee))
-                        DetailRow("Total", formatDepositCurrency(amount.add(fee)))
-                        DetailRow("New balance", formatDepositCurrency(balanceAmount.add(amount)))
+                        DetailRow("Fee", quote.feeDisplay)
+                        DetailRow("Total", quote.totalDisplay)
+                        DetailRow("New balance", quote.newBalanceDisplay)
                     }
                 }
             }
         }
     }
 }
-
-private enum class DepositMethod(val title: String, val feeNote: String, val feeRate: BigDecimal) {
-    Card("Card", "Instant · 0% fee", BigDecimal.ZERO),
-    Bank("Bank transfer", "1–2 days · 0% fee", BigDecimal.ZERO),
-    Wallet("Wallet", "Instant · 1% fee", BigDecimal("0.01")),
-}
-
-private fun formatDepositCurrency(value: BigDecimal): String =
-    FightCoreDisplay.formatCurrencyAmount(
-        value.setScale(2, RoundingMode.HALF_UP).toPlainString(),
-    )

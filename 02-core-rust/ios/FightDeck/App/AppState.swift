@@ -126,10 +126,8 @@ final class AppState {
         isPresentingDeposit = true
     }
 
-    func deposit(amount: Decimal) {
-        let raw = NSDecimalNumber(decimal: amount).stringValue
-        guard let formatted = try? formatMoney(amount: raw) else { return }
-        slipStore.deposit(amount: formatted)
+    func deposit(amount: String) {
+        slipStore.deposit(amount: amount)
     }
 
     func imageURL(_ path: String) -> URL? {

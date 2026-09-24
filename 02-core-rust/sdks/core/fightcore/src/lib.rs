@@ -1,9 +1,10 @@
 //! FightCore — the shared kernel.
 //!
-//! Decimal money, odds conversion and the contract vocabulary. No feature logic lives here:
-//! the bet slip is `fightslip`, the catalogue is `fightevents`. Both depend on this crate as
-//! an ordinary Rust dependency and ship as their own xcframework.
+//! Decimal money, odds conversion, the deposit rules and the contract vocabulary. No feature
+//! logic lives here: the bet slip is `fightslip`, the catalogue is `fightevents`. Both depend
+//! on this crate as an ordinary Rust dependency and ship as their own xcframework.
 
+pub mod deposit;
 pub mod money;
 pub mod odds;
 pub mod types;

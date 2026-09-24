@@ -14,48 +14,9 @@ struct DepositFlowView: View {
     let onResult: DepositResultHandler
 
     @State private var amountText = ""
-    @State private var method = DepositMethod.card
+    @State private var methodID = "card"
     @State private var didSucceed = false
     @FocusState private var amountFocused: Bool
-
-    private enum DepositMethod: String, CaseIterable, Identifiable {
-        case card
-        case bank
-        case wallet
-
-        var id: String { rawValue }
-
-        var title: String {
-            switch self {
-            case .card: "Card"
-            case .bank: "Bank transfer"
-            case .wallet: "Wallet"
-            }
-        }
-
-        var feeNote: String {
-            switch self {
-            case .card: "Instant · 0% fee"
-            case .bank: "1–2 days · 0% fee"
-            case .wallet: "Instant · 1% fee"
-            }
-        }
-
-        var symbol: String {
-            switch self {
-            case .card: "creditcard"
-            case .bank: "building.columns"
-            case .wallet: "wallet.bifold"
-            }
-        }
-
-        var feeRate: Decimal {
-            switch self {
-            case .card, .bank: 0
-            case .wallet: Decimal(string: "0.01")!
-            }
-        }
-    }
 
     var body: some View {
         Group {
@@ -93,21 +54,21 @@ struct DepositFlowView: View {
                     .keyboardType(.decimalPad)
                     .font(.largeTitle.bold())
                     .focused($amountFocused)
-                if let message = amountValidationMessage {
+                if let message = quote.validationMessage {
                     Label(message, systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundStyle(DesignTokens.ColorToken.negative)
                 }
                 PresetChipRow {
-                    ForEach(["10", "25", "50", "100"], id: \.self) { chip in
+                    ForEach(depositPresets(), id: \.self) { chip in
                         PresetChipButton(title: "€\(chip)") { amountText = chip }
                     }
                 }
             }
 
             Section("Method") {
-                Picker("Method", selection: $method) {
-                    ForEach(DepositMethod.allCases) { item in
+                Picker("Method", selection: $methodID) {
+                    ForEach(depositMethods(), id: \.id) { item in
                         Label {
                             VStack(alignment: .leading) {
                                 Text(item.title)
@@ -116,9 +77,9 @@ struct DepositFlowView: View {
                                     .foregroundStyle(.secondary)
                             }
                         } icon: {
-                            Image(systemName: item.symbol)
+                            Image(systemName: Self.symbol(for: item.id))
                         }
-                        .tag(item)
+                        .tag(item.id)
                     }
                 }
                 .pickerStyle(.inline)
@@ -126,23 +87,20 @@ struct DepositFlowView: View {
             }
 
             Section("Summary") {
-                LabeledContent("Amount", value: DepositMoney.formatCurrency(parsedAmount))
-                LabeledContent("Fee", value: DepositMoney.formatCurrency(feeAmount))
+                LabeledContent("Amount", value: quote.amountDisplay)
+                LabeledContent("Fee", value: quote.feeDisplay)
                 LabeledContent("Total") {
-                    Text(DepositMoney.formatCurrency(parsedAmount + feeAmount))
+                    Text(quote.totalDisplay)
                         .fontWeight(.semibold)
                 }
-                LabeledContent("New balance", value: DepositMoney.formatCurrency(params.currentBalance + parsedAmount))
+                LabeledContent("New balance", value: quote.newBalanceDisplay)
             }
         }
         // A bar rather than a plain inset: the form keeps scrolling under it, and Done sits
         // beside the action instead of in a keyboard toolbar that would overlap it.
         .safeAreaBar(edge: .bottom) {
             HStack(spacing: DesignTokens.Spacing.sm) {
-                PrimaryActionButton(
-                    title: "Confirm deposit",
-                    isEnabled: amountValidationMessage == nil && !amountText.isEmpty
-                ) {
+                PrimaryActionButton(title: "Confirm deposit", isEnabled: quote.canConfirm) {
                     withAnimation(.smooth(duration: 0.35)) { didSucceed = true }
                 }
                 if amountFocused {
@@ -169,26 +127,23 @@ struct DepositFlowView: View {
                     .symbolEffect(.bounce, options: .nonRepeating)
             }
         } description: {
-            Text("New balance: \(DepositMoney.formatCurrency(params.currentBalance + parsedAmount))")
+            Text("New balance: \(quote.newBalanceDisplay)")
         } actions: {
-            SecondaryActionButton(title: "Done") { onResult(.completed(amount: parsedAmount)) }
+            SecondaryActionButton(title: "Done") { onResult(.completed(amount: quote.amount)) }
         }
         .transition(.scale(scale: 0.92).combined(with: .opacity))
     }
 
-    private var parsedAmount: Decimal {
-        DepositMoney.parse(amountText.isEmpty ? "0" : amountText)
+    private var quote: DepositQuote {
+        depositQuote(amountText: amountText, methodId: methodID, balance: params.currentBalance)
     }
 
-    private var feeAmount: Decimal {
-        DepositMoney.money(parsedAmount * method.feeRate)
-    }
-
-    private var amountValidationMessage: String? {
-        let amount = parsedAmount
-        if amountText.isEmpty { return nil }
-        if amount < 10 { return "Minimum deposit is €10" }
-        if amount > 2_000 { return "Maximum deposit is €2,000" }
-        return nil
+    /// SF Symbols are iOS's own, so the icon is the one part of a method the core cannot supply.
+    private static func symbol(for methodID: String) -> String {
+        switch methodID {
+        case "card": "creditcard"
+        case "bank": "building.columns"
+        default: "wallet.bifold"
+        }
     }
 }

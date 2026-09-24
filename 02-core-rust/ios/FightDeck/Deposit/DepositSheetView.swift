@@ -24,6 +24,6 @@ struct DepositSheetView: View {
     }
 
     private var depositParams: DepositParams {
-        .init(currentBalance: Decimal(string: state.slipStore.balance) ?? 0)
+        .init(currentBalance: state.slipStore.balance)
     }
 }

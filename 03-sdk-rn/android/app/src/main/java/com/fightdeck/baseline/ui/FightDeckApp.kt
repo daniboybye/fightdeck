@@ -80,6 +80,12 @@ private const val PAST_TAB = 1
 
 private const val SLIP_TAB = 2
 
+/**
+ * The fighter surface reads every record count, and the default format leaves out fields
+ * that equal their defaults, so an unbeaten fighter would arrive without `losses`.
+ */
+private val fighterSurfaceJson = Json { encodeDefaults = true }
+
 /** Scroll inset that clears pinned primary actions when scaffold padding reads zero. */
 private fun pinnedScrollBottomInset(scaffoldBottom: Dp): Dp =
     maxOf(
@@ -462,7 +468,7 @@ private fun EventsNavHost(
                     onDeposit = onDeposit,
                 ) {
                     RNFighterProfileScreen(
-                        fighterJSON = Json.encodeToString(fighter),
+                        fighterJSON = fighterSurfaceJson.encodeToString(fighter),
                         portraitURL = viewModel.imageUrl(fighter.portrait).orEmpty(),
                         modifier = Modifier.fillMaxSize(),
                     )

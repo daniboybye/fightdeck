@@ -30,8 +30,8 @@ private const val DEFAULT_TAB_BAR_CLEARANCE_DP = 64f
  * Every React Native surface in the app is mounted through this one composable. Data and
  * chrome reach React on different channels: [update] hands the adapter new parameters, and
  * the adapter drops the ones that change nothing, because props re-render the surface from
- * its root and steal text-field focus. The chrome the surface has to clear changes *because*
- * a field gained focus, so it goes out through [FightDeckRNRuntime.publishLayout] instead.
+ * its root. The chrome the surface has to clear changes *because* a field gained focus, so it
+ * goes out through [FightDeckRNRuntime.publishLayout] instead.
  */
 @Composable
 fun RNSurface(

@@ -32,7 +32,11 @@ struct FighterBridgeView: View {
 
     private var params: FighterParams {
         let fighter = state.fighter(fighterID)
-        let fighterJSON = fighter.flatMap { try? String(data: JSONEncoder().encode($0), encoding: .utf8) } ?? "{}"
+        // Sorted: the encoder's key order changes between calls, and an unchanged fighter has
+        // to read as unchanged or the adapter pushes it to React again.
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let fighterJSON = fighter.flatMap { try? String(data: encoder.encode($0), encoding: .utf8) } ?? "{}"
         let portraitURL = fighter.flatMap { state.imageURL($0.portrait)?.absoluteString } ?? ""
         return FighterParams(
             themeJSON: ThemeLoader.tokensJSON(),

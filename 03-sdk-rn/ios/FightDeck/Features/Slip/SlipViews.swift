@@ -56,7 +56,11 @@ struct BetslipBridgeView: View {
     }
 
     private var params: BetslipParams {
-        let slipJSON = (try? JSONEncoder().encode(SlipPayload(from: state.slip))).flatMap {
+        // Sorted, because the encoder's key order changes from one call to the next, and the
+        // same slip spelled differently reads as a change the adapter has to push.
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let slipJSON = (try? encoder.encode(SlipPayload(from: state.slip))).flatMap {
             String(data: $0, encoding: .utf8)
         } ?? "{}"
         let eventsURL = DatasetLocator.datasetRoot().appendingPathComponent("events.json")

@@ -124,8 +124,8 @@ function BetslipScreenContent(props: SlipProps) {
 
   const [stakeText, setStakeText] = useState(initial.stake ?? '10.00');
   const [selections, setSelections] = useState<Selection[]>(parseSelections(initial.selections));
-  // Owned by the host. Handing the surface new properties restarts the React tree, so the
-  // confirmation would be wiped by the very update that empties the slip.
+  // Owned by the host, so the confirmation outlives a new presentation of the surface, which
+  // starts the React tree afresh.
   const placedMessage = String(props.betPlacedMessage ?? '') || null;
   const [stakeFocused, setStakeFocused] = useState(false);
   const stakeFocusedRef = useRef(false);

@@ -22,9 +22,9 @@ struct RNSurfaceLayoutMetrics: Equatable {
 /// Every React Native surface in the app is mounted through this one view. Data and chrome
 /// reach React on different channels: `update` hands the adapter new parameters, and the
 /// adapter drops the ones that change nothing, because properties re-render the surface from
-/// its root and take focus off the field being typed in. The chrome — safe areas, keyboard,
-/// whether a field is being edited — changes *because* a field gained focus, so it goes out
-/// through `publishLayout`, which React folds into its own state.
+/// its root. The chrome — safe areas, keyboard, whether a field is being edited — changes
+/// *because* a field gained focus, so it goes out through `publishLayout`, which React folds
+/// into its own state.
 struct RNSurfaceView: View {
     let make: @MainActor () -> UIViewController
     let update: @MainActor () -> Void

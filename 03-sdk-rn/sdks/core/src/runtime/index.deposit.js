@@ -1,15 +1,10 @@
 import { AppRegistry } from 'react-native';
 import { DepositScreen } from '../../../deposit/src/DepositScreen';
+import { feature } from './feature';
 
 /** Runtime + deposit surface only (no bet slip). */
 
-function withMountLog(name, Component) {
-  return function FeatureWrapper(props) {
-    return <Component {...props} />;
-  };
-}
-
-AppRegistry.registerComponent('DepositFeature', () => withMountLog('DepositFeature', DepositScreen));
+AppRegistry.registerComponent('DepositFeature', feature(DepositScreen));
 
 AppRegistry.registerComponent('FightDeckRuntimeBootstrap', () => {
   const React = require('react');

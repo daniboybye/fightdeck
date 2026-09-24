@@ -2,21 +2,13 @@ import { AppRegistry } from 'react-native';
 import { DepositScreen } from '../../../deposit/src/DepositScreen';
 import { BetslipScreen } from '../../../betslip/src/BetslipScreen';
 import { FighterScreen } from '../../../fighter/src/FighterScreen';
+import { feature } from './feature';
 
 /** Shared runtime entry — registers all SDK feature surfaces in one bundle. */
 
-function withMountLog(name, Component) {
-  return function FeatureWrapper(props) {
-    if (__DEV__) {
-      console.log(`[FightDeckRN] surface mounted: ${name}`);
-    }
-    return <Component {...props} />;
-  };
-}
-
-AppRegistry.registerComponent('DepositFeature', () => withMountLog('DepositFeature', DepositScreen));
-AppRegistry.registerComponent('BetslipFeature', () => withMountLog('BetslipFeature', BetslipScreen));
-AppRegistry.registerComponent('FighterFeature', () => withMountLog('FighterFeature', FighterScreen));
+AppRegistry.registerComponent('DepositFeature', feature(DepositScreen));
+AppRegistry.registerComponent('BetslipFeature', feature(BetslipScreen));
+AppRegistry.registerComponent('FighterFeature', feature(FighterScreen));
 
 AppRegistry.registerComponent('FightDeckRuntimeBootstrap', () => {
   const React = require('react');

@@ -34,8 +34,8 @@ public struct BetslipParams: Equatable, Sendable {
     public let balance: Decimal
     public let slipJSON: String
     public let eventsJSON: String
-    /// Set by the host, not the surface: a property update restarts the React tree, so state
-    /// the SDK kept locally would not survive the very update that announces it.
+    /// Set by the host, not the surface: a new presentation starts the React tree afresh, so
+    /// a confirmation the SDK kept locally would not outlive it.
     public let betPlacedMessage: String
 
     public init(

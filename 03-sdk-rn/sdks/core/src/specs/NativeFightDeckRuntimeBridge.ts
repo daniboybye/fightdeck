@@ -35,8 +35,8 @@ export interface Spec extends TurboModule {
   surfaceLayout(moduleName: string): SurfaceLayout | null;
   /**
    * Every layout after that. Chrome does not travel as a property because a property update
-   * re-renders the surface from its root, which takes focus off the field being typed in —
-   * and keyboard frames change precisely because a field gained focus.
+   * re-renders the surface from its root, and keyboard frames change precisely because a field
+   * gained focus.
    */
   readonly onSurfaceLayout: CodegenTypes.EventEmitter<SurfaceLayout>;
 }

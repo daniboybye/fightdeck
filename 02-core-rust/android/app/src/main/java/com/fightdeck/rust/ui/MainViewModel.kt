@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.core.StateFlowBetSlipStore
 import com.fightdeck.rust.services.DatasetLocator
-import com.fightdeck.rust.services.LocalAssetServer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +19,8 @@ import uniffi.fightevents.EventSummary
 import uniffi.fightevents.FighterSummary
 import uniffi.fightevents.MediaItem
 import uniffi.fightevents.NewsItem
+import uniffi.fightevents.assetUrl
+import uniffi.fightevents.startAssetServer
 import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.BoutIndexRecord
 import uniffi.fightslip.SlipHandle
@@ -140,8 +141,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             onFailure = { LoadState.Error(error) },
         )
 
-    fun imageUrl(path: String): String? =
-        LocalAssetServer.port.takeIf { it > 0 }?.let { "http://127.0.0.1:$it/$path" }
+    fun imageUrl(path: String): String? = assetUrl(path)
 
     fun toggleSelection(bout: BoutSummary, fighterId: String, odds: String) {
         requireSlipStore().toggleSelection(bout.id, fighterId, odds)
@@ -187,9 +187,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ): RustEngine {
             Log.i(TAG, "bootstrapRustEngine start")
             onStep("Loading fight catalogue…")
-            val root = DatasetLocator.datasetRoot(application)
-            LocalAssetServer.start(root)
-            val catalog = EventCatalog.load(root.path)
+            val root = DatasetLocator.datasetRoot(application).path
+            startAssetServer(root)
+            val catalog = EventCatalog.load(root)
             Log.i(TAG, "EventCatalog ready")
 
             onStep("Starting bet slip…")

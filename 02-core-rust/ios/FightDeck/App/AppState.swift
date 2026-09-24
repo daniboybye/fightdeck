@@ -61,9 +61,8 @@ final class AppState {
 
     func bootstrap() async {
         bootstrapState = .loading
-        let datasetRoot = DatasetLocator.datasetRoot()
         do {
-            try await LocalAssetServer.shared.start(assetsRoot: datasetRoot)
+            _ = try startAssetServer(datasetRoot: DatasetLocator.datasetRoot().path)
             bootstrapState = .ready
             await refreshAll()
         } catch {
@@ -126,8 +125,7 @@ final class AppState {
     }
 
     func imageURL(_ path: String) -> URL? {
-        guard LocalAssetServer.port > 0 else { return nil }
-        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(path)")
+        assetUrl(path: path).flatMap(URL.init(string:))
     }
 
     func fighter(_ id: String) -> FighterSummary? {

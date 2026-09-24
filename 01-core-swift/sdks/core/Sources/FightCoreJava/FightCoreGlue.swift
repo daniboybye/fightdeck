@@ -48,3 +48,53 @@ public func fractionalToDecimal(_ fractional: String) -> String {
 public func impliedProbability(_ odds: String) -> String {
     Money.formatImpliedProbability(Money.parse(odds))
 }
+
+public final class DepositMethodBridge {
+    public let id: String
+    public let title: String
+    public let feeNote: String
+
+    init(_ method: DepositMethod) {
+        id = method.rawValue
+        title = method.title
+        feeNote = method.feeNote
+    }
+}
+
+public final class DepositQuoteBridge {
+    /// Two places, ready for `SlipEngine.deposit`.
+    public let amount: String
+    public let amountDisplay: String
+    public let feeDisplay: String
+    public let totalDisplay: String
+    public let newBalanceDisplay: String
+    /// Empty while the amount is acceptable: jextract carries no optionals.
+    public let validationMessage: String
+    /// `confirmable` rather than `canConfirm`: jextract names a Bool getter `is…`.
+    public let confirmable: Bool
+
+    init(_ quote: DepositQuote) {
+        amount = Money.format(quote.amount)
+        amountDisplay = Money.formatCurrency(quote.amount)
+        feeDisplay = Money.formatCurrency(quote.fee)
+        totalDisplay = Money.formatCurrency(quote.total)
+        newBalanceDisplay = Money.formatCurrency(quote.newBalance)
+        validationMessage = quote.validationMessage ?? ""
+        confirmable = quote.canConfirm
+    }
+}
+
+public func depositMethods() -> [DepositMethodBridge] {
+    DepositMethod.allCases.map(DepositMethodBridge.init)
+}
+
+public func depositPresets() -> [String] {
+    Deposit.presets
+}
+
+public func depositQuote(amountText: String, methodID: String, balance: String) -> DepositQuoteBridge {
+    let method = DepositMethod(rawValue: methodID) ?? .card
+    return DepositQuoteBridge(
+        Deposit.quote(amountText: amountText, method: method, balance: Money.parse(balance))
+    )
+}

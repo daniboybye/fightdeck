@@ -4,7 +4,7 @@ Two host apps (SwiftUI + Compose) sharing the same business logic as [`02-core-r
 
 ## What this demonstrates
 
-- **Three Swift packages, same split as Rust** — `FightCore` (money, odds, contract limits), `FightSlip` (slip engine, store, settlement, cash-out), `FightEvents` (dataset parsing, catalog, display, tale of the tape). The feature packages depend on the kernel but not on each other; the app is the only place they meet.
+- **Three Swift packages, same split as Rust** — `FightCore` (money, odds, contract limits, deposit rules), `FightSlip` (slip engine, store, settlement, cash-out), `FightEvents` (dataset parsing, catalog, display, tale of the tape). The feature packages depend on the kernel but not on each other; the app is the only place they meet.
 - **One contract, 72 fixtures** — odds, slip math (including the seven-fold €361.11 trap), validation, settlement, cash-out. Fixture suites live with the package that owns the logic; all cases pass in `swift test` on macOS **and on an Android device** through the generated JNI bindings.
 - **Generated JNI bindings per package** — jextract runs once per SDK, each with its own `swift-java.config`, Java package, and `lib*.so`. Nobody writes or maintains a JNI thunk; what stays hand-written is the string-money facade in front of `FightCore` (see [the constraints](#four-constraints-that-shaped-the-code)).
 - **Shared mutation logic** — `SlipSession` holds the slip and the rules. iOS wraps it in `@Observable BetSlipStore`; Android wraps it in the extracted `SlipEngine`. Both platforms execute the same Swift.
@@ -171,7 +171,7 @@ nested `Discriminator` enum **and** a `sealed interface Case` of records, so Kot
 | --- | ---: | --- |
 | Generated Java classes (three packages) | 1,300+ | nobody |
 | Generated JNI thunks (Swift, three packages) | 2,378+ | nobody |
-| `FightCoreGlue.swift` — money/odds facade | 70 | us |
+| `FightCoreGlue.swift` — money, odds and deposit facade | 100 | us |
 | `FightSlipGlue.swift` — slip engine facade | 200 | us |
 | `FightEventsGlue.swift` — catalog facade | 250 | us |
 | `FightCoreGlue.kt` — marshalling and read-back | 109 | us |
@@ -342,7 +342,7 @@ None blocking. One observation:
 │   ├── build-aars.sh               drives all three AAR builds
 │   ├── scripts/build-aar-lib.sh    shared cross-compile + jextract + packaging body
 │   ├── core/                       SwiftPM package FightCore → libfightcore.so
-│   │   ├── Sources/FightCore/      money, odds, contract limits, bout index types
+│   │   ├── Sources/FightCore/      money, odds, contract limits, deposit rules, bout index
 │   │   └── Sources/FightCoreJava/  string-money facade for jextract
 │   ├── slip/                       SwiftPM package FightSlip → libfightslip.so
 │   │   ├── Sources/FightSlip/      SlipEngine, SlipSession, BetSlipStore

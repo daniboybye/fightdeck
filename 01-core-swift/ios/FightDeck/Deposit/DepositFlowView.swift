@@ -18,45 +18,6 @@ struct DepositFlowView: View {
     @State private var didSucceed = false
     @FocusState private var amountFocused: Bool
 
-    private enum DepositMethod: String, CaseIterable, Identifiable {
-        case card
-        case bank
-        case wallet
-
-        var id: String { rawValue }
-
-        var title: String {
-            switch self {
-            case .card: "Card"
-            case .bank: "Bank transfer"
-            case .wallet: "Wallet"
-            }
-        }
-
-        var feeNote: String {
-            switch self {
-            case .card: "Instant · 0% fee"
-            case .bank: "1–2 days · 0% fee"
-            case .wallet: "Instant · 1% fee"
-            }
-        }
-
-        var symbol: String {
-            switch self {
-            case .card: "creditcard"
-            case .bank: "building.columns"
-            case .wallet: "wallet.bifold"
-            }
-        }
-
-        var feeRate: Decimal {
-            switch self {
-            case .card, .bank: 0
-            case .wallet: Decimal(string: "0.01")!
-            }
-        }
-    }
-
     var body: some View {
         Group {
             if didSucceed {
@@ -93,13 +54,13 @@ struct DepositFlowView: View {
                     .keyboardType(.decimalPad)
                     .font(.largeTitle.bold())
                     .focused($amountFocused)
-                if let message = amountValidationMessage {
+                if let message = quote.validationMessage {
                     Label(message, systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundStyle(DesignTokens.ColorToken.negative)
                 }
                 PresetChipRow {
-                    ForEach(["10", "25", "50", "100"], id: \.self) { chip in
+                    ForEach(Deposit.presets, id: \.self) { chip in
                         PresetChipButton(title: "€\(chip)") { amountText = chip }
                     }
                 }
@@ -126,23 +87,20 @@ struct DepositFlowView: View {
             }
 
             Section("Summary") {
-                LabeledContent("Amount", value: Money.formatCurrency(parsedAmount))
-                LabeledContent("Fee", value: Money.formatCurrency(feeAmount))
+                LabeledContent("Amount", value: Money.formatCurrency(quote.amount))
+                LabeledContent("Fee", value: Money.formatCurrency(quote.fee))
                 LabeledContent("Total") {
-                    Text(Money.formatCurrency(parsedAmount + feeAmount))
+                    Text(Money.formatCurrency(quote.total))
                         .fontWeight(.semibold)
                 }
-                LabeledContent("New balance", value: Money.formatCurrency(params.currentBalance + parsedAmount))
+                LabeledContent("New balance", value: Money.formatCurrency(quote.newBalance))
             }
         }
         // A bar rather than a plain inset: the form keeps scrolling under it, and Done sits
         // beside the action instead of in a keyboard toolbar that would overlap it.
         .safeAreaBar(edge: .bottom) {
             HStack(spacing: DesignTokens.Spacing.sm) {
-                PrimaryActionButton(
-                    title: "Confirm deposit",
-                    isEnabled: amountValidationMessage == nil && !amountText.isEmpty
-                ) {
+                PrimaryActionButton(title: "Confirm deposit", isEnabled: quote.canConfirm) {
                     withAnimation(.smooth(duration: 0.35)) { didSucceed = true }
                 }
                 if amountFocused {
@@ -169,26 +127,25 @@ struct DepositFlowView: View {
                     .symbolEffect(.bounce, options: .nonRepeating)
             }
         } description: {
-            Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
+            Text("New balance: \(Money.formatCurrency(quote.newBalance))")
         } actions: {
-            SecondaryActionButton(title: "Done") { onResult(.completed(amount: parsedAmount)) }
+            SecondaryActionButton(title: "Done") { onResult(.completed(amount: quote.amount)) }
         }
         .transition(.scale(scale: 0.92).combined(with: .opacity))
     }
 
-    private var parsedAmount: Decimal {
-        Money.parse(amountText.isEmpty ? "0" : amountText)
+    private var quote: DepositQuote {
+        Deposit.quote(amountText: amountText, method: method, balance: params.currentBalance)
     }
+}
 
-    private var feeAmount: Decimal {
-        Money.money(parsedAmount * method.feeRate)
-    }
-
-    private var amountValidationMessage: String? {
-        let amount = parsedAmount
-        if amountText.isEmpty { return nil }
-        if amount < 10 { return "Minimum deposit is €10" }
-        if amount > 2_000 { return "Maximum deposit is €2,000" }
-        return nil
+/// SF Symbols are iOS's own, so the icon is the one part of a method the core cannot supply.
+private extension DepositMethod {
+    var symbol: String {
+        switch self {
+        case .card: "creditcard"
+        case .bank: "building.columns"
+        case .wallet: "wallet.bifold"
+        }
     }
 }

@@ -36,6 +36,10 @@ PKG_FOLDER="$(basename "$PKG_ROOT")"
 PLUGIN_OUT="$PKG_ROOT/.build/plugins/outputs/${PKG_FOLDER}/${JAVA_BRIDGE_TARGET}/destination/JExtractSwiftPlugin"
 GENERATED_JAVA="$PLUGIN_OUT/src/generated/java"
 
+# jextract writes a Java file per type and never deletes the file of a type that is gone, and
+# every file in that folder is compiled into classes.jar. Without this, a glue type deleted from
+# Swift keeps shipping as a class whose native methods no longer exist in the .so.
+rm -rf "$PLUGIN_OUT"
 rm -rf "$OUT/android-libs"
 mkdir -p "$OUT/android-libs"
 

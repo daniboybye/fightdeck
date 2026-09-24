@@ -5,8 +5,8 @@
 #   ./tools/measure-android.sh <approach> <project-dir> [module] [variant]
 #
 # The React Native and Skip hosts carry product flavours, so the variant to weigh is
-# named rather than assumed: `bothRelease` is the demo configuration, the other flavours
-# exist to price a single feature.
+# named rather than assumed: `allRelease` is the demo configuration, the other flavours
+# exist to price one feature at a time.
 #
 # The universal APK is the number people quote and the least honest one, because
 # nobody downloads it: Play delivers a per-ABI split. Both are recorded, and the

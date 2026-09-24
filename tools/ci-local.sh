@@ -500,10 +500,13 @@ run_ios_app() {
 
 # --- _android-app.yml --------------------------------------------------------------
 
+# `all` is the demo: every feature, and the flavour marked `isDefault`. This said `both` —
+# deposit and bet slip — from before the fighter profile existed, so Android weighed two
+# features for React Native and Skip while iOS, whose demo app links every SDK, weighed three.
 android_variant_for() {
     local approach="$1"
     if [[ "$approach" == "03-sdk-rn" || "$approach" == "04-sdk-skip" ]]; then
-        echo "bothRelease"
+        echo "allRelease"
     else
         echo "release"
     fi

@@ -15,9 +15,6 @@ interface FighterProps extends Record<string, unknown> {
   themeJSON: string;
   fighterJSON: string;
   portraitURL: string;
-  safeAreaTop?: unknown;
-  safeAreaBottom?: unknown;
-  chromeBackground?: unknown;
 }
 
 interface FighterRecord {

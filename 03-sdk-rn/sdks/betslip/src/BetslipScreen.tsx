@@ -39,10 +39,6 @@ interface SlipProps extends Record<string, unknown> {
   slipJSON: string;
   eventsJSON: string;
   betPlacedMessage?: unknown;
-  safeAreaTop?: unknown;
-  safeAreaBottom?: unknown;
-  keyboardBottomInset?: unknown;
-  chromeBackground?: unknown;
 }
 
 interface SelectionLabels {

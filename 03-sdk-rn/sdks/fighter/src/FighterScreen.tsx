@@ -267,7 +267,7 @@ function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: 
       overflow: 'hidden',
     },
     heroImage: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       width: '100%',
       height: 320,
     },

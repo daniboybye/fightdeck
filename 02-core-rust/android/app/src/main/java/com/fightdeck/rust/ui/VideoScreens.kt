@@ -45,9 +45,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.compose.composable
-import com.fightdeck.rust.data.MediaItem
 import com.fightdeck.rust.design.Tokens
 import kotlinx.coroutines.delay
+import uniffi.fightevents.MediaItem
+import uniffi.fightevents.formatDuration
 
 /** How often playback position is sampled, so the floating window can pick the clip back up. */
 private const val POSITION_SAMPLE_MS = 500L
@@ -232,8 +233,4 @@ private fun floatingWindowParams(autoEnter: Boolean): PictureInPictureParams {
 }
 
 internal val MediaItem.durationLabel: String
-    get() {
-        val minutes = durationSeconds / 60
-        val seconds = durationSeconds % 60
-        return "%d:%02d".format(minutes, seconds)
-    }
+    get() = formatDuration(durationSeconds)

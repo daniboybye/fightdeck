@@ -17,12 +17,3 @@
 
 -keep class uniffi.** { *; }
 -keepclassmembers class uniffi.** { *; }
-
-# Serializable dataset models — the generated serialisers are reached through the companion.
--keepclassmembers class com.fightdeck.rust.data.** {
-    *** Companion;
-}
--keepclasseswithmembers class com.fightdeck.rust.data.** {
-    kotlinx.serialization.KSerializer serializer(...);
-}
--keep,includedescriptorclasses class com.fightdeck.rust.data.**$$serializer { *; }

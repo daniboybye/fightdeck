@@ -1,6 +1,7 @@
 //! The dataset as it sits on disk. Both hosts used to declare these shapes themselves — one
 //! in Swift `Codable`, one in Kotlin `@Serializable` — and both had to re-derive the bout
-//! index from them at launch.
+//! index from them at launch. News and media cross the boundary exactly as they are stored,
+//! so those two are UniFFI records as well.
 
 use serde::Deserialize;
 
@@ -95,4 +96,43 @@ pub struct Record {
     pub draws: u32,
     pub no_contests: u32,
     pub display: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct NewsFile {
+    pub news: Vec<NewsItem>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MediaFile {
+    pub media: Vec<MediaItem>,
+}
+
+#[derive(uniffi::Record, Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewsItem {
+    pub id: String,
+    pub event_id: String,
+    pub headline: String,
+    pub body: String,
+    pub published_at: String,
+    pub read_minutes: u32,
+    pub source: String,
+    pub hero_image: String,
+}
+
+#[derive(uniffi::Record, Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaItem {
+    pub id: String,
+    pub event_id: String,
+    pub title: String,
+    pub kind: String,
+    pub url: String,
+    pub poster: String,
+    pub duration_seconds: u32,
+    /// Says which public test stream stands in for the licensed footage, so the demo never
+    /// passes a cartoon trailer off as a press conference.
+    #[serde(default)]
+    pub note: Option<String>,
 }

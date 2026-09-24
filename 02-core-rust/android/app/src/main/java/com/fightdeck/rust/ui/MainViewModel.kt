@@ -6,9 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.core.StateFlowBetSlipStore
-import com.fightdeck.rust.data.JsonFileRepository
-import com.fightdeck.rust.data.MediaItem
-import com.fightdeck.rust.data.NewsItem
 import com.fightdeck.rust.services.DatasetLocator
 import com.fightdeck.rust.services.LocalAssetServer
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +18,8 @@ import uniffi.fightevents.BoutSummary
 import uniffi.fightevents.EventCatalog
 import uniffi.fightevents.EventSummary
 import uniffi.fightevents.FighterSummary
+import uniffi.fightevents.MediaItem
+import uniffi.fightevents.NewsItem
 import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.BoutIndexRecord
 import uniffi.fightslip.SlipHandle
@@ -47,8 +46,6 @@ data class RustEngine(
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private var repository: JsonFileRepository? = null
-
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
         BootstrapState.Loading("Loading fight core…"),
     )
@@ -91,8 +88,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             booted.fold(
                 onSuccess = { engine ->
-                    repository = JsonFileRepository(engine.datasetRoot)
-                    _engine.value = engine.rustEngine
+                    _engine.value = engine
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
                     refreshNews()
@@ -127,36 +123,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         get() = requireSlipStore().balance
 
     fun refreshEvents() {
-        val events = runCatching { requireCatalog().events() }.getOrElse {
-            _events.value = LoadState.Error("Could not load events")
-            return
-        }
-        _events.value = if (events.isEmpty()) LoadState.Empty else LoadState.Loaded(events)
+        _events.value = loadState("Could not load events") { requireCatalog().events() }
     }
 
     fun refreshNews() {
-        viewModelScope.launch {
-            _news.value = LoadState.Loading
-            _news.value = runCatching { requireNotNull(repository).loadNews() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load news") },
-                )
-        }
+        _news.value = loadState("Could not load news") { requireCatalog().news() }
     }
 
     fun refreshMedia() {
-        viewModelScope.launch {
-            _media.value = LoadState.Loading
-            _media.value = runCatching { requireNotNull(repository).loadMedia() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load media") },
-                )
-        }
+        _media.value = loadState("Could not load media") { requireCatalog().media() }
     }
 
-    fun imageUrl(path: String): String? = repository?.imageUrl(path)
+    private fun <T> loadState(error: String, load: () -> List<T>): LoadState<List<T>> =
+        runCatching(load).fold(
+            onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
+            onFailure = { LoadState.Error(error) },
+        )
+
+    fun imageUrl(path: String): String? =
+        LocalAssetServer.port.takeIf { it > 0 }?.let { "http://127.0.0.1:$it/$path" }
 
     fun toggleSelection(bout: BoutSummary, fighterId: String, odds: String) {
         requireSlipStore().toggleSelection(bout.id, fighterId, odds)
@@ -193,26 +178,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
     }
 
-    private data class BootstrapResult(
-        val datasetRoot: java.io.File,
-        val rustEngine: RustEngine,
-    )
-
     private companion object {
         private const val TAG = "FightDeckRustBoot"
 
         private fun bootstrapRustEngine(
             application: Application,
             onStep: (String) -> Unit,
-        ): BootstrapResult {
+        ): RustEngine {
             Log.i(TAG, "bootstrapRustEngine start")
             onStep("Loading fight catalogue…")
             val root = DatasetLocator.datasetRoot(application)
             LocalAssetServer.start(root)
-            val catalog = EventCatalog.parse(
-                root.resolve("events.json").readText(),
-                root.resolve("fighters.json").readText(),
-            )
+            val catalog = EventCatalog.load(root.path)
             Log.i(TAG, "EventCatalog ready")
 
             onStep("Starting bet slip…")
@@ -225,7 +202,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Log.i(TAG, "BetSlipStore ready")
 
             onStep("Preparing UI…")
-            return BootstrapResult(root, RustEngine(catalog, slip, slipStore))
+            return RustEngine(catalog, slip, slipStore)
         }
     }
 }

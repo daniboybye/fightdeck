@@ -1,18 +1,23 @@
 //! The `fightevents` UniFFI namespace.
 
 use crate::catalog::{Catalog, CatalogError};
-use crate::dataset::{Bout, Event, Fighter};
+use crate::dataset::{Bout, Event, Fighter, MediaFile, MediaItem, NewsFile, NewsItem};
 use crate::display;
 use crate::tape;
 use fightcore::{money, odds};
+use serde::de::DeserializeOwned;
+use std::fs;
+use std::path::Path;
 use std::sync::Arc;
 
-#[derive(Debug, thiserror::Error, uniffi::Error)]
+#[derive(Debug, Clone, thiserror::Error, uniffi::Error)]
 pub enum EventsError {
     #[error("decoding")]
     Decoding { field: String },
     #[error("not found")]
     NotFound { id: String },
+    #[error("io")]
+    Io { reason: String },
 }
 
 impl From<CatalogError> for EventsError {
@@ -228,21 +233,56 @@ impl From<tape::Advantage> for AdvantageRecord {
     }
 }
 
+fn read(root: &Path, name: &str) -> Result<String, EventsError> {
+    fs::read_to_string(root.join(name))
+        .map_err(|_| EventsError::Io { reason: format!("could not read {name}") })
+}
+
+fn decode<T: DeserializeOwned>(text: &str, field: &str) -> Result<T, EventsError> {
+    serde_json::from_str(text).map_err(|_| EventsError::Decoding { field: field.to_string() })
+}
+
 // MARK: - Object
 
 #[derive(uniffi::Object)]
 pub struct EventCatalog {
     catalog: Catalog,
+    news: Result<Vec<NewsItem>, EventsError>,
+    media: Result<Vec<MediaItem>, EventsError>,
 }
 
 #[uniffi::export]
 impl EventCatalog {
-    /// Both files are handed in as text: the SDK does no I/O, so the host keeps control of
-    /// sandboxing and bundling.
+    /// The host still decides where the dataset lives — the app bundle, a scheme variable, a
+    /// folder pushed over adb — and hands over the directory. Reading and parsing it is ours.
     #[uniffi::constructor]
-    pub fn parse(events_json: String, fighters_json: String) -> Result<Arc<Self>, EventsError> {
-        let catalog = Catalog::parse(&events_json, &fighters_json)?;
-        Ok(Arc::new(Self { catalog }))
+    pub fn load(dataset_root: String) -> Result<Arc<Self>, EventsError> {
+        let root = Path::new(&dataset_root);
+        let catalog = Catalog::parse(&read(root, "events.json")?, &read(root, "fighters.json")?)?;
+        Ok(Arc::new(Self {
+            catalog,
+            // A broken news or media file costs its own section, not the whole catalogue.
+            news: read(root, "news.json")
+                .and_then(|text| decode::<NewsFile>(&text, "news"))
+                .map(|file| file.news),
+            media: read(root, "media.json")
+                .and_then(|text| decode::<MediaFile>(&text, "media"))
+                .map(|file| file.media),
+        }))
+    }
+
+    /// What the app shows when there is no dataset to load.
+    #[uniffi::constructor]
+    pub fn empty() -> Arc<Self> {
+        Arc::new(Self { catalog: Catalog::default(), news: Ok(vec![]), media: Ok(vec![]) })
+    }
+
+    pub fn news(&self) -> Result<Vec<NewsItem>, EventsError> {
+        self.news.clone()
+    }
+
+    pub fn media(&self) -> Result<Vec<MediaItem>, EventsError> {
+        self.media.clone()
     }
 
     pub fn events(&self) -> Vec<EventSummary> {
@@ -362,3 +402,4 @@ pub fn humanise_code(raw: String) -> String {
 pub fn segment_title(segment: String) -> String {
     display::segment_title(&segment)
 }
+

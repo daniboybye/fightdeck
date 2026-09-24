@@ -51,14 +51,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fightdeck.rust.core.FightCoreDisplay
-import com.fightdeck.rust.data.MediaItem
-import com.fightdeck.rust.data.NewsItem
 import com.fightdeck.rust.design.BalanceMenuAction
 import com.fightdeck.rust.design.Tokens
 import uniffi.fightevents.BoutSummary
 import uniffi.fightevents.CornerSummary
 import uniffi.fightevents.EventCatalog
 import uniffi.fightevents.EventSummary
+import uniffi.fightevents.MediaItem
+import uniffi.fightevents.NewsItem
 import uniffi.fightslip.BetSlipRecord
 
 @OptIn(ExperimentalMaterial3Api::class)

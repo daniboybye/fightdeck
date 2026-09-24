@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightEvents
 import SwiftUI
 
 struct NewsRow: View {

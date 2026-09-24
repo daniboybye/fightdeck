@@ -40,8 +40,8 @@ extension String {
     }
 }
 
-extension Int {
+extension UInt32 {
     var formattedDuration: String {
-        formatDuration(totalSeconds: UInt32(Swift.max(0, self)))
+        formatDuration(totalSeconds: self)
     }
 }

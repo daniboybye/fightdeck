@@ -1,6 +1,6 @@
 //! FightEvents — the catalogue feature SDK.
 //!
-//! Parses the dataset, orders a fight card, builds the tale of the tape and answers the
+//! Loads the dataset, orders a fight card, builds the tale of the tape and answers the
 //! lookups the slip screen needs. Depends on `fightcore` for money and odds, and ships as
 //! its own `FightEvents.xcframework` / `fightevents.aar`.
 

@@ -4,6 +4,7 @@ use crate::dataset::{Bout, Event, EventsFile, Fighter, FightersFile};
 use crate::display;
 use std::collections::HashMap;
 
+#[derive(Default)]
 pub struct Catalog {
     events: Vec<Event>,
     fighters: HashMap<String, Fighter>,

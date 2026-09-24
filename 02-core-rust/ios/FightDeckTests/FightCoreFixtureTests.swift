@@ -115,9 +115,7 @@ private func fixtureSlipHandle() -> SlipHandle {
         .deletingLastPathComponent()
         .deletingLastPathComponent()
         .appendingPathComponent("dataset")
-    let events = try! String(contentsOf: datasetRoot.appendingPathComponent("events.json"), encoding: .utf8)
-    let fighters = try! String(contentsOf: datasetRoot.appendingPathComponent("fighters.json"), encoding: .utf8)
-    let catalog = try! EventCatalog.parse(eventsJson: events, fightersJson: fighters)
+    let catalog = try! EventCatalog.load(datasetRoot: datasetRoot.path)
     return SlipHandle(bouts: catalog.boutIndex().map {
         BoutIndexRecord(
             id: $0.id,

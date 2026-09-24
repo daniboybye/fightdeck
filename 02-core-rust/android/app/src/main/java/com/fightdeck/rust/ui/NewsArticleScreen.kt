@@ -24,9 +24,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.fightdeck.rust.data.MediaItem
-import com.fightdeck.rust.data.NewsItem
 import com.fightdeck.rust.design.Tokens
+import uniffi.fightevents.MediaItem
+import uniffi.fightevents.NewsItem
 
 @Composable
 internal fun NewsArticleScreen(

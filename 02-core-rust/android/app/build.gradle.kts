@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -69,8 +68,6 @@ dependencies {
 
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     // All three UniFFI namespaces call into libfightdeck.so via JNA — must resolve the AAR so
     // libjnidispatch.so ships for every ABI, not the JVM jar that looks on the classpath.

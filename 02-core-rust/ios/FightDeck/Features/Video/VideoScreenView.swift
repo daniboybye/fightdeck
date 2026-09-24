@@ -7,6 +7,7 @@
 //
 
 import AVKit
+import FightEvents
 import MediaPlayer
 import SwiftUI
 import UIKit

@@ -1,5 +1,8 @@
 plugins {
     id("com.android.library")
+    // Runs codegen on `codegenConfig` in 03-sdk-rn/package.json and compiles the Java half of
+    // the spec into this AAR. The JNI half is linked by the app, which runs the same codegen.
+    id("com.facebook.react")
 }
 
 android {

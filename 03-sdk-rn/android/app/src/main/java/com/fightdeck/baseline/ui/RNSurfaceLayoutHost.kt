@@ -1,44 +1,60 @@
 package com.fightdeck.baseline.ui
 
+import android.content.Context
 import android.view.View
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.fightdeck.rn.runtime.RNSurfaceLayoutMetrics
-import com.fightdeck.rn.runtime.RNSurfaceLayoutPush
-import com.fightdeck.rn.runtime.RNSurfaceLayoutSnapshot
+import com.fightdeck.rn.runtime.FightDeckRNRuntime
 import com.fightdeck.rn.runtime.SurfaceChrome
+import com.fightdeck.rn.runtime.SurfaceLayout
 
 /** Default bottom chrome until the RN host view reports a size (tab bar + home indicator). */
 private const val DEFAULT_TAB_BAR_CLEARANCE_DP = 64f
 
-class RNSurfaceLayoutHandle internal constructor(
-    internal val metrics: RNSurfaceLayoutMetrics,
-    private val onViewChanged: (View) -> Unit,
+/**
+ * Every React Native surface in the app is mounted through this one composable. Data and
+ * chrome reach React on different channels: [update] hands the adapter new parameters, and
+ * the adapter drops the ones that change nothing, because props re-render the surface from
+ * its root and steal text-field focus. The chrome the surface has to clear changes *because*
+ * a field gained focus, so it goes out through [FightDeckRNRuntime.publishLayout] instead.
+ */
+@Composable
+fun RNSurface(
+    includesTabBarClearance: Boolean,
+    create: (Context) -> View,
+    update: (View) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    fun trackHost(view: View) {
-        onViewChanged(view)
-    }
+    val trackHost = rememberRNSurfaceLayout(includesTabBarClearance)
+    AndroidView(
+        modifier = modifier.fillMaxSize(),
+        factory = { context -> create(context).also(trackHost) },
+        update = { view ->
+            trackHost(view)
+            update(view)
+            view.requestLayout()
+        },
+        onRelease = FightDeckRNRuntime::stopSurface,
+    )
 }
 
 @Composable
-fun rememberRNSurfaceLayout(
-    moduleName: String,
-    includesTabBarClearance: Boolean,
-    textInputActive: Boolean = false,
-): RNSurfaceLayoutHandle {
+private fun rememberRNSurfaceLayout(includesTabBarClearance: Boolean): (View) -> Unit {
     val density = LocalDensity.current
     val imeInsetPx = with(density) {
         WindowInsets.ime.asPaddingValues().calculateBottomPadding().roundToPx()
@@ -47,7 +63,6 @@ fun rememberRNSurfaceLayout(
     var hostView by remember { mutableStateOf<View?>(null) }
     var surfaceHeightPx by remember { mutableIntStateOf(0) }
     var surfaceTopInWindowPx by remember { mutableIntStateOf(0) }
-    var layoutStamp by remember { mutableDoubleStateOf(0.0) }
 
     val windowInsets = hostView?.let { ViewCompat.getRootWindowInsets(it) }
     val systemBars = windowInsets?.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -69,7 +84,7 @@ fun rememberRNSurfaceLayout(
         0
     }
 
-    val snapshot = if (hostView != null && surfaceHeightPx > 0) {
+    val layout = if (hostView != null && surfaceHeightPx > 0) {
         // React Native lays out in density-independent units, the same as the points the iOS
         // host sends. Window insets come in raw pixels, so they are scaled here rather than
         // arriving as numbers three times too big for the style they end up in.
@@ -81,59 +96,40 @@ fun rememberRNSurfaceLayout(
             keyboardOverlapPx = overlapWithSurface(imeInsetPx),
         ).inDensityIndependentUnits(density.density)
     } else {
-        RNSurfaceLayoutSnapshot(
+        SurfaceLayout(
             safeAreaTop = with(density) { topInsetPx.toDp().value },
-            safeAreaBottom = if (includesTabBarClearance) {
-                DEFAULT_TAB_BAR_CLEARANCE_DP
-            } else {
-                0f
-            },
-            keyboardBottomInset = 0f,
-            chromeBackground = SurfaceChrome.listBackgroundHex(),
+            safeAreaBottom = if (includesTabBarClearance) DEFAULT_TAB_BAR_CLEARANCE_DP else 0f,
         )
     }
 
-    LaunchedEffect(hostView, snapshot, textInputActive, layoutStamp) {
-        RNSurfaceLayoutPush.deliver(
-            moduleName = moduleName,
-            layout = snapshot,
-            textInputActive = textInputActive,
-            layoutStamp = layoutStamp,
-        )
+    LaunchedEffect(hostView, layout) {
+        hostView?.let { FightDeckRNRuntime.publishLayout(it, layout) }
     }
 
-    val metrics = RNSurfaceLayoutMetrics(
-        safeAreaTop = snapshot.safeAreaTop,
-        safeAreaBottom = snapshot.safeAreaBottom,
-        keyboardBottomInset = snapshot.keyboardBottomInset,
-        chromeBackground = snapshot.chromeBackground,
-        textInputActive = textInputActive,
-    )
-
-    return RNSurfaceLayoutHandle(metrics) { view ->
-        if (hostView === view) {
-            return@RNSurfaceLayoutHandle
-        }
-        hostView = view
-        fun publishGeometry() {
-            val height = view.height
-            if (height <= 0) {
-                return
+    return { view ->
+        if (hostView !== view) {
+            hostView = view
+            // Before the surface starts, so the first thing React reads is already this.
+            FightDeckRNRuntime.publishLayout(view, layout)
+            fun publishGeometry() {
+                val height = view.height
+                if (height <= 0) {
+                    return
+                }
+                surfaceHeightPx = height
+                val location = IntArray(2)
+                view.getLocationInWindow(location)
+                surfaceTopInWindowPx = location[1]
             }
-            surfaceHeightPx = height
-            val location = IntArray(2)
-            view.getLocationInWindow(location)
-            surfaceTopInWindowPx = location[1]
-            layoutStamp += 1.0
+            view.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                publishGeometry()
+            }
+            view.post { publishGeometry() }
         }
-        view.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            publishGeometry()
-        }
-        view.post { publishGeometry() }
     }
 }
 
-private fun RNSurfaceLayoutSnapshot.inDensityIndependentUnits(scale: Float) = copy(
+private fun SurfaceLayout.inDensityIndependentUnits(scale: Float) = copy(
     safeAreaTop = safeAreaTop / scale,
     safeAreaBottom = safeAreaBottom / scale,
     keyboardBottomInset = keyboardBottomInset / scale,

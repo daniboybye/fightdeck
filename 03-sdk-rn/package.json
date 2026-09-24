@@ -5,5 +5,20 @@
   "dependencies": {
     "react": "19.2.3",
     "react-native": "0.87.0"
+  },
+  "codegenConfig": {
+    "name": "FightDeckRuntimeSpec",
+    "type": "modules",
+    "jsSrcsDir": "sdks/core/src/specs",
+    "android": {
+      "javaPackageName": "com.fightdeck.rn.runtime.specs"
+    },
+    "ios": {
+      "modules": {
+        "FightDeckRuntimeBridge": {
+          "className": "FightDeckRuntimeBridge"
+        }
+      }
+    }
   }
 }

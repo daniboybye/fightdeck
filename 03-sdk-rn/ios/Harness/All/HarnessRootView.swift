@@ -18,7 +18,6 @@ struct HarnessRootView: View {
         TabView {
             HarnessSurface { onResult in
                 let hosting: DepositHosting = DepositAdapter()
-                hosting.configure()
                 FightDeckRuntime.shared.prewarm()
                 return hosting.makeViewController(
                     params: DepositParams(
@@ -30,7 +29,6 @@ struct HarnessRootView: View {
             }
             HarnessSurface { onResult in
                 let hosting: BetslipHosting = BetslipAdapter()
-                hosting.configure()
                 return hosting.makeViewController(
                     params: BetslipParams(
                         themeJSON: "{}",
@@ -41,9 +39,8 @@ struct HarnessRootView: View {
                     onResult: { _ in onResult() }
                 )
             }
-            HarnessSurface { onResult in
+            HarnessSurface { _ in
                 let hosting: FighterHosting = FighterAdapter()
-                hosting.configure()
                 return hosting.makeViewController(
                     params: FighterParams(
                         themeJSON: "{}",
@@ -51,8 +48,7 @@ struct HarnessRootView: View {
                         {"name":"Sample Fighter","record":{"wins":20,"losses":2,"noContests":0,"display":"20-2-0"}}
                         """,
                         portraitURL: ""
-                    ),
-                    onResult: { _ in onResult() }
+                    )
                 )
             }
         }

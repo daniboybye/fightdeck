@@ -18,7 +18,6 @@ struct HarnessRootView: View {
     var body: some View {
         HarnessSurface { onResult in
             let hosting: DepositHosting = DepositAdapter()
-            hosting.configure()
             FightDeckRuntime.shared.prewarm()
             return hosting.makeViewController(
                 params: DepositParams(

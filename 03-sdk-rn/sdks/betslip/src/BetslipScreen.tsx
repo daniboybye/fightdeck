@@ -18,7 +18,7 @@ import {
 } from '../../core/src/fightcore/fightcore';
 import { formatCurrency, formatMoney, parseMoney } from '../../core/src/fightcore/money';
 import { formatOdds, parseOdds } from '../../core/src/fightcore/odds';
-import { notifyNative } from '../../core/src/runtime/RuntimeRegistry';
+import Runtime from '../../core/src/specs/NativeFightDeckRuntimeBridge';
 import { PinnedActionBar } from '../../core/src/ui/PinnedActionBar';
 import {
   MIN_TAP_TARGET,
@@ -107,7 +107,7 @@ export function BetslipScreen(props: SlipProps) {
 }
 
 function BetslipScreenContent(props: SlipProps) {
-  const layoutFrame = useSurfaceLayout(props, 'BetslipFeature');
+  const layoutFrame = useSurfaceLayout('BetslipFeature');
 
   const theme = useMemo(() => parseThemeJSON(String(props.themeJSON ?? '{}')), [props.themeJSON]);
   const styles = useMemo(
@@ -159,10 +159,7 @@ function BetslipScreenContent(props: SlipProps) {
   });
 
   const notifyUpdated = (nextSelections: Selection[], nextStake: string) => {
-    notifyNative('betslip', {
-      type: 'updated',
-      slipJSON: slipPayload(nextSelections, nextStake),
-    });
+    Runtime.betslipUpdated(slipPayload(nextSelections, nextStake));
   };
 
   const dismissKeyboard = () => Keyboard.dismiss();
@@ -183,7 +180,7 @@ function BetslipScreenContent(props: SlipProps) {
           style={({ pressed }) => [styles.successButton, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel="Browse Events"
-          onPress={() => notifyNative('betslip', { type: 'browse' })}
+          onPress={() => Runtime.betslipBrowseEvents()}
         >
           <Text style={styles.primaryLabel}>Browse Events</Text>
         </Pressable>
@@ -202,7 +199,7 @@ function BetslipScreenContent(props: SlipProps) {
           style={({ pressed }) => [styles.successButton, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel="Browse Events"
-          onPress={() => notifyNative('betslip', { type: 'browse' })}
+          onPress={() => Runtime.betslipBrowseEvents()}
         >
           <Text style={styles.primaryLabel}>Browse Events</Text>
         </Pressable>
@@ -332,7 +329,7 @@ function BetslipScreenContent(props: SlipProps) {
               accessibilityRole="button"
               accessibilityLabel="Add funds"
               style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}
-              onPress={() => notifyNative('betslip', { type: 'deposit' })}
+              onPress={() => Runtime.betslipDeposit()}
             >
               <Text style={styles.linkLabel}>Add funds</Text>
             </Pressable>
@@ -356,12 +353,7 @@ function BetslipScreenContent(props: SlipProps) {
           const nextBalance = formatMoney(balance.minus(state.totalStake));
           const clearedStake = stakeText;
           setSelections([]);
-          notifyNative('betslip', {
-            type: 'placed',
-            message,
-            slipJSON: slipPayload([], clearedStake),
-            balance: nextBalance,
-          });
+          Runtime.betslipPlaced(message, slipPayload([], clearedStake), nextBalance);
         }}
       />
     </View>

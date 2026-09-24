@@ -4,7 +4,6 @@ import { BetslipScreen } from '../../../betslip/src/BetslipScreen';
 import { FighterScreen } from '../../../fighter/src/FighterScreen';
 
 /** Shared runtime entry — registers all SDK feature surfaces in one bundle. */
-import './RuntimeRegistry';
 
 function withMountLog(name, Component) {
   return function FeatureWrapper(props) {

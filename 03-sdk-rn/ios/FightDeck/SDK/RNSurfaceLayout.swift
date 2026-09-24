@@ -19,72 +19,77 @@ struct RNSurfaceLayoutMetrics: Equatable {
     var keyboardVisible: Bool = false
 }
 
-struct RNSurfaceLayoutSnapshot: Equatable {
-    var safeAreaTop: CGFloat = 0
-    /// Bottom chrome the RN surface must clear (tab bar, home indicator).
-    var safeAreaBottom: CGFloat = 0
-    var keyboardBottomInset: CGFloat = 0
-    var chromeBackground: String = SurfaceChrome.listBackgroundHex()
-}
+/// Every React Native surface in the app is mounted through this one view. Data and chrome
+/// reach React on different channels: `update` hands the adapter new parameters, and the
+/// adapter drops the ones that change nothing, because properties re-render the surface from
+/// its root and take focus off the field being typed in. The chrome — safe areas, keyboard,
+/// whether a field is being edited — changes *because* a field gained focus, so it goes out
+/// through `publishLayout`, which React folds into its own state.
+struct RNSurfaceView: View {
+    let make: @MainActor () -> UIViewController
+    let update: @MainActor () -> Void
+    @State private var metrics = RNSurfaceLayoutMetrics()
+    @State private var textInputActive = false
 
-/// Data and chrome travel to React on different channels, so they need separate fingerprints.
-/// Data goes through `appProperties`, which re-renders the surface from the root and takes
-/// focus off whatever text field the user is typing in; chrome goes through an event the JS
-/// side folds into its own state. Keyboard frames and safe areas change *because* a field
-/// gained focus, so sending them as props would blur the field the moment it was tapped.
-struct RNSurfacePropsFingerprint: Equatable {
-    let data: [String]
-    let layout: String
-
-    init(_ params: BetslipParams) {
-        data = [
-            params.slipJSON,
-            "\(params.balance)",
-            params.themeJSON,
-            params.eventsJSON,
-            params.betPlacedMessage,
-        ]
-        layout = layoutKey(
-            top: params.safeAreaTop,
-            bottom: params.safeAreaBottom,
-            keyboard: params.keyboardBottomInset,
-            background: params.chromeBackground,
-            editing: params.textInputActive
-        )
-    }
-
-    init(_ params: DepositParams) {
-        data = ["\(params.currentBalance)", params.themeJSON]
-        layout = layoutKey(
-            top: params.safeAreaTop,
-            bottom: params.safeAreaBottom,
-            keyboard: params.keyboardBottomInset,
-            background: params.chromeBackground,
-            editing: params.textInputActive
-        )
-    }
-
-    init(_ params: FighterParams) {
-        data = [params.fighterJSON, params.portraitURL, params.themeJSON]
-        layout = layoutKey(
-            top: params.safeAreaTop,
-            bottom: params.safeAreaBottom,
-            keyboard: 0,
-            background: params.chromeBackground,
-            editing: false
-        )
+    var body: some View {
+        RNSurfaceLayoutReader(metrics: $metrics) {
+            RNSurfaceRepresentable(
+                make: make,
+                update: update,
+                metrics: metrics,
+                textInputActive: textInputActive
+            )
+        }
+        .tracksTextInput($textInputActive)
     }
 }
 
-/// Sub-point differences come from layout rounding, not from anything the user can see.
-private func layoutKey(
-    top: CGFloat,
-    bottom: CGFloat,
-    keyboard: CGFloat,
-    background: String,
-    editing: Bool
-) -> String {
-    "\(top.rounded())|\(bottom.rounded())|\(keyboard.rounded())|\(background)|\(editing)"
+private struct RNSurfaceRepresentable: UIViewControllerRepresentable {
+    let make: @MainActor () -> UIViewController
+    let update: @MainActor () -> Void
+    let metrics: RNSurfaceLayoutMetrics
+    let textInputActive: Bool
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    func makeUIViewController(context: Context) -> RNSurfaceWrapperViewController {
+        SDKBootstrap.shared.configureOnce()
+        let wrapper = RNSurfaceWrapperViewController(childController: make())
+        let coordinator = context.coordinator
+        wrapper.onLayout = { [weak wrapper] in
+            guard let wrapper else { return }
+            Task { @MainActor in
+                coordinator.parent.publishLayout(to: wrapper)
+            }
+        }
+        DispatchQueue.main.async {
+            coordinator.parent.publishLayout(to: wrapper)
+        }
+        return wrapper
+    }
+
+    func updateUIViewController(_ wrapper: RNSurfaceWrapperViewController, context: Context) {
+        context.coordinator.parent = self
+        update()
+        publishLayout(to: wrapper)
+    }
+
+    @MainActor
+    fileprivate func publishLayout(to wrapper: RNSurfaceWrapperViewController) {
+        var layout = SurfaceChrome.resolve(metrics, for: wrapper)
+        layout.textInputActive = textInputActive || RNSurfaceLayoutProbe.isTextInputActive(for: wrapper)
+        FightDeckRuntime.shared.publishLayout(layout, for: wrapper.childController)
+    }
+
+    final class Coordinator {
+        var parent: RNSurfaceRepresentable
+
+        init(parent: RNSurfaceRepresentable) {
+            self.parent = parent
+        }
+    }
 }
 
 enum SurfaceChrome {
@@ -101,8 +106,8 @@ enum SurfaceChrome {
     static func resolve(
         _ metrics: RNSurfaceLayoutMetrics,
         for controller: UIViewController?
-    ) -> RNSurfaceLayoutSnapshot {
-        var snapshot = RNSurfaceLayoutSnapshot(chromeBackground: listBackgroundHex())
+    ) -> SurfaceLayout {
+        var snapshot = SurfaceLayout(chromeBackground: listBackgroundHex())
 
         guard let hostView = controller?.view, let window = hostView.window else {
             return snapshot
@@ -131,7 +136,7 @@ enum SurfaceChrome {
     }
 }
 
-/// Reads the SwiftUI container's safe area and keyboard overlap, then pushes both into RN props.
+/// Reads the SwiftUI container's safe area and keyboard overlap for `RNSurfaceView` to publish.
 struct RNSurfaceLayoutReader<Content: View>: View {
     @Binding var metrics: RNSurfaceLayoutMetrics
     @ViewBuilder var content: () -> Content
@@ -240,33 +245,6 @@ enum RNSurfaceLayoutProbe {
     }
 }
 
-extension Notification.Name {
-    static let fightdeckSurfaceLayout = Notification.Name("FightDeckSurfaceLayout")
-}
-
-enum RNSurfaceLayoutPush {
-    static func deliver(
-        moduleName: String,
-        layout: RNSurfaceLayoutSnapshot,
-        textInputActive: Bool,
-        layoutStamp: Double
-    ) {
-        NotificationCenter.default.post(
-            name: .fightdeckSurfaceLayout,
-            object: nil,
-            userInfo: [
-                "moduleName": moduleName,
-                "safeAreaTop": Double(layout.safeAreaTop),
-                "safeAreaBottom": Double(layout.safeAreaBottom),
-                "keyboardBottomInset": Double(layout.keyboardBottomInset),
-                "chromeBackground": layout.chromeBackground,
-                "textInputActive": textInputActive,
-                "layoutStamp": layoutStamp,
-            ]
-        )
-    }
-}
-
 private extension UIView {
     @MainActor
     func containsActiveTextInput(in window: UIWindow) -> Bool {
@@ -313,7 +291,7 @@ private extension UIColor {
     }
 }
 
-/// Hosts the cached RN controller and re-pushes layout props whenever UIKit relayouts.
+/// Hosts the cached RN controller and re-publishes its layout whenever UIKit relayouts.
 @MainActor
 final class RNSurfaceWrapperViewController: UIViewController {
     let childController: UIViewController

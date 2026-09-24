@@ -2,7 +2,6 @@ import { AppRegistry } from 'react-native';
 import { DepositScreen } from '../../../deposit/src/DepositScreen';
 
 /** Runtime + deposit surface only (no bet slip). */
-import './RuntimeRegistry';
 
 function withMountLog(name, Component) {
   return function FeatureWrapper(props) {

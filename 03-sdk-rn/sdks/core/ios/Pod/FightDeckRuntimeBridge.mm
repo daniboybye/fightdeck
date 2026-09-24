@@ -1,64 +1,101 @@
 #import "FightDeckRuntimeBridge.h"
 
-static NSString *const kFightDeckSurfaceLayoutNotification = @"FightDeckSurfaceLayout";
+#import <FightDeckRuntimeSpec/FightDeckRuntimeSpec.h>
+#import "FightDeckRNRuntime-Swift.h"
 
-@implementation FightDeckRuntimeBridge {
-  BOOL _hasListeners;
+/// Implements the protocol codegen wrote from `NativeFightDeckRuntimeBridge.ts`. The JSI glue,
+/// argument conversion and event plumbing are generated; this class only says where each call
+/// lands. Registered through `codegenConfig.ios.modules`, never in the host app.
+@interface FightDeckRuntimeBridge : NativeFightDeckRuntimeBridgeSpecBase <NativeFightDeckRuntimeBridgeSpec>
+@end
+
+static __weak FightDeckRuntimeBridge *sLiveBridge;
+static NSMutableDictionary<NSString *, NSDictionary *> *sLayouts = [NSMutableDictionary new];
+
+@implementation FightDeckRuntimeBridge
+
+RCT_EXPORT_MODULE()
+
+- (dispatch_queue_t)methodQueue
+{
+  return dispatch_get_main_queue();
 }
 
-RCT_EXPORT_MODULE();
-
-+ (BOOL)requiresMainQueueSetup
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params
 {
-  return YES;
+  return std::make_shared<facebook::react::NativeFightDeckRuntimeBridgeSpecJSI>(params);
 }
 
-- (NSArray<NSString *> *)supportedEvents
+/// Only the instance wired to JavaScript gets an emitter, so it is the one layouts go to.
+- (void)setEventEmitterCallback:(EventEmitterCallbackWrapper *)eventEmitterCallbackWrapper
 {
-  return @[ @"fightdeckSurfaceLayout", @"fightdeckFeatureResult" ];
+  [super setEventEmitterCallback:eventEmitterCallbackWrapper];
+  sLiveBridge = self;
 }
 
-- (instancetype)init
+- (void)depositConfirmed
 {
-  if (self = [super init]) {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(handleSurfaceLayout:)
-                                                 name:kFightDeckSurfaceLayoutNotification
-                                               object:nil];
+  [FightDeckFeatureResults depositConfirmed];
+}
+
+- (void)depositCompleted:(NSString *)amount
+{
+  [FightDeckFeatureResults depositCompleted:amount];
+}
+
+- (void)betslipUpdated:(NSString *)slipJSON
+{
+  [FightDeckFeatureResults betslipUpdated:slipJSON];
+}
+
+- (void)betslipBrowseEvents
+{
+  [FightDeckFeatureResults betslipBrowseEvents];
+}
+
+- (void)betslipDeposit
+{
+  [FightDeckFeatureResults betslipDeposit];
+}
+
+- (void)betslipPlaced:(NSString *)message slipJSON:(NSString *)slipJSON balance:(NSString *)balance
+{
+  [FightDeckFeatureResults betslipPlaced:message slipJSON:slipJSON balance:balance];
+}
+
+/// Synchronous, so it runs on the JavaScript thread while the host publishes from the main one.
+- (NSDictionary *)surfaceLayout:(NSString *)moduleName
+{
+  @synchronized(sLayouts) {
+    return sLayouts[moduleName];
   }
-  return self;
-}
-
-- (void)dealloc
-{
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
-- (void)startObserving
-{
-  _hasListeners = YES;
-}
-
-- (void)stopObserving
-{
-  _hasListeners = NO;
-}
-
-- (void)handleSurfaceLayout:(NSNotification *)note
-{
-  [self sendEventWithName:@"fightdeckSurfaceLayout" body:note.userInfo ?: @{}];
-}
-
-RCT_EXPORT_METHOD(postResult : (NSString *)feature payload : (NSDictionary *)payload)
-{
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"FightDeckFeatureResult"
-                                                        object:nil
-                                                      userInfo:@{
-                                                        @"feature" : feature,
-                                                        @"payload" : payload ?: @{}
-                                                      }];
-  });
 }
 
 @end
+
+void FightDeckPublishSurfaceLayout(
+    NSString *moduleName,
+    double safeAreaTop,
+    double safeAreaBottom,
+    double keyboardBottomInset,
+    NSString *chromeBackground,
+    BOOL textInputActive)
+{
+  // Sub-point differences come from layout rounding, not from anything the user can see.
+  NSDictionary *layout = @{
+    @"moduleName" : moduleName,
+    @"safeAreaTop" : @(round(safeAreaTop)),
+    @"safeAreaBottom" : @(round(safeAreaBottom)),
+    @"keyboardBottomInset" : @(round(keyboardBottomInset)),
+    @"chromeBackground" : chromeBackground,
+    @"textInputActive" : @(textInputActive),
+  };
+  @synchronized(sLayouts) {
+    if ([sLayouts[moduleName] isEqualToDictionary:layout]) {
+      return;
+    }
+    sLayouts[moduleName] = layout;
+  }
+  [sLiveBridge emitOnSurfaceLayout:layout];
+}

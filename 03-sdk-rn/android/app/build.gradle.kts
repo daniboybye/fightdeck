@@ -15,6 +15,14 @@ react {
     autolinkLibrariesWithApp()
 }
 
+// Codegen runs here as well as in the runtime library, on the same package.json, because the
+// JNI half of the spec has to be compiled into this app's libappmodules.so. The Java half is
+// already inside the runtime AAR, and a second copy of the same class would not dex.
+val codegenJavaHalf = layout.buildDirectory.dir("generated/source/codegen/java")
+tasks.named("generateCodegenArtifactsFromSchema") {
+    doLast { codegenJavaHalf.get().asFile.deleteRecursively() }
+}
+
 val demoAssetsDir = file("build/generated/demo-assets")
 
 android {

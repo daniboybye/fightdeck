@@ -3,7 +3,6 @@ import { DepositScreen } from '../../../deposit/src/DepositScreen';
 import { BetslipScreen } from '../../../betslip/src/BetslipScreen';
 
 /** Shared runtime entry — registers all SDK feature surfaces in one bundle. */
-import './RuntimeRegistry';
 
 function withMountLog(name, Component) {
   return function FeatureWrapper(props) {

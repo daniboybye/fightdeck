@@ -10,58 +10,42 @@ public struct RuntimeStartupMetrics: Sendable {
 public final class FightDeckRuntime {
     public static let shared = FightDeckRuntime()
 
-    private var configured = false
     private var prewarmed = false
-    private var registeredFeatures = Set<String>()
-    private var featureModules: [String: String] = [:]
+    /// Which module each surface controller renders, so a host can publish layout for the
+    /// controller it holds without knowing the React module name behind it.
+    private var modules: [ObjectIdentifier: String] = [:]
 
     private init() {}
 
-    /// Call once at app launch — not per feature presentation.
-    public func configure() {
-        guard !configured else { return }
-        configured = true
-        RuntimeBridge.shared.install()
-    }
-
     public func prewarm() {
-        guard configured, !prewarmed else { return }
+        guard !prewarmed else { return }
         FightDeckRNHost.initializeHost()
         FightDeckRNHost.prewarm()
         prewarmed = true
     }
 
-    public func registerFeature(_ name: String, moduleName: String) {
-        registeredFeatures.insert(name)
-        featureModules[name] = moduleName
-        RuntimeBridge.shared.registerFeature(name: name, moduleName: moduleName)
-    }
-
-    public func makeViewController(
-        feature: String,
-        properties: [String: Any],
-        onResult: @escaping @Sendable ([String: Any]) -> Void
-    ) -> UIViewController {
+    public func makeViewController(moduleName: String, properties: [String: Any]) -> UIViewController {
         FightDeckRNHost.initializeHost()
-        if !prewarmed {
-            _ = FightDeckRNHost.coldStartMilliseconds()
-        }
-        let module = featureModules[feature] ?? feature
-        RuntimeBridge.shared.setResultHandler(for: feature, handler: onResult)
-        return FightDeckRNHost.makeViewController(withModuleName: module, properties: properties)
+        let controller = FightDeckRNHost.makeViewController(withModuleName: moduleName, properties: properties)
+        modules[ObjectIdentifier(controller)] = moduleName
+        return controller
     }
 
-    public func updateProperties(feature: String, properties: [String: Any]) {
-        let module = featureModules[feature] ?? feature
-        FightDeckRNHost.updateProperties(properties, forModuleName: module)
+    public func updateProperties(moduleName: String, properties: [String: Any]) {
+        FightDeckRNHost.updateProperties(properties, forModuleName: moduleName)
     }
 
-    public func destroyFeature(_ name: String) {
-        registeredFeatures.remove(name)
-        RuntimeBridge.shared.destroyFeature(name: name)
-        if let module = featureModules[name] {
-            FightDeckRNHost.destroySurface(module)
-        }
+    /// Hands the surface the chrome it has to clear. Unchanged layouts stop at the bridge.
+    public func publishLayout(_ layout: SurfaceLayout, for controller: UIViewController) {
+        guard let moduleName = modules[ObjectIdentifier(controller)] else { return }
+        FightDeckPublishSurfaceLayout(
+            moduleName,
+            layout.safeAreaTop,
+            layout.safeAreaBottom,
+            layout.keyboardBottomInset,
+            layout.chromeBackground,
+            layout.textInputActive
+        )
     }
 
     public func startupMetrics() -> RuntimeStartupMetrics {
@@ -77,9 +61,5 @@ public final class FightDeckRuntime {
 
     public func onHostPause() {
         FightDeckRNHost.onHostPause()
-    }
-
-    public func onHostDestroy() {
-        FightDeckRNHost.onHostDestroy()
     }
 }

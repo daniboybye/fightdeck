@@ -4,59 +4,34 @@ import FightDeckRNRuntime
 
 @MainActor
 public final class FighterAdapter: FighterHosting {
-    private var configured = false
+    private static let moduleName = "FighterFeature"
+    private var lastPushed: FighterParams?
 
     public init() {}
 
-    public func configure() {
-        guard !configured else { return }
-        FightDeckRuntime.shared.configure()
-        FightDeckRuntime.shared.registerFeature("fighter", moduleName: "FighterFeature")
-        configured = true
-    }
-
-    public func makeViewController(
-        params: FighterParams,
-        onResult: @escaping @Sendable (FighterResult) -> Void
-    ) -> UIViewController {
-        configure()
-        let properties: [String: Any] = Self.properties(from: params)
-        return FightDeckRuntime.shared.makeViewController(feature: "fighter", properties: properties) { payload in
-            let result = FighterAdapter.mapResult(payload)
-            Task { @MainActor in
-                onResult(result)
-            }
-        }
-    }
-
-    public func update(params: FighterParams) {
-        configure()
-        FightDeckRuntime.shared.updateProperties(
-            feature: "fighter",
+    public func makeViewController(params: FighterParams) -> UIViewController {
+        lastPushed = params
+        return FightDeckRuntime.shared.makeViewController(
+            moduleName: Self.moduleName,
             properties: Self.properties(from: params)
         )
     }
 
-    public func destroy() {
-        FightDeckRuntime.shared.destroyFeature("fighter")
+    /// Only a change reaches React: new properties re-render the surface from its root.
+    public func update(params: FighterParams) {
+        guard params != lastPushed else { return }
+        lastPushed = params
+        FightDeckRuntime.shared.updateProperties(
+            moduleName: Self.moduleName,
+            properties: Self.properties(from: params)
+        )
     }
 
-    nonisolated private static func properties(from params: FighterParams) -> [String: Any] {
+    private static func properties(from params: FighterParams) -> [String: Any] {
         [
             "themeJSON": params.themeJSON,
             "fighterJSON": params.fighterJSON,
             "portraitURL": params.portraitURL,
-            "safeAreaTop": Double(params.safeAreaTop),
-            "safeAreaBottom": Double(params.safeAreaBottom),
-            "chromeBackground": params.chromeBackground,
-            "layoutStamp": params.layoutStamp,
         ]
-    }
-
-    nonisolated private static func mapResult(_ payload: [String: Any]) -> FighterResult {
-        switch payload["type"] as? String {
-        default:
-            return .cancelled
-        }
     }
 }

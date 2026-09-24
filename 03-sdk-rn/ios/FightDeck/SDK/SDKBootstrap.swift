@@ -35,9 +35,6 @@ final class SDKBootstrap {
 
     func configureOnce() {
         guard !didConfigure else { return }
-        depositHosting.configure()
-        betslipHosting.configure()
-        fighterHosting.configure()
         if !Self.shouldSkipRNPrewarm {
             FightDeckRuntime.shared.prewarm()
         }

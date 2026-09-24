@@ -15,7 +15,6 @@ import com.google.android.material.R
 
 /** Owns the single ReactHost for all SDK features. */
 object FightDeckRNRuntime {
-    private var configured = false
     private var coldStartMs: Long = 0
     private var prewarmedStartMs: Long = 0
     private var prewarmed = false
@@ -26,13 +25,6 @@ object FightDeckRNRuntime {
         requireNotNull((app as ReactApplication).reactHost) {
             "ReactHost is not configured on the host Application"
         }
-
-    fun configure(app: Application) {
-        if (configured) {
-            return
-        }
-        configured = true
-    }
 
     fun prewarm(app: Application) {
         if (prewarmed) {
@@ -46,12 +38,11 @@ object FightDeckRNRuntime {
 
     fun createSurfaceView(
         context: Context,
-        app: Application,
         moduleName: String,
         initialProps: Bundle,
     ): View {
         val start = System.nanoTime()
-        val host = reactHost(app)
+        val host = reactHost(context.applicationContext as Application)
         if (!prewarmed) {
             host.start()
             coldStartMs = (System.nanoTime() - start) / 1_000_000
@@ -78,6 +69,12 @@ object FightDeckRNRuntime {
     fun updateSurfaceProps(hostView: View, props: Bundle) {
         val surface = hostView.getTag(surfaceTagKey) as? ReactSurfaceImpl ?: return
         surface.updateInitProps(props)
+    }
+
+    /** Hands the surface the chrome it has to clear. Unchanged layouts stop at the bridge. */
+    fun publishLayout(hostView: View, layout: SurfaceLayout) {
+        val surface = hostView.getTag(surfaceTagKey) as? ReactSurface ?: return
+        FightDeckRuntimeBridgeModule.publish(surface.moduleName, layout)
     }
 
     fun stopSurface(hostView: View) {

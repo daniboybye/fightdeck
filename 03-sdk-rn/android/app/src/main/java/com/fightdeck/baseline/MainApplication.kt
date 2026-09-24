@@ -8,7 +8,6 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.load
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
-import com.fightdeck.rn.runtime.FightDeckRNRuntime
 import com.fightdeck.rn.runtime.FightDeckRNRuntimePackage
 
 class MainApplication : Application(), ReactApplication {
@@ -28,7 +27,6 @@ class MainApplication : Application(), ReactApplication {
         if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
             load()
         }
-        FightDeckRNRuntime.configure(this)
     }
 
     companion object {

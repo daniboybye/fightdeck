@@ -13,8 +13,7 @@ Pod::Spec.new do |s|
   s.source       = { git: 'https://github.com/fightdeck/fightdeck.git', tag: s.version.to_s }
 
   s.source_files = 'Pod/**/*.{h,m,mm,swift}'
-  s.public_header_files = 'Pod/FightDeckRNHost.h'
-  s.private_header_files = 'Pod/FightDeckRuntimeBridge.h'
+  s.public_header_files = ['Pod/FightDeckRNHost.h', 'Pod/FightDeckRuntimeBridge.h']
   s.resource_bundles = {
     'FightDeckRNRuntime' => ['Resources/*']
   }
@@ -29,4 +28,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-RCTAppDelegate'
   s.dependency 'ReactAppDependencyProvider'
   s.dependency 'ReactCommon/turbomodule/core'
+  # What codegen compiled from `codegenConfig` in 03-sdk-rn/package.json.
+  s.dependency 'ReactCodegen'
 end

@@ -1,90 +1,44 @@
 package com.fightdeck.sdk.deposit
 
-import android.app.Application
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import com.fightdeck.rn.runtime.DepositResult
+import com.fightdeck.rn.runtime.FeatureResults
 import com.fightdeck.rn.runtime.FightDeckRNRuntime
-import com.fightdeck.rn.runtime.FightDeckRuntimeBridgeNotifier
-import com.fightdeck.rn.runtime.RNSurfaceLayoutSnapshot
-import com.fightdeck.rn.runtime.applySurfaceLayout
 import java.math.BigDecimal
 
+/** Data only: the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`. */
 data class DepositParams(
     val themeJSON: String,
     val currentBalance: BigDecimal,
-    val layout: RNSurfaceLayoutSnapshot? = null,
-    val textInputActive: Boolean = false,
-    val layoutStamp: Double = 0.0,
 )
 
-sealed class DepositResult {
-    data object Confirmed : DepositResult()
-    data class Completed(val amount: BigDecimal) : DepositResult()
-    data object Cancelled : DepositResult()
-    data class Failed(val reason: String) : DepositResult()
-}
+class DepositAdapter {
+    private var lastPushed: DepositParams? = null
 
-interface DepositHosting {
-    fun configure(app: Application)
     fun createView(
         context: Context,
-        app: Application,
         params: DepositParams,
         onResult: (DepositResult) -> Unit = {},
-    ): View
-}
+    ): View {
+        FeatureResults.deposit = onResult
+        lastPushed = params
+        return FightDeckRNRuntime.createSurfaceView(context, "DepositFeature", propsBundle(params))
+    }
 
-class DepositAdapter : DepositHosting {
-    private var configured = false
-
-    override fun configure(app: Application) {
-        if (configured) {
+    /** Only a change reaches React: new props re-render the surface from its root. */
+    fun updateProps(hostView: View, params: DepositParams) {
+        if (params == lastPushed) {
             return
         }
-        FightDeckRNRuntime.configure(app)
-        configured = true
-    }
-
-    override fun createView(
-        context: Context,
-        app: Application,
-        params: DepositParams,
-        onResult: (DepositResult) -> Unit,
-    ): View {
-        configure(app)
-        FightDeckRuntimeBridgeNotifier.setListener("deposit") { payload ->
-            onResult(mapResult(payload))
-        }
-        return FightDeckRNRuntime.createSurfaceView(
-            context,
-            app,
-            "DepositFeature",
-            propsBundle(params),
-        )
-    }
-
-    fun updateProps(hostView: View, params: DepositParams) {
+        lastPushed = params
         FightDeckRNRuntime.updateSurfaceProps(hostView, propsBundle(params))
     }
 
-    fun propsBundle(params: DepositParams): Bundle =
+    private fun propsBundle(params: DepositParams): Bundle =
         Bundle().apply {
             putString("themeJSON", params.themeJSON)
             putString("currentBalance", params.currentBalance.toPlainString())
-            params.layout?.let { layout ->
-                applySurfaceLayout(layout, params.textInputActive, params.layoutStamp)
-            }
-        }
-
-    private fun mapResult(payload: Map<String, Any?>): DepositResult =
-        when (payload["type"]) {
-            "confirmed" -> DepositResult.Confirmed
-            "completed" -> {
-                val raw = (payload["amount"] as? String)?.replace("€", "")?.trim() ?: "0"
-                DepositResult.Completed(BigDecimal(raw.ifBlank { "0" }))
-            }
-            "failed" -> DepositResult.Failed(payload["reason"] as? String ?: "unknown")
-            else -> DepositResult.Cancelled
         }
 }

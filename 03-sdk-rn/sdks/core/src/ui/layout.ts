@@ -1,6 +1,6 @@
 /** Mirrors native `DesignTokens.Layout` — HIG tap target and primary action height. */
 import { useEffect, useState } from 'react';
-import { NativeEventEmitter, NativeModules } from 'react-native';
+import Runtime, { type SurfaceLayout } from '../specs/NativeFightDeckRuntimeBridge';
 
 export const MIN_TAP_TARGET = 44;
 export const PRIMARY_ACTION_HEIGHT = 44;
@@ -11,61 +11,31 @@ export const ACTION_BAR_GAP = 12;
 export const TAB_BAR_ACTION_GAP = 20;
 const ACTION_BAR_PADDING_TOP = 8;
 
-export interface SurfaceLayoutProps {
-  moduleName?: unknown;
-  safeAreaTop?: unknown;
-  safeAreaBottom?: unknown;
-  keyboardBottomInset?: unknown;
-  chromeBackground?: unknown;
-  textInputActive?: unknown;
-  layoutStamp?: unknown;
-}
-
-export function readSurfaceLayout(props: SurfaceLayoutProps) {
+function readSurfaceLayout(layout: SurfaceLayout | null) {
   return {
-    safeAreaTop: Math.max(0, Number(props.safeAreaTop ?? 0)),
+    safeAreaTop: Math.max(0, layout?.safeAreaTop ?? 0),
     // No upper clamp: hosts report chrome in the same density-independent units these styles
     // use, and the Android tab bar is deeper than anything worth hard-coding here.
-    safeAreaBottom: Math.max(0, Number(props.safeAreaBottom ?? 0)),
-    keyboardBottomInset: Math.min(400, Math.max(0, Number(props.keyboardBottomInset ?? 0))),
-    chromeBackground: String(props.chromeBackground ?? '').trim(),
-    textInputActive: Boolean(props.textInputActive),
+    safeAreaBottom: Math.max(0, layout?.safeAreaBottom ?? 0),
+    keyboardBottomInset: Math.min(400, Math.max(0, layout?.keyboardBottomInset ?? 0)),
+    chromeBackground: layout?.chromeBackground.trim() ?? '',
+    textInputActive: layout?.textInputActive ?? false,
   };
 }
 
-const layoutEvents = NativeModules.FightDeckRuntimeBridge != null
-  ? new NativeEventEmitter(NativeModules.FightDeckRuntimeBridge)
-  : null;
-
-/** Host props plus native layout events — props alone miss keyboard frames on Fabric surfaces. */
-export function useSurfaceLayout(props: SurfaceLayoutProps, moduleName: string) {
-  const [frame, setFrame] = useState(() => readSurfaceLayout(props));
+/** The chrome the host last published for this surface, then every change to it. */
+export function useSurfaceLayout(moduleName: string) {
+  const [frame, setFrame] = useState(() => readSurfaceLayout(Runtime.surfaceLayout(moduleName)));
 
   useEffect(() => {
-    setFrame(readSurfaceLayout(props));
-  }, [
-    props.safeAreaTop,
-    props.safeAreaBottom,
-    props.keyboardBottomInset,
-    props.chromeBackground,
-    props.textInputActive,
-    props.layoutStamp,
-  ]);
-
-  useEffect(() => {
-    if (layoutEvents == null) {
-      return undefined;
-    }
-    const subscription = layoutEvents.addListener(
-      'fightdeckSurfaceLayout',
-      (event: object) => {
-        const payload = event as SurfaceLayoutProps;
-        if (String(payload.moduleName ?? '') !== moduleName) {
-          return;
-        }
-        setFrame(readSurfaceLayout(payload));
-      },
-    );
+    const subscription = Runtime.onSurfaceLayout((layout) => {
+      if (layout.moduleName === moduleName) {
+        setFrame(readSurfaceLayout(layout));
+      }
+    });
+    // Read again now that the listener is in place: a layout published between the first
+    // render and this effect would otherwise be the one the surface never sees.
+    setFrame(readSurfaceLayout(Runtime.surfaceLayout(moduleName)));
     return () => subscription.remove();
   }, [moduleName]);
 

@@ -10,8 +10,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { notifyNative } from '../../core/src/runtime/RuntimeRegistry';
-import { formatCurrency, money, parseMoney } from '../../core/src/fightcore/money';
+import Runtime from '../../core/src/specs/NativeFightDeckRuntimeBridge';
+import { formatCurrency, formatMoney, money, parseMoney } from '../../core/src/fightcore/money';
 import { PinnedActionBar } from '../../core/src/ui/PinnedActionBar';
 import {
   MIN_TAP_TARGET,
@@ -38,7 +38,7 @@ export function DepositScreen(props: Record<string, unknown>) {
 }
 
 function DepositScreenContent(props: Record<string, unknown>) {
-  const layoutFrame = useSurfaceLayout(props, 'DepositFeature');
+  const layoutFrame = useSurfaceLayout('DepositFeature');
 
   const theme = useMemo(
     () => parseThemeJSON(String(props.themeJSON ?? '{}')),
@@ -75,7 +75,7 @@ function DepositScreenContent(props: Record<string, unknown>) {
     if (!didSucceed) {
       return undefined;
     }
-    notifyNative('deposit', { type: 'confirmed' });
+    Runtime.depositConfirmed();
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => subscription.remove();
   }, [didSucceed]);
@@ -85,7 +85,7 @@ function DepositScreenContent(props: Record<string, unknown>) {
   };
 
   const done = () => {
-    notifyNative('deposit', { type: 'completed', amount: formatCurrency(amount) });
+    Runtime.depositCompleted(formatMoney(amount));
   };
 
   const dismissKeyboard = () => Keyboard.dismiss();

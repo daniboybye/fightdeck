@@ -1,49 +1,38 @@
 import Foundation
-import UIKit
 
+/// The Swift half of the codegen'd `FightDeckRuntimeBridge` module.
+///
+/// Codegen writes the protocol and the JSI glue from `NativeFightDeckRuntimeBridge.ts`, and
+/// `FightDeckRuntimeBridge.mm` forwards each generated method here unchanged; this half only
+/// turns them into the host-facing result types. One handler per feature, installed by its
+/// adapter when the surface is made.
+@objc(FightDeckFeatureResults)
 @MainActor
-final class RuntimeBridge: NSObject {
-    static let shared = RuntimeBridge()
+public final class FeatureResults: NSObject {
+    public static var deposit: (@Sendable (DepositResult) -> Void)?
+    public static var betslip: (@Sendable (BetslipResult) -> Void)?
 
-    private var resultHandlers: [String: ([String: Any]) -> Void] = [:]
-    private var featureModules: [String: String] = [:]
-
-    override private init() {
-        super.init()
+    @objc public static func depositConfirmed() {
+        deposit?(.confirmed)
     }
 
-    func install() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleFeatureResult(_:)),
-            name: .fightdeckFeatureResult,
-            object: nil
-        )
+    @objc public static func depositCompleted(_ amount: String) {
+        deposit?(.completed(amount: Decimal(string: amount) ?? 0))
     }
 
-    @objc private func handleFeatureResult(_ note: Notification) {
-        guard
-            let feature = note.userInfo?["feature"] as? String,
-            let payload = note.userInfo?["payload"] as? [String: Any]
-        else { return }
-        resultHandlers[feature]?(payload)
+    @objc public static func betslipUpdated(_ slipJSON: String) {
+        betslip?(.updated(slipJSON: slipJSON))
     }
 
-    func registerFeature(name: String, moduleName: String) {
-        featureModules[name] = moduleName
+    @objc public static func betslipBrowseEvents() {
+        betslip?(.browseEvents)
     }
 
-    func setResultHandler(for feature: String, handler: @escaping ([String: Any]) -> Void) {
-        resultHandlers[feature] = handler
+    @objc public static func betslipDeposit() {
+        betslip?(.deposit)
     }
 
-    func destroyFeature(name: String) {
-        resultHandlers.removeValue(forKey: name)
-        featureModules.removeValue(forKey: name)
+    @objc public static func betslipPlaced(_ message: String, slipJSON: String, balance: String) {
+        betslip?(.placed(message: message, slipJSON: slipJSON, balance: balance))
     }
-}
-
-extension Notification.Name {
-    static let fightdeckFeatureResult = Notification.Name("FightDeckFeatureResult")
-    static let fightdeckSurfaceLayout = Notification.Name("FightDeckSurfaceLayout")
 }

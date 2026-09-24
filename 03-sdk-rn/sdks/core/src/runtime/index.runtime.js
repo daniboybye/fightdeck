@@ -1,7 +1,6 @@
 import { AppRegistry } from 'react-native';
 
 /** Runtime-only bundle — Hermes host bootstrap, no feature surfaces. */
-import './RuntimeRegistry';
 
 AppRegistry.registerComponent('FightDeckRuntimeBootstrap', () => {
   const React = require('react');

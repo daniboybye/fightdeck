@@ -1,72 +1,39 @@
 package com.fightdeck.sdk.fighter
 
-import android.app.Application
 import android.content.Context
 import android.os.Bundle
 import android.view.View
 import com.fightdeck.rn.runtime.FightDeckRNRuntime
-import com.fightdeck.rn.runtime.FightDeckRuntimeBridgeNotifier
-import com.fightdeck.rn.runtime.RNSurfaceLayoutSnapshot
-import com.fightdeck.rn.runtime.SurfaceChrome
-import com.fightdeck.rn.runtime.applySurfaceLayout
 
+/** Data only: the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`. */
 data class FighterParams(
     val themeJSON: String,
     val fighterJSON: String,
     val portraitURL: String,
-    val layout: RNSurfaceLayoutSnapshot? = null,
-    val layoutStamp: Double = 0.0,
 )
 
-sealed class FighterResult {
-    data object Cancelled : FighterResult()
-}
-
+/** The fighter profile reports nothing back: the codegen spec declares no fighter methods. */
 class FighterAdapter {
-    private var configured = false
+    private var lastPushed: FighterParams? = null
 
-    fun configure(app: Application) {
-        if (configured) {
+    fun createView(context: Context, params: FighterParams): View {
+        lastPushed = params
+        return FightDeckRNRuntime.createSurfaceView(context, "FighterFeature", propsBundle(params))
+    }
+
+    /** Only a change reaches React: new props re-render the surface from its root. */
+    fun updateProps(hostView: View, params: FighterParams) {
+        if (params == lastPushed) {
             return
         }
-        FightDeckRNRuntime.configure(app)
-        configured = true
-    }
-
-    fun createView(
-        context: Context,
-        app: Application,
-        params: FighterParams,
-        onResult: (FighterResult) -> Unit = {},
-    ): View {
-        configure(app)
-        FightDeckRuntimeBridgeNotifier.setListener("fighter") { _ ->
-            onResult(FighterResult.Cancelled)
-        }
-        return FightDeckRNRuntime.createSurfaceView(
-            context,
-            app,
-            "FighterFeature",
-            propsBundle(params),
-        )
-    }
-
-    fun updateProps(hostView: View, params: FighterParams) {
+        lastPushed = params
         FightDeckRNRuntime.updateSurfaceProps(hostView, propsBundle(params))
     }
 
-    fun propsBundle(params: FighterParams): Bundle =
+    private fun propsBundle(params: FighterParams): Bundle =
         Bundle().apply {
             putString("themeJSON", params.themeJSON)
             putString("fighterJSON", params.fighterJSON)
             putString("portraitURL", params.portraitURL)
-            val layout = params.layout ?: RNSurfaceLayoutSnapshot(
-                safeAreaTop = 0f,
-                safeAreaBottom = 0f,
-                keyboardBottomInset = 0f,
-                chromeBackground = SurfaceChrome.listBackgroundHex(),
-            )
-            applySurfaceLayout(layout, false, params.layoutStamp)
         }
-
 }

@@ -44,11 +44,9 @@ final class AppState {
     let catalog: Catalog
     let slipStore: BetSlipStore
 
-    private let repository: JSONFileRepository
-
-    init(repository: JSONFileRepository = JSONFileRepository()) {
-        self.repository = repository
-        self.catalog = AppState.makeCatalog()
+    init() {
+        // An unreadable dataset shows as empty lists rather than stopping the app at launch.
+        self.catalog = (try? Catalog.load(datasetRoot: DatasetLocator.datasetRoot())) ?? .empty
         let slipEngine = SlipEngine(bouts: catalog.boutIndex())
         self.slipStore = BetSlipStore(
             slipEngine: slipEngine,
@@ -82,8 +80,8 @@ final class AppState {
 
     func refreshAll() async {
         loadEvents()
-        await loadNews()
-        await loadMedia()
+        loadNews()
+        loadMedia()
     }
 
     func loadEvents() {
@@ -92,24 +90,20 @@ final class AppState {
         eventsState = events.isEmpty ? .empty : .loaded(events)
     }
 
-    func loadNews() async {
-        newsState = .loading
-        do {
-            let news = try await repository.loadNews()
-            newsState = news.isEmpty ? .empty : .loaded(news)
-        } catch {
+    func loadNews() {
+        guard let news = try? catalog.news() else {
             newsState = .error("Could not load news")
+            return
         }
+        newsState = news.isEmpty ? .empty : .loaded(news)
     }
 
-    func loadMedia() async {
-        mediaState = .loading
-        do {
-            let media = try await repository.loadMedia()
-            mediaState = media.isEmpty ? .empty : .loaded(media)
-        } catch {
+    func loadMedia() {
+        guard let media = try? catalog.media() else {
             mediaState = .error("Could not load media")
+            return
         }
+        mediaState = media.isEmpty ? .empty : .loaded(media)
     }
 
     func toggleSelection(bout: Bout, fighterID: String, odds: String) {
@@ -169,19 +163,7 @@ final class AppState {
     }
 
     func imageURL(_ path: String) -> URL? {
-        repository.imageURL(for: path)
-    }
-
-    /// The dataset is read as text and parsed inside FightEvents, so the app declares no
-    /// `Codable` mirror of the JSON and neither does the Android host.
-    private static func makeCatalog() -> Catalog {
-        let root = DatasetLocator.datasetRoot()
-        func read(_ name: String, empty: String) -> String {
-            (try? String(contentsOf: root.appendingPathComponent(name), encoding: .utf8)) ?? empty
-        }
-        let events = read("events.json", empty: #"{"events":[]}"#)
-        let fighters = read("fighters.json", empty: #"{"fighters":[]}"#)
-        return (try? Catalog.parse(eventsJSON: events, fightersJSON: fighters))
-            ?? (try! Catalog.parse(eventsJSON: #"{"events":[]}"#, fightersJSON: #"{"fighters":[]}"#))
+        guard LocalAssetServer.port > 0 else { return nil }
+        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(path)")
     }
 }

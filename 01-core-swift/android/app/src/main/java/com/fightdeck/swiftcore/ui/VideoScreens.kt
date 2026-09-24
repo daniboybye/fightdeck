@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.compose.composable
 import com.fightdeck.fightevents.FightEventsJava
-import com.fightdeck.swiftcore.data.MediaItem
+import com.fightdeck.fightevents.MediaItem
 import com.fightdeck.swiftcore.design.Tokens
 import java.math.BigDecimal
 import kotlinx.coroutines.delay
@@ -121,7 +121,7 @@ internal fun VideoScreen(
                     }
                 }
             }
-            item.note?.let { note ->
+            item.note.takeIf { it.isNotEmpty() }?.let { note ->
                 item {
                     Row(verticalAlignment = Alignment.Top) {
                         Icon(
@@ -234,4 +234,4 @@ private fun floatingWindowParams(autoEnter: Boolean): PictureInPictureParams {
 }
 
 internal val MediaItem.durationLabel: String
-    get() = FightEventsJava.formatDuration(durationSeconds.toLong())
+    get() = FightEventsJava.formatDuration(durationSeconds)

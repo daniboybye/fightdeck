@@ -50,6 +50,53 @@ public final class TaleOfTheTapeBridge {
     }
 }
 
+// Named as the screens name them. Inside this file the dataset's own types need the module
+// prefix, the same way `FightSlip.SlipEngine` does beside the slip glue's `SlipEngine`.
+public final class NewsItem {
+    public let id: String
+    public let eventId: String
+    public let headline: String
+    public let body: String
+    public let publishedAt: String
+    public let readMinutes: Int
+    public let source: String
+    public let heroImage: String
+
+    init(_ item: FightEvents.NewsItem) {
+        id = item.id
+        eventId = item.eventId
+        headline = item.headline
+        body = item.body
+        publishedAt = item.publishedAt
+        readMinutes = item.readMinutes
+        source = item.source
+        heroImage = item.heroImage
+    }
+}
+
+public final class MediaItem {
+    public let id: String
+    public let eventId: String
+    public let title: String
+    public let kind: String
+    public let url: String
+    public let poster: String
+    public let durationSeconds: Int
+    /// Empty when the dataset carries no note: jextract carries no optionals.
+    public let note: String
+
+    init(_ item: FightEvents.MediaItem) {
+        id = item.id
+        eventId = item.eventId
+        title = item.title
+        kind = item.kind
+        url = item.url
+        poster = item.poster
+        durationSeconds = item.durationSeconds
+        note = item.note ?? ""
+    }
+}
+
 public final class LegContextBridge {
     public let fighterName: String
     public let opponentName: String
@@ -64,13 +111,13 @@ public final class LegContextBridge {
     }
 }
 
-/// Android-facing handle over `Catalog`. The host reads JSON files and hands the text in;
-/// the SDK does no file I/O.
+/// Android-facing handle over `Catalog`. The host finds the dataset directory; reading and
+/// parsing it happens on this side.
 public final class EventCatalogBridge {
     private let catalog: Catalog
 
-    public init(eventsJSON: String, fightersJSON: String) throws {
-        catalog = try Catalog.parse(eventsJSON: eventsJSON, fightersJSON: fightersJSON)
+    public init(datasetRoot: String) throws {
+        catalog = try Catalog.load(datasetRoot: URL(fileURLWithPath: datasetRoot, isDirectory: true))
     }
 
     public var eventCount: Int { catalog.allEvents().count }
@@ -252,5 +299,13 @@ public final class EventCatalogBridge {
     public var boutIndexJSON: String {
         let data = (try? JSONEncoder().encode(catalog.boutIndex())) ?? Data("[]".utf8)
         return String(decoding: data, as: UTF8.self)
+    }
+
+    public func news() throws -> [NewsItem] {
+        try catalog.news().map(NewsItem.init)
+    }
+
+    public func media() throws -> [MediaItem] {
+        try catalog.media().map(MediaItem.init)
     }
 }

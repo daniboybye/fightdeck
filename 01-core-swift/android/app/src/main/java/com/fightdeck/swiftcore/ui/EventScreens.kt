@@ -51,12 +51,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fightdeck.fightevents.FightEventsJava
+import com.fightdeck.fightevents.MediaItem
+import com.fightdeck.fightevents.NewsItem
 import com.fightdeck.swiftcore.catalog.BoutCard
 import com.fightdeck.swiftcore.catalog.EventCard
 import com.fightdeck.swiftcore.core.BetSlip
 import com.fightdeck.swiftcore.core.Money
-import com.fightdeck.swiftcore.data.MediaItem
-import com.fightdeck.swiftcore.data.NewsItem
 import com.fightdeck.swiftcore.design.BalanceMenuAction
 import com.fightdeck.swiftcore.design.Tokens
 import java.math.BigDecimal

@@ -84,8 +84,6 @@ dependencies {
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     testImplementation("junit:junit:4.13.2")
@@ -95,6 +93,14 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
     androidTestImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.4.10")
+    // Only the fixture tests decode JSON on this side; the app's dataset is read by FightEvents.
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    // Instrumented tests run on the app's classpath, where Navigation alone leaves
+    // kotlinx-serialization-core at 1.7.3 — older than the serialisers the Kotlin 2.4 plugin
+    // writes for the fixtures, which then fail with AbstractMethodError.
+    constraints {
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.9.0")
+    }
 }
 
 tasks.withType<Test>().configureEach {

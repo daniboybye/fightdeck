@@ -17,12 +17,3 @@
 # not exist on Android. The annotations are never read here, so the dangling reference is
 # harmless — but R8 treats a missing class as an error until it is named.
 -dontwarn jdk.jfr.**
-
-# Serializable dataset models — the generated serialisers are reached through the companion.
--keepclassmembers class com.fightdeck.swiftcore.data.** {
-    *** Companion;
-}
--keepclasseswithmembers class com.fightdeck.swiftcore.data.** {
-    kotlinx.serialization.KSerializer serializer(...);
-}
--keep,includedescriptorclasses class com.fightdeck.swiftcore.data.**$$serializer { *; }

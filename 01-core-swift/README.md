@@ -4,11 +4,11 @@ Two host apps (SwiftUI + Compose) sharing the same business logic as [`02-core-r
 
 ## What this demonstrates
 
-- **Three Swift packages, same split as Rust** — `FightCore` (money, odds, contract limits, deposit rules), `FightSlip` (slip engine, store, settlement, cash-out), `FightEvents` (dataset parsing, catalog, display, tale of the tape). The feature packages depend on the kernel but not on each other; the app is the only place they meet.
+- **Three Swift packages, same split as Rust** — `FightCore` (money, odds, contract limits, deposit rules), `FightSlip` (slip engine, store, settlement, cash-out), `FightEvents` (dataset loading, catalog, news and media, display, tale of the tape). The feature packages depend on the kernel but not on each other; the app is the only place they meet.
 - **One contract, 72 fixtures** — odds, slip math (including the seven-fold €361.11 trap), validation, settlement, cash-out. Fixture suites live with the package that owns the logic; all cases pass in `swift test` on macOS **and on an Android device** through the generated JNI bindings.
 - **Generated JNI bindings per package** — jextract runs once per SDK, each with its own `swift-java.config`, Java package, and `lib*.so`. Nobody writes or maintains a JNI thunk; what stays hand-written is the string-money facade in front of `FightCore` (see [the constraints](#four-constraints-that-shaped-the-code)).
 - **Shared mutation logic** — `SlipSession` holds the slip and the rules. iOS wraps it in `@Observable BetSlipStore`; Android wraps it in the extracted `SlipEngine`. Both platforms execute the same Swift.
-- **Synchronous dataset parsing** — `Catalog.parse(eventsJSON:fightersJSON:)` is synchronous and throwing, mirroring Rust's `EventCatalog::parse`. The host reads the files and hands over the text; the SDK does no file I/O, which keeps the Android build free of async-over-JNI for the dataset.
+- **Synchronous dataset loading** — `Catalog.load(datasetRoot:)` is synchronous and throwing, mirroring Rust's `EventCatalog::load`. The host finds the dataset directory and hands over its path; the SDK reads events, fighters, news and media itself, synchronously, which keeps the Android build free of async-over-JNI for the dataset.
 - **The honest constraints** — jextract has no mapping for `Decimal`, Observation does not cross JNI, and the Swift runtime that a 273 KB core drags behind it is 68 MB per ABI.
 
 ## Build commands
@@ -174,7 +174,7 @@ validation errors used one until it turned out Kotlin only ever wanted the contr
 | Generated JNI thunks (Swift, three packages) | 2,378+ | nobody |
 | `FightCoreGlue.swift` — money, odds and deposit facade | 100 | us |
 | `FightSlipGlue.swift` — slip engine facade | 173 | us |
-| `FightEventsGlue.swift` — catalog facade | 250 | us |
+| `FightEventsGlue.swift` — catalog, news and media facade | 311 | us |
 | `FightCoreGlue.kt` — marshalling and read-back | 97 | us |
 | `SwiftCoreBridge.kt` — loads the `.so` files | 15 | us |
 
@@ -349,7 +349,7 @@ None blocking. One observation:
 │   │   ├── Sources/FightSlip/      SlipEngine, SlipSession, BetSlipStore
 │   │   └── Sources/FightSlipJava/  slip engine facade for jextract
 │   └── events/                     SwiftPM package FightEvents → libfightevents.so
-│       ├── Sources/FightEvents/    Catalog.parse, display, tale of the tape
+│       ├── Sources/FightEvents/    Catalog.load, news and media, display, tale of the tape
 │       └── Sources/FightEventsJava/ catalog facade for jextract
 ├── ios/                            SwiftUI host (scheme FightDeck)
 ├── android/                        Compose host — consumes all three AARs
@@ -373,7 +373,7 @@ JNI means nothing on iOS.
 | Three Swift `.so` files + JNI bindings on Android | ✅ Each package cross-compiles to its own `lib*.so`; Java classes and JNI thunks are jextract's |
 | Extract `FightCore` directly | ❌ Its API is `Decimal`; a string-money facade module sits in front |
 | `@Observable` driving Compose recomposition | iOS ✅ via `BetSlipStore`; Android re-reads a snapshot after every mutation |
-| Dataset parsing in the host to avoid async-over-JNI | ✅ `Catalog.parse` is synchronous; the host reads JSON files and passes text |
+| Dataset loading without async-over-JNI | ✅ `Catalog.load` is synchronous; the host passes the dataset directory and the SDK reads the files |
 | Kotlin port of the logic for UI parity | Deleted — duplicated rules replaced by Kotlin marshalling and three Swift glue facades |
 | Fixture coverage in JVM unit tests | Moved to instrumented tests; only a device can load the `.so` |
 

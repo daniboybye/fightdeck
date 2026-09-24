@@ -15,6 +15,7 @@ import Foundation
 
 public enum CatalogError: Error, Sendable {
     case decoding(field: String)
+    case unreadable(file: String)
 }
 
 public struct CardSection: Sendable {
@@ -45,21 +46,40 @@ public struct Catalog: Sendable {
     private let events: [Event]
     private let fighters: [String: Fighter]
     private let boutToEvent: [String: String]
+    private var loadedNews: Result<[NewsItem], any Error> = .success([])
+    private var loadedMedia: Result<[MediaItem], any Error> = .success([])
+
+    /// What the app shows when there is no dataset to load.
+    public static let empty = Catalog(events: [], fighters: [:], boutToEvent: [:])
+
+    /// The host still decides where the dataset lives — the app bundle, a scheme variable, a
+    /// folder pushed over adb — and hands over the directory. Reading and parsing it is ours.
+    public static func load(datasetRoot: URL) throws -> Catalog {
+        func read(_ name: String) throws -> Data {
+            do {
+                return try Data(contentsOf: datasetRoot.appendingPathComponent(name))
+            } catch {
+                throw CatalogError.unreadable(file: name)
+            }
+        }
+        var catalog = try parse(eventsData: read("events.json"), fightersData: read("fighters.json"))
+        // A broken news or media file costs its own section, not the whole catalogue.
+        catalog.loadedNews = Result {
+            try decode(NewsFile.self, from: read("news.json"), field: "news").news
+        }
+        catalog.loadedMedia = Result {
+            try decode(MediaFile.self, from: read("media.json"), field: "media").media
+        }
+        return catalog
+    }
 
     public static func parse(eventsJSON: String, fightersJSON: String) throws -> Catalog {
-        let decoder = JSONDecoder()
-        let eventsFile: EventsFile
-        do {
-            eventsFile = try decoder.decode(EventsFile.self, from: Data(eventsJSON.utf8))
-        } catch {
-            throw CatalogError.decoding(field: "events")
-        }
-        let fightersFile: FightersFile
-        do {
-            fightersFile = try decoder.decode(FightersFile.self, from: Data(fightersJSON.utf8))
-        } catch {
-            throw CatalogError.decoding(field: "fighters")
-        }
+        try parse(eventsData: Data(eventsJSON.utf8), fightersData: Data(fightersJSON.utf8))
+    }
+
+    private static func parse(eventsData: Data, fightersData: Data) throws -> Catalog {
+        let eventsFile = try decode(EventsFile.self, from: eventsData, field: "events")
+        let fightersFile = try decode(FightersFile.self, from: fightersData, field: "fighters")
 
         var boutToEvent: [String: String] = [:]
         for event in eventsFile.events {
@@ -78,8 +98,24 @@ public struct Catalog: Sendable {
         self.boutToEvent = boutToEvent
     }
 
+    private static func decode<T: Decodable>(_ type: T.Type, from data: Data, field: String) throws -> T {
+        do {
+            return try JSONDecoder().decode(type, from: data)
+        } catch {
+            throw CatalogError.decoding(field: field)
+        }
+    }
+
     public func allEvents() -> [Event] {
         events
+    }
+
+    public func news() throws -> [NewsItem] {
+        try loadedNews.get()
+    }
+
+    public func media() throws -> [MediaItem] {
+        try loadedMedia.get()
     }
 
     public func event(id: String) -> Event? {

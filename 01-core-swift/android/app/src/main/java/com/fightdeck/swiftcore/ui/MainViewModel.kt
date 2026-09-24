@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.fightevents.EventCatalogBridge
+import com.fightdeck.fightevents.MediaItem
+import com.fightdeck.fightevents.NewsItem
 import com.fightdeck.swiftcore.bridge.SharedPreferencesStore
 import com.fightdeck.swiftcore.bridge.SwiftCoreBridge
 import com.fightdeck.swiftcore.catalog.BoutCard
@@ -19,9 +21,6 @@ import com.fightdeck.swiftcore.core.BetMode
 import com.fightdeck.swiftcore.core.Money
 import com.fightdeck.swiftcore.core.SlipState
 import com.fightdeck.swiftcore.core.SwiftSlipStore
-import com.fightdeck.swiftcore.data.JsonFileRepository
-import com.fightdeck.swiftcore.data.MediaItem
-import com.fightdeck.swiftcore.data.NewsItem
 import com.fightdeck.swiftcore.services.DatasetLocator
 import com.fightdeck.swiftcore.services.LocalAssetServer
 import java.math.BigDecimal
@@ -47,7 +46,6 @@ sealed interface BootstrapState {
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = SharedPreferencesStore(application)
-    private var repository: JsonFileRepository? = null
     private var catalog: EventCatalogBridge? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
@@ -106,10 +104,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 runCatching { bootstrapEngine(getApplication()) }
             }
             booted.fold(
-                onSuccess = { engine ->
-                    repository = engine.repository
-                    catalog = engine.catalog
-                    slipStore = SwiftSlipStore(engine.catalog.boutIndexJSON)
+                onSuccess = { loaded ->
+                    catalog = loaded
+                    slipStore = SwiftSlipStore(loaded.boutIndexJSON)
                     publishSlipState()
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
@@ -125,29 +122,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private data class Engine(
-        val repository: JsonFileRepository,
-        val catalog: EventCatalogBridge,
-    )
-
-    private fun bootstrapEngine(application: Application): Engine {
+    private fun bootstrapEngine(application: Application): EventCatalogBridge {
         val root = DatasetLocator.datasetRoot(application)
         LocalAssetServer.start(root)
         // jextract exposes Swift initialisers as a static `init`, which Kotlin reads as a
         // keyword and needs escaped.
-        val catalog = EventCatalogBridge.`init`(
-            root.resolve("events.json").readText(),
-            root.resolve("fighters.json").readText(),
-        )
-        return Engine(JsonFileRepository(root), catalog)
+        return EventCatalogBridge.`init`(root.path)
     }
 
     fun refreshEvents() {
-        val events = runCatching { requireNotNull(catalog).loadEvents() }.getOrElse {
-            _events.value = LoadState.Error("Could not load events")
-            return
-        }
-        _events.value = if (events.isEmpty()) LoadState.Empty else LoadState.Loaded(events)
+        _events.value = loadState("Could not load events") { requireNotNull(catalog).loadEvents() }
     }
 
     fun cardSections(eventID: String): List<CardSectionCard> =
@@ -164,28 +148,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         requireNotNull(catalog).legContext(boutID, fighterID)
 
     fun refreshNews() {
-        viewModelScope.launch {
-            _news.value = LoadState.Loading
-            _news.value = runCatching { requireNotNull(repository).loadNews() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load news") },
-                )
-        }
+        _news.value = loadState("Could not load news") { requireNotNull(catalog).news().toList() }
     }
 
     fun refreshMedia() {
-        viewModelScope.launch {
-            _media.value = LoadState.Loading
-            _media.value = runCatching { requireNotNull(repository).loadMedia() }
-                .fold(
-                    onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                    onFailure = { LoadState.Error("Could not load media") },
-                )
-        }
+        _media.value = loadState("Could not load media") { requireNotNull(catalog).media().toList() }
     }
 
-    fun imageUrl(path: String): String? = repository?.imageUrl(path)
+    private fun <T> loadState(error: String, load: () -> List<T>): LoadState<List<T>> =
+        runCatching(load).fold(
+            onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
+            onFailure = { LoadState.Error(error) },
+        )
+
+    fun imageUrl(path: String): String? =
+        LocalAssetServer.port.takeIf { it > 0 }?.let { "http://127.0.0.1:$it/$path" }
 
     fun toggleSelection(boutID: String, fighterId: String, odds: String) {
         requireNotNull(slipStore).toggleSelection(boutID, fighterId, Money.parse(odds))

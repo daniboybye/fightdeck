@@ -24,8 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.fightdeck.swiftcore.data.MediaItem
-import com.fightdeck.swiftcore.data.NewsItem
+import com.fightdeck.fightevents.MediaItem
+import com.fightdeck.fightevents.NewsItem
 import com.fightdeck.swiftcore.design.Tokens
 import java.math.BigDecimal
 

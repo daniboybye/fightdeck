@@ -191,3 +191,35 @@ public struct FighterRecord: Codable, Sendable {
         self.display = display
     }
 }
+
+struct NewsFile: Decodable {
+    let news: [NewsItem]
+}
+
+struct MediaFile: Decodable {
+    let media: [MediaItem]
+}
+
+public struct NewsItem: Codable, Identifiable, Sendable {
+    public let id: String
+    public let eventId: String
+    public let headline: String
+    public let body: String
+    public let publishedAt: String
+    public let readMinutes: Int
+    public let source: String
+    public let heroImage: String
+}
+
+public struct MediaItem: Codable, Identifiable, Sendable {
+    public let id: String
+    public let eventId: String
+    public let title: String
+    public let kind: String
+    public let url: String
+    public let poster: String
+    public let durationSeconds: Int
+    /// Says which public test stream stands in for the licensed footage, so the demo never
+    /// passes a cartoon trailer off as a press conference.
+    public let note: String?
+}

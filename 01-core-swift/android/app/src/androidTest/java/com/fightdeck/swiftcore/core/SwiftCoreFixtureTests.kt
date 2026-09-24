@@ -107,13 +107,8 @@ class SwiftCoreFixtureTests {
         assertEquals("361.11", engine.potentialReturnText)
     }
 
-    private fun engineForFixtures(): SlipEngine {
-        val catalog = EventCatalogBridge.`init`(
-            File(DATASET_ROOT, "events.json").readText(),
-            File(DATASET_ROOT, "fighters.json").readText(),
-        )
-        return SlipEngine.init(catalog.boutIndexJSON)
-    }
+    private fun engineForFixtures(): SlipEngine =
+        SlipEngine.init(EventCatalogBridge.`init`(DATASET_ROOT).boutIndexJSON)
 
     private fun fixture(name: String): String {
         val file = File(FIXTURES_ROOT, "$name.json")

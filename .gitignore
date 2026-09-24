@@ -107,10 +107,6 @@ tools/.commons-cache.json
 # run without an adb push. Committing it would be a second copy of the dataset, free to drift.
 04-sdk-skip/android/app/src/main/assets/
 
-# rsync'd from ios/Sources by build-xcframework.sh. A committed copy of sources that already
-# live next door only ever ends up stale.
-03-sdk-rn/sdks/core/ios/BuildPackage/
-
 # Records which feature set the last SDK build bundled, so the Podfile can catch a mismatch.
 03-sdk-rn/sdks/core/ios/.fightdeck-features
 

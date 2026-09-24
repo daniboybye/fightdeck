@@ -25,9 +25,8 @@ Deliberately excluded, because including them would compare different things:
   tests          not shipped; `00-native` carries UI tests the SDK demos do not
   harnesses      04-sdk-skip's ios/Harness/** and sdks/consumer-verify/** measure the
                  SDK, they are not the demo app
-  duplicates     03-sdk-rn ships its iOS SDK sources twice, once for SwiftPM and once
-                 for CocoaPods. Byte-identical files are counted once — the duplication
-                 is a real maintenance cost, but it is not two implementations.
+  duplicates     byte-identical files are counted once — a copy is a real maintenance
+                 cost, but it is not two implementations.
 
     python3 tools/count-significant-lines.py           # the table
     python3 tools/count-significant-lines.py --audit   # every file and how it was classed
@@ -107,6 +106,15 @@ GENERATED_GLOBS = {
         "sdks/*/Sources/Fight*/*.swift",
         "sdks/*/Sources/*FFI/include/*.h",
         "android/app/src/main/java/uniffi/*/*.kt",
+    ],
+    # Codegen, from sdks/core/src/specs. Android writes the Java half into the runtime
+    # library and the JNI half into the app; iOS writes both halves at `pod install`.
+    "03-sdk-rn": [
+        "sdks/core/android/runtime/build/generated/source/codegen/java/**/*.java",
+        "android/app/build/generated/source/codegen/jni/**/*.h",
+        "android/app/build/generated/source/codegen/jni/**/*.cpp",
+        "ios/build/generated/ios/**/FightDeckRuntimeSpec*",
+        "ios/build/generated/ios/**/FightDeckRuntimeSpec/*",
     ],
     # Our own modules only. skipstone also transpiles SkipUI/SkipFoundation/SkipLib —
     # another ~280k lines through the same compiler — which is somebody else's framework.
@@ -438,10 +446,9 @@ def main() -> int:
             for _, key in cols
         )
         print(f"{approach:<16}{cells}")
-    print("\n00-native and 03-sdk-rn have no binding generator at all — nothing crosses a")
-    print("language boundary in the first, and React Native's Codegen is deliberately unused")
-    print("in the second. For the other three, generated is build output: it reads zero until")
-    print("that approach has been packaged locally by its SDK build scripts.")
+    print("\n00-native has no binding generator at all — nothing crosses a language boundary.")
+    print("For the other four, generated is build output: it reads zero until that approach")
+    print("has been packaged locally by its SDK build scripts.")
     return 0
 
 

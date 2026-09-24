@@ -8,11 +8,12 @@ Three feature screens (**deposit**, **bet slip**, **fighter profile**) ship as a
 | --- | --- |
 | Shared runtime + feature adapters | `FightDeckRNRuntime`, `DepositSDK`, `BetslipSDK`, `FighterSDK` (CocoaPods / Gradle modules) |
 | Mockable adapter boundary | `DepositHosting` / `BetslipHosting` / `FighterHosting` protocols |
-| Launcher separate from adapter | `DepositLauncher` fetches token, pushes VC |
 | Theme as JSON | `themeJSON` in params from `shared-ui-spec/tokens.json` |
-| Runtime singleton | `FightDeckRNRuntime.shared` — configure → registerFeature → host |
-| Zero host native modules | JS → native via `NotificationCenter`, not host-registered modules |
-| Prewarm + teardown | `prewarm()`, `destroyFeature(_:)` with startup metrics |
+| Runtime singleton | `FightDeckRuntime.shared` — prewarm → host |
+| One typed boundary, written once | `sdks/core/src/specs/NativeFightDeckRuntimeBridge.ts` → Codegen → ObjC++ protocol, Java base class, JSI/JNI glue |
+| Zero host native modules | The Turbo Module lives in the runtime SDK; the host never registers one |
+| Data and chrome on separate channels | Surface props carry data only; safe areas and keyboard go through `publishLayout` |
+| Prewarm | `prewarm()` with startup metrics |
 | Hermes bytecode | `fightdeck.hbc` in runtime resource bundle |
 
 ## Build order
@@ -21,8 +22,8 @@ Three feature screens (**deposit**, **bet slip**, **fighter profile**) ship as a
 # 1. TypeScript core + fixtures
 cd sdks/core && npm install && npm test
 
-# 2. JS bundle + Hermes bytecode (also run automatically by pod build)
-cd sdks/core && ./build-xcframework.sh   # emits Resources/fightdeck.hbc
+# 2. JS bundle + Hermes bytecode (also run by ./sdks/build-apple.sh)
+cd sdks/core && ./build-jsbundle.sh      # emits ios/Resources/fightdeck.hbc
 
 # Bundle only, for a different feature set — no need to rebuild three architecture slices
 cd sdks/core && FIGHTDECK_FEATURES=deposit ./build-jsbundle.sh
@@ -115,8 +116,6 @@ All-surfaces bundle (`FIGHTDECK_FEATURES=all`); the deposit-only entry is roughl
 | **iOS** | `RNIntegrationTests` finds RN UI text ("Balance", "No selections yet"). Host uses `FightDeckRNHost.mm` → `RCTReactNativeFactory` → `viewWithModuleName:` (Fabric surface). |
 | **Android** | `RNIntegrationTest` asserts logcat `Running "DepositFeature"` / `Running "BetslipFeature"` (UiAutomator fallback). Host uses `ReactHost.createSurface()` inside `AndroidView`. |
 
-The Swift-only placeholder in `sdks/core/ios/Sources/FightDeckRNRuntime/RNHostEngineImpl.swift` is **not** used when building via CocoaPods — the ObjC++ pod target is the production path.
-
 ## Fixture coverage (TypeScript FightCore)
 
 | File | Cases |
@@ -154,7 +153,7 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
    React and Hermes xcframeworks.
 2. **Android binary host (RN)** — SDK adapter AARs come from `sdks/*/out`;
    `react-android` / `hermes-android` still resolve from Maven to avoid duplicate classes.
-3. **Fabric badge + Turbo `PreferencesStore`** — TypeScript specs and native stub files exist; codegen + ObjC++ Fabric wrapper not linked.
+3. **Codegen writes the boundary, but not in the languages the hosts are written in** — `sdks/core/src/specs/NativeFightDeckRuntimeBridge.ts` is the one place the calls between React and the hosts are declared. Codegen turns it into an ObjC++ protocol with JSI glue at `pod install`, and a Java base class with JNI glue in Gradle. Swift cannot conform to a protocol whose header is C++, so `FightDeckRuntimeBridge.mm` forwards each generated method to `FeatureResults` in Swift. On Android the JNI half has to be compiled into the app's `libappmodules.so` while the Java half ships in the runtime AAR, so Codegen runs twice from the same `package.json` and the app build deletes its own copy of the Java class, which would otherwise not dex. What Codegen does not reach is a surface's own properties: React Native's root props are an untyped dictionary, so `*Params` → dictionary / `Bundle` is still written by hand on both sides.
 4. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
 5. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
 6. **iOS feature gating is a build-time concern only** — Which pods a target links is fixed by target name in the `Podfile`, so the demo app needs no conditional compilation and the four `ios/Harness/` measurement hosts each compile against exactly the SDKs they import. `FIGHTDECK_FEATURES` survives for one job the target name cannot do: picking the JS bundle's entry point when the SDK is built. Nothing ties the bundle to the host, so the `Podfile` compares the value against the `ios/.fightdeck-features` stamp and refuses a mismatch rather than producing an app whose size means nothing.
@@ -163,6 +162,7 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 9. **The host owns the chrome, per platform** — the React screen draws the deposit form and nothing around it, so the title and the Close button are written twice: a `NavigationStack` toolbar on iOS, a `TopAppBar` in the Compose sheet on Android. The RN side reports `confirmed` so both hosts can drop the close affordance once the money has moved. Compare with `04-sdk-skip`, where the same two controls are declared once in Swift.
 10. **Two hosts, two coordinate systems, one JS layout** — the React bar clears the keyboard using numbers the host sends it, and iOS sends points while Compose reads window insets in pixels. Nothing in between converts, so on a 2.6× screen the bet slip's "Place bet" row asked for a lift almost three times too deep; JS clamped it at 400 and the bar came to rest in the middle of the form. The insets also measure from the window edge, while the surface stops above the tab bar, so the whole tab bar's height was counted a second time. `RNSurfaceLayoutHost.kt` now scales to density-independent units and reports only the slice of an inset that reaches the surface. A bridge that passes bare numbers has no way to say which units they are in, and the receiving side cannot tell a plausible number from a wrong one.
 11. **The JS bundle is found by name, so nothing checks that it is there** — `FightDeckRNHost.mm` resolves the Hermes bytecode by asking for `FightDeckRNRuntime.bundle` and then `fightdeck.hbc` inside it. The source podspec ships that as a `resource_bundles` entry, but the vendored binary podspec `sdks/build-apple.sh` generates had declared it as a plain `s.resources`, which copies the file to the app bundle root instead. Both spellings build clean and both put a 1.3 MB `.hbc` in the app; the lookup simply returned `nil`, fell through to `RCTBundleURLProvider`, found no Metro packager and killed the app on launch with *No script URL provided*. Resource wiring across a binary pod boundary has no compiler on either side of it, so a demo app can pass a full build and still not start.
+12. **A typed call still arrives on somebody else's thread** — Android delivers Turbo Module methods on React Native's native-modules thread, and the host answers "Add funds" by navigating, which Compose only allows on the main thread. The untyped bridge used the same thread and crashed the same way. `FightDeckRuntimeBridgeModule` now posts every result to the main thread, which is what the iOS module's `methodQueue` does.
 
 ## Architecture sketch
 
@@ -171,10 +171,11 @@ Host (SwiftUI / Compose)
   │  DepositHosting / BetslipHosting / FighterHosting  ← mockable, no RN import
   ▼
 DepositSDK / BetslipSDK / FighterSDK  (feature pod/AAR)
-  │  registerFeature("deposit", moduleName: "DepositFeature")
+  │  props = data only; unchanged params never reach React
   ▼
 FightDeckRNRuntime  (RCTReactNativeFactory / ReactHost, one Hermes, bundle in Resources/)
-  │  NotificationCenter bridge (no host native modules)
+  │  FightDeckRuntimeBridge — Turbo Module, Codegen from NativeFightDeckRuntimeBridge.ts
+  │    JS → host: typed results      host → JS: surfaceLayout() + onSurfaceLayout
   ▼
 JS: DepositFeature / BetslipFeature / FighterFeature + shared FightCore (decimal.js)
 ```

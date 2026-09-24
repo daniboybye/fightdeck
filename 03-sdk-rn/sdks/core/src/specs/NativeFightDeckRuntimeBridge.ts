@@ -3,9 +3,10 @@
  * properties, declared once.
  *
  * Codegen turns this file into the ObjC++ protocol and JSI glue on iOS and the Java base class
- * and JNI glue on Android. A method added here and forgotten on either side is a compile error
- * there, where the untyped `postResult(feature, payload)` it replaces accepted any dictionary
- * and left each host to re-parse it with a string switch of its own.
+ * and JNI glue on Android. A method added here and forgotten on either side is caught by the
+ * compiler — an error on Android, where the base class declares it abstract, and a
+ * missing-protocol-method warning on iOS — where the untyped `postResult(feature, payload)` it
+ * replaces accepted any dictionary and left each host to re-parse it with a string switch.
  */
 import type { CodegenTypes, TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';

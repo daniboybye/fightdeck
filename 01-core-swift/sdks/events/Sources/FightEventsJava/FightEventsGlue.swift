@@ -133,10 +133,6 @@ public final class EventCatalogBridge {
         catalog.eventOfBout(boutID: boutID)?.id ?? ""
     }
 
-    public func boutSegment(boutID: String) -> String {
-        catalog.bout(id: boutID)?.segment ?? ""
-    }
-
     public func boutHeadline(boutID: String) -> String {
         guard let bout = catalog.bout(id: boutID) else { return "" }
         return Display.boutHeadline(
@@ -155,10 +151,6 @@ public final class EventCatalogBridge {
         catalog.bout(id: boutID)?.titleFight ?? false
     }
 
-    public func boutScheduledRounds(boutID: String) -> Int {
-        catalog.bout(id: boutID)?.scheduledRounds ?? 0
-    }
-
     public func cornerFighterID(boutID: String, isRed: Bool) -> String {
         guard let bout = catalog.bout(id: boutID) else { return "" }
         return isRed ? bout.redCorner.fighterId : bout.blueCorner.fighterId
@@ -172,11 +164,6 @@ public final class EventCatalogBridge {
     public func cornerOddsDecimal(boutID: String, isRed: Bool) -> String {
         guard let bout = catalog.bout(id: boutID) else { return "" }
         return isRed ? bout.redCorner.closingOdds.decimal : bout.blueCorner.closingOdds.decimal
-    }
-
-    public func cornerOddsFractional(boutID: String, isRed: Bool) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "" }
-        return isRed ? bout.redCorner.closingOdds.fractional : bout.blueCorner.closingOdds.fractional
     }
 
     public func cornerRecordDisplay(boutID: String, isRed: Bool) -> String {

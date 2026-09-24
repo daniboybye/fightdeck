@@ -181,8 +181,8 @@ struct BetSlipView: View {
             }
         }
         .padding(.horizontal, DesignTokens.Spacing.lg)
-        // The tab accessory now clears the bar from the tab bar, so only keyboard focus needs
-        // extra breathing room — tabBarActionGap would double up with the accessory slot.
+        // The tab accessory already lifts the bar clear of the tab bar, so the ordinary gap is
+        // enough; a wider one would double up with the accessory slot.
         .padding(.bottom, DesignTokens.Layout.actionBarGap)
         .animation(.snappy(duration: 0.25), value: stakeFocused)
     }

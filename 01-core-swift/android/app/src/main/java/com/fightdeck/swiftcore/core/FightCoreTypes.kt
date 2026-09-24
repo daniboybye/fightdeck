@@ -33,11 +33,6 @@ enum class ValidationError(val code: String) {
     UNKNOWN_BOUT("unknown_bout"),
     FIGHTER_NOT_IN_BOUT("fighter_not_in_bout"),
     PAYOUT_EXCEEDS_LIMIT("payout_exceeds_limit"),
-    ;
-
-    companion object {
-        val order = entries.toList()
-    }
 }
 
 data class SlipState(

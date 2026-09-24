@@ -48,27 +48,3 @@ public func fractionalToDecimal(_ fractional: String) -> String {
 public func impliedProbability(_ odds: String) -> String {
     Money.formatImpliedProbability(Money.parse(odds))
 }
-
-public func contractLimitsMinStake() -> String {
-    Money.format(ContractLimits.minStake)
-}
-
-public func contractLimitsMaxStake() -> String {
-    Money.format(ContractLimits.maxStake)
-}
-
-public func contractLimitsMaxSelections() -> Int {
-    ContractLimits.maxSelections
-}
-
-public func contractLimitsMinAccaLegs() -> Int {
-    ContractLimits.minAccaLegs
-}
-
-public func contractLimitsMaxPayout() -> String {
-    Money.format(ContractLimits.maxPayout)
-}
-
-public func contractLimitsCashOutMargin() -> String {
-    Money.format(ContractLimits.cashOutMargin)
-}

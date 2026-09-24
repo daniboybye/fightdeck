@@ -53,9 +53,4 @@ class JsonFileRepository(
             val wrapper = json.decodeFromString<Map<String, List<T>>>(text)
             wrapper[key] ?: error("missing $key")
         }
-
-    companion object {
-        fun create(context: android.content.Context): JsonFileRepository =
-            JsonFileRepository(com.fightdeck.swiftcore.services.DatasetLocator.datasetRoot(context))
-    }
 }

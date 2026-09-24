@@ -25,7 +25,6 @@ import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.BoutIndexRecord
 import uniffi.fightslip.SlipHandle
 import uniffi.fightslip.SlipStateRecord
-import uniffi.fightslip.validationErrorCode
 
 sealed interface LoadState<out T> {
     data object Loading : LoadState<Nothing>
@@ -186,7 +185,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun formatOdds(odds: String) = FightCoreDisplay.formatOdds(odds)
     fun formatCurrency(amount: String) = FightCoreDisplay.formatCurrencyAmount(amount)
-    fun errorCode(error: uniffi.fightslip.ValidationErrorRecord) = validationErrorCode(error)
 
     override fun onCleared() {
         _engine.value?.slipStore?.close()

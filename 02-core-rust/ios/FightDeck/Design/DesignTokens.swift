@@ -49,9 +49,6 @@ enum DesignTokens {
         static let secondaryActionPadding: CGFloat = 24
         /// Keeps a pinned action bar off whatever sits below it — tab bar or keyboard.
         static let actionBarGap: CGFloat = 12
-        /// The floating tab bar's capsule rises above the safe area it reports, so a bar
-        /// sitting on it needs more than `actionBarGap` to read as separate.
-        static let tabBarActionGap: CGFloat = 20
         /// What an odds pill asks for before the bordered style pads it out to the tap target.
         static let oddsLabelHeight: CGFloat = 30
         static let mediaTileAspectRatio: CGFloat = 16 / 9

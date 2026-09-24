@@ -1,7 +1,5 @@
 package com.fightdeck.rust.data
 
-import android.content.Context
-import com.fightdeck.rust.services.DatasetLocator
 import com.fightdeck.rust.services.LocalAssetServer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,11 +24,6 @@ class JsonFileRepository(
             val wrapper = json.decodeFromString<Map<String, List<T>>>(text)
             wrapper[key] ?: error("missing $key")
         }
-
-    companion object {
-        fun create(context: Context): JsonFileRepository =
-            JsonFileRepository(DatasetLocator.datasetRoot(context))
-    }
 }
 
 @Serializable

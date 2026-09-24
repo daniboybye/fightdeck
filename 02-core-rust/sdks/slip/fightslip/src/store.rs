@@ -74,13 +74,6 @@ impl BetSlipStore {
         lock(&self.inner).slip.mode.into()
     }
 
-    pub fn set_balance(&self, balance: String) -> Result<(), SlipError> {
-        let parsed = parse_amount("balance", &balance)?;
-        lock(&self.inner).balance = parsed;
-        self.notify();
-        Ok(())
-    }
-
     pub fn set_stake(&self, stake: String) {
         {
             let mut inner = lock(&self.inner);

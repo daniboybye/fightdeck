@@ -6,9 +6,9 @@ Same UFC betting product as [`00-native/`](../00-native/): event list, bout deta
 
 | SDK | Crate | UniFFI namespace | Apple artifact | Android artifact | Owns |
 | --- | --- | --- | --- | --- | --- |
-| Kernel | `fightcore` | `fightcore` | `FightCore.xcframework` | `fightdeck.aar` | Decimal money, odds conversion, contract vocabulary and limits |
+| Kernel | `fightcore` | `fightcore` | `FightCore.xcframework` | `fightdeck.aar` | Decimal money, odds conversion, contract vocabulary and limits, deposit rules |
 | Feature one | `fightslip` | `fightslip` | `FightSlip.xcframework` | `fightdeck.aar` | Bet slip store, validation, settlement, cash-out, place-bet |
-| Feature two | `fightevents` | `fightevents` | `FightEvents.xcframework` | `fightdeck.aar` | Dataset parsing, bout index, card ordering, tale of the tape, search |
+| Feature two | `fightevents` | `fightevents` | `FightEvents.xcframework` | `fightdeck.aar` | Dataset loading (catalogue, news, media), bout index, card ordering, tale of the tape, search, the localhost image server |
 
 Both feature crates depend on `fightcore` as an ordinary Rust dependency and **neither depends on the other**. `fightevents` produces the bout index, `fightslip` consumes it, and the app is the only place the two meet — four lines of mapping in each host. This remains a source and API boundary, but Android is now one native release unit: changing any crate creates a new common `.so`.
 
@@ -86,6 +86,9 @@ Splitting the crates was the excuse to move logic that both hosts were maintaini
 | Opponent and event lookup per slip leg | 23 lines Swift + 18 lines Kotlin | `EventCatalog::leg_context` |
 | Tale of the tape, plus who holds each advantage | Five hand-written rows in each host | `EventCatalog::tale_of_the_tape` |
 | `split_decision` → `Split decision`, clip durations | `displayMethod` / `formattedDuration` in both | `humanise_code`, `format_duration` |
+| Deposit limits, method fees, fee rounding, preset amounts | `DepositFlowView` + `DepositMoney` in Swift, `DepositScreen` in Kotlin | `deposit_methods`, `deposit_presets`, `deposit_quote` |
+| Reading the dataset, news and media | Each host read the files, and kept a JSON repository and news/media models | `EventCatalog::load`, `news`, `media` |
+| Serving dataset images over localhost | `LocalAssetServer` on Network.framework and on `ServerSocket` | `start_asset_server`, `asset_url` |
 
 Hand-written glue shrank accordingly:
 

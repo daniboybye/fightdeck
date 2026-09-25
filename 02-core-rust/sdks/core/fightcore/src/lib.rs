@@ -5,6 +5,7 @@
 //! on this crate as an ordinary Rust dependency and ship as their own xcframework.
 
 pub mod deposit;
+pub mod display;
 pub mod money;
 pub mod odds;
 pub mod types;

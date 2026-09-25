@@ -3,23 +3,25 @@
 
 use crate::engine::SlipEngine;
 use crate::ffi::{
-    parse_amount, BetSlipRecord, PlaceBetOutcome, SlipError, SlipHandle, SlipStateRecord,
+    parse_amount, PlaceBetOutcome, SlipError, SlipHandle, SlipSnapshot, SlipStateRecord,
 };
 use fightcore::money;
 use fightcore::types::{BetSlip, Selection};
 use rust_decimal::Decimal;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+/// Receives the whole slip after every change. There is no replay on registration: a host
+/// reads `current_snapshot` once to start from, and is told about every change after that.
 #[uniffi::export(foreign)]
-pub trait SlipStateListener: Send + Sync {
-    fn on_slip_state_changed(&self, state: SlipStateRecord);
+pub trait SlipSnapshotListener: Send + Sync {
+    fn on_snapshot(&self, snapshot: SlipSnapshot);
 }
 
 struct StoreInner {
     slip: BetSlip,
     balance: Decimal,
     engine: Arc<SlipEngine>,
-    listeners: Vec<Arc<dyn SlipStateListener>>,
+    listeners: Vec<Arc<dyn SlipSnapshotListener>>,
 }
 
 fn lock(inner: &Mutex<StoreInner>) -> MutexGuard<'_, StoreInner> {
@@ -51,22 +53,12 @@ impl BetSlipStore {
         }))
     }
 
-    pub fn add_listener(&self, listener: Arc<dyn SlipStateListener>) {
+    pub fn add_listener(&self, listener: Arc<dyn SlipSnapshotListener>) {
         lock(&self.inner).listeners.push(listener);
-        self.notify();
     }
 
-    pub fn current_state(&self) -> SlipStateRecord {
-        let inner = lock(&self.inner);
-        Self::state_of(&inner)
-    }
-
-    pub fn current_slip(&self) -> BetSlipRecord {
-        lock(&self.inner).slip.clone().into()
-    }
-
-    pub fn balance(&self) -> String {
-        money::format(lock(&self.inner).balance)
+    pub fn current_snapshot(&self) -> SlipSnapshot {
+        Self::snapshot_of(&lock(&self.inner))
     }
 
     pub fn set_stake(&self, stake: String) {
@@ -171,21 +163,26 @@ impl BetSlipStore {
         inner.slip.mode = SlipEngine::mode_for(inner.slip.selections.len());
     }
 
-    fn state_of(inner: &StoreInner) -> SlipStateRecord {
-        SlipStateRecord::new(
-            inner.engine.slip_state(&inner.slip, inner.balance),
-            &inner.slip,
-        )
+    fn snapshot_of(inner: &StoreInner) -> SlipSnapshot {
+        SlipSnapshot {
+            slip: inner.slip.clone().into(),
+            state: SlipStateRecord::new(
+                inner.engine.slip_state(&inner.slip, inner.balance),
+                &inner.slip,
+            ),
+            balance: money::format(inner.balance),
+            balance_display: money::format_currency(inner.balance),
+        }
     }
 
     /// Listeners may re-enter and call back into the store; never hold the mutex across them.
     fn notify(&self) {
-        let (state, listeners) = {
+        let (snapshot, listeners) = {
             let inner = lock(&self.inner);
-            (Self::state_of(&inner), inner.listeners.clone())
+            (Self::snapshot_of(&inner), inner.listeners.clone())
         };
         for listener in listeners {
-            listener.on_slip_state_changed(state.clone());
+            listener.on_snapshot(snapshot.clone());
         }
     }
 }

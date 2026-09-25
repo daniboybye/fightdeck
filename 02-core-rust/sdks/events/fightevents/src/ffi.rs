@@ -134,7 +134,8 @@ fn corner_summary(
     corner: &crate::dataset::Corner,
 ) -> CornerSummary {
     let fighter = catalog.fighter(&corner.fighter_id);
-    let implied = money::try_parse(&corner.closing_odds.decimal)
+    let decimal = money::try_parse(&corner.closing_odds.decimal).ok();
+    let implied = decimal
         .map(|value| money::format_implied_probability(odds::implied_probability(value)))
         .unwrap_or_default();
     CornerSummary {
@@ -145,7 +146,8 @@ fn corner_summary(
             || format!("assets/fighters/{}.jpg", corner.fighter_id),
             |f| f.portrait.clone(),
         ),
-        odds_decimal: corner.closing_odds.decimal.clone(),
+        // Two places whatever the dataset wrote, so no odds button formats its own label.
+        odds_decimal: decimal.map_or_else(|| corner.closing_odds.decimal.clone(), money::format),
         odds_fractional: corner.closing_odds.fractional.clone(),
         implied_probability: implied,
     }

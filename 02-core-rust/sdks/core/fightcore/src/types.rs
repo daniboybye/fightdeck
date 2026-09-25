@@ -92,6 +92,11 @@ impl ValidationError {
             Self::PayoutExceedsLimit => "payout_exceeds_limit",
         }
     }
+
+    /// What the slip screen prints under the summary: the code, humanised.
+    pub fn message(&self) -> String {
+        crate::display::humanise(self.code())
+    }
 }
 
 #[derive(Debug, Clone)]

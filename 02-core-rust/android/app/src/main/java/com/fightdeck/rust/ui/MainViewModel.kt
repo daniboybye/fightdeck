@@ -20,10 +20,9 @@ import uniffi.fightevents.MediaItem
 import uniffi.fightevents.NewsItem
 import uniffi.fightevents.assetUrl
 import uniffi.fightevents.startAssetServer
-import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.BoutIndexRecord
 import uniffi.fightslip.SlipHandle
-import uniffi.fightslip.SlipStateRecord
+import uniffi.fightslip.SlipSnapshot
 
 sealed interface LoadState<out T> {
     data object Loading : LoadState<Nothing>
@@ -112,14 +111,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun fighter(id: String): FighterSummary? =
         runCatching { requireCatalog().fighter(id) }.getOrNull()
 
-    val slip: StateFlow<BetSlipRecord>
-        get() = requireSlipStore().slip
-
-    val slipState: StateFlow<SlipStateRecord>
-        get() = requireSlipStore().slipState
-
-    val balance: StateFlow<String>
-        get() = requireSlipStore().balance
+    val snapshot: StateFlow<SlipSnapshot>
+        get() = requireSlipStore().snapshot
 
     fun refreshEvents() {
         _events.value = loadState("Could not load events") { requireCatalog().events() }

@@ -56,7 +56,9 @@ final class AppState {
         self.slipStore = ObservableBetSlipStore(store: store)
     }
 
-    var slipState: SlipStateRecord { slipStore.slipState }
+    var slip: BetSlipRecord { slipStore.snapshot.slip }
+
+    var slipState: SlipStateRecord { slipStore.snapshot.state }
 
     func bootstrap() async {
         bootstrapState = .loading
@@ -158,10 +160,3 @@ extension NewsItem: @retroactive Identifiable {}
 
 extension MediaItem: @retroactive Identifiable {}
 
-extension ValidationErrorRecord: @retroactive Identifiable {
-    public var id: String { validationErrorCode(error: self) }
-}
-
-extension ValidationErrorRecord {
-    var displayName: String { humaniseCode(raw: id) }
-}

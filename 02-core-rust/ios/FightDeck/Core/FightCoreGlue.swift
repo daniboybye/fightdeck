@@ -7,7 +7,6 @@
 // validation, settlement, the place-bet workflow — stays in FightSlip.
 //
 
-import FightCore
 import FightSlip
 import Foundation
 import Observation
@@ -15,21 +14,19 @@ import Observation
 @Observable
 @MainActor
 final class ObservableBetSlipStore {
-    private(set) var slipState: SlipStateRecord
-    private(set) var slip: BetSlipRecord
-    private(set) var balance: String
+    /// The slip, its derived state and the balance, as FightSlip last reported them.
+    private(set) var snapshot: SlipSnapshot
     private let store: BetSlipStore
-    private let listener: SlipStateListenerBridge
+    private let listener: SlipSnapshotListenerBridge
 
     init(store: BetSlipStore) {
         self.store = store
-        self.slipState = store.currentState()
-        self.slip = store.currentSlip()
-        self.balance = store.balance()
-        let bridge = SlipStateListenerBridge()
+        // Read once here; the listener only reports changes, it does not replay this.
+        self.snapshot = store.currentSnapshot()
+        let bridge = SlipSnapshotListenerBridge()
         self.listener = bridge
-        bridge.onUpdate = { [weak self] state in
-            self?.applyListenerUpdate(state)
+        bridge.apply = { [weak self] snapshot in
+            self?.snapshot = snapshot
         }
         store.addListener(listener: bridge)
     }
@@ -57,32 +54,14 @@ final class ObservableBetSlipStore {
     func placeBet() -> PlaceBetOutcome {
         store.placeBet()
     }
-
-    private func applyListenerUpdate(_ state: SlipStateRecord) {
-        slipState = state
-        slip = store.currentSlip()
-        balance = store.balance()
-    }
 }
 
-private final class SlipStateListenerBridge: SlipStateListener, @unchecked Sendable {
-    var onUpdate: (@MainActor (SlipStateRecord) -> Void)?
+private final class SlipSnapshotListenerBridge: SlipSnapshotListener, @unchecked Sendable {
+    var apply: (@MainActor (SlipSnapshot) -> Void)?
 
-    func onSlipStateChanged(state: SlipStateRecord) {
+    func onSnapshot(snapshot: SlipSnapshot) {
         Task { @MainActor in
-            onUpdate?(state)
+            apply?(snapshot)
         }
-    }
-}
-
-/// Thin `try?` wrappers over FightCore. The kernel returns an error for unparseable input;
-/// a label has nothing useful to do with one, so it shows the raw value instead.
-enum FightCoreDisplay {
-    static func formatMoneyAmount(_ amount: String) -> String {
-        (try? formatMoney(amount: amount)) ?? amount
-    }
-
-    static func formatCurrencyAmount(_ amount: String) -> String {
-        (try? formatCurrency(amount: amount)) ?? amount
     }
 }

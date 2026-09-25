@@ -89,15 +89,23 @@ Splitting the crates was the excuse to move logic that both hosts were maintaini
 | Deposit limits, method fees, fee rounding, preset amounts | `DepositFlowView` + `DepositMoney` in Swift, `DepositScreen` in Kotlin | `deposit_methods`, `deposit_presets`, `deposit_quote` |
 | Reading the dataset, news and media | Each host read the files, and kept a JSON repository and news/media models | `EventCatalog::load`, `news`, `media` |
 | Serving dataset images over localhost | `LocalAssetServer` on Network.framework and on `ServerSocket` | `start_asset_server`, `asset_url` |
+| Balance, potential return, odds labels, validation messages | `formatCurrency` / `formatMoney` / `humaniseCode(validationErrorCode(…))` across FFI on every body pass | `SlipSnapshot::balance_display`, `SlipStateRecord::potential_return_display`, `ValidationIssue::message`, `CornerSummary::odds_decimal` |
 
 Hand-written glue shrank accordingly:
 
-| File | Before | After |
-| --- | ---: | ---: |
-| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | **74** |
-| `android/.../core/FightCoreGlue.kt` | 115 | **61** |
+| File | Before the split | After the split | One snapshot |
+| --- | ---: | ---: | ---: |
+| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | 74 | **56** |
+| `android/.../core/FightCoreGlue.kt` | 115 | 61 | **41** |
 
-What is left in those files is the part UniFFI genuinely cannot generate: a listener bridge republished as `@Observable` on iOS and `StateFlow` on Android. No betting rule survives in either.
+Non-blank lines. What is left in those files is the part UniFFI genuinely cannot generate: a listener bridge republished as `@Observable` on iOS and `StateFlow` on Android. No betting rule survives in either.
+
+The bridge carries one value. `BetSlipStore` hands every listener a `SlipSnapshot` — the slip, its
+derived state, the balance and the balance as text — after each change, so applying an update is
+one assignment. It used to hand over only the derived state, and each host then called
+`current_slip()` and `balance()`: three crossings, three locks and three copies per tap instead of
+one. Registering a listener does not replay the current value; a host reads
+`current_snapshot()` once when it starts and hears about every change after that.
 
 ## Hand-written Rust vs generated bindings
 
@@ -117,7 +125,7 @@ per-struct annotation; individual exceptions can be listed under `mutable_record
 
 ## What UniFFI does **not** give you for free
 
-- **Reactive UI bindings** — no `@Observable`, no `StateFlow`; you write the listener bridge (~75 lines per platform here).
+- **Reactive UI bindings** — no `@Observable`, no `StateFlow`; you write the listener bridge (~50 lines per platform here).
 - **Cross-SDK types** — `fightevents::BoutIndexEntry` and `fightslip::BoutIndexRecord` are separate types with identical shapes, because independent namespaces cannot share records without coupling their build. The host maps between them.
 - **A single modulemap** — three xcframeworks each want to install `include/module.modulemap`, and Xcode copies them into one `include/`, where they collide. The xcframework ships libraries only; each package carries its header in a SwiftPM C target that gets its own include directory. UniFFI's own modulemap is discarded too, because it `use`s Darwin submodules SwiftPM does not put on the path.
 - **Swift 6 concurrency** — the generated bindings do not survive strict checking, so the bindings target compiles in Swift 5 language mode. Confining that to one SwiftPM target is what lets the app itself build with `SWIFT_STRICT_CONCURRENCY: complete`, like every other approach here.
@@ -132,7 +140,7 @@ Toolchain pins: [`versions.lock.toml`](../versions.lock.toml).
 export PATH="$HOME/.cargo/bin:$PATH"
 cd 02-core-rust/sdks
 
-cargo test --workspace          # 16 tests: fixtures + unit
+cargo test --workspace          # 28 tests: fixtures, store + unit
 
 ./build-apple.sh                # all three SPM packages: {core,slip,events}/out/*.xcframework
 ./build-android.sh              # one fightdeck.aar/.so + three generated Kotlin packages

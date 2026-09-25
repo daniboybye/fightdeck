@@ -61,12 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fightdeck.rust.design.BalanceMenuAction
 import com.fightdeck.rust.design.Tokens
-import uniffi.fightcore.formatCurrency
-import uniffi.fightcore.formatMoney
-import uniffi.fightslip.BetSlipRecord
+import uniffi.fightslip.SlipSnapshot
 import uniffi.fightslip.SlipStateRecord
-import uniffi.fightslip.betTypeTitle
-import uniffi.fightslip.validationErrorCode
 
 @Composable
 private fun LinkRowButton(
@@ -126,9 +122,7 @@ private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier
 @Composable
 internal fun BetSlipScreen(
     viewModel: MainViewModel,
-    slip: BetSlipRecord,
-    slipState: SlipStateRecord,
-    balance: String,
+    snapshot: SlipSnapshot,
     placedMessage: String?,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,
@@ -136,7 +130,8 @@ internal fun BetSlipScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val focusManager = LocalFocusManager.current
     var stakeFocused by remember { mutableStateOf(false) }
-    val state = slipState
+    val slip = snapshot.slip
+    val state = snapshot.state
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -148,7 +143,7 @@ internal fun BetSlipScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
                     BalanceMenuAction(
-                        balanceLabel = formatCurrency(balance),
+                        balanceLabel = snapshot.balanceDisplay,
                         onDeposit = onDeposit,
                     )
                 },
@@ -208,7 +203,7 @@ internal fun BetSlipScreen(
                     verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                 ) {
                     item {
-                        SectionHeader(betTypeTitle(slip.mode))
+                        SectionHeader(state.modeTitle)
                     }
                     items(slip.selections, key = { "${it.boutId}-${it.fighterId}" }) { selection ->
                         val leg = viewModel.requireCatalog().legContext(selection.boutId, selection.fighterId)
@@ -233,7 +228,7 @@ internal fun BetSlipScreen(
                                     )
                                 }
                                 Text(
-                                    formatMoney(selection.odds),
+                                    selection.odds,
                                     color = Tokens.accent,
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(start = Tokens.spacingMd),
@@ -277,7 +272,7 @@ internal fun BetSlipScreen(
                         }
                     }
                     item { SummaryBlock(state) }
-                    items(state.errors, key = { validationErrorCode(it) }) { error ->
+                    items(state.errors, key = { it.error }) { issue ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Warning,
@@ -287,7 +282,7 @@ internal fun BetSlipScreen(
                             )
                             Spacer(Modifier.width(Tokens.spacingSm))
                             Text(
-                                validationErrorCode(error).displayMethod,
+                                issue.message,
                                 color = Tokens.negative,
                                 style = MaterialTheme.typography.labelMedium,
                             )
@@ -305,7 +300,7 @@ internal fun BetSlipScreen(
                                 Modifier.padding(Tokens.spacingLg),
                                 verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                             ) {
-                                DetailRow("Balance", formatCurrency(balance))
+                                DetailRow("Balance", snapshot.balanceDisplay)
                                 LinkRowButton(title = "Add funds", onClick = onDeposit)
 
                             }

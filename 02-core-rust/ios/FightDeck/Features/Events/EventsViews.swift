@@ -264,7 +264,7 @@ struct BoutRowView: View {
             Spacer()
             if mode.showsOdds {
                 OddsButton(
-                    label: FightCoreDisplay.formatMoneyAmount(corner.oddsDecimal),
+                    label: corner.oddsDecimal,
                     fractional: corner.oddsFractional,
                     isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
                 ) {

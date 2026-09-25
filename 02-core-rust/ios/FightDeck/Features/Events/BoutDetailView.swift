@@ -146,7 +146,7 @@ struct BoutDetailView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             OddsButton(
-                label: FightCoreDisplay.formatMoneyAmount(corner.oddsDecimal),
+                label: corner.oddsDecimal,
                 fractional: corner.oddsFractional,
                 isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
             ) {

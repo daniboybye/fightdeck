@@ -11,10 +11,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (UIViewController *)makeViewControllerWithModuleName:(NSString *)moduleName
                                             properties:(NSDictionary *)properties;
 + (void)updateProperties:(NSDictionary *)properties forModuleName:(NSString *)moduleName;
-+ (void)destroySurface:(NSString *)moduleName;
 + (void)onHostResume;
 + (void)onHostPause;
-+ (void)onHostDestroy;
 + (NSTimeInterval)coldStartMilliseconds;
 + (NSTimeInterval)prewarmedStartMilliseconds;
 

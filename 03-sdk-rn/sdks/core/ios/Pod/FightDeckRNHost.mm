@@ -1,6 +1,5 @@
 #import "FightDeckRNHost.h"
 
-#import <React/RCTBundleURLProvider.h>
 #import <React/RCTSurfaceHostingProxyRootView.h>
 #import <React/RCTFabricSurface.h>
 #import "RCTDefaultReactNativeFactoryDelegate.h"
@@ -18,25 +17,14 @@ using facebook::react::DisplayMode;
 
 @implementation FightDeckRNFactoryDelegate
 
+/// The Hermes bytecode the runtime pod ships, and nothing else: there is no text bundle to
+/// fall back to (build-jsbundle.sh deletes it) and no Metro fallback, since this pod is only
+/// ever built in Release. A nil URL fails loudly at launch, which is what seam 11 relies on.
 - (NSURL *)bundleURL
 {
   NSBundle *frameworkBundle = [NSBundle bundleForClass:[FightDeckRNFactoryDelegate class]];
   NSBundle *resourceBundle = [NSBundle bundleWithPath:[frameworkBundle pathForResource:@"FightDeckRNRuntime" ofType:@"bundle"]];
-  if (resourceBundle != nil) {
-    NSURL *hbc = [resourceBundle URLForResource:@"fightdeck" withExtension:@"hbc"];
-    if (hbc != nil) {
-      return hbc;
-    }
-    NSURL *jsbundle = [resourceBundle URLForResource:@"fightdeck" withExtension:@"jsbundle"];
-    if (jsbundle != nil) {
-      return jsbundle;
-    }
-  }
-#if DEBUG
-  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"src/runtime/index"];
-#else
-  return nil;
-#endif
+  return [resourceBundle URLForResource:@"fightdeck" withExtension:@"hbc"];
 }
 
 @end
@@ -72,19 +60,6 @@ static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mo
   }
   const auto &handler = [(RCTFabricSurface *)surface surfaceHandler];
   handler.setDisplayMode(mode);
-}
-
-static void FightDeckRNTearDownSurfaceView(UIView *surfaceView)
-{
-  if (surfaceView == nil) {
-    return;
-  }
-  if ([surfaceView isKindOfClass:[RCTSurfaceHostingProxyRootView class]]) {
-    RCTSurfaceHostingProxyRootView *hostingView = (RCTSurfaceHostingProxyRootView *)surfaceView;
-    id<RCTSurfaceProtocol> surface = hostingView.surface;
-    [surface stop];
-  }
-  [surfaceView removeFromSuperview];
 }
 
 @implementation FightDeckRNHost {
@@ -177,18 +152,6 @@ static void FightDeckRNTearDownSurfaceView(UIView *surfaceView)
   }
 }
 
-+ (void)destroySurface:(NSString *)moduleName
-{
-  FightDeckRNHost *host = [self shared];
-  FightDeckRNSurfaceController *controller = host->_controllers[moduleName];
-  if (controller == nil) {
-    return;
-  }
-  FightDeckRNTearDownSurfaceView(controller.surfaceView);
-  controller.surfaceView = nil;
-  [host->_controllers removeObjectForKey:moduleName];
-}
-
 + (void)onHostResume
 {
   FightDeckRNHost *host = [self shared];
@@ -205,17 +168,6 @@ static void FightDeckRNTearDownSurfaceView(UIView *surfaceView)
   for (FightDeckRNSurfaceController *controller in host->_controllers.allValues) {
     FightDeckRNSetSurfaceDisplayMode(controller.surfaceView, DisplayMode::Suspended);
   }
-}
-
-+ (void)onHostDestroy
-{
-  FightDeckRNHost *host = [self shared];
-  NSArray<NSString *> *moduleNames = host->_controllers.allKeys;
-  for (NSString *moduleName in moduleNames) {
-    [self destroySurface:moduleName];
-  }
-  host->_prewarmed = NO;
-  host->_hostPaused = NO;
 }
 
 + (NSTimeInterval)coldStartMilliseconds

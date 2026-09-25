@@ -25,6 +25,7 @@ import {
   pageBackground,
 } from '../../core/src/ui/layout';
 import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
+import { groupedChrome } from '../../core/src/ui/groupedChrome';
 import { slipSummaryRows, theme, type ThemeTokens } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
 import type { BetMode, BoutIndex, Selection } from '../../core/src/fightcore/types';
@@ -378,21 +379,23 @@ function GroupedRow({
 function groupedStyles(c: Record<string, string>, theme: ThemeTokens, overflowVisible = false) {
   const s = theme.spacing;
   const r = theme.radius;
+  // Card, hairline and header colour come from the platform on iOS. See `groupedChrome`.
+  const chrome = groupedChrome(theme);
   return StyleSheet.create({
     header: {
-      color: c.textSecondary ?? '#9AA5B8',
+      color: chrome.sectionHeader,
       fontSize: theme.fontSize.callout ?? 17,
       marginBottom: s.sm ?? 8,
       marginHorizontal: s.lg ?? 16,
     },
     group: {
-      backgroundColor: c.surface ?? '#141922',
+      backgroundColor: chrome.card,
       borderRadius: r.lg ?? 16,
       overflow: overflowVisible ? 'visible' : 'hidden',
     },
     divider: {
       height: StyleSheet.hairlineWidth,
-      backgroundColor: c.border ?? '#232A38',
+      backgroundColor: chrome.separator,
     },
   });
 }

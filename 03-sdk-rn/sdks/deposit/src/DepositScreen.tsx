@@ -21,6 +21,7 @@ import {
   pageBackground,
 } from '../../core/src/ui/layout';
 import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
+import { groupedChrome } from '../../core/src/ui/groupedChrome';
 import { theme, type ThemeTokens } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
 
@@ -215,6 +216,8 @@ function makeStyles(theme: ThemeTokens) {
   const c = theme.colors;
   const s = theme.spacing;
   const r = theme.radius;
+  // Card fill and header colour come from the platform on iOS. See `groupedChrome`.
+  const chrome = groupedChrome(theme);
   return StyleSheet.create({
     root: { flex: 1, backgroundColor: pageBackground(theme) },
     successRoot: { flex: 1 },
@@ -222,7 +225,7 @@ function makeStyles(theme: ThemeTokens) {
     content: { paddingHorizontal: s.lg ?? 16, paddingBottom: s.lg ?? 16, gap: s.lg ?? 16 },
     // Sentence case, not caps: this is what a SwiftUI `Section("Amount")` header looks like.
     sectionTitle: {
-      color: c.textSecondary ?? '#9AA5B8',
+      color: chrome.sectionHeader,
       fontSize: theme.fontSize.callout ?? 17,
     },
     title: { color: c.textPrimary ?? '#F5F7FA', fontSize: theme.fontSize.title ?? 22, fontWeight: '700' },
@@ -242,7 +245,7 @@ function makeStyles(theme: ThemeTokens) {
       fontSize: theme.fontSize.display ?? 34,
       fontWeight: '700',
       padding: s.lg ?? 16,
-      backgroundColor: c.surface ?? '#141922',
+      backgroundColor: chrome.card,
       borderRadius: r.lg ?? 16,
     },
     chipRow: { flexDirection: 'row', gap: s.sm ?? 8 },
@@ -261,14 +264,14 @@ function makeStyles(theme: ThemeTokens) {
       gap: s.md ?? 12,
       padding: s.lg ?? 16,
       borderRadius: r.lg ?? 16,
-      backgroundColor: c.surface ?? '#141922',
+      backgroundColor: chrome.card,
     },
     methodSelected: { borderWidth: 2, borderColor: c.accent ?? '#E8B33C' },
     methodRadio: { color: c.accent ?? '#E8B33C', fontSize: 20 },
     summary: {
       gap: s.sm ?? 8,
       padding: s.lg ?? 16,
-      backgroundColor: c.surfaceElevated ?? '#1C2230',
+      backgroundColor: chrome.card,
       borderRadius: r.lg ?? 16,
     },
     summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },

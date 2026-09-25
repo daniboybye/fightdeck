@@ -22,7 +22,8 @@ Six measured columns, then two totals:
 
 Deliberately excluded, because including them would compare different things:
 
-  tests          not shipped; `00-native` carries UI tests the SDK demos do not
+  tests          not shipped; `00-native` carries UI tests the SDK demos do not. Rust keeps
+                 unit tests inline, so a `#[cfg(test)]` item is cut out of its file too
   harnesses      04-sdk-skip's ios/Harness/** and sdks/consumer-verify/** measure the
                  SDK, they are not the demo app
   duplicates     byte-identical files are counted once — a copy is a real maintenance
@@ -147,11 +148,43 @@ BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.S)
 PUNCTUATION_ONLY = re.compile(r"^[\s{}()\[\];,.:?<>&|]*$")
 
 
-def significant_lines(path: pathlib.Path) -> int:
-    """Lines that declare or execute something."""
+def without_rust_tests(text: str) -> str:
+    """Drop every `#[cfg(test)]` item — in practice the `mod tests { … }` at a file's foot.
+
+    Everywhere else tests live in their own files and TEST_MARKERS keeps them out; Rust's
+    convention puts them inside the file under test, which would count them as shipped code.
+    """
+    lines = text.splitlines()
+    kept: list[str] = []
+    i = 0
+    while i < len(lines):
+        if lines[i].strip() != "#[cfg(test)]":
+            kept.append(lines[i])
+            i += 1
+            continue
+        depth, opened = 0, False
+        i += 1
+        while i < len(lines):
+            depth += lines[i].count("{") - lines[i].count("}")
+            opened = opened or "{" in lines[i]
+            i += 1
+            if (opened and depth <= 0) or (not opened and lines[i - 1].rstrip().endswith(";")):
+                break
+    return "\n".join(kept)
+
+
+def read_code(path: pathlib.Path) -> str | None:
     try:
         text = (ROOT / path).read_text(errors="ignore")
     except (OSError, UnicodeDecodeError):
+        return None
+    return without_rust_tests(text) if path.suffix == ".rs" else text
+
+
+def significant_lines(path: pathlib.Path) -> int:
+    """Lines that declare or execute something."""
+    text = read_code(path)
+    if text is None:
         return 0
     text = BLOCK_COMMENT.sub("", text)
     count = 0
@@ -190,9 +223,8 @@ def regions(path: pathlib.Path) -> dict[str, int]:
     """
     out = {"shared": 0, "android-adapter": 0, "android-specific": 0,
            "ios-adapter": 0, "ios-specific": 0}
-    try:
-        text = (ROOT / path).read_text(errors="ignore")
-    except (OSError, UnicodeDecodeError):
+    text = read_code(path)
+    if text is None:
         return out
     # A headless module has no UI, so none of its branches can be platform-specific *UI* —
     # every one of them is translating a type or an API the other side lacks. That is the
@@ -435,22 +467,6 @@ def main() -> int:
         print(f"{LABELS[approach]:<16}{cells}")
     print()
     return 0
-    # (legacy renderer below, unreachable)
-    header = f"{'approach':<16}" + "".join(f"{label:>14}" for label, _ in cols)
-    print(header)
-    print("-" * len(header))
-    for approach in APPROACHES:
-        row = table[approach]
-        cells = "".join(
-            f"{row[key]:>14,}" if row[key] or key != "generated" else f"{'—':>14}"
-            for _, key in cols
-        )
-        print(f"{approach:<16}{cells}")
-    print("\n00-native has no binding generator at all — nothing crosses a language boundary.")
-    print("For the other four, generated is build output: it reads zero until that approach")
-    print("has been packaged locally by its SDK build scripts.")
-    return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

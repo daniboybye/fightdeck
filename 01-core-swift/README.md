@@ -164,17 +164,57 @@ Swift enums come across well too — a Java class with a nested `Discriminator` 
 validation errors used one until it turned out Kotlin only ever wanted the contract's code:
 `errorCodes` now hands over the strings, and the ten-case mapping on the Kotlin side is gone.
 
+### What crosses: tuples, not objects
+
+jextract turns a Swift class into a Java wrapper, and every property of it into a getter —
+another JNI call, each time Kotlin reads it. A catalogue served that way cost a call per
+field: a bout row was nineteen, an event card of thirteen bouts 269, and Compose paid them
+again on every recomposition. A **labelled tuple** is different: jextract fills it in the one
+call that returns it, and it arrives as plain Java values with named accessors. So every
+read the Android app makes returns a tuple, and a list travels as parallel arrays of equal
+length:
+
+| One… | JNI calls before | After |
+| --- | ---: | ---: |
+| Change to the slip (toggle, stake, place bet) | 10 + 3 per leg, then formatting on every recomposition | **2** — the call and `snapshot()` |
+| Event card, UFC 328 (13 bouts, 4 sections) | 269, on every recomposition | **14**, once per visit |
+| Bout detail, tape included | 36 | **2** |
+| Fighter profile | 12 | **1** |
+| Event list | 13 | **1** |
+
+Counted from the glue: one call per method, one per getter read.
+
+It also settles the memory question. The bindings are generated with
+`memoryManagementMode: allowGlobalAutomatic`, so a Swift object that reaches Kotlin without
+an explicit `SwiftArena` is registered in `SwiftMemoryManagement.DEFAULT_SWIFT_JAVA_AUTO_ARENA`:
+a `PhantomReference` on the Java wrapper, queued to a daemon thread that destroys the Swift
+instance once the collector has taken the wrapper. Nothing leaked, but nothing was freed
+promptly either — a `SlipSelection` per leg per tap, a deposit quote per keystroke, a tape of
+six objects per bout screen, each waiting for a GC that Swift's heap does not trigger, and
+each adding to one synchronised linked list that the cleaner removes from linearly. A tuple
+leaves no Swift object behind. The only two the app still holds are `EventCatalogBridge` and
+`SlipEngine`, created once at bootstrap and alive as long as the view model; they stay in the
+automatic arena, because closing an explicit one in `onCleared` would free them under any
+composition still running during teardown, and a freed pointer fails as a native crash.
+
 ### What the tool writes, and what you still write
 
 | | Lines | Who maintains it |
 | --- | ---: | --- |
-| Generated Java classes (three packages) | 1,300+ | nobody |
-| Generated JNI thunks (Swift, three packages) | 2,378+ | nobody |
-| `FightCoreGlue.swift` — money, odds and deposit facade | 91 | us |
-| `FightSlipGlue.swift` — slip engine facade | 164 | us |
-| `FightEventsGlue.swift` — catalog, news and media facade | 297 | us |
-| `FightCoreGlue.kt` — marshalling and read-back | 81 | us |
-| `SwiftCoreBridge.kt` — loads the `.so` files | 16 | us |
+| Generated Java classes | 1,032 | nobody |
+| Generated JNI thunks (Swift) | 868 | nobody |
+| `FightCoreGlue.swift` — money, odds and deposit facade | 78 | us |
+| `FightSlipGlue.swift` — slip engine facade | 157 | us |
+| `FightEventsGlue.swift` — catalogue, news and media facade | 179 | us |
+| `FightCoreGlue.kt` — slip snapshot and deposit quote, from tuples | 61 | us |
+| `CatalogHost.kt` — catalogue models, from tuples | 185 | us |
+| `SwiftCoreBridge.kt` — loads the `.so` | 15 | us |
+
+Lines as `wc -l` counts them; the generated ones from jextract's output for `FightDeckJava`.
+Before the tuples and the single library the same rows read 3,041 and 2,768 generated, and
+91, 164, 297, 81, 123 and 16 written — the Swift facades shrank by 138 lines, the Kotlin grew
+by 41, because news, media, the tape and the leg context are now Kotlin data classes where
+Compose used to hold jextract's wrappers and read them through JNI.
 
 Three quarters of the boundary is written by a tool, and none of the part that is left is
 JNI. What survives is the part no generator can decide: which API crosses, what happens to
@@ -194,9 +234,10 @@ but never does the rounding, so `HALF_UP` cannot drift away from `NSDecimalRound
 the one place where a money-domain core pays a real design tax for this route.
 
 **2. Observation does not cross JNI.** iOS gets recomposition for free because
-`BetSlipStore` is `@Observable`. On Android every mutating call is followed by a full
-read-back into an immutable snapshot (`SwiftSlipStore.readBack()`), which is the manual
-half of what Skip's Fuse bridge generates. To keep the rules themselves from being written
+`BetSlipStore` is `@Observable`. On Android every mutating call is followed by one
+`snapshot()` call whose result becomes the view model's single `StateFlow<SlipSnapshot>` —
+the manual half of what Skip's Fuse bridge generates. It used to be ten getters plus three
+per leg, and a `SlipSelection` object per leg, after every tap. To keep the rules themselves from being written
 twice, the slip mutations moved into `SlipSession` — a plain `Sendable` struct with no
 isolation — and `BetSlipStore` became a thin `@Observable` shell over it. Both platforms
 now run the same mutation code; only the change-notification shell differs.
@@ -354,10 +395,12 @@ As of Swift SDK 6.3.3 + swift-java 0.6.0, treat native Swift on Android as
 1. **Two Swifts with the same version number** — Apple Xcode 6.3.3 ≠ open-source 6.3.3-RELEASE for Android SDK module compatibility.
 2. **NDK version drift** — Spec pins r27d, which builds both ABIs cleanly; r29 compatibility unconfirmed.
 3. **swift-java pre-1.0 moves fast** — the `0.4.2` this repo pinned in June was two minor versions stale by September; 0.5.0, 0.5.1 and 0.6.0 shipped in ten weeks, most of the changes in the JNI generator this approach depends on.
-4. **`@Observable` does not cross** — the Compose side re-reads the whole slip after every mutation.
+4. **`@Observable` does not cross** — the Compose side re-reads the whole slip after every mutation, in one call.
 5. **XCFramework from SPM** — No linked `.dylib` from `swift build` alone; script uses `libtool -static` on `.o` files, then `xcodebuild -create-xcframework`.
 6. **Android Gradle OOM** — First `./gradlew` failed on dex merge; fixed by copying `gradle.properties` heap settings from `00-native`.
 7. **A stale output directory can ship the wrong closure** — the `NEEDED` walk skipped libraries it had already copied, so a library carried over from an earlier run never had its own dependencies read. `build-aar-lib.sh` now clears `out/android-libs` first and tracks visited names separately from copied files.
+8. **A tuple's Java class is named after every label in it** — `LabeledTuple_snapshot_modeTitle_legBoutIDs_…` — and the `.class` file carries that name, so eighteen labels ran past the 255-byte file-name limit and `javac` failed with *File name too long*. The slip's contract figures moved to a second call.
+9. **Two tuple shapes jextract 0.6.0 does not handle** — an array of tuples is skipped without a warning, and a tuple nested in a tuple generates Swift thunks that do not compile (`invalid redeclaration of 'tupleResult$'`). Lists cross as parallel arrays instead.
 
 ---
 

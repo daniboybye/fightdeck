@@ -35,9 +35,11 @@ pub struct Quote {
 }
 
 /// The amount is rounded before anything else reads it, so the limits judge — and the fee is
-/// charged on — the figure that will actually reach the balance.
+/// charged on — the figure that will actually reach the balance. A decimal comma reads as a
+/// point: that is what the number pad types in a comma locale.
 pub fn quote(amount_text: &str, method_id: &str, balance: Decimal) -> Quote {
-    let amount = money::money(money::try_parse(amount_text).unwrap_or(Decimal::ZERO));
+    let amount =
+        money::money(money::try_parse(&amount_text.replace(',', ".")).unwrap_or(Decimal::ZERO));
     let rate = METHODS
         .iter()
         .find(|method| method.id == method_id)

@@ -38,7 +38,14 @@ fn an_empty_field_is_not_an_error_but_cannot_be_confirmed() {
 
 #[test]
 fn text_that_is_not_a_number_deposits_nothing() {
-    let quote = quote("12,5", "card", parse("0"));
+    let quote = quote("abc", "card", parse("0"));
     assert_eq!(format(quote.amount), "0.00");
     assert_eq!(quote.validation_message, Some("Minimum deposit is €10"));
+}
+
+#[test]
+fn a_decimal_comma_reads_as_a_point() {
+    let quote = quote("10,50", "card", parse("500.00"));
+    assert_eq!(format(quote.amount), "10.50");
+    assert_eq!(quote.validation_message, None);
 }

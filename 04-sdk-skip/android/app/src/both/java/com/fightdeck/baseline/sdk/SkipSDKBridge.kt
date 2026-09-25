@@ -20,6 +20,12 @@ import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
 
+/**
+ * Each SDK screen sits in a `SaveableStateProvider` whose slot is removed when the screen leaves
+ * composition. The removal is load-bearing: SkipUI cannot restore its own saved `@FocusState` or
+ * `NavigationStack`, so state that survives an activity recreation crashes the screen. See the
+ * embedding-seam section of the README.
+ */
 object SkipSDKBridge {
     @Composable
     fun BetslipScreen(

@@ -14,87 +14,14 @@ import FoundationEssentials
 import Foundation
 #endif
 
-public func humaniseCode(_ raw: String) -> String {
-    Display.humanise(raw)
-}
+// Every read returns a labelled tuple, for the reasons the slip glue gives: one JNI call fills
+// it, it arrives as plain Java values, and no Swift instance is left for the collector. The
+// values are the presentation models iOS reads (`BoutSummary`, `FighterSummary`, …), flattened.
+// A list of records crosses as parallel arrays of equal length — jextract 0.6.0 skips an array
+// of tuples — and a bout's two corners as arrays of two, red first.
 
-public func formatDuration(totalSeconds: Int) -> String {
-    Display.duration(totalSeconds: totalSeconds)
-}
-
-public final class TapeRowBridge {
-    public let label: String
-    public let red: String
-    public let blue: String
-
-    init(_ row: TapeRow) {
-        label = row.label
-        red = row.red
-        blue = row.blue
-    }
-}
-
-public final class TaleOfTheTapeBridge {
-    public let rows: [TapeRowBridge]
-
-    init(_ tape: TaleOfTheTape) {
-        rows = tape.rows.map(TapeRowBridge.init)
-    }
-}
-
-// Named as the screens name them. Inside this file the dataset's own types need the module
-// prefix, the same way `FightSlip.SlipEngine` does beside the slip glue's `SlipEngine`.
-public final class NewsItem {
-    public let id: String
-    public let eventId: String
-    public let headline: String
-    public let body: String
-    public let readMinutes: Int
-    public let source: String
-    public let heroImage: String
-
-    init(_ item: FightEvents.NewsItem) {
-        id = item.id
-        eventId = item.eventId
-        headline = item.headline
-        body = item.body
-        readMinutes = item.readMinutes
-        source = item.source
-        heroImage = item.heroImage
-    }
-}
-
-public final class MediaItem {
-    public let id: String
-    public let eventId: String
-    public let title: String
-    public let kind: String
-    public let url: String
-    public let poster: String
-    public let durationSeconds: Int
-    /// Empty when the dataset carries no note: jextract carries no optionals.
-    public let note: String
-
-    init(_ item: FightEvents.MediaItem) {
-        id = item.id
-        eventId = item.eventId
-        title = item.title
-        kind = item.kind
-        url = item.url
-        poster = item.poster
-        durationSeconds = item.durationSeconds
-        note = item.note ?? ""
-    }
-}
-
-public final class LegContextBridge {
-    public let fighterName: String
-    public let subtitle: String
-
-    init(_ context: LegContext) {
-        fighterName = context.fighterName
-        subtitle = context.subtitle
-    }
+struct NotFound: Error {
+    let id: String
 }
 
 /// Android-facing handle over `Catalog`. The host finds the dataset directory; reading and
@@ -106,179 +33,102 @@ public final class EventCatalogBridge {
         catalog = try Catalog.load(datasetRoot: URL(fileURLWithPath: datasetRoot, isDirectory: true))
     }
 
-    public var eventCount: Int { catalog.allEvents().count }
-
-    public func eventID(at index: Int) -> String {
-        catalog.allEvents()[index].id
+    public func events() -> (
+        ids: [String],
+        names: [String],
+        dates: [String],
+        locations: [String],
+        boutCounts: [Int],
+        posters: [String]
+    ) {
+        let events = catalog.eventSummaries()
+        return (
+            ids: events.map(\.id),
+            names: events.map(\.name),
+            dates: events.map(\.date),
+            locations: events.map(\.locationLine),
+            boutCounts: events.map(\.boutCount),
+            posters: events.map(\.posterPath)
+        )
     }
 
-    public func eventName(id: String) -> String {
-        catalog.event(id: id)?.name ?? ""
+    /// Section titles, and the bout ids under each in card order; `bout(id:)` has the rest.
+    public func cardSections(eventID: String) -> (titles: [String], boutIDs: [[String]]) {
+        let sections = catalog.cardSections(eventID: eventID)
+        return (titles: sections.map(\.title), boutIDs: sections.map { $0.bouts.map(\.id) })
     }
 
-    public func eventDate(id: String) -> String {
-        catalog.event(id: id)?.date ?? ""
-    }
-
-    public func eventVenue(id: String) -> String {
-        catalog.event(id: id)?.venue ?? ""
-    }
-
-    public func eventCity(id: String) -> String {
-        catalog.event(id: id)?.city ?? ""
-    }
-
-    public func eventBoutCount(id: String) -> Int {
-        catalog.event(id: id)?.bouts.count ?? 0
-    }
-
-    public func cardSectionCount(eventID: String) -> Int {
-        catalog.cardSections(eventID: eventID).count
-    }
-
-    public func cardSectionTitle(eventID: String, sectionIndex: Int) -> String {
-        catalog.cardSections(eventID: eventID)[sectionIndex].title
-    }
-
-    public func cardSectionBoutCount(eventID: String, sectionIndex: Int) -> Int {
-        catalog.cardSections(eventID: eventID)[sectionIndex].bouts.count
-    }
-
-    public func cardSectionBoutID(eventID: String, sectionIndex: Int, boutIndex: Int) -> String {
-        catalog.cardSections(eventID: eventID)[sectionIndex].bouts[boutIndex].id
-    }
-
-    public func boutEventID(boutID: String) -> String {
-        catalog.eventOfBout(boutID: boutID)?.id ?? ""
-    }
-
-    public func boutHeadline(boutID: String) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "" }
-        return Display.boutHeadline(
-            weightClassRaw: bout.weightClass,
+    public func bout(id: String) throws -> (
+        id: String,
+        headline: String,
+        weightClass: String,
+        titleFight: Bool,
+        resultLine: String,
+        winnerName: String,
+        method: String,
+        detail: String,
+        ended: String,
+        fighterIDs: [String],
+        names: [String],
+        records: [String],
+        portraits: [String],
+        odds: [String],
+        oddsLabels: [String]
+    ) {
+        guard let bout = catalog.boutSummary(id: id) else { throw NotFound(id: id) }
+        let corners = [bout.red, bout.blue]
+        return (
+            id: bout.id,
+            headline: bout.headline,
+            weightClass: bout.weightClassDisplay,
             titleFight: bout.titleFight,
-            scheduledRounds: bout.scheduledRounds
+            resultLine: bout.resultLine,
+            winnerName: bout.winnerName,
+            method: bout.methodDisplay,
+            detail: bout.detail,
+            ended: bout.endedLine,
+            fighterIDs: corners.map(\.fighterID),
+            names: corners.map(\.name),
+            records: corners.map(\.recordDisplay),
+            portraits: corners.map(\.portraitPath),
+            odds: corners.map(\.odds),
+            oddsLabels: corners.map(\.oddsLabel)
         )
     }
 
-    public func boutWeightClassDisplay(boutID: String) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "" }
-        return Display.weightClass(bout.weightClass)
-    }
-
-    public func boutTitleFight(boutID: String) -> Bool {
-        catalog.bout(id: boutID)?.titleFight ?? false
-    }
-
-    public func cornerFighterID(boutID: String, isRed: Bool) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "" }
-        return isRed ? bout.redCorner.fighterId : bout.blueCorner.fighterId
-    }
-
-    public func cornerName(boutID: String, isRed: Bool) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "" }
-        return isRed ? bout.redCorner.name : bout.blueCorner.name
-    }
-
-    public func cornerOddsDecimal(boutID: String, isRed: Bool) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "" }
-        return isRed ? bout.redCorner.closingOdds.decimal : bout.blueCorner.closingOdds.decimal
-    }
-
-    public func cornerRecordDisplay(boutID: String, isRed: Bool) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "—" }
-        let fighterID = isRed ? bout.redCorner.fighterId : bout.blueCorner.fighterId
-        return catalog.fighter(id: fighterID)?.record.display ?? "—"
-    }
-
-    public func boutResultLine(boutID: String) -> String {
-        guard let bout = catalog.bout(id: boutID) else { return "" }
-        return Display.resultLine(
-            winnerName: bout.result.winnerName,
-            method: bout.result.method,
-            endRound: bout.result.endRound,
-            endTime: bout.result.endTime
+    public func fighter(id: String) throws -> (
+        id: String,
+        name: String,
+        nickname: String?,
+        record: String,
+        portrait: String,
+        profileLabels: [String],
+        profileValues: [String],
+        physicalLabels: [String],
+        physicalValues: [String]
+    ) {
+        guard let fighter = catalog.fighterSummary(id: id) else { throw NotFound(id: id) }
+        return (
+            id: fighter.id,
+            name: fighter.name,
+            nickname: fighter.nickname,
+            record: fighter.recordDisplay,
+            portrait: fighter.portraitPath,
+            profileLabels: fighter.profileRows.map(\.label),
+            profileValues: fighter.profileRows.map(\.value),
+            physicalLabels: fighter.physicalRows.map(\.label),
+            physicalValues: fighter.physicalRows.map(\.value)
         )
     }
 
-    public func boutWinnerName(boutID: String) -> String {
-        catalog.bout(id: boutID)?.result.winnerName ?? ""
+    public func taleOfTheTape(boutID: String) -> (labels: [String], red: [String], blue: [String]) {
+        let rows = (catalog.taleOfTheTape(boutID: boutID) ?? Tape.taleOfTheTape(red: nil, blue: nil)).rows
+        return (labels: rows.map(\.label), red: rows.map(\.red), blue: rows.map(\.blue))
     }
 
-    public func boutResultMethod(boutID: String) -> String {
-        catalog.bout(id: boutID)?.result.method ?? ""
-    }
-
-    public func boutResultDetail(boutID: String) -> String {
-        catalog.bout(id: boutID)?.result.detail ?? ""
-    }
-
-    public func boutEndRound(boutID: String) -> Int {
-        catalog.bout(id: boutID)?.result.endRound ?? 0
-    }
-
-    public func boutEndTime(boutID: String) -> String {
-        catalog.bout(id: boutID)?.result.endTime ?? ""
-    }
-
-    public func fighterName(id: String) -> String {
-        catalog.fighter(id: id)?.name ?? id
-    }
-
-    public func fighterNickname(id: String) -> String {
-        catalog.fighter(id: id)?.nickname ?? ""
-    }
-
-    public func fighterCountry(id: String) -> String {
-        catalog.fighter(id: id)?.country ?? ""
-    }
-
-    public func fighterRecordDisplay(id: String) -> String {
-        catalog.fighter(id: id)?.record.display ?? "—"
-    }
-
-    public func fighterWins(id: String) -> Int {
-        catalog.fighter(id: id)?.record.wins ?? 0
-    }
-
-    public func fighterLosses(id: String) -> Int {
-        catalog.fighter(id: id)?.record.losses ?? 0
-    }
-
-    public func fighterNoContests(id: String) -> Int {
-        catalog.fighter(id: id)?.record.noContests ?? 0
-    }
-
-    // The three measurements are optional in the dataset and jextract carries no optionals, so
-    // they cross already formatted, with an empty string standing for absent — the same
-    // convention `fighterNickname` and `fighterCountry` already use.
-    public func fighterHeightDisplay(id: String) -> String {
-        catalog.fighter(id: id)?.heightCm.map { "\($0) cm" } ?? ""
-    }
-
-    public func fighterReachDisplay(id: String) -> String {
-        catalog.fighter(id: id)?.reachIn.map { "\($0) in" } ?? ""
-    }
-
-    // `Display.humanise`, not `localizedCapitalized`: the Android build links
-    // FoundationEssentials precisely to keep ICU out, and the locale-aware casing lives on the
-    // other side of that line.
-    public func fighterStanceDisplay(id: String) -> String {
-        catalog.fighter(id: id)?.stance.map(Display.humanise) ?? ""
-    }
-
-    public func fighterPortraitPath(id: String) -> String {
-        catalog.fighter(id: id)?.portrait ?? "assets/fighters/\(id).jpg"
-    }
-
-    public func taleOfTheTape(boutID: String) -> TaleOfTheTapeBridge {
-        TaleOfTheTapeBridge(
-            catalog.taleOfTheTape(boutID: boutID) ?? Tape.taleOfTheTape(red: nil, blue: nil)
-        )
-    }
-
-    public func legContext(boutID: String, fighterID: String) -> LegContextBridge {
-        LegContextBridge(catalog.legContext(boutID: boutID, fighterID: fighterID))
+    public func legContext(boutID: String, fighterID: String) -> (fighterName: String, subtitle: String) {
+        let context = catalog.legContext(boutID: boutID, fighterID: fighterID)
+        return (fighterName: context.fighterName, subtitle: context.subtitle)
     }
 
     /// Handed straight to the slip glue's `SlipEngine`, which decodes it on its own side.
@@ -287,11 +137,48 @@ public final class EventCatalogBridge {
         return String(decoding: data, as: UTF8.self)
     }
 
-    public func news() throws -> [NewsItem] {
-        try catalog.news().map(NewsItem.init)
+    public func news() throws -> (
+        ids: [String],
+        eventIDs: [String],
+        headlines: [String],
+        bodies: [String],
+        readMinutes: [Int],
+        sources: [String],
+        heroImages: [String]
+    ) {
+        let news = try catalog.news()
+        return (
+            ids: news.map(\.id),
+            eventIDs: news.map(\.eventId),
+            headlines: news.map(\.headline),
+            bodies: news.map(\.body),
+            readMinutes: news.map(\.readMinutes),
+            sources: news.map(\.source),
+            heroImages: news.map(\.heroImage)
+        )
     }
 
-    public func media() throws -> [MediaItem] {
-        try catalog.media().map(MediaItem.init)
+    /// `notes` is empty where the dataset has none.
+    public func media() throws -> (
+        ids: [String],
+        eventIDs: [String],
+        titles: [String],
+        kinds: [String],
+        urls: [String],
+        posters: [String],
+        durations: [String],
+        notes: [String]
+    ) {
+        let media = try catalog.media()
+        return (
+            ids: media.map(\.id),
+            eventIDs: media.map(\.eventId),
+            titles: media.map(\.title),
+            kinds: media.map(\.kind),
+            urls: media.map(\.url),
+            posters: media.map(\.poster),
+            durations: media.map { Display.duration(totalSeconds: $0.durationSeconds) },
+            notes: media.map { $0.note ?? "" }
+        )
     }
 }

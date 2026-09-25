@@ -24,8 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.fightdeck.fightevents.MediaItem
-import com.fightdeck.fightevents.NewsItem
+import com.fightdeck.swiftcore.catalog.MediaItem
+import com.fightdeck.swiftcore.catalog.NewsItem
 import com.fightdeck.swiftcore.design.Tokens
 
 @Composable

@@ -25,7 +25,7 @@ struct FighterProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func profile(_ fighter: Fighter) -> some View {
+    private func profile(_ fighter: FighterSummary) -> some View {
         List {
             Section {
                 hero(fighter)
@@ -33,25 +33,13 @@ struct FighterProfileView: View {
                     .listRowBackground(Color.clear)
             }
             Section("Profile") {
-                LabeledContent("Record", value: fighter.recordDisplay)
-                LabeledContent("Wins", value: "\(fighter.record.wins)")
-                LabeledContent("Losses", value: "\(fighter.record.losses)")
-                if fighter.record.noContests > 0 {
-                    LabeledContent("No contests", value: "\(fighter.record.noContests)")
+                ForEach(fighter.profileRows, id: \.label) { row in
+                    LabeledContent(row.label, value: row.value)
                 }
             }
             Section("Physicals") {
-                if let height = fighter.heightCm {
-                    LabeledContent("Height", value: "\(height) cm")
-                }
-                if let reach = fighter.reachIn {
-                    LabeledContent("Reach", value: "\(reach) in")
-                }
-                if let stance = fighter.stance {
-                    LabeledContent("Stance", value: stance.localizedCapitalized)
-                }
-                if let country = fighter.country {
-                    LabeledContent("Country", value: country)
+                ForEach(fighter.physicalRows, id: \.label) { row in
+                    LabeledContent(row.label, value: row.value)
                 }
             }
         }
@@ -60,8 +48,8 @@ struct FighterProfileView: View {
 
     /// The portrait carries the screen the way it does in Photos: full bleed, with the name
     /// sitting on a scrim over the image instead of in a caption below it.
-    private func hero(_ fighter: Fighter) -> some View {
-        RemoteImage(url: state.imageURL(fighter.portrait))
+    private func hero(_ fighter: FighterSummary) -> some View {
+        RemoteImage(url: state.imageURL(fighter.portraitPath))
             .frame(height: 320)
             .frame(maxWidth: .infinity)
             .clipped()

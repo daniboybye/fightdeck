@@ -126,10 +126,11 @@ struct BetSlipView: View {
     /// An `HStack` rather than `LabeledContent`: the two-line label pushes that layout into
     /// its stacked form, which drops the odds under the fighter instead of out to the edge.
     private func selectionRow(_ selection: Selection) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
+        let context = state.legContext(boutID: selection.boutID, fighterID: selection.fighterID)
+        return HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
             VStack(alignment: .leading) {
-                Text(state.fighter(selection.fighterID)?.name ?? selection.fighterID)
-                Text(state.legContext(boutID: selection.boutID, fighterID: selection.fighterID).subtitle)
+                Text(context.fighterName)
+                Text(context.subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

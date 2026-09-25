@@ -6,14 +6,12 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
-import FightCore
 import FightEvents
 import SwiftUI
 
 struct BoutDetailView: View {
     let state: AppState
-    let event: Event
-    let bout: Bout
+    let bout: BoutSummary
     @Binding var path: [EventsRoute]
     let mode: EventMode
 
@@ -29,30 +27,30 @@ struct BoutDetailView: View {
             }
             if mode.showsOdds {
                 Section("Outright winner") {
-                    marketRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
-                    marketRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
+                    marketRow(bout.red, ring: DesignTokens.ColorToken.cornerRed)
+                    marketRow(bout.blue, ring: DesignTokens.ColorToken.cornerBlue)
                 }
             }
             if mode.showsResults {
                 Section("Result") {
                     LabeledContent("Winner") {
-                        Text(bout.result.winnerName)
+                        Text(bout.winnerName)
                             .foregroundStyle(DesignTokens.ColorToken.positive)
                     }
-                    LabeledContent("Method", value: Display.humanise(bout.result.method))
-                    LabeledContent("Detail", value: bout.result.detail)
-                    LabeledContent("Ended", value: "Round \(bout.result.endRound) · \(bout.result.endTime)")
+                    LabeledContent("Method", value: bout.methodDisplay)
+                    LabeledContent("Detail", value: bout.detail)
+                    LabeledContent("Ended", value: bout.endedLine)
                 }
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle(Display.weightClass(bout.weightClass))
+        .navigationTitle(bout.weightClassDisplay)
         .navigationBarTitleDisplayMode(.inline)
     }
 
     private var matchup: some View {
         HStack(alignment: .top, spacing: DesignTokens.Spacing.md) {
-            cornerColumn(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
+            cornerColumn(bout.red, ring: DesignTokens.ColorToken.cornerRed)
             VStack(spacing: DesignTokens.Spacing.xs) {
                 Text("VS")
                     .font(.caption.weight(.bold))
@@ -63,27 +61,27 @@ struct BoutDetailView: View {
                 }
             }
             .padding(.top, DesignTokens.Spacing.xl)
-            cornerColumn(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
+            cornerColumn(bout.blue, ring: DesignTokens.ColorToken.cornerBlue)
         }
         .padding(.vertical, DesignTokens.Spacing.lg)
     }
 
     // A Button rather than a NavigationLink: two links inside one list row make the list draw
     // two disclosure chevrons across the middle of the matchup.
-    private func cornerColumn(_ corner: Corner, ring: Color) -> some View {
+    private func cornerColumn(_ corner: CornerSummary, ring: Color) -> some View {
         Button {
-            path.append(.fighter(corner.fighterId))
+            path.append(.fighter(corner.fighterID))
         } label: {
             VStack(spacing: DesignTokens.Spacing.sm) {
                 FighterAvatar(
-                    url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"),
+                    url: state.imageURL(corner.portraitPath),
                     ring: ring,
                     size: 88
                 )
                 Text(corner.name)
                     .font(.headline)
                     .multilineTextAlignment(.center)
-                Text(state.record(for: corner.fighterId))
+                Text(corner.recordDisplay)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -126,26 +124,26 @@ struct BoutDetailView: View {
     /// An `HStack` rather than `LabeledContent`: an avatar plus two lines of text is enough to
     /// tip that layout into stacking, which would drop the odds under the name on some rows
     /// and leave them at the trailing edge on others.
-    private func marketRow(_ corner: Corner, ring: Color) -> some View {
+    private func marketRow(_ corner: CornerSummary, ring: Color) -> some View {
         HStack(spacing: DesignTokens.Spacing.md) {
             FighterAvatar(
-                url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"),
+                url: state.imageURL(corner.portraitPath),
                 ring: ring,
                 size: 32
             )
             VStack(alignment: .leading) {
                 Text(corner.name)
-                Text("Implied \(Money.formatImpliedProbability(Money.parse(corner.closingOdds.decimal)))")
+                Text("Implied \(corner.impliedProbability)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             OddsButton(
-                label: Money.formatOdds(Money.parse(corner.closingOdds.decimal)),
-                fractional: corner.closingOdds.fractional,
-                isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
+                label: corner.oddsLabel,
+                fractional: corner.oddsFractional,
+                isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterID)
             ) {
-                state.toggleSelection(bout: bout, fighterID: corner.fighterId, odds: corner.closingOdds.decimal)
+                state.toggleSelection(boutID: bout.id, fighterID: corner.fighterID, odds: corner.odds)
             }
         }
     }

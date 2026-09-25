@@ -40,6 +40,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,11 +51,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.fightdeck.fightevents.FightEventsJava
-import com.fightdeck.fightevents.MediaItem
-import com.fightdeck.fightevents.NewsItem
 import com.fightdeck.swiftcore.catalog.BoutCard
+import com.fightdeck.swiftcore.catalog.CornerCard
 import com.fightdeck.swiftcore.catalog.EventCard
+import com.fightdeck.swiftcore.catalog.MediaItem
+import com.fightdeck.swiftcore.catalog.NewsItem
+import com.fightdeck.swiftcore.catalog.TapeRowCard
 import com.fightdeck.swiftcore.core.SlipSnapshot
 import com.fightdeck.swiftcore.design.BalanceMenuAction
 import com.fightdeck.swiftcore.design.Tokens
@@ -110,7 +112,7 @@ internal fun EventListScreen(
                     EventListCard(
                         event = event,
                         mode = mode,
-                        posterUrl = viewModel.imageUrl("assets/events/${event.id}.jpg"),
+                        posterUrl = viewModel.imageUrl(event.posterPath),
                         onClick = { onEventClick(event) },
                     )
                 }
@@ -192,7 +194,7 @@ private fun VideoCard(
                         .padding(Tokens.spacingSm),
                 ) {
                     Text(
-                        item.durationLabel,
+                        item.duration,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White,
@@ -237,7 +239,7 @@ private fun EventListCard(event: EventCard, mode: EventMode, posterUrl: String?,
         ) {
             Text(event.name, style = MaterialTheme.typography.titleLarge)
             Text(
-                "${event.venue} · ${event.city}",
+                event.locationLine,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -328,7 +330,7 @@ internal fun EventDetailScreen(
     onVideoClick: (MediaItem) -> Unit,
     onBack: () -> Unit,
 ) {
-    val sections = viewModel.cardSections(event.id)
+    val sections = remember(event.id) { viewModel.cardSections(event.id) }
     DetailScaffold(title = event.name, onBack = onBack, balanceLabel = balanceLabel, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
@@ -341,8 +343,8 @@ internal fun EventDetailScreen(
         ) {
             sections.forEach { section ->
                 item { SectionHeader(section.title) }
-                items(section.boutIDs, key = { it }) { boutID ->
-                    BoutRow(viewModel.bout(boutID), mode, slip, viewModel, onClick = { onBoutClick(boutID) })
+                items(section.bouts, key = { it.id }) { bout ->
+                    BoutRow(bout, mode, slip, viewModel, onClick = { onBoutClick(bout.id) })
                 }
             }
             if (mode.showsResults) {
@@ -352,7 +354,7 @@ internal fun EventDetailScreen(
                     items(clips, key = { it.id }) { clip ->
                         ListItem(
                             headlineContent = { Text(clip.title) },
-                            supportingContent = { Text(clip.durationLabel) },
+                            supportingContent = { Text(clip.duration) },
                             leadingContent = {
                                 Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Tokens.accent)
                             },
@@ -395,8 +397,8 @@ private fun BoutRow(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            CornerLine(bout, isRed = true, mode, slip, viewModel, Tokens.cornerRed)
-            CornerLine(bout, isRed = false, mode, slip, viewModel, Tokens.cornerBlue)
+            CornerLine(bout.id, bout.red, mode, slip, viewModel, Tokens.cornerRed)
+            CornerLine(bout.id, bout.blue, mode, slip, viewModel, Tokens.cornerBlue)
             if (mode.showsResults) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -419,29 +421,25 @@ private fun BoutRow(
 
 @Composable
 private fun CornerLine(
-    bout: BoutCard,
-    isRed: Boolean,
+    boutId: String,
+    corner: CornerCard,
     mode: EventMode,
     slip: SlipSnapshot,
     viewModel: MainViewModel,
     ring: Color,
 ) {
-    val fighterID = if (isRed) bout.redFighterID else bout.blueFighterID
-    val name = if (isRed) bout.redName else bout.blueName
-    val odds = if (isRed) bout.redOddsDecimal else bout.blueOddsDecimal
-    val record = if (isRed) bout.redRecord else bout.blueRecord
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-            FighterAvatar(viewModel.imageUrl("assets/fighters/$fighterID.jpg"), ring, 40.dp)
+            FighterAvatar(viewModel.imageUrl(corner.portraitPath), ring, 40.dp)
             Spacer(Modifier.width(Tokens.spacingMd))
             Column {
-                Text(name, style = MaterialTheme.typography.bodyLarge)
+                Text(corner.name, style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    record,
+                    corner.record,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -449,10 +447,10 @@ private fun CornerLine(
         }
         if (mode.showsOdds) {
             OddsChip(
-                label = odds,
-                selected = slip.isSelected(bout.id, fighterID),
+                label = corner.oddsLabel,
+                selected = slip.isSelected(boutId, corner.fighterId),
                 onClick = {
-                    viewModel.toggleSelection(bout.id, fighterID, odds)
+                    viewModel.toggleSelection(boutId, corner.fighterId, corner.odds)
                 },
             )
         }
@@ -501,7 +499,7 @@ internal fun BoutDetailScreen(
     onBack: () -> Unit,
 ) {
     DetailScaffold(
-        title = bout.weightClassDisplay,
+        title = bout.weightClass,
         onBack = onBack,
         balanceLabel = balanceLabel,
         onDeposit = onDeposit,
@@ -522,7 +520,7 @@ internal fun BoutDetailScreen(
                         .padding(vertical = Tokens.spacingLg),
                     verticalAlignment = Alignment.Top,
                 ) {
-                    FighterHero(bout, isRed = true, Tokens.cornerRed, viewModel, onFighterClick, Modifier.weight(1f))
+                    FighterHero(bout.red, Tokens.cornerRed, viewModel, onFighterClick, Modifier.weight(1f))
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(top = Tokens.spacingXl),
@@ -536,11 +534,11 @@ internal fun BoutDetailScreen(
                             Icon(Icons.Default.Star, contentDescription = null, tint = Tokens.accent)
                         }
                     }
-                    FighterHero(bout, isRed = false, Tokens.cornerBlue, viewModel, onFighterClick, Modifier.weight(1f))
+                    FighterHero(bout.blue, Tokens.cornerBlue, viewModel, onFighterClick, Modifier.weight(1f))
                 }
             }
             item { SectionHeader("Tale of the tape") }
-            item { TaleOfTheTape(viewModel.taleOfTheTape(bout.id)) }
+            item { TaleOfTheTape(remember(bout.id) { viewModel.taleOfTheTape(bout.id) }) }
             if (mode.showsOdds) {
                 item { SectionHeader("Outright winner") }
                 item {
@@ -552,8 +550,8 @@ internal fun BoutDetailScreen(
                             Modifier.padding(Tokens.spacingLg),
                             verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                         ) {
-                            CornerLine(bout, isRed = true, mode, slip, viewModel, Tokens.cornerRed)
-                            CornerLine(bout, isRed = false, mode, slip, viewModel, Tokens.cornerBlue)
+                            CornerLine(bout.id, bout.red, mode, slip, viewModel, Tokens.cornerRed)
+                            CornerLine(bout.id, bout.blue, mode, slip, viewModel, Tokens.cornerBlue)
                         }
                     }
                 }
@@ -568,11 +566,11 @@ internal fun BoutDetailScreen(
                         Column(Modifier.padding(Tokens.spacingLg)) {
                             DetailRow("Winner", bout.winnerName, Tokens.positive)
                             HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Method", FightEventsJava.humaniseCode(bout.resultMethod))
+                            DetailRow("Method", bout.method)
                             HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Detail", bout.resultDetail)
+                            DetailRow("Detail", bout.detail)
                             HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
-                            DetailRow("Ended", "Round ${bout.endRound} · ${bout.endTime}")
+                            DetailRow("Ended", bout.endedLine)
                         }
                     }
                 }
@@ -583,32 +581,28 @@ internal fun BoutDetailScreen(
 
 @Composable
 private fun FighterHero(
-    bout: BoutCard,
-    isRed: Boolean,
+    corner: CornerCard,
     ring: Color,
     viewModel: MainViewModel,
     onClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val fighterID = if (isRed) bout.redFighterID else bout.blueFighterID
-    val name = if (isRed) bout.redName else bout.blueName
-    val record = if (isRed) bout.redRecord else bout.blueRecord
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = Tokens.minTapTarget)
-            .clickable { onClick(fighterID) },
+            .clickable { onClick(corner.fighterId) },
     ) {
-        FighterAvatar(viewModel.imageUrl("assets/fighters/$fighterID.jpg"), ring, 88.dp)
+        FighterAvatar(viewModel.imageUrl(corner.portraitPath), ring, 88.dp)
         Text(
-            name,
+            corner.name,
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )
         Text(
-            record,
+            corner.record,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -616,7 +610,7 @@ private fun FighterHero(
 }
 
 @Composable
-private fun TaleOfTheTape(tape: com.fightdeck.fightevents.TaleOfTheTapeBridge) {
+private fun TaleOfTheTape(rows: List<TapeRowCard>) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(Tokens.radiusLg),
@@ -625,7 +619,7 @@ private fun TaleOfTheTape(tape: com.fightdeck.fightevents.TaleOfTheTapeBridge) {
             Modifier.padding(Tokens.spacingLg),
             verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
         ) {
-            tape.rows.forEach { row ->
+            rows.forEach { row ->
                 TapeRow(row.red, row.label, row.blue)
             }
         }

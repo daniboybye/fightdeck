@@ -205,7 +205,9 @@ internal fun BetSlipScreen(
                         SectionHeader(slip.modeTitle)
                     }
                     items(slip.legs, key = { "${it.boutId}-${it.fighterId}" }) { selection ->
-                        val context = viewModel.legContext(selection.boutId, selection.fighterId)
+                        val context = remember(selection.boutId, selection.fighterId) {
+                            viewModel.legContext(selection.boutId, selection.fighterId)
+                        }
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer,

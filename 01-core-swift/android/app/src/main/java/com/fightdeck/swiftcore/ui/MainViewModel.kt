@@ -4,18 +4,24 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.fightevents.EventCatalogBridge
-import com.fightdeck.fightevents.MediaItem
-import com.fightdeck.fightevents.NewsItem
+import com.fightdeck.fightslip.SlipEngine
 import com.fightdeck.swiftcore.bridge.SwiftCoreBridge
 import com.fightdeck.swiftcore.catalog.BoutCard
 import com.fightdeck.swiftcore.catalog.CardSectionCard
 import com.fightdeck.swiftcore.catalog.EventCard
 import com.fightdeck.swiftcore.catalog.FighterCard
+import com.fightdeck.swiftcore.catalog.LegContext
+import com.fightdeck.swiftcore.catalog.MediaItem
+import com.fightdeck.swiftcore.catalog.NewsItem
+import com.fightdeck.swiftcore.catalog.TapeRowCard
 import com.fightdeck.swiftcore.catalog.boutCard
-import com.fightdeck.swiftcore.catalog.cardSections
+import com.fightdeck.swiftcore.catalog.eventCards
 import com.fightdeck.swiftcore.catalog.fighterCard
-import com.fightdeck.swiftcore.catalog.loadEvents
-import com.fightdeck.fightslip.SlipEngine
+import com.fightdeck.swiftcore.catalog.legContextCard
+import com.fightdeck.swiftcore.catalog.mediaItems
+import com.fightdeck.swiftcore.catalog.newsItems
+import com.fightdeck.swiftcore.catalog.sectionCards
+import com.fightdeck.swiftcore.catalog.tapeRows
 import com.fightdeck.swiftcore.core.SlipSnapshot
 import com.fightdeck.swiftcore.core.readSnapshot
 import com.fightdeck.swiftcore.services.DatasetLocator
@@ -116,28 +122,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refreshEvents() {
-        _events.value = loadState("Could not load events") { requireNotNull(catalog).loadEvents() }
+        _events.value = loadState("Could not load events") { requireNotNull(catalog).eventCards() }
     }
 
+    // Each of these crosses once per call and returns plain values; the screens remember the
+    // result per id rather than asking again on every recomposition.
     fun cardSections(eventID: String): List<CardSectionCard> =
-        requireNotNull(catalog).cardSections(eventID)
+        requireNotNull(catalog).sectionCards(eventID)
 
     fun bout(boutID: String): BoutCard = requireNotNull(catalog).boutCard(boutID)
 
     fun fighter(id: String): FighterCard? =
         runCatching { requireNotNull(catalog).fighterCard(id) }.getOrNull()
 
-    fun taleOfTheTape(boutID: String) = requireNotNull(catalog).taleOfTheTape(boutID)
+    fun taleOfTheTape(boutID: String): List<TapeRowCard> = requireNotNull(catalog).tapeRows(boutID)
 
-    fun legContext(boutID: String, fighterID: String) =
-        requireNotNull(catalog).legContext(boutID, fighterID)
+    fun legContext(boutID: String, fighterID: String): LegContext =
+        requireNotNull(catalog).legContextCard(boutID, fighterID)
 
     fun refreshNews() {
-        _news.value = loadState("Could not load news") { requireNotNull(catalog).news().toList() }
+        _news.value = loadState("Could not load news") { requireNotNull(catalog).newsItems() }
     }
 
     fun refreshMedia() {
-        _media.value = loadState("Could not load media") { requireNotNull(catalog).media().toList() }
+        _media.value = loadState("Could not load media") { requireNotNull(catalog).mediaItems() }
     }
 
     private fun <T> loadState(error: String, load: () -> List<T>): LoadState<List<T>> =

@@ -32,6 +32,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -381,7 +382,7 @@ private fun EventsNavHost(
             val boutId = entry.arguments?.getString("boutId")
             if (boutId != null) {
                 BoutDetailScreen(
-                    bout = viewModel.bout(boutId),
+                    bout = remember(boutId) { viewModel.bout(boutId) },
                     mode = mode,
                     slip = slip,
                     viewModel = viewModel,
@@ -397,7 +398,7 @@ private fun EventsNavHost(
             arguments = listOf(navArgument("fighterId") { type = NavType.StringType }),
         ) { entry ->
             val fighterId = entry.arguments?.getString("fighterId")
-            val fighter = fighterId?.let { viewModel.fighter(it) }
+            val fighter = remember(fighterId) { fighterId?.let { viewModel.fighter(it) } }
             if (fighter != null) {
                 FighterProfileScreen(
                     fighter,

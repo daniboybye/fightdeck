@@ -6,7 +6,6 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
-import FightCore
 import FightEvents
 import SwiftUI
 
@@ -50,7 +49,7 @@ struct EventsTabView: View {
     /// Every article carries its event, and the feed mixes both cards, so the row has to say
     /// which event it belongs to — otherwise the list reads as unrelated stories.
     @ViewBuilder
-    private func newsSection(events: [Event]) -> some View {
+    private func newsSection(events: [EventSummary]) -> some View {
         if case .loaded(let items) = state.newsState, !items.isEmpty {
             Section("News") {
                 ForEach(items) { item in
@@ -69,7 +68,7 @@ struct EventsTabView: View {
     /// Clips also hang off their event, but nobody opens an event card looking for the press
     /// conference, so the feed carries them next to the news.
     @ViewBuilder
-    private func videoSection(events: [Event]) -> some View {
+    private func videoSection(events: [EventSummary]) -> some View {
         if case .loaded(let clips) = state.mediaState, !clips.isEmpty {
             Section("Video") {
                 ForEach(clips) { clip in
@@ -85,22 +84,21 @@ struct EventsTabView: View {
         }
     }
 
-    private var eventsOrEmpty: [Event] {
+    private var eventsOrEmpty: [EventSummary] {
         if case .loaded(let events) = state.eventsState { return events }
         return []
     }
 
     @ViewBuilder
-    private func destination(for route: EventsRoute, events: [Event]) -> some View {
+    private func destination(for route: EventsRoute, events: [EventSummary]) -> some View {
         switch route {
         case .event(let id):
             if let event = events.first(where: { $0.id == id }) {
                 EventDetailView(state: state, event: event, mode: mode)
             }
-        case .bout(let eventID, let boutID):
-            if let event = events.first(where: { $0.id == eventID }),
-               let bout = event.bouts.first(where: { $0.id == boutID }) {
-                BoutDetailView(state: state, event: event, bout: bout, path: $path, mode: mode)
+        case .bout(_, let boutID):
+            if let bout = state.bout(boutID) {
+                BoutDetailView(state: state, bout: bout, path: $path, mode: mode)
             }
         case .fighter(let id):
             FighterProfileView(state: state, fighterID: id)
@@ -118,13 +116,13 @@ struct EventsTabView: View {
         }
     }
 
-    private func posterURL(for event: Event) -> URL? {
-        state.imageURL("assets/events/\(event.id).jpg")
+    private func posterURL(for event: EventSummary) -> URL? {
+        state.imageURL(event.posterPath)
     }
 }
 
 private struct EventRow: View {
-    let event: Event
+    let event: EventSummary
     let posterURL: URL?
     let mode: EventMode
 
@@ -140,7 +138,7 @@ private struct EventRow: View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.xs) {
             Text(event.name)
                 .font(.headline)
-            Text("\(event.venue) · \(event.city)")
+            Text(event.locationLine)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             metaRow
@@ -151,7 +149,7 @@ private struct EventRow: View {
         HStack(spacing: DesignTokens.Spacing.sm) {
             Text(event.date.formattedEventDate)
             Text("·")
-            Text("^[\(event.bouts.count) fight](inflect: true)")
+            Text("^[\(event.boutCount) fight](inflect: true)")
             Spacer()
             statusBadge
         }
@@ -173,7 +171,7 @@ private struct EventRow: View {
 
 struct EventDetailView: View {
     let state: AppState
-    let event: Event
+    let event: EventSummary
     let mode: EventMode
 
     var body: some View {
@@ -229,20 +227,16 @@ struct EventDetailView: View {
 
 struct BoutRowView: View {
     let state: AppState
-    let bout: Bout
+    let bout: BoutSummary
     let mode: EventMode
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.sm) {
-            Text(Display.boutHeadline(
-                weightClassRaw: bout.weightClass,
-                titleFight: bout.titleFight,
-                scheduledRounds: bout.scheduledRounds
-            ))
+            Text(bout.headline)
             .font(.caption2)
             .foregroundStyle(.secondary)
-            cornerRow(bout.redCorner, ring: DesignTokens.ColorToken.cornerRed)
-            cornerRow(bout.blueCorner, ring: DesignTokens.ColorToken.cornerBlue)
+            cornerRow(bout.red, ring: DesignTokens.ColorToken.cornerRed)
+            cornerRow(bout.blue, ring: DesignTokens.ColorToken.cornerBlue)
             if mode.showsResults {
                 resultLabel
             }
@@ -251,37 +245,29 @@ struct BoutRowView: View {
     }
 
     private var resultLabel: some View {
-        Label(
-            Display.resultLine(
-                winnerName: bout.result.winnerName,
-                method: bout.result.method,
-                endRound: bout.result.endRound,
-                endTime: bout.result.endTime
-            ),
-            systemImage: "checkmark.seal.fill"
-        )
+        Label(bout.resultLine, systemImage: "checkmark.seal.fill")
         .font(.caption)
         .foregroundStyle(DesignTokens.ColorToken.positive)
     }
 
-    private func cornerRow(_ corner: Corner, ring: Color) -> some View {
+    private func cornerRow(_ corner: CornerSummary, ring: Color) -> some View {
         HStack(spacing: DesignTokens.Spacing.md) {
-            FighterAvatar(url: state.imageURL("assets/fighters/\(corner.fighterId).jpg"), ring: ring, size: 40)
+            FighterAvatar(url: state.imageURL(corner.portraitPath), ring: ring, size: 40)
             VStack(alignment: .leading) {
                 Text(corner.name)
                     .font(.callout)
-                Text(state.record(for: corner.fighterId))
+                Text(corner.recordDisplay)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             if mode.showsOdds {
                 OddsButton(
-                    label: Money.formatOdds(Money.parse(corner.closingOdds.decimal)),
-                    fractional: corner.closingOdds.fractional,
-                    isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
+                    label: corner.oddsLabel,
+                    fractional: corner.oddsFractional,
+                    isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterID)
                 ) {
-                    state.toggleSelection(bout: bout, fighterID: corner.fighterId, odds: corner.closingOdds.decimal)
+                    state.toggleSelection(boutID: bout.id, fighterID: corner.fighterID, odds: corner.odds)
                 }
             }
         }

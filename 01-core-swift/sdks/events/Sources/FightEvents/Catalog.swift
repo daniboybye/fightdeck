@@ -18,11 +18,6 @@ public enum CatalogError: Error, Sendable {
     case unreadable(file: String)
 }
 
-public struct CardSection: Sendable {
-    public let title: String
-    public let bouts: [Bout]
-}
-
 public struct LegContext: Sendable {
     public let fighterName: String
     public let subtitle: String
@@ -130,20 +125,6 @@ public struct Catalog: Sendable {
                 blueFighterID: bout.blueCorner.fighterId,
                 winnerID: bout.result.winnerId
             )
-        }
-    }
-
-    public func cardSections(eventID: String) -> [CardSection] {
-        guard let event = event(id: eventID) else { return [] }
-        var grouped: [String: [Bout]] = [:]
-        for bout in event.bouts {
-            grouped[bout.segment, default: []].append(bout)
-        }
-        let segments = grouped.keys.sorted { Display.segmentRank($0) < Display.segmentRank($1) }
-        return segments.compactMap { segment in
-            guard var bouts = grouped[segment], !bouts.isEmpty else { return nil }
-            bouts.sort { $0.order < $1.order }
-            return CardSection(title: Display.segmentTitle(segment), bouts: bouts)
         }
     }
 

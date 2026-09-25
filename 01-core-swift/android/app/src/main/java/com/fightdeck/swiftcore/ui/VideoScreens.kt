@@ -44,8 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.fightdeck.fightevents.FightEventsJava
-import com.fightdeck.fightevents.MediaItem
+import com.fightdeck.swiftcore.catalog.MediaItem
 import com.fightdeck.swiftcore.design.Tokens
 import kotlinx.coroutines.delay
 
@@ -113,13 +112,13 @@ internal fun VideoScreen(
                     shape = RoundedCornerShape(Tokens.radiusLg),
                 ) {
                     Column(Modifier.padding(Tokens.spacingLg)) {
-                        DetailRow("Duration", item.durationLabel)
+                        DetailRow("Duration", item.duration)
                         HorizontalDivider(Modifier.padding(vertical = Tokens.spacingSm))
                         DetailRow("Format", item.kind.uppercase())
                     }
                 }
             }
-            item.note.takeIf { it.isNotEmpty() }?.let { note ->
+            item.note?.let { note ->
                 item {
                     Row(verticalAlignment = Alignment.Top) {
                         Icon(
@@ -230,6 +229,3 @@ private fun floatingWindowParams(autoEnter: Boolean): PictureInPictureParams {
     }
     return params.build()
 }
-
-internal val MediaItem.durationLabel: String
-    get() = FightEventsJava.formatDuration(durationSeconds)

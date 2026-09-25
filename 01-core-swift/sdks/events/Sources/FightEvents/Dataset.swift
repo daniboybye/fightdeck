@@ -71,8 +71,6 @@ public struct Fighter: Codable, Identifiable, Sendable {
     public let stance: String?
     public let record: FighterRecord
     public let portrait: String
-
-    public var recordDisplay: String { record.display }
 }
 
 public struct FighterRecord: Codable, Sendable {

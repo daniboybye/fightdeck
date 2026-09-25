@@ -29,7 +29,7 @@ enum LoadState<Value>: Sendable where Value: Sendable {
 @Observable
 @MainActor
 final class AppState {
-    var eventsState: LoadState<[Event]> = .loading
+    var eventsState: LoadState<[EventSummary]> = .loading
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
@@ -80,7 +80,7 @@ final class AppState {
 
     func loadEvents() {
         eventsState = .loading
-        let events = catalog.allEvents()
+        let events = catalog.eventSummaries()
         eventsState = events.isEmpty ? .empty : .loaded(events)
     }
 
@@ -100,9 +100,9 @@ final class AppState {
         mediaState = media.isEmpty ? .empty : .loaded(media)
     }
 
-    func toggleSelection(bout: Bout, fighterID: String, odds: String) {
+    func toggleSelection(boutID: String, fighterID: String, odds: String) {
         slipStore.toggleSelection(
-            boutID: bout.id,
+            boutID: boutID,
             fighterID: fighterID,
             odds: Money.parse(odds)
         )
@@ -120,12 +120,12 @@ final class AppState {
         slipStore.placeBet()
     }
 
-    func fighter(_ id: String) -> Fighter? {
-        catalog.fighter(id: id)
+    func fighter(_ id: String) -> FighterSummary? {
+        catalog.fighterSummary(id: id)
     }
 
-    func record(for id: String) -> String {
-        fighter(id)?.recordDisplay ?? "—"
+    func bout(_ id: String) -> BoutSummary? {
+        catalog.boutSummary(id: id)
     }
 
     func cardSections(for eventID: String) -> [CardSection] {

@@ -7,7 +7,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.math.BigDecimal
 
 interface FightRepository {
     suspend fun loadEvents(): List<EventItem>

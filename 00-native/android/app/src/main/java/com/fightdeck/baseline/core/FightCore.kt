@@ -1,7 +1,6 @@
 package com.fightdeck.baseline.core
 
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 class FightCore(private val bouts: Map<String, BoutIndex>) {
     fun slipState(slip: BetSlip, balance: BigDecimal): SlipState {

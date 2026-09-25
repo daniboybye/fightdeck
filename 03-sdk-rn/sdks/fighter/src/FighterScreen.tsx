@@ -260,13 +260,15 @@ function makeStyles(theme: ThemeTokens) {
     heroPlaceholder: {
       backgroundColor: c.surface ?? '#141922',
     },
+    // A fade, as on the native screen, so the name reads without a grey block over the
+    // portrait: a flat translucent fill ends in a hard edge across the face.
     heroGradient: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
       height: 200,
-      backgroundColor: 'rgba(0,0,0,0.65)',
+      backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 100%)',
     },
     heroScrim: {
       position: 'absolute',

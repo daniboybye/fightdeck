@@ -159,23 +159,6 @@ public struct FighterRecord: Codable, Sendable {
     }
 }
 
-/// Platform port — implemented by the host (UserDefaults on iOS, SharedPreferences on Android).
-public protocol PreferencesStore: Sendable {
-    func read(key: String) -> String?
-    func write(key: String, value: String)
-}
-
-/// Platform port — host supplies the current time.
-public protocol Clock: Sendable {
-    func now() -> Date
-}
-
-/// Platform port — async data loading with typed errors across the FFI boundary.
-public protocol FightRepository: Sendable {
-    func loadEvents() async throws(FightCoreError) -> [Event]
-    func loadFighters() async throws(FightCoreError) -> [Fighter]
-}
-
 public extension FightCore {
     static func make(from events: [Event]) -> FightCore {
         let bouts = events.flatMap(\.bouts).map { bout in

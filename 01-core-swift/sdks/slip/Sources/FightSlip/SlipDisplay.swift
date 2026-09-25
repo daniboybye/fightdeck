@@ -19,6 +19,11 @@ public struct SummaryRow: Sendable, Hashable {
 }
 
 public enum SlipDisplay {
+    /// The label above the legs. The user never picks a mode; the slip says which one it is.
+    public static func modeTitle(_ mode: BetMode) -> String {
+        mode == .accumulator ? "Accumulator" : "Single"
+    }
+
     /// The summary block under the stake, labels and order included, so neither host decides
     /// which rows a single slip leaves out.
     public static func slipSummary(state: SlipState) -> [SummaryRow] {

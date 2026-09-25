@@ -15,14 +15,11 @@ import com.fightdeck.swiftcore.catalog.boutCard
 import com.fightdeck.swiftcore.catalog.cardSections
 import com.fightdeck.swiftcore.catalog.fighterCard
 import com.fightdeck.swiftcore.catalog.loadEvents
-import com.fightdeck.swiftcore.core.BetSlip
-import com.fightdeck.swiftcore.core.BetMode
-import com.fightdeck.swiftcore.core.Money
-import com.fightdeck.swiftcore.core.SlipState
-import com.fightdeck.swiftcore.core.SwiftSlipStore
+import com.fightdeck.fightslip.SlipEngine
+import com.fightdeck.swiftcore.core.SlipSnapshot
+import com.fightdeck.swiftcore.core.readSnapshot
 import com.fightdeck.swiftcore.services.DatasetLocator
 import com.fightdeck.swiftcore.services.LocalAssetServer
-import java.math.BigDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,15 +58,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _events = MutableStateFlow<LoadState<List<EventCard>>>(LoadState.Loading)
     val events: StateFlow<LoadState<List<EventCard>>> = _events.asStateFlow()
 
-    private var slipStore: SwiftSlipStore? = null
+    private var slipEngine: SlipEngine? = null
 
-    private val _slip = MutableStateFlow(
-        BetSlip(BetMode.single, emptyList(), BigDecimal("10.00")),
-    )
-    val slip: StateFlow<BetSlip> = _slip.asStateFlow()
-
-    private val _balance = MutableStateFlow(BigDecimal("500.00"))
-    val balance: StateFlow<BigDecimal> = _balance.asStateFlow()
+    // Null only until bootstrap has made the engine; the tabs are not composed before then.
+    // Every write goes through publishSlip, straight from the engine, so nothing on this side
+    // holds a second copy of the slip, the balance or the confirmation.
+    private val _slip = MutableStateFlow<SlipSnapshot?>(null)
+    val slip: StateFlow<SlipSnapshot?> = _slip.asStateFlow()
 
     private val _news = MutableStateFlow<LoadState<List<NewsItem>>>(LoadState.Loading)
     val news: StateFlow<LoadState<List<NewsItem>>> = _news.asStateFlow()
@@ -77,17 +72,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _media = MutableStateFlow<LoadState<List<MediaItem>>>(LoadState.Loading)
     val media: StateFlow<LoadState<List<MediaItem>>> = _media.asStateFlow()
 
-    private val _betPlacedMessage = MutableStateFlow<String?>(null)
-    val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
-
-    val slipState: SlipState
-        get() = requireNotNull(slipStore).slipState
-
-    private fun publishSlipState() {
-        val store = requireNotNull(slipStore)
-        _slip.value = store.slip
-        _balance.value = store.balance
-        _betPlacedMessage.value = store.confirmation
+    private fun updateSlip(change: SlipEngine.() -> Unit) {
+        val engine = requireNotNull(slipEngine)
+        engine.change()
+        _slip.value = engine.readSnapshot()
     }
 
     fun retryBootstrap() {
@@ -103,8 +91,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             booted.fold(
                 onSuccess = { loaded ->
                     catalog = loaded
-                    slipStore = SwiftSlipStore(loaded.boutIndexJSON)
-                    publishSlipState()
+                    slipEngine = SlipEngine.`init`(loaded.boutIndexJSON)
+                    updateSlip {}
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
                     refreshNews()
@@ -161,28 +149,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun imageUrl(path: String): String? =
         LocalAssetServer.port.takeIf { it > 0 }?.let { "http://127.0.0.1:$it/$path" }
 
-    fun toggleSelection(boutID: String, fighterId: String, odds: String) {
-        requireNotNull(slipStore).toggleSelection(boutID, fighterId, Money.parse(odds))
-        publishSlipState()
-    }
+    // Amounts and odds go over as the text they arrived in; the core parses them.
+    fun toggleSelection(boutID: String, fighterId: String, odds: String) =
+        updateSlip { toggleSelection(boutID, fighterId, odds) }
 
-    fun updateStake(stake: BigDecimal) {
-        requireNotNull(slipStore).updateStake(stake)
-        publishSlipState()
-    }
+    fun updateStake(stake: String) = updateSlip { updateStake(stake) }
 
-    fun removeSelection(boutId: String, fighterId: String) {
-        requireNotNull(slipStore).removeSelection(boutId, fighterId)
-        publishSlipState()
-    }
+    fun removeSelection(boutId: String, fighterId: String) =
+        updateSlip { removeSelection(boutId, fighterId) }
 
-    fun placeBet() {
-        requireNotNull(slipStore).placeBet()
-        publishSlipState()
-    }
+    fun placeBet() = updateSlip { placeBet() }
 
-    fun deposit(amount: BigDecimal) {
-        requireNotNull(slipStore).deposit(amount)
-        publishSlipState()
-    }
+    fun deposit(amount: String) = updateSlip { deposit(amount) }
 }

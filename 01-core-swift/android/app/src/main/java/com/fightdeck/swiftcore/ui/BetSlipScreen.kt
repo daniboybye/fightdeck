@@ -60,15 +60,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.fightdeck.fightevents.FightEventsJava
 import com.fightdeck.swiftcore.catalog.EventCard
-import com.fightdeck.swiftcore.core.BetMode
-import com.fightdeck.swiftcore.core.BetSlip
-import com.fightdeck.swiftcore.core.Money
-import com.fightdeck.swiftcore.core.SlipState
+import com.fightdeck.swiftcore.core.SlipSnapshot
 import com.fightdeck.swiftcore.design.BalanceMenuAction
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 @Composable
 private fun LinkRowButton(
@@ -128,17 +123,14 @@ private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier
 @Composable
 internal fun BetSlipScreen(
     viewModel: MainViewModel,
-    slip: BetSlip,
-    balance: BigDecimal,
+    slip: SlipSnapshot,
     events: List<EventCard>,
-    placedMessage: String?,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val focusManager = LocalFocusManager.current
     var stakeFocused by remember { mutableStateOf(false) }
-    val state = viewModel.slipState
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -150,14 +142,14 @@ internal fun BetSlipScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
                     BalanceMenuAction(
-                        balanceLabel = Money.formatCurrency(balance),
+                        balanceLabel = slip.balanceDisplay,
                         onDeposit = onDeposit,
                     )
                 },
             )
         },
         bottomBar = {
-            if (slip.selections.isNotEmpty()) {
+            if (slip.legs.isNotEmpty()) {
                 // No fill behind the buttons. With one, the slip tab stacks three surface
                 // tones — this strip, the selections pill above it and the navigation bar —
                 // and the pill stops reading as part of the same bar. The action pill floats
@@ -175,7 +167,7 @@ internal fun BetSlipScreen(
                     PrimaryActionButton(
                         title = "Place bet",
                         onClick = viewModel::placeBet,
-                        enabled = state.errors.isEmpty(),
+                        enabled = slip.errors.isEmpty(),
                         modifier = Modifier.weight(1f),
                     )
                     AnimatedVisibility(visible = stakeFocused) {
@@ -186,8 +178,8 @@ internal fun BetSlipScreen(
         },
     ) { padding ->
         val screenState = when {
-            slip.selections.isNotEmpty() -> 0
-            placedMessage != null -> 1
+            slip.legs.isNotEmpty() -> 0
+            slip.confirmation != null -> 1
             else -> 2
         }
         AnimatedContent(
@@ -210,9 +202,9 @@ internal fun BetSlipScreen(
                     verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                 ) {
                     item {
-                        SectionHeader(if (slip.mode == BetMode.accumulator) "Accumulator" else "Single")
+                        SectionHeader(slip.modeTitle)
                     }
-                    items(slip.selections, key = { "${it.boutId}-${it.fighterId}" }) { selection ->
+                    items(slip.legs, key = { "${it.boutId}-${it.fighterId}" }) { selection ->
                         val context = viewModel.legContext(selection.boutId, selection.fighterId)
                         Card(
                             colors = CardDefaults.cardColors(
@@ -235,7 +227,7 @@ internal fun BetSlipScreen(
                                     )
                                 }
                                 Text(
-                                    Money.format(selection.odds),
+                                    selection.odds,
                                     color = Tokens.accent,
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(start = Tokens.spacingMd),
@@ -251,8 +243,8 @@ internal fun BetSlipScreen(
                     item { SectionHeader("Stake") }
                     item {
                         OutlinedTextField(
-                            value = slip.stake.toPlainString(),
-                            onValueChange = { viewModel.updateStake(Money.parse(it.ifBlank { "0" })) },
+                            value = slip.stake,
+                            onValueChange = { viewModel.updateStake(it.ifBlank { "0" }) },
                             label = { Text("Amount") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -270,14 +262,14 @@ internal fun BetSlipScreen(
                             listOf(5, 10, 25, 50).forEach { chip ->
                                 PresetChipButton(
                                     title = "€$chip",
-                                    onClick = { viewModel.updateStake(BigDecimal(chip)) },
+                                    onClick = { viewModel.updateStake("$chip") },
                                     modifier = Modifier.weight(1f),
                                 )
                             }
                         }
                     }
-                    item { SummaryBlock(state) }
-                    items(state.errors, key = { it }) { error ->
+                    item { SummaryBlock(slip.summaryRows) }
+                    items(slip.errors, key = { it }) { error ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.Warning,
@@ -287,7 +279,7 @@ internal fun BetSlipScreen(
                             )
                             Spacer(Modifier.width(Tokens.spacingSm))
                             Text(
-                                FightEventsJava.humaniseCode(error),
+                                error,
                                 color = Tokens.negative,
                                 style = MaterialTheme.typography.labelMedium,
                             )
@@ -305,13 +297,13 @@ internal fun BetSlipScreen(
                                 Modifier.padding(Tokens.spacingLg),
                                 verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                             ) {
-                                DetailRow("Balance", Money.formatCurrency(balance))
+                                DetailRow("Balance", slip.balanceDisplay)
                                 LinkRowButton(title = "Add funds", onClick = onDeposit)
                             }
                         }
                     }
                 }
-                1 -> BetPlacedState(placedMessage.orEmpty(), onBrowseEvents, Modifier.fillMaxSize())
+                1 -> BetPlacedState(slip.confirmation.orEmpty(), onBrowseEvents, Modifier.fillMaxSize())
                 else -> EmptyState("No selections yet", Modifier.fillMaxSize(), onBrowseEvents)
             }
         }
@@ -319,7 +311,7 @@ internal fun BetSlipScreen(
 }
 
 @Composable
-private fun SummaryBlock(state: SlipState) {
+private fun SummaryBlock(rows: List<Pair<String, String>>) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         shape = RoundedCornerShape(Tokens.radiusLg),
@@ -328,7 +320,7 @@ private fun SummaryBlock(state: SlipState) {
             Modifier.padding(Tokens.spacingLg),
             verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
         ) {
-            state.summaryRows.forEach { (label, value) -> DetailRow(label, value) }
+            rows.forEach { (label, value) -> DetailRow(label, value) }
         }
     }
 }

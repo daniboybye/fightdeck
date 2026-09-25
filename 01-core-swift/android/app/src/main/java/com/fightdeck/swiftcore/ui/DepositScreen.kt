@@ -56,18 +56,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.fightdeck.fightcore.FightCoreJava
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onClose: () -> Unit) {
+internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: () -> Unit) {
     val methods = remember { FightCoreJava.depositMethods().toList() }
     var amountText by remember { mutableStateOf("") }
     var method by remember { mutableStateOf(methods.first()) }
     var didSucceed by remember { mutableStateOf(false) }
     var amountFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val quote = FightCoreJava.depositQuote(amountText, method.id, balance.toPlainString())
+    val quote = FightCoreJava.depositQuote(amountText, method.id, balance)
     val validationMessage = quote.validationMessage.ifEmpty { null }
 
     Scaffold(
@@ -146,7 +145,7 @@ internal fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, on
                     )
                     SecondaryActionButton(
                         title = "Done",
-                        onClick = { onDone(BigDecimal(quote.amount)) },
+                        onClick = { onDone(quote.amount) },
                     )
                 }
             }

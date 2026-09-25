@@ -43,10 +43,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.SubcomposeAsyncImage
-import com.fightdeck.swiftcore.core.Money
 import com.fightdeck.swiftcore.design.BalanceMenuAction
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -168,7 +166,7 @@ internal fun PresetChipButton(
 internal fun DetailScaffold(
     title: String,
     onBack: () -> Unit,
-    balance: BigDecimal? = null,
+    balanceLabel: String? = null,
     onDeposit: (() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -183,9 +181,9 @@ internal fun DetailScaffold(
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
-                    if (balance != null && onDeposit != null) {
+                    if (balanceLabel != null && onDeposit != null) {
                         BalanceMenuAction(
-                            balanceLabel = Money.formatCurrency(balance),
+                            balanceLabel = balanceLabel,
                             onDeposit = onDeposit,
                         )
                     }

@@ -14,49 +14,17 @@ import FoundationEssentials
 import Foundation
 #endif
 
-public final class SettlementResult {
-    public let status: String
-    public let returnedText: String
-    public let profitText: String
-    /// One of "won", "lost", "void" per leg, in slip order.
-    public let legOutcomes: [String]
-
-    init(_ settlement: Settlement) {
-        status = settlement.status.rawValue
-        returnedText = Money.format(settlement.returned)
-        profitText = Money.format(settlement.profit)
-        legOutcomes = settlement.legs.map(\.outcome.rawValue)
-    }
-}
-
-public final class CashOutResult {
-    public let available: Bool
-    public let amountText: String
-    /// Empty when the offer stands; otherwise the contract's refusal code.
-    public let reason: String
-
-    init(_ offer: CashOutOffer) {
-        available = offer.available
-        amountText = Money.format(offer.amount)
-        reason = offer.reason ?? ""
-    }
-}
-
-public final class SlipSelection {
-    public let boutID: String
-    public let fighterID: String
-    public let oddsText: String
-
-    init(_ selection: Selection) {
-        boutID = selection.boutID
-        fighterID = selection.fighterID
-        oddsText = Money.format(selection.odds)
-    }
-}
+// Results cross as labelled tuples rather than as objects. jextract 0.6.0 turns a returned
+// class into a Java wrapper whose every getter is another JNI call, and whose Swift instance
+// lives until the garbage collector finds the wrapper. A tuple is filled in the one call that
+// returns it and arrives as plain Java values, with nothing on this side left to free. Two
+// limits shape the signatures: an array of tuples is skipped without a word, and a tuple
+// nested in a tuple generates Swift that does not compile — so lists travel as parallel
+// arrays of the same length.
 
 /// The Android-facing shell over `SlipSession`. iOS wraps the same session in
-/// `BetSlipStore`, which adds `@Observable`; there is no Observation on ART, so Kotlin
-/// re-reads the getters after every mutating call instead.
+/// `BetSlipStore`, which adds `@Observable`; there is no Observation on ART, so Kotlin reads
+/// `snapshot()` after every mutating call instead.
 public final class SlipEngine {
     private var session: SlipSession
 
@@ -100,80 +68,89 @@ public final class SlipEngine {
         session.deposit(amount: Money.parse(amount))
     }
 
-    /// Returns false when the slip has validation errors, matching `BetSlipStore.placeBet`
-    /// returning nil.
-    public func placeBet() -> Bool {
-        session.placeBet() != nil
+    /// A slip with errors is left as it was; `confirmation` in the next snapshot says whether
+    /// the bet went through.
+    public func placeBet() {
+        session.placeBet()
     }
 
-    public func settle(voidedBoutIDs: [String]) -> SettlementResult {
-        SettlementResult(
-            session.slipEngine.settle(slip: session.slip, voidedBouts: Set(voidedBoutIDs))
+    /// Everything the slip screen shows. Amounts without a symbol are two places, the way
+    /// `Money.format` writes them; `…Display` carries the euro.
+    public func snapshot() -> (
+        modeTitle: String,
+        legBoutIDs: [String],
+        legFighterIDs: [String],
+        legOdds: [String],
+        stake: String,
+        balance: String,
+        balanceDisplay: String,
+        returnDisplay: String,
+        summaryLabels: [String],
+        summaryValues: [String],
+        errors: [String],
+        confirmation: String?
+    ) {
+        let slip = session.slip
+        let state = session.slipState
+        let summary = SlipDisplay.slipSummary(state: state)
+        return (
+            modeTitle: SlipDisplay.modeTitle(slip.mode),
+            legBoutIDs: slip.selections.map(\.boutID),
+            legFighterIDs: slip.selections.map(\.fighterID),
+            legOdds: slip.selections.map { Money.formatOdds($0.odds) },
+            stake: Money.format(slip.stake),
+            balance: Money.format(session.balance),
+            balanceDisplay: Money.formatCurrency(session.balance),
+            returnDisplay: Money.formatCurrency(state.potentialReturn),
+            summaryLabels: summary.map(\.label),
+            summaryValues: summary.map(\.value),
+            errors: state.errors.map(\.message),
+            confirmation: session.confirmation
         )
     }
 
-    public func cashOutOffer(settledBoutIDs: [String]) -> CashOutResult {
-        CashOutResult(
-            session.slipEngine.cashOutOffer(slip: session.slip, settledBouts: Set(settledBoutIDs))
+    /// The contract's figures for the same slip, in the fixtures' own format, so the device
+    /// tests hold the cross-compiled core to the numbers `swift test` checks. A separate call
+    /// because jextract names the Java class after every label in the tuple, and one class
+    /// name carrying all eighteen is longer than a file name may be.
+    public func contractState() -> (
+        oddsExact: String?,
+        odds: String?,
+        totalStake: String,
+        potentialReturn: String,
+        potentialProfit: String,
+        errorCodes: [String]
+    ) {
+        let state = session.slipState
+        return (
+            oddsExact: state.combinedOddsExact.map(Money.formatExactOdds),
+            odds: state.combinedOddsDisplay.map(Money.format),
+            totalStake: Money.format(state.totalStake),
+            potentialReturn: Money.format(state.potentialReturn),
+            potentialProfit: Money.format(state.potentialProfit),
+            errorCodes: state.errors.map(\.rawValue)
         )
     }
 
-    public var selections: [SlipSelection] {
-        session.slip.selections.map(SlipSelection.init)
+    /// `legOutcomes` is one of "won", "lost", "void" per leg, in slip order.
+    public func settle(voidedBoutIDs: [String]) -> (
+        status: String,
+        returned: String,
+        profit: String,
+        legOutcomes: [String]
+    ) {
+        let settlement = session.slipEngine.settle(slip: session.slip, voidedBouts: Set(voidedBoutIDs))
+        return (
+            status: settlement.status.rawValue,
+            returned: Money.format(settlement.returned),
+            profit: Money.format(settlement.profit),
+            legOutcomes: settlement.legs.map(\.outcome.rawValue)
+        )
     }
 
-    public var isAccumulator: Bool {
-        session.slip.mode == .accumulator
-    }
-
-    public var stakeText: String {
-        Money.format(session.slip.stake)
-    }
-
-    public var balanceText: String {
-        Money.format(session.balance)
-    }
-
-    public var totalStakeText: String {
-        Money.format(session.slipState.totalStake)
-    }
-
-    public var potentialReturnText: String {
-        Money.format(session.slipState.potentialReturn)
-    }
-
-    public var potentialProfitText: String {
-        Money.format(session.slipState.potentialProfit)
-    }
-
-    /// Empty for a single-bet slip, where the contract defines no combined odds.
-    public var combinedOddsText: String {
-        guard let display = session.slipState.combinedOddsDisplay else { return "" }
-        return Money.format(display)
-    }
-
-    public var combinedOddsExactText: String {
-        guard let exact = session.slipState.combinedOddsExact else { return "" }
-        return Money.formatExactOdds(exact)
-    }
-
-    /// `SlipDisplay.slipSummary`, split in two because jextract has no mapping for an array
-    /// of tuples. Same length, same order.
-    public var summaryLabels: [String] {
-        SlipDisplay.slipSummary(state: session.slipState).map(\.label)
-    }
-
-    public var summaryValues: [String] {
-        SlipDisplay.slipSummary(state: session.slipState).map(\.value)
-    }
-
-    /// Nil until a bet is placed, and again once the legs change.
-    public var confirmation: String? {
-        session.confirmation
-    }
-
-    /// The contract's codes, in the contract's order.
-    public var errorCodes: [String] {
-        session.slipState.errors.map(\.rawValue)
+    /// `reason` is nil while the offer stands, otherwise the contract's refusal code.
+    public func cashOutOffer(settledBoutIDs: [String]) -> (available: Bool, amount: String, reason: String?) {
+        let offer = session.slipEngine.cashOutOffer(slip: session.slip, settledBouts: Set(settledBoutIDs))
+        return (available: offer.available, amount: Money.format(offer.amount), reason: offer.reason)
     }
 }

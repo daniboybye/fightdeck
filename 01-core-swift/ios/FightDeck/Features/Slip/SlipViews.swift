@@ -75,7 +75,7 @@ struct BetSlipView: View {
 
     private var slipContent: some View {
         List {
-            Section(betTypeTitle) {
+            Section(SlipDisplay.modeTitle(state.slip.mode)) {
                 ForEach(state.slip.selections) { selection in
                     selectionRow(selection)
                 }
@@ -121,12 +121,6 @@ struct BetSlipView: View {
         .safeAreaBar(edge: .bottom) { placeBetBar }
         .contentMargins(.bottom, DesignTokens.Layout.betSlipAccessoryHeight, for: .scrollContent)
         .scrollDismissesKeyboard(.interactively)
-    }
-
-    /// One leg is a single, two or more is an accumulator. The user never picks — the slip
-    /// just says which one it currently is.
-    private var betTypeTitle: String {
-        state.slip.mode == .accumulator ? "Accumulator" : "Single"
     }
 
     /// An `HStack` rather than `LabeledContent`: the two-line label pushes that layout into

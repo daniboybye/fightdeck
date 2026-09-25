@@ -55,11 +55,9 @@ import com.fightdeck.fightevents.MediaItem
 import com.fightdeck.fightevents.NewsItem
 import com.fightdeck.swiftcore.catalog.BoutCard
 import com.fightdeck.swiftcore.catalog.EventCard
-import com.fightdeck.swiftcore.core.BetSlip
-import com.fightdeck.swiftcore.core.Money
+import com.fightdeck.swiftcore.core.SlipSnapshot
 import com.fightdeck.swiftcore.design.BalanceMenuAction
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +67,7 @@ internal fun EventListScreen(
     media: LoadState<List<MediaItem>>,
     mode: EventMode,
     viewModel: MainViewModel,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     onRetry: () -> Unit,
     onEventClick: (EventCard) -> Unit,
@@ -88,7 +86,7 @@ internal fun EventListScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
                     BalanceMenuAction(
-                        balanceLabel = Money.formatCurrency(balance),
+                        balanceLabel = balanceLabel,
                         onDeposit = onDeposit,
                     )
                 },
@@ -321,17 +319,17 @@ private fun NewsCard(item: NewsItem, eventName: String, imageUrl: String?, onCli
 internal fun EventDetailScreen(
     event: EventCard,
     mode: EventMode,
-    slip: BetSlip,
+    slip: SlipSnapshot,
     viewModel: MainViewModel,
     media: LoadState<List<MediaItem>>,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     onBoutClick: (String) -> Unit,
     onVideoClick: (MediaItem) -> Unit,
     onBack: () -> Unit,
 ) {
     val sections = viewModel.cardSections(event.id)
-    DetailScaffold(title = event.name, onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
+    DetailScaffold(title = event.name, onBack = onBack, balanceLabel = balanceLabel, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 start = Tokens.spacingLg,
@@ -378,7 +376,7 @@ internal fun EventDetailScreen(
 private fun BoutRow(
     bout: BoutCard,
     mode: EventMode,
-    slip: BetSlip,
+    slip: SlipSnapshot,
     viewModel: MainViewModel,
     onClick: () -> Unit,
 ) {
@@ -424,7 +422,7 @@ private fun CornerLine(
     bout: BoutCard,
     isRed: Boolean,
     mode: EventMode,
-    slip: BetSlip,
+    slip: SlipSnapshot,
     viewModel: MainViewModel,
     ring: Color,
 ) {
@@ -452,9 +450,7 @@ private fun CornerLine(
         if (mode.showsOdds) {
             OddsChip(
                 label = odds,
-                selected = slip.selections.any {
-                    it.boutId == bout.id && it.fighterId == fighterID
-                },
+                selected = slip.isSelected(bout.id, fighterID),
                 onClick = {
                     viewModel.toggleSelection(bout.id, fighterID, odds)
                 },
@@ -497,9 +493,9 @@ private fun OddsChip(label: String, selected: Boolean, onClick: () -> Unit) {
 internal fun BoutDetailScreen(
     bout: BoutCard,
     mode: EventMode,
-    slip: BetSlip,
+    slip: SlipSnapshot,
     viewModel: MainViewModel,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     onFighterClick: (String) -> Unit,
     onBack: () -> Unit,
@@ -507,7 +503,7 @@ internal fun BoutDetailScreen(
     DetailScaffold(
         title = bout.weightClassDisplay,
         onBack = onBack,
-        balance = balance,
+        balanceLabel = balanceLabel,
         onDeposit = onDeposit,
     ) { padding ->
         LazyColumn(

@@ -47,7 +47,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.fightdeck.fightevents.FightEventsJava
 import com.fightdeck.fightevents.MediaItem
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 import kotlinx.coroutines.delay
 
 /** How often playback position is sampled, so the floating window can pick the clip back up. */
@@ -56,7 +55,7 @@ private const val POSITION_SAMPLE_MS = 500L
 @Composable
 internal fun VideoScreen(
     item: MediaItem,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -80,7 +79,7 @@ internal fun VideoScreen(
         return
     }
 
-    DetailScaffold(title = "Video", onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
+    DetailScaffold(title = "Video", onBack = onBack, balanceLabel = balanceLabel, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 start = Tokens.spacingLg,

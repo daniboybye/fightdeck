@@ -25,17 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fightdeck.swiftcore.catalog.FighterCard
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 @Composable
 internal fun FighterProfileScreen(
     fighter: FighterCard,
     viewModel: MainViewModel,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     onBack: () -> Unit,
 ) {
-    DetailScaffold(title = fighter.name, onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
+    DetailScaffold(title = fighter.name, onBack = onBack, balanceLabel = balanceLabel, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 top = padding.calculateTopPadding(),

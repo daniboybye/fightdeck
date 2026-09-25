@@ -27,19 +27,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fightdeck.fightevents.MediaItem
 import com.fightdeck.fightevents.NewsItem
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 @Composable
 internal fun NewsArticleScreen(
     item: NewsItem,
     media: LoadState<List<MediaItem>>,
     viewModel: MainViewModel,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     onVideoClick: (MediaItem) -> Unit,
     onBack: () -> Unit,
 ) {
-    DetailScaffold(title = "Article", onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
+    DetailScaffold(title = "Article", onBack = onBack, balanceLabel = balanceLabel, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 top = padding.calculateTopPadding(),

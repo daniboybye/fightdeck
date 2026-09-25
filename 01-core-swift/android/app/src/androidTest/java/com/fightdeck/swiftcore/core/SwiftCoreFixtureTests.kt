@@ -46,15 +46,16 @@ class SwiftCoreFixtureTests {
         root.cases.forEach { case ->
             val engine = engineForFixtures()
             case.load(engine, balance = "10000")
+            val state = engine.contractState()
             case.expect.combinedOddsExact?.let {
-                assertEquals(it, engine.combinedOddsExactText, case.id)
+                assertEquals(it, state.oddsExact().orElse(""), case.id)
             }
             case.expect.combinedOddsDisplay?.let {
-                assertEquals(it, engine.combinedOddsText, case.id)
+                assertEquals(it, state.odds().orElse(""), case.id)
             }
-            assertEquals(case.expect.totalStake, engine.totalStakeText, case.id)
-            assertEquals(case.expect.potentialReturn, engine.potentialReturnText, case.id)
-            assertEquals(case.expect.potentialProfit, engine.potentialProfitText, case.id)
+            assertEquals(case.expect.totalStake, state.totalStake(), case.id)
+            assertEquals(case.expect.potentialReturn, state.potentialReturn(), case.id)
+            assertEquals(case.expect.potentialProfit, state.potentialProfit(), case.id)
         }
     }
 
@@ -64,7 +65,7 @@ class SwiftCoreFixtureTests {
         root.cases.forEach { case ->
             val engine = engineForFixtures()
             case.load(engine, balance = case.balance)
-            assertEquals(case.expect.errors, engine.errorCodes.toList(), case.id)
+            assertEquals(case.expect.errors, engine.contractState().errorCodes().toList(), case.id)
         }
     }
 
@@ -75,11 +76,11 @@ class SwiftCoreFixtureTests {
             val engine = engineForFixtures()
             case.load(engine, balance = "10000")
             val result = engine.settle((case.voidedBouts ?: emptyList()).toTypedArray())
-            assertEquals(case.expect.returned, result.returnedText, case.id)
-            assertEquals(case.expect.profit, result.profitText, case.id)
-            assertEquals(case.expect.status, result.status, case.id)
+            assertEquals(case.expect.returned, result.returned(), case.id)
+            assertEquals(case.expect.profit, result.profit(), case.id)
+            assertEquals(case.expect.status, result.status(), case.id)
             case.expect.legs.forEachIndexed { index, expected ->
-                assertEquals(expected.outcome, result.legOutcomes[index], "${case.id} leg $index")
+                assertEquals(expected.outcome, result.legOutcomes()[index], "${case.id} leg $index")
             }
         }
     }
@@ -91,9 +92,9 @@ class SwiftCoreFixtureTests {
             val engine = engineForFixtures()
             case.load(engine, balance = "10000")
             val offer = engine.cashOutOffer(case.settledBouts.toTypedArray())
-            assertEquals(case.expect.available, offer.isAvailable, case.id)
-            assertEquals(case.expect.amount, offer.amountText, case.id)
-            assertEquals(case.expect.reason ?: "", offer.reason, case.id)
+            assertEquals(case.expect.available, offer.available(), case.id)
+            assertEquals(case.expect.amount, offer.amount(), case.id)
+            assertEquals(case.expect.reason, offer.reason().orElse(null), case.id)
         }
     }
 
@@ -104,7 +105,7 @@ class SwiftCoreFixtureTests {
         val case = root.cases.first { it.selections.size == 7 }
         val engine = engineForFixtures()
         case.load(engine, balance = "10000")
-        assertEquals("361.11", engine.potentialReturnText)
+        assertEquals("361.11", engine.contractState().potentialReturn())
     }
 
     private fun engineForFixtures(): SlipEngine =

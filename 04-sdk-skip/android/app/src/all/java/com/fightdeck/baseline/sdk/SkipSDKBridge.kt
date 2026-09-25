@@ -12,11 +12,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fight.deck.core.Fighter
 import fight.deck.core.ThemeTokens
 import com.fightdeck.baseline.ui.MainViewModel
-import fight.deck.betslip.BetslipComposeEntry
+import fight.deck.betslip.BetSlipRootView
 import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
-import fight.deck.fighter.FighterComposeEntry
+import fight.deck.fighter.FighterRootView
 import fight.deck.fighter.FighterParams
 
 object SkipSDKBridge {
@@ -51,7 +51,7 @@ object SkipSDKBridge {
             // it is given and reads no insets of its own, so the host's top-bar padding has to
             // be a real box around it. Without one the list scrolls under the Bet Slip toolbar.
             Box(modifier) {
-                BetslipComposeEntry(
+                BetSlipRootView(
                     store = store,
                     display = display,
                     theme = theme,
@@ -127,7 +127,7 @@ object SkipSDKBridge {
             // insets of its own, so the host's top inset has to be a real box around it.
             // Dropping the modifier is what let the hero slide up under the toolbar.
             Box(modifier) {
-                FighterComposeEntry(
+                FighterRootView(
                     params = params,
                     theme = theme,
                 ).Compose()

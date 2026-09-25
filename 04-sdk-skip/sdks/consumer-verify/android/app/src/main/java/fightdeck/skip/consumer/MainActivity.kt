@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import fight.deck.betslip.BetslipComposeEntry
+import fight.deck.betslip.BetSlipRootView
 import fight.deck.betslip.BetSlipStore
 import fight.deck.betslip.SlipDisplayContext
 import fight.deck.core.FightCore
@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    BetslipComposeEntry(
+                    BetSlipRootView(
                         store = store,
                         display = StubSlipDisplay,
                         theme = theme,

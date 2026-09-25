@@ -14,7 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fightdeck.baseline.ui.MainViewModel
-import fight.deck.betslip.BetslipComposeEntry
+import fight.deck.betslip.BetSlipRootView
 import fight.deck.core.ThemeTokens
 import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
@@ -57,7 +57,7 @@ object SkipSDKBridge {
             // own, so the host's top-bar padding has to be a real box around it. Without one the
             // list scrolls under the Bet Slip toolbar.
             Box(modifier) {
-                BetslipComposeEntry(
+                BetSlipRootView(
                     store = store,
                     display = display,
                     theme = theme,

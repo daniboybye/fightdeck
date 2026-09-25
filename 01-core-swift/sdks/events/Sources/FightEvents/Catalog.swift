@@ -31,12 +31,14 @@ public struct LegContext: Sendable {
 public struct Catalog: Sendable {
     private let events: [Event]
     private let fighters: [String: Fighter]
+    /// Every lookup by bout goes through here; a bout row alone asks for its bout a dozen times.
+    private let bouts: [String: Bout]
     private let boutToEvent: [String: String]
     private var loadedNews: Result<[NewsItem], any Error> = .success([])
     private var loadedMedia: Result<[MediaItem], any Error> = .success([])
 
     /// What the app shows when there is no dataset to load.
-    public static let empty = Catalog(events: [], fighters: [:], boutToEvent: [:])
+    public static let empty = Catalog(events: [], fighters: [:], bouts: [:], boutToEvent: [:])
 
     /// The host still decides where the dataset lives — the app bundle, a scheme variable, a
     /// folder pushed over adb — and hands over the directory. Reading and parsing it is ours.
@@ -63,20 +65,23 @@ public struct Catalog: Sendable {
         let eventsFile = try decode(EventsFile.self, from: eventsData, field: "events")
         let fightersFile = try decode(FightersFile.self, from: fightersData, field: "fighters")
 
+        var bouts: [String: Bout] = [:]
         var boutToEvent: [String: String] = [:]
         for event in eventsFile.events {
             for bout in event.bouts {
+                bouts[bout.id] = bout
                 boutToEvent[bout.id] = event.id
             }
         }
 
         let fighters = Dictionary(uniqueKeysWithValues: fightersFile.fighters.map { ($0.id, $0) })
-        return Catalog(events: eventsFile.events, fighters: fighters, boutToEvent: boutToEvent)
+        return Catalog(events: eventsFile.events, fighters: fighters, bouts: bouts, boutToEvent: boutToEvent)
     }
 
-    private init(events: [Event], fighters: [String: Fighter], boutToEvent: [String: String]) {
+    private init(events: [Event], fighters: [String: Fighter], bouts: [String: Bout], boutToEvent: [String: String]) {
         self.events = events
         self.fighters = fighters
+        self.bouts = bouts
         self.boutToEvent = boutToEvent
     }
 
@@ -109,7 +114,7 @@ public struct Catalog: Sendable {
     }
 
     public func bout(id: String) -> Bout? {
-        events.lazy.flatMap(\.bouts).first { $0.id == id }
+        bouts[id]
     }
 
     public func eventOfBout(boutID: String) -> Event? {

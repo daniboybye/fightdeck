@@ -41,6 +41,8 @@ struct FightEventsTests {
         let catalog = try Catalog.load(datasetRoot: dataset)
         #expect(!catalog.allEvents().isEmpty)
         #expect(!catalog.boutIndex().isEmpty)
+        let lastBout = try #require(catalog.allEvents().last?.bouts.last)
+        #expect(catalog.bout(id: lastBout.id)?.order == lastBout.order)
         #expect(try !catalog.news().isEmpty)
         #expect(try catalog.media().allSatisfy { $0.durationSeconds > 0 })
         #expect(throws: CatalogError.self) {

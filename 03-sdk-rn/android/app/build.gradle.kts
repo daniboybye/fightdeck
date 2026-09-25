@@ -28,6 +28,15 @@ tasks.named("generateCodegenArtifactsFromSchema") {
 
 val demoAssetsDir = file("build/generated/demo-assets")
 
+/** The feature SDKs each measurement flavour links; `all` is the demo app. */
+val features = listOf("deposit", "betslip", "fighter")
+val featureSets = mapOf(
+    "runtime" to emptyList(),
+    "deposit" to listOf("deposit"),
+    "both" to listOf("deposit", "betslip"),
+    "all" to features,
+)
+
 android {
     namespace = "com.fightdeck.baseline"
     compileSdk = 37
@@ -100,6 +109,15 @@ android {
         getByName("main") {
             assets.srcDir(demoAssetsDir)
         }
+        // A flavour compiles the real bridge of each feature it links and a stand-in for the
+        // rest, so the flavours differ only in which SDKs they can see.
+        featureSets.forEach { (flavor, linked) ->
+            getByName(flavor).kotlin.srcDirs(
+                features.map { feature ->
+                    if (feature in linked) "src/sdk/$feature/java" else "src/sdk/unavailable/$feature/java"
+                },
+            )
+        }
     }
 }
 
@@ -134,25 +152,16 @@ tasks.named("preBuild") {
 
 dependencies {
     val sdkRoot = rootProject.file("../sdks")
-    val rnRuntime = files(sdkRoot.resolve("core/out/FightDeckRNRuntime.aar"))
-    val depositSdk = files(sdkRoot.resolve("deposit/out/DepositSDK.aar"))
-    val betslipSdk = files(sdkRoot.resolve("betslip/out/BetslipSDK.aar"))
-    val fighterSdk = files(sdkRoot.resolve("fighter/out/FighterSDK.aar"))
-
-    listOf("runtime", "deposit", "both", "all").forEach { flavor ->
-        "${flavor}Implementation"(rnRuntime)
-    }
-    listOf("deposit", "both", "all").forEach { flavor ->
-        "${flavor}Implementation"(depositSdk)
-    }
-    listOf("both", "all").forEach { flavor ->
-        "${flavor}Implementation"(betslipSdk)
-    }
-    "allImplementation"(fighterSdk)
-
-    listOf("runtime", "deposit", "both", "all").forEach { flavor ->
+    val sdkAars = mapOf(
+        "deposit" to "deposit/out/DepositSDK.aar",
+        "betslip" to "betslip/out/BetslipSDK.aar",
+        "fighter" to "fighter/out/FighterSDK.aar",
+    )
+    featureSets.forEach { (flavor, linked) ->
+        "${flavor}Implementation"(files(sdkRoot.resolve("core/out/FightDeckRNRuntime.aar")))
         "${flavor}Implementation"("com.facebook.react:react-android")
         "${flavor}Implementation"("com.facebook.react:hermes-android")
+        linked.forEach { feature -> "${flavor}Implementation"(files(sdkRoot.resolve(sdkAars.getValue(feature)))) }
     }
 
     val composeBom = platform("androidx.compose:compose-bom:2026.08.00")

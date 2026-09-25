@@ -79,10 +79,12 @@ EXCLUDED_DIRS = {
 # product flavours are the same thing on the other platform — `both`, `deposit` and
 # `runtime` are cut-down bridges that exist so the size harness can weigh one feature at a
 # time. Only `all` is the app that gets demoed, and counting the other three would charge
-# the two SDK approaches for measuring themselves.
+# the two SDK approaches for measuring themselves. `03-sdk-rn` keeps those flavours'
+# stand-ins for the features they leave out under `sdk/unavailable/` instead.
 EXCLUDED_PREFIXES = (
     "ios/Harness/", "sdks/consumer-verify/",
     "android/app/src/both/", "android/app/src/deposit/", "android/app/src/runtime/",
+    "android/app/src/sdk/unavailable/",
 )
 
 TEST_MARKERS = ("test", "Test", "__tests__", "androidTest")

@@ -99,8 +99,8 @@ Hand-written glue shrank accordingly:
 
 | File | Before the split | After the split | One snapshot |
 | --- | ---: | ---: | ---: |
-| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | 74 | **58** |
-| `android/.../core/FightCoreGlue.kt` | 115 | 61 | **42** |
+| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | 74 | **65** |
+| `android/.../core/FightCoreGlue.kt` | 115 | 61 | **45** |
 
 Non-blank lines. What is left in those files is the part UniFFI genuinely cannot generate: a listener bridge republished as `@Observable` on iOS and `StateFlow` on Android. No betting rule survives in either.
 
@@ -120,10 +120,20 @@ store.
 
 | Crate | Rust | Generated Swift | Generated Kotlin |
 | --- | ---: | ---: | ---: |
-| `fightcore` | 383 | 776 | 1219 |
-| `fightslip` | 1255 | 1986 | 2739 |
-| `fightevents` | 797 | 1563 | 2110 |
-| **Total** | **2435** | **4325** | **6068** |
+| `fightcore` | 434 | 872 | 1252 |
+| `fightslip` | 864 | 2027 | 2708 |
+| `fightevents` | 872 | 1697 | 2258 |
+| **Total** | **2170** | **4596** | **6218** |
+
+Non-blank lines. *Rust* is each crate's `src/`, tests excluded. The generated columns are
+`uniffi-bindgen generate --library` run over a host build of the aggregate crate
+(`cargo build -p fightdeck-android`), which carries the same metadata as the device libraries
+the build scripts read, so it emits the same code. The same count at `3d6299f`, before the slip
+snapshot, the shared `BoutIndex` and the stake presets, was 2,146 Rust, 4,468 Swift and 6,120
+Kotlin: the bindings grew by about a hundred lines on each side, because the records that now
+carry display strings, validation messages and chips outweigh the ones that went
+(`BoutIndexEntry`, `BoutIndexRecord`, `PlaceBetOutcome`) and the three getters the snapshot
+replaced.
 
 The generated columns are not maintained by anyone, but they are real compile time and real binary, and they scale per namespace rather than per line of logic — a third SDK costs another full scaffolding preamble.
 

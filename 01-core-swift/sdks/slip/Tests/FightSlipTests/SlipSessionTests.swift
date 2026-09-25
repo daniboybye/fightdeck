@@ -24,4 +24,20 @@ struct SlipSessionTests {
         // What the empty slip reports was never the difference: both modes say only this.
         #expect(session.slipState.errors == [.emptySlip])
     }
+
+    @Test("placing a bet leaves a confirmation that only a change to the legs clears")
+    func confirmation() {
+        var session = SlipSession(slipEngine: SlipEngine(bouts: [bout]))
+        session.toggleSelection(boutID: "b1", fighterID: "red", odds: 2)
+        #expect(session.placeBet() != nil)
+        #expect(session.confirmation == "€20.00 returns if it lands")
+        #expect(session.balance == 490)
+
+        session.slip.stake = 5
+        session.deposit(amount: 10)
+        #expect(session.confirmation != nil)
+
+        session.toggleSelection(boutID: "b1", fighterID: "blue", odds: 2)
+        #expect(session.confirmation == nil)
+    }
 }

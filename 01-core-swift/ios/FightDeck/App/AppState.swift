@@ -34,7 +34,6 @@ final class AppState {
     var mediaState: LoadState<[MediaItem]> = .loading
 
     var bootstrapState: AppBootstrapState = .loading
-    var betPlacedMessage: String?
 
     /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
     /// toolbars depend on observable state rather than on a closure handed down through the
@@ -56,6 +55,8 @@ final class AppState {
     }
 
     var balance: Decimal { slipStore.balance }
+
+    var confirmation: String? { slipStore.confirmation }
 
     var slipState: SlipState { slipStore.slipState }
 
@@ -105,7 +106,6 @@ final class AppState {
             fighterID: fighterID,
             odds: Money.parse(odds)
         )
-        betPlacedMessage = nil
     }
 
     func isSelected(boutID: String, fighterID: String) -> Bool {
@@ -114,12 +114,10 @@ final class AppState {
 
     func removeSelection(id: String) {
         slipStore.removeSelection(id: id)
-        betPlacedMessage = nil
     }
 
     func placeBet() {
-        guard let state = slipStore.placeBet() else { return }
-        betPlacedMessage = "\(Money.formatCurrency(state.potentialReturn)) returns if it lands"
+        slipStore.placeBet()
     }
 
     func fighter(_ id: String) -> Fighter? {

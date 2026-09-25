@@ -87,6 +87,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val store = requireNotNull(slipStore)
         _slip.value = store.slip
         _balance.value = store.balance
+        _betPlacedMessage.value = store.confirmation
     }
 
     fun retryBootstrap() {
@@ -163,7 +164,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleSelection(boutID: String, fighterId: String, odds: String) {
         requireNotNull(slipStore).toggleSelection(boutID, fighterId, Money.parse(odds))
         publishSlipState()
-        _betPlacedMessage.value = null
     }
 
     fun updateStake(stake: BigDecimal) {
@@ -174,14 +174,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun removeSelection(boutId: String, fighterId: String) {
         requireNotNull(slipStore).removeSelection(boutId, fighterId)
         publishSlipState()
-        _betPlacedMessage.value = null
     }
 
     fun placeBet() {
-        val state = requireNotNull(slipStore).placeBet() ?: return
+        requireNotNull(slipStore).placeBet()
         publishSlipState()
-        _betPlacedMessage.value =
-            "${Money.formatCurrency(state.potentialReturn)} returns if it lands"
     }
 
     fun deposit(amount: BigDecimal) {

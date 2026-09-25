@@ -28,6 +28,10 @@ class SwiftSlipStore(boutIndexJSON: String) {
         SlipState(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, emptyList())
         private set
 
+    /** Set by the core when a bet is placed and cleared when the legs change. */
+    var confirmation: String? = null
+        private set
+
     init {
         readBack()
     }
@@ -52,11 +56,8 @@ class SwiftSlipStore(boutIndexJSON: String) {
         readBack()
     }
 
-    fun placeBet(): SlipState? {
-        val placed = slipState
-        if (!engine.placeBet()) return null
-        readBack()
-        return placed
+    fun placeBet() {
+        if (engine.placeBet()) readBack()
     }
 
     private fun readBack() {
@@ -75,6 +76,7 @@ class SwiftSlipStore(boutIndexJSON: String) {
             potentialProfit = BigDecimal(engine.potentialProfitText),
             errors = engine.errorCodes.toList(),
         )
+        confirmation = engine.confirmation.orElse(null)
     }
 
     private fun String.toBigDecimalOrNull(): BigDecimal? = if (isEmpty()) null else BigDecimal(this)

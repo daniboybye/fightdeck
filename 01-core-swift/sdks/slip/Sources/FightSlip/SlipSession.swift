@@ -22,6 +22,10 @@ public struct SlipSession: Sendable {
     public var slipEngine: SlipEngine
     public var slip: BetSlip
     public var balance: Decimal
+    /// The copy shown where the slip was once a bet is placed. Set by `placeBet`, cleared by the
+    /// next change to the legs; a stake edit or a deposit leaves it. Both hosts used to keep it
+    /// and decide for themselves when it went away.
+    public private(set) var confirmation: String?
 
     public init(
         slipEngine: SlipEngine,
@@ -56,7 +60,7 @@ public struct SlipSession: Sendable {
         } else {
             slip.selections.append(Selection(boutID: boutID, fighterID: fighterID, odds: odds))
         }
-        syncMode()
+        legsChanged()
     }
 
     public func isSelected(boutID: String, fighterID: String) -> Bool {
@@ -65,26 +69,34 @@ public struct SlipSession: Sendable {
 
     public mutating func removeSelection(boutID: String, fighterID: String) {
         slip.selections.removeAll { $0.boutID == boutID && $0.fighterID == fighterID }
-        syncMode()
+        legsChanged()
     }
 
     public mutating func removeSelection(id: String) {
         slip.selections.removeAll { $0.id == id }
-        syncMode()
+        legsChanged()
     }
 
-    /// Validates, deducts stake, clears selections. Returns the pre-clear slip state when successful.
+    /// Validates, deducts stake, clears selections and leaves `confirmation` saying what the bet
+    /// returns. Returns the pre-clear slip state when successful.
+    @discardableResult
     public mutating func placeBet() -> SlipState? {
         let state = slipState
         guard state.errors.isEmpty else { return nil }
         balance -= state.totalStake
         slip.selections.removeAll()
         syncMode()
+        confirmation = "\(Money.formatCurrency(state.potentialReturn)) returns if it lands"
         return state
     }
 
     public mutating func deposit(amount: Decimal) {
         balance += amount
+    }
+
+    private mutating func legsChanged() {
+        syncMode()
+        confirmation = nil
     }
 
     private mutating func syncMode() {

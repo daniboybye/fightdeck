@@ -34,15 +34,15 @@ struct BetSlipView: View {
         Group {
             if !state.slip.selections.isEmpty {
                 slipContent
-            } else if let message = state.betPlacedMessage {
+            } else if let message = state.confirmation {
                 placedState(message)
             } else {
                 emptyState
             }
         }
         .animation(.smooth(duration: 0.35), value: state.slip.selections.count)
-        .animation(.smooth(duration: 0.35), value: state.betPlacedMessage)
-        .sensoryFeedback(.success, trigger: state.betPlacedMessage) { _, new in new != nil }
+        .animation(.smooth(duration: 0.35), value: state.confirmation)
+        .sensoryFeedback(.success, trigger: state.confirmation) { _, new in new != nil }
     }
 
     private var emptyState: some View {

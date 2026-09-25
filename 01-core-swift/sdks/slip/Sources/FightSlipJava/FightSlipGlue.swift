@@ -157,6 +157,11 @@ public final class SlipEngine {
         return Money.formatExactOdds(exact)
     }
 
+    /// Nil until a bet is placed, and again once the legs change.
+    public var confirmation: String? {
+        session.confirmation
+    }
+
     /// The contract's codes, in the contract's order.
     public var errorCodes: [String] {
         session.slipState.errors.map(\.rawValue)

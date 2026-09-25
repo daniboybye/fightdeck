@@ -347,14 +347,17 @@ private fun EventsNavHost(
     onDeposit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val events by viewModel.events.collectAsStateWithLifecycle()
-    val fighters by viewModel.fighters.collectAsStateWithLifecycle()
-    val news by viewModel.news.collectAsStateWithLifecycle()
-    val media by viewModel.media.collectAsStateWithLifecycle()
+    // The shared catalogue's properties are Compose state: reading them here is what
+    // recomposes this host when a list arrives. Its arrays are Swift's, so the screens get
+    // Kotlin lists.
+    val catalog = viewModel.catalog
+    val events = catalog.events
+    val news = catalog.loadedNews.toList()
+    val media = catalog.loadedMedia.toList()
     // Read here and handed down, so every odds button below recomposes with the slip.
     val slip = viewModel.slipStore.slip
-    val loadedEvents = (events as? LoadState.Loaded)?.value.orEmpty()
-    val loadedFighters = (fighters as? LoadState.Loaded)?.value.orEmpty()
+    val loadedEvents = catalog.loadedEvents.toList()
+    val loadedFighters = catalog.loadedFighters.toList()
 
     NavHost(navController = nav, startDestination = "events", modifier = modifier) {
         composable("events") {
@@ -444,8 +447,8 @@ private fun EventsNavHost(
             "article/{articleId}",
             arguments = listOf(navArgument("articleId") { type = NavType.StringType }),
         ) { entry ->
-            val article = (news as? LoadState.Loaded)?.value
-                ?.firstOrNull { it.id == entry.arguments?.getString("articleId") }
+            val article = news
+                .firstOrNull { it.id == entry.arguments?.getString("articleId") }
             if (article != null) {
                 NewsArticleScreen(
                     item = article,
@@ -462,8 +465,8 @@ private fun EventsNavHost(
             "video/{videoId}",
             arguments = listOf(navArgument("videoId") { type = NavType.StringType }),
         ) { entry ->
-            val clip = (media as? LoadState.Loaded)?.value
-                ?.firstOrNull { it.id == entry.arguments?.getString("videoId") }
+            val clip = media
+                .firstOrNull { it.id == entry.arguments?.getString("videoId") }
             if (clip != null) {
                 VideoScreen(clip, balance = balance, onDeposit = onDeposit, onBack = { nav.popBackStack() })
             }

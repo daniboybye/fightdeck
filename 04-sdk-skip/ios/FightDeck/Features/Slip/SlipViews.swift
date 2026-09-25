@@ -47,10 +47,6 @@ struct BetslipBridgeView: View {
     /// Built from the lists as they stand on this pass, so the rows pick up the names once the
     /// catalogue finishes loading.
     private var display: CatalogSlipDisplay {
-        var events: [Event] = []
-        var fighters: [Fighter] = []
-        if case .loaded(let loaded) = state.eventsState { events = loaded }
-        if case .loaded(let loaded) = state.fightersState { fighters = loaded }
-        return CatalogSlipDisplay(events: events, fighters: fighters)
+        CatalogSlipDisplay(events: state.catalog.loadedEvents, fighters: state.catalog.loadedFighters)
     }
 }

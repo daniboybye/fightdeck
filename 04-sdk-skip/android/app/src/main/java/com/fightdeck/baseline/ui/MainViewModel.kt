@@ -6,12 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.baseline.services.LocalAssetServer
 import fight.deck.core.BetSlipStore
-import fight.deck.core.Event
 import fight.deck.core.FightCore
-import fight.deck.core.Fighter
+import fight.deck.events.CatalogModel
 import fight.deck.events.EventCatalog
-import fight.deck.events.MediaItem
-import fight.deck.events.NewsItem
 import skip.foundation.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,14 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import skip.lib.Array as SkipArray
-
-sealed interface LoadState<out T> {
-    data object Loading : LoadState<Nothing>
-    data class Loaded<T>(val value: T) : LoadState<T>
-    data object Empty : LoadState<Nothing>
-    data class Error(val message: String) : LoadState<Nothing>
-}
 
 sealed interface BootstrapState {
     data class Loading(val step: String) : BootstrapState
@@ -35,7 +24,13 @@ sealed interface BootstrapState {
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private var catalog: EventCatalog? = null
+    /**
+     * Events, fighters, news and media with their load states — the same shared model the iOS
+     * host holds. Like the slip store its properties are Compose state, so screens read them
+     * directly. Set once the dataset is found, before anything leaves the bootstrap screen.
+     */
+    lateinit var catalog: CatalogModel
+        private set
 
     /**
      * The slip, the balance and the bet confirmation, shared with the bet slip SDK. Its reads
@@ -51,17 +46,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     )
     val bootstrapState: StateFlow<BootstrapState> = _bootstrapState.asStateFlow()
 
-    private val _events = MutableStateFlow<LoadState<List<Event>>>(LoadState.Loading)
-    val events: StateFlow<LoadState<List<Event>>> = _events.asStateFlow()
-
-    private val _fighters = MutableStateFlow<LoadState<List<Fighter>>>(LoadState.Loading)
-    val fighters: StateFlow<LoadState<List<Fighter>>> = _fighters.asStateFlow()
-
-    private val _news = MutableStateFlow<LoadState<List<NewsItem>>>(LoadState.Loading)
-    val news: StateFlow<LoadState<List<NewsItem>>> = _news.asStateFlow()
-
-    private val _media = MutableStateFlow<LoadState<List<MediaItem>>>(LoadState.Loading)
-    val media: StateFlow<LoadState<List<MediaItem>>> = _media.asStateFlow()
 
     init {
         bootstrap()
@@ -79,13 +63,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             booted.fold(
                 onSuccess = { engine ->
-                    catalog = engine.catalog
+                    catalog = CatalogModel(catalog = engine.catalog)
                     slipStore = BetSlipStore(fightCore = engine.fightCore)
                     _bootstrapState.value = BootstrapState.Ready
-                    refreshEvents()
-                    refreshFighters()
-                    refreshNews()
-                    refreshMedia()
+                    catalog.loadAll()
                 },
                 onFailure = { error ->
                     _bootstrapState.value = BootstrapState.Failed(
@@ -111,48 +92,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refreshEvents() {
-        viewModelScope.launch {
-            _events.value = LoadState.Loading
-            _events.value = loadCatalogue("events") { it.loadEvents() }
-        }
-    }
-
-    fun refreshFighters() {
-        viewModelScope.launch {
-            _fighters.value = LoadState.Loading
-            _fighters.value = loadCatalogue("fighters") { it.loadFighters() }
-        }
-    }
-
-    fun refreshNews() {
-        viewModelScope.launch {
-            _news.value = LoadState.Loading
-            _news.value = loadCatalogue("news") { it.loadNews() }
-        }
-    }
-
-    fun refreshMedia() {
-        viewModelScope.launch {
-            _media.value = LoadState.Loading
-            _media.value = loadCatalogue("media") { it.loadMedia() }
-        }
-    }
-
-    /**
-     * Two seams in one place: the shared catalogue is synchronous, so leaving the main thread is
-     * the host's job, and it hands back Swift's Array, which every Compose list wants as a
-     * Kotlin List. The transpiled Array is an Iterable, so toList() stays type-safe.
-     */
-    private suspend fun <T> loadCatalogue(
-        label: String,
-        read: (EventCatalog) -> SkipArray<T>,
-    ): LoadState<List<T>> {
-        val catalog = requireNotNull(catalog)
-        return runCatching { withContext(Dispatchers.IO) { read(catalog).toList() } }
-            .fold(
-                onSuccess = { if (it.isEmpty()) LoadState.Empty else LoadState.Loaded(it) },
-                onFailure = { LoadState.Error("Could not load $label") },
-            )
+        viewModelScope.launch { catalog.loadEvents() }
     }
 
     /**

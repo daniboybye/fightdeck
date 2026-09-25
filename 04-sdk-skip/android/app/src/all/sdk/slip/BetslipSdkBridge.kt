@@ -3,16 +3,12 @@ package com.fightdeck.baseline.sdk
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.fightdeck.baseline.ui.LoadState
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetSlipRootView
 import fight.deck.betslip.CatalogSlipDisplay
-import skip.lib.Array as SkipArray
 
 /**
  * Compiled into every flavour that links the bet slip SDK (`both` and `all`); the others get a
@@ -31,18 +27,14 @@ fun BetslipSdkScreen(
     onBrowseEvents: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Collected rather than read with `.value`: a plain `.value` read is not a composition
-    // input, so selection rows kept showing fighter ids when the slip opened before the roster
-    // finished loading.
-    val fighters by viewModel.fighters.collectAsStateWithLifecycle()
-    val events by viewModel.events.collectAsStateWithLifecycle()
+    // Read in composition, so the rows swap fighter ids for names when the roster finishes
+    // loading after the slip has opened.
+    val events = viewModel.catalog.loadedEvents
+    val fighters = viewModel.catalog.loadedFighters
     val stateHolder = rememberSaveableStateHolder()
     stateHolder.SaveableStateProvider(saveKey) {
         val display = remember(fighters, events) {
-            CatalogSlipDisplay(
-                events = SkipArray((events as? LoadState.Loaded)?.value.orEmpty()),
-                fighters = SkipArray((fighters as? LoadState.Loaded)?.value.orEmpty()),
-            )
+            CatalogSlipDisplay(events = events, fighters = fighters)
         }
         // The SDK view composes into whatever box it is given and reads no insets of its own, so
         // the host's top-bar padding has to be a real box around it. Without one the list

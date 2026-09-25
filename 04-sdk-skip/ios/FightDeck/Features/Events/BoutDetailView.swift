@@ -83,7 +83,7 @@ struct BoutDetailView: View {
                 Text(corner.name)
                     .font(.headline)
                     .multilineTextAlignment(.center)
-                Text(state.record(for: corner.fighterId))
+                Text(state.catalog.record(for: corner.fighterId))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -120,8 +120,8 @@ struct BoutDetailView: View {
     }
 
     private var tapeRows: [(label: String, red: String, blue: String)] {
-        let red = state.fighter(bout.redCorner.fighterId)
-        let blue = state.fighter(bout.blueCorner.fighterId)
+        let red = state.catalog.fighter(bout.redCorner.fighterId)
+        let blue = state.catalog.fighter(bout.blueCorner.fighterId)
         return [
             ("RECORD", red?.recordDisplay ?? "—", blue?.recordDisplay ?? "—"),
             ("HEIGHT", format(red?.heightCm, unit: "cm"), format(blue?.heightCm, unit: "cm")),

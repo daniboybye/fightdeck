@@ -28,7 +28,7 @@ Skip has been free and open source since 21 January 2026 (v1.7).
 
 ```
 sdks/core/      — FightCore (headless, skipstone): betting logic, the slip store, DTOs, design tokens
-sdks/events/    — Fight catalogue (headless): dataset loading and display formatting
+sdks/events/    — Fight catalogue (headless): dataset loading, the catalogue model both hosts observe, and display formatting
 sdks/deposit/   — Deposit SwiftUI → Compose
 sdks/betslip/   — Bet slip SwiftUI → Compose
 sdks/fighter/   — Fighter profile SwiftUI → Compose
@@ -144,6 +144,8 @@ Implemented once per SDK under [`android/app/src/all/sdk/`](android/app/src/all/
 | Bet slip | **FightDeckBetslip** SDK → `BetSlipRootView` | `BetslipSdkScreen` → `BetSlipRootView(...).Compose()` |
 | Deposit | **FightDeckDeposit** SDK → `DepositScreen` | `DepositSdkScreen` → `DepositScreen(...).Compose()` |
 | Fighter profile | **FightDeckFighter** SDK → `FighterRootView` | `FighterSdkScreen` → `FighterRootView(...).Compose()` |
+
+The event, news and video screens stay native on both hosts, but what they draw from does not: the four lists and their loading / loaded / empty / error states live in `CatalogModel` (**FightDeckEvents**), which both hosts hold and read directly. It is `@Observable`, and skipstone backs its properties with Compose state, so a composable reading `catalog.events` recomposes when the list arrives, as a SwiftUI view does. The hosts used to declare the four states and the off-main-thread load once each.
 
 ## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
 

@@ -16,7 +16,7 @@ struct FighterBridgeView: View {
 
     var body: some View {
         Group {
-            if let fighter = state.fighter(fighterID) {
+            if let fighter = state.catalog.fighter(fighterID) {
                 FighterRootView(
                     params: FighterParams(
                         fighter: fighter,
@@ -27,7 +27,7 @@ struct FighterBridgeView: View {
                 ProgressView()
             }
         }
-        .navigationTitle(state.fighter(fighterID)?.name ?? "Fighter")
+        .navigationTitle(state.catalog.fighter(fighterID)?.name ?? "Fighter")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

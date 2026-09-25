@@ -7,10 +7,11 @@
 //
 
 import SwiftUI
+import FightDeckEvents
 import Kingfisher
 
 struct LoadStateView<Value: Sendable, Content: View, Empty: View>: View {
-    let state: LoadState<Value>
+    let state: CatalogLoad<Value>
     let retry: () -> Void
     @ViewBuilder var content: (Value) -> Content
     @ViewBuilder var empty: () -> Empty

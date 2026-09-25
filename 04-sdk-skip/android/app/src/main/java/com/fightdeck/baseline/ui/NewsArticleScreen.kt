@@ -32,7 +32,7 @@ import java.math.BigDecimal
 @Composable
 internal fun NewsArticleScreen(
     item: NewsItem,
-    media: LoadState<List<MediaItem>>,
+    media: List<MediaItem>,
     viewModel: MainViewModel,
     balance: BigDecimal,
     onDeposit: () -> Unit,
@@ -68,7 +68,7 @@ internal fun NewsArticleScreen(
                     Text(item.body, style = MaterialTheme.typography.bodyLarge)
                 }
             }
-            val clips = (media as? LoadState.Loaded)?.value.orEmpty().filter { it.eventId == item.eventId }
+            val clips = media.filter { it.eventId == item.eventId }
             if (clips.isNotEmpty()) {
                 item {
                     SectionHeader("Watch", Modifier.padding(horizontal = Tokens.spacingLg))

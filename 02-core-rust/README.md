@@ -180,6 +180,20 @@ Set `FIGHTDECK_DATASET_ROOT` or rely on the default path to the repo `dataset/` 
 
 The fixtures live in `slip/fightslip/tests/fixtures.rs` and run against a bout index built by `fightevents`, so they only pass when both feature SDKs agree on the same dataset. The iOS suite (`FightDeckTests`) does the same thing across the FFI boundary.
 
+Android checks the Kotlin bindings on the JVM, with no emulator. UniFFI's Kotlin reaches Rust
+through JNA, which loads a library by name from `jna.library.path`, so `:app:test` first builds
+`libfightdeck` for the host (`cargo build -p fightdeck-android`, wired as the `buildHostRust`
+task) and points JNA at it. `RustBoundaryTest` takes one case from each fixture file, chosen
+for what it carries across: odds and money as strings, the seven-fold's unrounded odds,
+validation errors as enums in contract order, a void leg, a cash-out reason that is `null` and
+one that is not, one typed error per namespace, and optional fighter fields. The Rust tests
+already run all 72 cases against the rules; these check the boundary.
+`StateFlowBetSlipStoreTest` checks the glue.
+
+```bash
+cd 02-core-rust/android && ./gradlew :app:test    # 8 JVM tests against a host libfightdeck
+```
+
 ## Spec notes
 
 - **`invalid_stake`** is a Rust-specific validation not present in `contract/fightcore-api.md`; it fires when the raw stake text will not parse, which the other approaches surface as a zero stake.

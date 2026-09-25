@@ -55,9 +55,14 @@ final class ObservableBetSlipStore {
 private final class SlipSnapshotListenerBridge: SlipSnapshotListener, @unchecked Sendable {
     var apply: (@MainActor (SlipSnapshot) -> Void)?
 
+    /// Every mutation starts on the main thread, so the snapshot is applied before the call
+    /// that caused it returns and the next body pass already sees it. Hopping through a Task
+    /// here left the observed state one turn of the run loop behind the store.
     func onSnapshot(snapshot: SlipSnapshot) {
-        Task { @MainActor in
-            apply?(snapshot)
+        if Thread.isMainThread {
+            MainActor.assumeIsolated { apply?(snapshot) }
+        } else {
+            Task { @MainActor in apply?(snapshot) }
         }
     }
 }

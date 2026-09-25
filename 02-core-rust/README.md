@@ -96,8 +96,8 @@ Hand-written glue shrank accordingly:
 
 | File | Before the split | After the split | One snapshot |
 | --- | ---: | ---: | ---: |
-| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | 74 | **56** |
-| `android/.../core/FightCoreGlue.kt` | 115 | 61 | **41** |
+| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | 74 | **58** |
+| `android/.../core/FightCoreGlue.kt` | 115 | 61 | **42** |
 
 Non-blank lines. What is left in those files is the part UniFFI genuinely cannot generate: a listener bridge republished as `@Observable` on iOS and `StateFlow` on Android. No betting rule survives in either.
 
@@ -108,7 +108,10 @@ one assignment. It used to hand over only the derived state, and each host then 
 one. Registering a listener does not replay the current value; a host reads
 `current_snapshot()` once when it starts and hears about every change after that. Whether an odds
 button shows as selected is read off the same snapshot's legs, so nothing on screen can answer
-from a newer state than the rest of it.
+from a newer state than the rest of it. On the main thread the bridge applies a snapshot before the call that
+caused it returns — directly on Android, where a `StateFlow` may be set from any thread, and
+through `MainActor.assumeIsolated` on iOS — so the observed state is never a frame behind the
+store.
 
 ## Hand-written Rust vs generated bindings
 

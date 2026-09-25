@@ -13,8 +13,6 @@ import uniffi.fightslip.SlipSnapshotListener
  * workflow all stay in FightSlip, so this file has no betting rules left in it.
  */
 class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
-    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-
     // Read once here; the listener only reports changes, it does not replay this.
     private val _snapshot = MutableStateFlow(store.currentSnapshot())
 
@@ -24,8 +22,11 @@ class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
     init {
         store.addListener(
             object : SlipSnapshotListener {
+                // Assigned on the calling thread: a StateFlow is safe to set from any thread and
+                // Compose collects it on main. Posting to the main looper instead left the
+                // observed state one frame behind the store even when the tap was already there.
                 override fun onSnapshot(snapshot: SlipSnapshot) {
-                    mainHandler.post { _snapshot.value = snapshot }
+                    _snapshot.value = snapshot
                 }
             },
         )

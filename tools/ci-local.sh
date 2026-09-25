@@ -104,7 +104,18 @@ run_step() {
     # Timed because the build-time column in README.md is sourced from these numbers, and a
     # figure nobody can reproduce is a figure nobody should trust.
     local started=$SECONDS
-    if "$@"; then
+    # Not `if "$@"; then`: bash ignores `set -e` inside anything run as an `if` condition, so a
+    # failing SDK build in the middle of a step let the step carry on and report PASS. In
+    # `--in-place` mode that meant archiving whatever stale SDK was left on disk — a React
+    # Native `pod install` that crashed on the shell's locale produced a measured app with the
+    # previous day's JavaScript in it. A subshell with `-e` set outside any condition stops at
+    # the first failing command, which is the behaviour every step was written to expect.
+    local status
+    set +e
+    ( set -e; "$@" )
+    status=$?
+    set -e
+    if [[ $status -eq 0 ]]; then
         record "$label" "PASS" "$((SECONDS - started))"
     else
         record "$label" "FAIL" "$((SECONDS - started))"

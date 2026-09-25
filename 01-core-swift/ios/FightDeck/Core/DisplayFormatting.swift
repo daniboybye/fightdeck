@@ -33,17 +33,4 @@ extension String {
         guard let date = DateParsers.timestamp.date(from: self) else { return self }
         return date.formatted(.relative(presentation: .named))
     }
-
-    /// `split_decision` reads as a database column; `Split decision` reads as a result.
-    var displayMethod: String {
-        replacingOccurrences(of: "_", with: " ").localizedCapitalized
-    }
-}
-
-extension Int {
-    /// Clock style rather than `.units`, which rounds a 3:24 clip to "3 min" and drops the
-    /// seconds every media player shows.
-    var formattedDuration: String {
-        Duration.seconds(self).formatted(.time(pattern: .minuteSecond))
-    }
 }

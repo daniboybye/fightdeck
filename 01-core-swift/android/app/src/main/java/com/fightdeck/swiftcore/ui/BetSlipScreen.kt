@@ -60,6 +60,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.fightdeck.fightevents.FightEventsJava
 import com.fightdeck.swiftcore.catalog.EventCard
 import com.fightdeck.swiftcore.core.BetMode
 import com.fightdeck.swiftcore.core.BetSlip
@@ -286,7 +287,7 @@ internal fun BetSlipScreen(
                             )
                             Spacer(Modifier.width(Tokens.spacingSm))
                             Text(
-                                error.displayMethod,
+                                FightEventsJava.humaniseCode(error),
                                 color = Tokens.negative,
                                 style = MaterialTheme.typography.labelMedium,
                             )

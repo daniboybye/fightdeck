@@ -95,7 +95,7 @@ struct BetSlipView: View {
             if !state.slipState.errors.isEmpty {
                 Section {
                     ForEach(state.slipState.errors, id: \.self) { error in
-                        Label(error.rawValue.displayMethod, systemImage: "exclamationmark.triangle.fill")
+                        Label(Display.humanise(error.rawValue), systemImage: "exclamationmark.triangle.fill")
                             .font(.callout)
                             .foregroundStyle(DesignTokens.ColorToken.negative)
                     }

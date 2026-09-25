@@ -317,7 +317,7 @@ struct VideoRow: View {
     }
 
     private var durationBadge: some View {
-        Text(item.durationSeconds.formattedDuration)
+        Text(Display.duration(totalSeconds: item.durationSeconds))
             .font(.caption2.weight(.semibold))
             .monospacedDigit()
             .padding(.horizontal, DesignTokens.Spacing.sm)

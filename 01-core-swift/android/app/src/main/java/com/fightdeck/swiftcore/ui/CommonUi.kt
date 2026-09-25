@@ -326,10 +326,6 @@ internal fun Modifier.fixedActionHeight(height: Dp = Tokens.primaryActionHeight)
         .heightIn(max = height)
         .height(height)
 
-/** `split_decision` reads as a database column; `Split decision` reads as a result. */
-internal val String.displayMethod: String
-    get() = replace('_', ' ').replaceFirstChar { it.uppercase() }
-
 /** Dataset dates are plain `yyyy-MM-dd`; the raw form reads as a database column. */
 internal val String.displayDate: String
     get() = runCatching {

@@ -1,14 +1,9 @@
 package com.fightdeck.rn.runtime
 
-import com.facebook.proguard.annotations.DoNotStrip
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.CxxCallbackImpl
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
-import com.facebook.react.bridge.WritableMap
 import com.fightdeck.rn.runtime.specs.NativeFightDeckRuntimeBridgeSpec
 import java.math.BigDecimal
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Implements the base class codegen wrote from `NativeFightDeckRuntimeBridge.ts`. The JNI
@@ -50,44 +45,6 @@ class FightDeckRuntimeBridgeModule(
      */
     private fun deliver(result: () -> Unit) {
         UiThreadUtil.runOnUiThread(result)
-    }
-
-    /** Synchronous, so it runs on the JavaScript thread while the host publishes from main. */
-    override fun surfaceLayout(moduleName: String): WritableMap? =
-        layouts[moduleName]?.let(Arguments::makeNativeMap)
-
-    /** Only the instance wired to JavaScript gets an emitter, so it is the one layouts go to. */
-    @DoNotStrip
-    override fun setEventEmitterCallback(eventEmitterCallback: CxxCallbackImpl) {
-        super.setEventEmitterCallback(eventEmitterCallback)
-        live = this
-    }
-
-    private fun emit(layout: Map<String, Any>) {
-        emitOnSurfaceLayout(Arguments.makeNativeMap(layout))
-    }
-
-    internal companion object {
-        private val layouts = ConcurrentHashMap<String, Map<String, Any>>()
-
-        @Volatile
-        private var live: FightDeckRuntimeBridgeModule? = null
-
-        /** Stores the layout for `surfaceLayout()` and emits it — unless nothing changed. */
-        fun publish(moduleName: String, layout: SurfaceLayout) {
-            // Sub-point differences come from layout rounding, not from anything the user sees.
-            val map = mapOf(
-                "moduleName" to moduleName,
-                "safeAreaTop" to Math.round(layout.safeAreaTop).toDouble(),
-                "safeAreaBottom" to Math.round(layout.safeAreaBottom).toDouble(),
-                "keyboardBottomInset" to Math.round(layout.keyboardBottomInset).toDouble(),
-                "chromeBackground" to layout.chromeBackground,
-                "textInputActive" to layout.textInputActive,
-            )
-            if (layouts.put(moduleName, map) != map) {
-                live?.emit(map)
-            }
-        }
     }
 }
 

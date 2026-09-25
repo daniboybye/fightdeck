@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -257,7 +258,14 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                 }
             },
         ) { padding ->
-            Box(Modifier.padding(padding)) {
+            // Consuming the padding this scaffold already spent lets a surface inside measure a
+            // keyboard lift from the space the tab content actually gets, instead of stacking it
+            // on top of the tab bar's height — the same arrangement as 00-native.
+            Box(
+                Modifier
+                    .padding(padding)
+                    .consumeWindowInsets(padding),
+            ) {
                 when (selectedTab) {
                     UPCOMING_TAB -> EventsNavHost(
                         nav = upcomingNav,
@@ -328,13 +336,12 @@ private fun DepositDestination(
             }
         },
     ) { padding ->
-        // The surface reads its own keyboard inset, so it is handed the space the system bars
-        // leave and nothing else: Scaffold's insets do not include the IME.
+        // Scaffold's insets do not include the IME; the surface adds that itself.
         RNDepositScreen(
             balance = balance,
             onCompleted = { completedAmount = it },
             onConfirmed = { depositConfirmed = true },
-            modifier = Modifier.padding(padding),
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         )
     }
 }
@@ -467,11 +474,11 @@ private fun EventsNavHost(
                     onBack = { nav.popBackStack() },
                     balance = balance,
                     onDeposit = onDeposit,
-                ) {
+                ) { padding ->
                     RNFighterProfileScreen(
                         fighterJSON = fighterSurfaceJson.encodeToString(fighter),
                         portraitURL = viewModel.imageUrl(fighter.portrait).orEmpty(),
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.padding(padding).consumeWindowInsets(padding),
                     )
                 }
             }
@@ -550,7 +557,7 @@ private fun SlipNavHost(
                     onDeposit = onDeposit,
                     onUpdated = viewModel::applySlipJSON,
                     onPlaced = viewModel::placeBetFromSDK,
-                    modifier = Modifier.padding(padding),
+                    modifier = Modifier.padding(padding).consumeWindowInsets(padding),
                 )
             }
         }

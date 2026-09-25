@@ -14,13 +14,11 @@ interface PinnedActionBarProps {
   theme: ThemeTokens;
   primaryTitle: string;
   onPrimaryPress: () => void;
-  safeAreaBottom: number;
-  keyboardBottomInset: number;
   primaryDisabled?: boolean;
   showDone?: boolean;
   onDonePress?: () => void;
-  /// What the bar rests on when the keyboard is down. The host's floating tab bar needs a
-  /// wider gap than the home indicator does.
+  /// What the bar rests on when no field is being edited. The host's floating tab bar needs
+  /// a wider gap than the home indicator does; the keyboard, which Done dismisses, does not.
   restingGap?: number;
   style?: StyleProp<ViewStyle>;
 }
@@ -29,8 +27,6 @@ export function PinnedActionBar({
   theme,
   primaryTitle,
   onPrimaryPress,
-  safeAreaBottom,
-  keyboardBottomInset,
   primaryDisabled = false,
   showDone = false,
   onDonePress,
@@ -38,15 +34,13 @@ export function PinnedActionBar({
   style,
 }: PinnedActionBarProps) {
   const styles = makeStyles(theme);
-  const keyboard = Math.max(0, keyboardBottomInset);
-  const chrome = Math.max(Math.max(0, safeAreaBottom), keyboard);
-  const gap = keyboard > 0 ? ACTION_BAR_GAP : restingGap;
+  const gap = showDone ? ACTION_BAR_GAP : restingGap;
 
   return (
     <View
       style={[
         styles.bar,
-        { paddingBottom: chrome + gap },
+        { paddingBottom: gap },
         style,
       ]}
       pointerEvents="box-none"

@@ -8,7 +8,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { useSurfaceLayout } from '../../core/src/ui/layout';
+import { pageBackground } from '../../core/src/ui/layout';
 import { theme, type ThemeTokens } from '../../core/src/ui/theme';
 
 interface FighterProps extends Record<string, unknown> {
@@ -49,17 +49,13 @@ function capitalize(value: string): string {
 }
 
 export function FighterScreen(props: FighterProps) {
-  const layoutFrame = useSurfaceLayout('FighterFeature');
   const fighter = useMemo(() => parseFighter(String(props.fighterJSON ?? '{}')), [props.fighterJSON]);
   const portraitURL = String(props.portraitURL ?? '');
-  const styles = useMemo(
-    () => makeStyles(theme, layoutFrame.chromeBackground),
-    [layoutFrame.chromeBackground],
-  );
+  const styles = useMemo(() => makeStyles(theme), []);
 
   if (fighter == null) {
     return (
-      <View style={[styles.root, styles.loadingRoot, { paddingTop: layoutFrame.safeAreaTop }]}>
+      <View style={[styles.root, styles.loadingRoot]}>
         <Text style={styles.secondary}>Loading…</Text>
       </View>
     );
@@ -69,10 +65,7 @@ export function FighterScreen(props: FighterProps) {
     <View style={styles.root}>
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: layoutFrame.safeAreaTop, paddingBottom: layoutFrame.safeAreaBottom },
-        ]}
+        contentContainerStyle={styles.content}
         contentInsetAdjustmentBehavior="never"
       >
         <Hero fighter={fighter} portraitURL={portraitURL} styles={styles} />
@@ -238,12 +231,11 @@ function groupedStyles(c: Record<string, string>, theme: ThemeTokens) {
   });
 }
 
-function makeStyles(theme: ThemeTokens, chromeBackground: string) {
+function makeStyles(theme: ThemeTokens) {
   const c = theme.colors;
   const s = theme.spacing;
-  const pageBackground = chromeBackground || c.background || '#0B0E14';
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: pageBackground },
+    root: { flex: 1, backgroundColor: pageBackground(theme) },
     flex: { flex: 1 },
     loadingRoot: {
       flex: 1,

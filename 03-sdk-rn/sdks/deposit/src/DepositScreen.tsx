@@ -17,8 +17,8 @@ import {
   MIN_TAP_TARGET,
   SECONDARY_ACTION_PADDING,
   SUCCESS_BUTTON_HEIGHT,
-  actionBarScrollInset,
-  useSurfaceLayout,
+  ACTION_BAR_SCROLL_INSET,
+  pageBackground,
 } from '../../core/src/ui/layout';
 import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
 import { theme, type ThemeTokens } from '../../core/src/ui/theme';
@@ -34,18 +34,13 @@ const METHODS = [
 ];
 
 export function DepositScreen(props: Record<string, unknown>) {
-  const layoutFrame = useSurfaceLayout('DepositFeature');
-
   const balance = parseMoney(String(props.currentBalance ?? '0'));
   const [amountText, setAmountText] = useState('');
   const [methodId, setMethodId] = useState('card');
   const [didSucceed, setDidSucceed] = useState(false);
   const [amountFocused, setAmountFocused] = useState(false);
 
-  const styles = useMemo(
-    () => makeStyles(theme, layoutFrame.chromeBackground),
-    [layoutFrame.chromeBackground],
-  );
+  const styles = useMemo(() => makeStyles(theme), []);
   const amount = parseMoney(amountText || '0');
   const method = METHODS.find((m) => m.id === methodId) ?? METHODS[0];
   const fee = money(amount.times(method.rate));
@@ -85,7 +80,7 @@ export function DepositScreen(props: Record<string, unknown>) {
   if (didSucceed) {
     return (
       <View style={[styles.root, styles.successRoot]} testID="deposit-success">
-        <View style={[styles.successContent, { paddingTop: layoutFrame.safeAreaTop }]}>
+        <View style={styles.successContent}>
           <Text style={styles.successIcon}>✓</Text>
           <Text style={styles.title}>Deposit successful</Text>
           <Text style={styles.secondary}>
@@ -104,10 +99,6 @@ export function DepositScreen(props: Record<string, unknown>) {
     );
   }
 
-  const scrollInset = actionBarScrollInset(
-    layoutFrame.safeAreaBottom,
-    layoutFrame.keyboardBottomInset,
-  );
   const confirmDisabled = amountError != null || amountText.length === 0;
 
   return (
@@ -119,7 +110,7 @@ export function DepositScreen(props: Record<string, unknown>) {
         style={styles.flex}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: layoutFrame.safeAreaTop + (theme.spacing.lg ?? 16), paddingBottom: scrollInset },
+          { paddingTop: theme.spacing.lg ?? 16, paddingBottom: ACTION_BAR_SCROLL_INSET },
         ]}
         // The host hands the surface the area under the navigation bar and tells us how deep
         // it is; letting UIKit guess as well would inset the content twice.
@@ -194,10 +185,8 @@ export function DepositScreen(props: Record<string, unknown>) {
       <PinnedActionBar
         theme={theme}
         primaryTitle="Confirm deposit"
-        safeAreaBottom={layoutFrame.safeAreaBottom}
-        keyboardBottomInset={layoutFrame.keyboardBottomInset}
         primaryDisabled={confirmDisabled}
-        showDone={amountFocused || layoutFrame.textInputActive || layoutFrame.keyboardBottomInset > 0}
+        showDone={amountFocused}
         onDonePress={dismissKeyboard}
         onPrimaryPress={confirmDeposit}
       />
@@ -222,13 +211,12 @@ function SummaryRow({
   );
 }
 
-function makeStyles(theme: ThemeTokens, chromeBackground: string) {
+function makeStyles(theme: ThemeTokens) {
   const c = theme.colors;
   const s = theme.spacing;
   const r = theme.radius;
-  const pageBackground = chromeBackground || c.background || '#0B0E14';
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: pageBackground },
+    root: { flex: 1, backgroundColor: pageBackground(theme) },
     successRoot: { flex: 1 },
     flex: { flex: 1 },
     content: { paddingHorizontal: s.lg ?? 16, paddingBottom: s.lg ?? 16, gap: s.lg ?? 16 },

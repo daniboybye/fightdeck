@@ -9,9 +9,9 @@
 import SwiftUI
 import UIKit
 
-/// Hosts one SDK view controller. The demo app's `RNSurfaceWrapperViewController` exists to
-/// feed React the host's safe areas and keyboard frames every time UIKit relayouts; a
-/// harness has no chrome to report, so it needs none of that.
+/// Hosts one SDK view controller. The demo app's `RNSurfaceWrapperViewController` re-adopts
+/// the runtime's cached controller when SwiftUI rebuilds a screen; a harness shows each
+/// surface once, so it needs none of that.
 struct HarnessSurface: UIViewControllerRepresentable {
     let make: (@escaping () -> Void) -> UIViewController
 

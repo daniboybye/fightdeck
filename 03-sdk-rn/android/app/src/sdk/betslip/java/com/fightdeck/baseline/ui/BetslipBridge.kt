@@ -32,7 +32,6 @@ fun RNBetslipScreen(
         betPlacedMessage = betPlacedMessage,
     )
     RNSurface(
-        includesTabBarClearance = true,
         create = { context ->
             adapter.createView(context, params) { result ->
                 when (result) {

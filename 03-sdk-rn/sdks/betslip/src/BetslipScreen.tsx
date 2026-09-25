@@ -21,8 +21,8 @@ import {
   SECONDARY_ACTION_PADDING,
   SUCCESS_BUTTON_HEIGHT,
   TAB_BAR_ACTION_GAP,
-  actionBarScrollInset,
-  useSurfaceLayout,
+  ACTION_BAR_SCROLL_INSET,
+  pageBackground,
 } from '../../core/src/ui/layout';
 import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
 import { slipSummaryRows, theme, type ThemeTokens } from '../../core/src/ui/theme';
@@ -80,12 +80,7 @@ function parseSelections(raw: SlipLeg[] | undefined): Selection[] {
 }
 
 export function BetslipScreen(props: SlipProps) {
-  const layoutFrame = useSurfaceLayout('BetslipFeature');
-
-  const styles = useMemo(
-    () => makeStyles(theme, layoutFrame.chromeBackground),
-    [layoutFrame.chromeBackground],
-  );
+  const styles = useMemo(() => makeStyles(theme), []);
   const slipJSONProp = String(props.slipJSON ?? '{}');
   const legs = useMemo(
     () => new Map(((JSON.parse(slipJSONProp) as HostSlip).selections ?? []).map((leg) => [leg.boutId, leg])),
@@ -137,15 +132,11 @@ export function BetslipScreen(props: SlipProps) {
   };
 
   const dismissKeyboard = () => Keyboard.dismiss();
-  const scrollInset = actionBarScrollInset(
-    layoutFrame.safeAreaBottom,
-    layoutFrame.keyboardBottomInset,
-  );
 
   if (selections.length === 0 && placedMessage) {
     return (
       <View
-        style={[styles.root, styles.emptyRoot, { paddingTop: layoutFrame.safeAreaTop }]}
+        style={[styles.root, styles.emptyRoot]}
         testID="betslip-placed"
       >
         <Text style={styles.positive}>Bet placed</Text>
@@ -165,7 +156,7 @@ export function BetslipScreen(props: SlipProps) {
   if (selections.length === 0) {
     return (
       <View
-        style={[styles.root, styles.emptyRoot, { paddingTop: layoutFrame.safeAreaTop }]}
+        style={[styles.root, styles.emptyRoot]}
         testID={TestIds.betslipEmpty}
       >
         <Text style={styles.secondary}>No selections yet</Text>
@@ -189,7 +180,7 @@ export function BetslipScreen(props: SlipProps) {
         style={styles.flex}
         contentContainerStyle={[
           styles.content,
-          { paddingTop: layoutFrame.safeAreaTop + (theme.spacing.sm ?? 8), paddingBottom: scrollInset },
+          { paddingTop: theme.spacing.sm ?? 8, paddingBottom: ACTION_BAR_SCROLL_INSET },
         ]}
         // The host hands the surface the area under the navigation bar and tells us how deep
         // it is; letting UIKit guess as well would inset the content twice.
@@ -313,11 +304,9 @@ export function BetslipScreen(props: SlipProps) {
       <PinnedActionBar
         theme={theme}
         primaryTitle="Place bet"
-        safeAreaBottom={layoutFrame.safeAreaBottom}
-        keyboardBottomInset={layoutFrame.keyboardBottomInset}
         primaryDisabled={state.errors.length > 0}
         restingGap={TAB_BAR_ACTION_GAP}
-        showDone={stakeFocused || layoutFrame.textInputActive}
+        showDone={stakeFocused}
         onDonePress={dismissKeyboard}
         onPrimaryPress={() => {
           if (state.errors.length > 0) {
@@ -408,13 +397,12 @@ function groupedStyles(c: Record<string, string>, theme: ThemeTokens, overflowVi
   });
 }
 
-function makeStyles(theme: ThemeTokens, chromeBackground: string) {
+function makeStyles(theme: ThemeTokens) {
   const c = theme.colors;
   const s = theme.spacing;
   const r = theme.radius;
-  const pageBackground = chromeBackground || c.background || '#0B0E14';
   return StyleSheet.create({
-    root: { flex: 1, backgroundColor: pageBackground },
+    root: { flex: 1, backgroundColor: pageBackground(theme) },
     flex: { flex: 1 },
     emptyRoot: {
       flex: 1,

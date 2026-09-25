@@ -8,7 +8,6 @@ import com.fightdeck.rn.runtime.FeatureAdapter
 import com.fightdeck.rn.runtime.FeatureResults
 import java.math.BigDecimal
 
-/** Data only: the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`. */
 data class DepositParams(
     val currentBalance: BigDecimal,
 )

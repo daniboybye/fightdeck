@@ -18,7 +18,6 @@ fun RNFighterProfileScreen(
         portraitURL = portraitURL,
     )
     RNSurface(
-        includesTabBarClearance = false,
         create = { context -> adapter.createView(context, params) },
         update = { view -> adapter.updateProps(view, params) },
         modifier = modifier,

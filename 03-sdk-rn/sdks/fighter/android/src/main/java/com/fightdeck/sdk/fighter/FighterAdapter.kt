@@ -3,7 +3,6 @@ package com.fightdeck.sdk.fighter
 import android.os.Bundle
 import com.fightdeck.rn.runtime.FeatureAdapter
 
-/** Data only: the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`. */
 data class FighterParams(
     val fighterJSON: String,
     val portraitURL: String,

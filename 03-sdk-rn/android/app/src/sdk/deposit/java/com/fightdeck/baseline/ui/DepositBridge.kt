@@ -18,7 +18,6 @@ fun RNDepositScreen(
     val adapter = remember { DepositAdapter() }
     val params = DepositParams(currentBalance = balance)
     RNSurface(
-        includesTabBarClearance = false,
         create = { context ->
             adapter.createView(context, params) { result ->
                 when (result) {

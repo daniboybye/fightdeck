@@ -1,5 +1,4 @@
-#import "FightDeckRuntimeBridge.h"
-
+#import <Foundation/Foundation.h>
 #import <FightDeckRuntimeSpec/FightDeckRuntimeSpec.h>
 #import "FightDeckRNRuntime-Swift.h"
 
@@ -8,9 +7,6 @@
 /// lands. Registered through `codegenConfig.ios.modules`, never in the host app.
 @interface FightDeckRuntimeBridge : NativeFightDeckRuntimeBridgeSpecBase <NativeFightDeckRuntimeBridgeSpec>
 @end
-
-static __weak FightDeckRuntimeBridge *sLiveBridge;
-static NSMutableDictionary<NSString *, NSDictionary *> *sLayouts = [NSMutableDictionary new];
 
 @implementation FightDeckRuntimeBridge
 
@@ -25,13 +21,6 @@ RCT_EXPORT_MODULE()
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
   return std::make_shared<facebook::react::NativeFightDeckRuntimeBridgeSpecJSI>(params);
-}
-
-/// Only the instance wired to JavaScript gets an emitter, so it is the one layouts go to.
-- (void)setEventEmitterCallback:(EventEmitterCallbackWrapper *)eventEmitterCallbackWrapper
-{
-  [super setEventEmitterCallback:eventEmitterCallbackWrapper];
-  sLiveBridge = self;
 }
 
 - (void)depositConfirmed
@@ -64,38 +53,4 @@ RCT_EXPORT_MODULE()
   [FightDeckFeatureResults betslipPlaced:message slipJSON:slipJSON balance:balance];
 }
 
-/// Synchronous, so it runs on the JavaScript thread while the host publishes from the main one.
-- (NSDictionary *)surfaceLayout:(NSString *)moduleName
-{
-  @synchronized(sLayouts) {
-    return sLayouts[moduleName];
-  }
-}
-
 @end
-
-void FightDeckPublishSurfaceLayout(
-    NSString *moduleName,
-    double safeAreaTop,
-    double safeAreaBottom,
-    double keyboardBottomInset,
-    NSString *chromeBackground,
-    BOOL textInputActive)
-{
-  // Sub-point differences come from layout rounding, not from anything the user can see.
-  NSDictionary *layout = @{
-    @"moduleName" : moduleName,
-    @"safeAreaTop" : @(round(safeAreaTop)),
-    @"safeAreaBottom" : @(round(safeAreaBottom)),
-    @"keyboardBottomInset" : @(round(keyboardBottomInset)),
-    @"chromeBackground" : chromeBackground,
-    @"textInputActive" : @(textInputActive),
-  };
-  @synchronized(sLayouts) {
-    if ([sLayouts[moduleName] isEqualToDictionary:layout]) {
-      return;
-    }
-    sLayouts[moduleName] = layout;
-  }
-  [sLiveBridge emitOnSurfaceLayout:layout];
-}

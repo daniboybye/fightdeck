@@ -1,10 +1,8 @@
 import Foundation
 import UIKit
 
-/// Host-visible deposit boundary — no React Native types cross this line.
-///
-/// Parameters carry data only. The chrome a surface has to clear travels separately, through
-/// `FightDeckRuntime.publishLayout(_:for:)`, so a keyboard frame never re-renders the form.
+/// Host-visible deposit boundary — no React Native types cross this line. Parameters carry
+/// data only: the host sizes the surface to the space its bars and the keyboard leave.
 public struct DepositParams: Equatable, Sendable {
     public let currentBalance: Decimal
 
@@ -111,27 +109,4 @@ public struct FighterParams: Equatable, Sendable {
 public protocol FighterHosting: AnyObject {
     func makeViewController(params: FighterParams) -> UIViewController
     func update(params: FighterParams)
-}
-
-/// The host chrome a surface has to clear, in points — `SurfaceLayout` in the TypeScript spec.
-public struct SurfaceLayout: Equatable, Sendable {
-    public var safeAreaTop: CGFloat
-    public var safeAreaBottom: CGFloat
-    public var keyboardBottomInset: CGFloat
-    public var chromeBackground: String
-    public var textInputActive: Bool
-
-    public init(
-        safeAreaTop: CGFloat = 0,
-        safeAreaBottom: CGFloat = 0,
-        keyboardBottomInset: CGFloat = 0,
-        chromeBackground: String,
-        textInputActive: Bool = false
-    ) {
-        self.safeAreaTop = safeAreaTop
-        self.safeAreaBottom = safeAreaBottom
-        self.keyboardBottomInset = keyboardBottomInset
-        self.chromeBackground = chromeBackground
-        self.textInputActive = textInputActive
-    }
 }

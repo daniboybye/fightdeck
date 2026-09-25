@@ -22,10 +22,7 @@ data class BetslipSelection(
     val eventName: String,
 )
 
-/**
- * Values, not JSON: the adapter compares them structurally and encodes only what it pushes.
- * Data only — the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`.
- */
+/** Values, not JSON: the adapter compares them structurally and encodes only what it pushes. */
 data class BetslipParams(
     val balance: BigDecimal,
     val stake: BigDecimal,

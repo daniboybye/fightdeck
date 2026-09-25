@@ -61,7 +61,6 @@ object FightDeckRNRuntime {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT,
         )
-        surfaceView.setBackgroundColor(android.graphics.Color.parseColor(SurfaceChrome.listBackgroundHex()))
         val container = RNSurfaceContainer(themedContext, surface)
         container.setTag(surfaceTagKey, surface)
         container.addView(surfaceView)
@@ -78,12 +77,6 @@ object FightDeckRNRuntime {
     fun updateSurfaceProps(hostView: View, props: Bundle) {
         val surface = hostView.getTag(surfaceTagKey) as? ReactSurfaceImpl ?: return
         surface.updateInitProps(props)
-    }
-
-    /** Hands the surface the chrome it has to clear. Unchanged layouts stop at the bridge. */
-    fun publishLayout(hostView: View, layout: SurfaceLayout) {
-        val surface = hostView.getTag(surfaceTagKey) as? ReactSurface ?: return
-        FightDeckRuntimeBridgeModule.publish(surface.moduleName, layout)
     }
 
     fun stopSurface(hostView: View) {

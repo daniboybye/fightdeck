@@ -19,28 +19,16 @@ struct HarnessRootView: View {
 
     var body: some View {
         TabView {
-            DepositFlowView(
+            DepositScreen(
                 params: DepositParams(currentBalance: Money.parse("500.00")),
-                theme: ThemeTokens.defaults,
                 onResult: { _ in }
             )
             BetSlipRootView(
                 store: store,
-                display: HarnessSlipDisplay(),
-                theme: ThemeTokens.defaults,
+                display: CatalogSlipDisplay(events: [], fighters: []),
                 onDeposit: {},
-                onBrowseEvents: {},
-                onHostSync: { _, _, _ in }
+                onBrowseEvents: {}
             )
         }
     }
-}
-
-// The bet slip asks its host to resolve fighter and event names. A harness has no dataset,
-// so it answers with the identifier it was given.
-@MainActor
-private final class HarnessSlipDisplay: SlipDisplayContext {
-    func fighterName(id: String) -> String { id }
-    func opponentName(for selection: Selection) -> String { selection.fighterID }
-    func eventName(for selection: Selection) -> String { selection.boutID }
 }

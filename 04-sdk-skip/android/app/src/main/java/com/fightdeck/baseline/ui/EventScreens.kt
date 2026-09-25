@@ -59,16 +59,18 @@ import fight.deck.core.Event
 import fight.deck.core.Fighter
 import fight.deck.core.Money
 import fight.deck.events.Display
+import fight.deck.events.CatalogLoad
 import fight.deck.events.MediaItem
 import fight.deck.events.NewsItem
 import java.math.BigDecimal
+import skip.lib.Array as SkipArray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EventListScreen(
-    state: LoadState<List<Event>>,
-    news: LoadState<List<NewsItem>>,
-    media: LoadState<List<MediaItem>>,
+    state: CatalogLoad<SkipArray<Event>>,
+    news: List<NewsItem>,
+    media: List<MediaItem>,
     mode: EventMode,
     viewModel: MainViewModel,
     balance: BigDecimal,
@@ -98,55 +100,78 @@ internal fun EventListScreen(
         },
     ) { padding ->
         when (state) {
-            LoadState.Loading -> SkeletonColumn(Modifier.padding(padding))
-            is LoadState.Empty -> EmptyState("No events", Modifier.padding(padding))
-            is LoadState.Error -> ErrorState(onRetry, Modifier.padding(padding))
-            is LoadState.Loaded -> LazyColumn(
-                contentPadding = PaddingValues(
-                    start = Tokens.spacingLg,
-                    end = Tokens.spacingLg,
-                    top = padding.calculateTopPadding(),
-                    bottom = Tokens.spacingXl,
-                ),
-                verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
-            ) {
-                items(state.value, key = { it.id }) { event ->
-                    EventCard(
-                        event = event,
-                        mode = mode,
-                        posterUrl = viewModel.imageUrl("assets/events/${event.id}.jpg"),
-                        onClick = { onEventClick(event) },
+            is CatalogLoad.LoadingCase -> SkeletonColumn(Modifier.padding(padding))
+            is CatalogLoad.EmptyCase -> EmptyState("No events", Modifier.padding(padding))
+            is CatalogLoad.ErrorCase -> ErrorState(onRetry, Modifier.padding(padding))
+            is CatalogLoad.LoadedCase -> EventList(
+                events = state.associated0.toList(),
+                news = news,
+                media = media,
+                mode = mode,
+                viewModel = viewModel,
+                padding = padding,
+                onEventClick = onEventClick,
+                onArticleClick = onArticleClick,
+                onVideoClick = onVideoClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun EventList(
+    events: List<Event>,
+    news: List<NewsItem>,
+    media: List<MediaItem>,
+    mode: EventMode,
+    viewModel: MainViewModel,
+    padding: PaddingValues,
+    onEventClick: (Event) -> Unit,
+    onArticleClick: (NewsItem) -> Unit,
+    onVideoClick: (MediaItem) -> Unit,
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(
+            start = Tokens.spacingLg,
+            end = Tokens.spacingLg,
+            top = padding.calculateTopPadding(),
+            bottom = Tokens.spacingXl,
+        ),
+        verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
+    ) {
+        items(events, key = { it.id }) { event ->
+            EventCard(
+                event = event,
+                mode = mode,
+                posterUrl = viewModel.imageUrl("assets/events/${event.id}.jpg"),
+                onClick = { onEventClick(event) },
+            )
+        }
+        if (mode.showsResults) {
+            if (news.isNotEmpty()) {
+                item {
+                    SectionHeader("News")
+                }
+                items(news, key = { it.id }) { article ->
+                    NewsCard(
+                        item = article,
+                        eventName = events.firstOrNull { it.id == article.eventId }?.name.orEmpty(),
+                        imageUrl = viewModel.imageUrl(article.heroImage),
+                        onClick = { onArticleClick(article) },
                     )
                 }
-                if (mode.showsResults) {
-                    val articles = (news as? LoadState.Loaded)?.value.orEmpty()
-                    if (articles.isNotEmpty()) {
-                        item {
-                            SectionHeader("News")
-                        }
-                        items(articles, key = { it.id }) { article ->
-                            NewsCard(
-                                item = article,
-                                eventName = state.value.firstOrNull { it.id == article.eventId }?.name.orEmpty(),
-                                imageUrl = viewModel.imageUrl(article.heroImage),
-                                onClick = { onArticleClick(article) },
-                            )
-                        }
-                    }
-                    val clips = (media as? LoadState.Loaded)?.value.orEmpty()
-                    if (clips.isNotEmpty()) {
-                        item {
-                            SectionHeader("Video")
-                        }
-                        items(clips, key = { it.id }) { clip ->
-                            VideoCard(
-                                item = clip,
-                                eventName = state.value.firstOrNull { it.id == clip.eventId }?.name.orEmpty(),
-                                posterUrl = viewModel.imageUrl(clip.poster),
-                                onClick = { onVideoClick(clip) },
-                            )
-                        }
-                    }
+            }
+            if (media.isNotEmpty()) {
+                item {
+                    SectionHeader("Video")
+                }
+                items(media, key = { it.id }) { clip ->
+                    VideoCard(
+                        item = clip,
+                        eventName = events.firstOrNull { it.id == clip.eventId }?.name.orEmpty(),
+                        posterUrl = viewModel.imageUrl(clip.poster),
+                        onClick = { onVideoClick(clip) },
+                    )
                 }
             }
         }
@@ -326,7 +351,7 @@ internal fun EventDetailScreen(
     slip: BetSlip,
     viewModel: MainViewModel,
     fighters: List<Fighter>,
-    media: LoadState<List<MediaItem>>,
+    media: List<MediaItem>,
     balance: BigDecimal,
     onDeposit: () -> Unit,
     onBoutClick: (Bout) -> Unit,
@@ -353,7 +378,7 @@ internal fun EventDetailScreen(
                 }
             }
             if (mode.showsResults) {
-                val clips = (media as? LoadState.Loaded)?.value.orEmpty().filter { it.eventId == event.id }
+                val clips = media.filter { it.eventId == event.id }
                 if (clips.isNotEmpty()) {
                     item { SectionHeader("Video") }
                     items(clips, key = { it.id }) { clip ->
@@ -462,7 +487,11 @@ private fun CornerLine(
                     it.boutID == bout.id && it.fighterID == corner.fighterId
                 },
                 onClick = {
-                    viewModel.toggleSelection(bout, corner.fighterId, corner.closingOdds.decimal)
+                    viewModel.slipStore.toggleSelection(
+                        boutID = bout.id,
+                        fighterID = corner.fighterId,
+                        odds = Money.parse(corner.closingOdds.decimal),
+                    )
                 },
             )
         }

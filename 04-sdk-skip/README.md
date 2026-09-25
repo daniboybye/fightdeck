@@ -27,8 +27,8 @@ Skip has been free and open source since 21 January 2026 (v1.7).
 ## Layout
 
 ```
-sdks/core/      — FightCore (headless, skipstone): betting logic, DTOs, design tokens
-sdks/events/    — Fight catalogue (headless): dataset loading and display formatting
+sdks/core/      — FightCore (headless, skipstone): betting logic, the slip store, DTOs, design tokens
+sdks/events/    — Fight catalogue (headless): dataset loading, the catalogue model both hosts observe, display formatting, and the localhost server the images are fetched from
 sdks/deposit/   — Deposit SwiftUI → Compose
 sdks/betslip/   — Bet slip SwiftUI → Compose
 sdks/fighter/   — Fighter profile SwiftUI → Compose
@@ -127,23 +127,25 @@ Skip warns that SwiftUI state (`@AppStorage`, `NavigationPath`, etc.) **does not
 ```kotlin
 val stateHolder = rememberSaveableStateHolder()
 stateHolder.SaveableStateProvider("myKey") {
-    DepositComposeEntry(...).Compose()
+    DepositScreen(...).Compose()
     DisposableEffect("myKey") {
         onDispose { stateHolder.removeState("myKey") }
     }
 }
 ```
 
-Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/all/java/com/fightdeck/baseline/sdk/SkipSDKBridge.kt). Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositComposeEntry`, `BetslipComposeEntry`, `FighterComposeEntry`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. iOS has no seam at all: the host puts `DepositFlowView`, `BetSlipRootView` and `FighterRootView` straight into its own SwiftUI tree, so there is nothing to bridge and nothing to wrap.
+Implemented once per SDK under [`android/app/src/all/sdk/`](android/app/src/all/sdk) — `DepositSdkBridge.kt`, `BetslipSdkBridge.kt`, `FighterSdkBridge.kt` — and compiled into every flavour that links that SDK; the flavours that do not get a placeholder from their own source set. Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. The cleanup looks as if it throws away exactly what the provider should keep, and it does — but it is also the one thing keeping the app up. `NavHost` already wraps every destination in a provider of its own, so without this one the SDK's `@State` (skipstone writes it as `rememberSaveable`) *is* saved across an activity recreation, and SkipUI cannot restore it: the slip dies in `BetSlipRootView.getStakeFocused` on a null `FocusState`, the deposit form in `NavigationStack.Render` on a null preference. Checked on the Pixel 9 emulator (API 36, Skip 1.9.11, SkipUI 1.60.0) by toggling `cmd uimode night` with the form filled in — rotation alone shows nothing, because `MainActivity` handles orientation changes itself. With the cleanup in place the recreated deposit form comes back empty and the slip keeps its stake, because the stake lives in the store rather than in view state. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositScreen`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. No screen needs an entry type on Android: every transpiled SkipUI `View` has a `Compose()` of its own, so the bridge calls `BetSlipRootView(...).Compose()` directly. iOS has no seam at all: the host puts `DepositScreen`, `BetSlipRootView` and `FighterRootView` straight into its own SwiftUI tree, the same three views Android composes.
 
 ## Host split
 
 | Screen | iOS | Android |
 | --- | --- | --- |
 | Event list / card / bout | Native SwiftUI | Native Compose |
-| Bet slip | **FightDeckBetslip** SDK → `BetSlipRootView` | **SkipSDKBridge** → `BetslipComposeEntry(...).Compose()` |
-| Deposit | **FightDeckDeposit** SDK → `DepositFlowView` | **SkipSDKBridge** → `DepositComposeEntry(...).Compose()` |
-| Fighter profile | **FightDeckFighter** SDK → `FighterRootView` | **SkipSDKBridge** → `FighterComposeEntry(...).Compose()` |
+| Bet slip | **FightDeckBetslip** SDK → `BetSlipRootView` | `BetslipSdkScreen` → `BetSlipRootView(...).Compose()` |
+| Deposit | **FightDeckDeposit** SDK → `DepositScreen` | `DepositSdkScreen` → `DepositScreen(...).Compose()` |
+| Fighter profile | **FightDeckFighter** SDK → `FighterRootView` | `FighterSdkScreen` → `FighterRootView(...).Compose()` |
+
+The event, news and video screens stay native on both hosts, but what they draw from does not: the four lists and their loading / loaded / empty / error states live in `CatalogModel` (**FightDeckEvents**), which both hosts hold and read directly. It is `@Observable`, and skipstone backs its properties with Compose state, so a composable reading `catalog.events` recomposes when the list arrives, as a SwiftUI view does. The hosts used to declare the four states and the off-main-thread load once each.
 
 ## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
 
@@ -206,8 +208,13 @@ Install: `brew install skiptools/skip/skip`
 9. **Consuming transpiled Swift from hand-written Kotlin** — a `BetSlip` reaching the host is
    a `MutableStruct` with emulated value semantics: `selections` is a `skip.lib.Array` so
    `size`/`isNotEmpty()` do not apply, fields keep Swift `ID` casing, there is no generated
-   `copy()`, and the property getter hands back a write-back reference. Anything stored in a
-   `StateFlow` has to be rebuilt rather than mutated. Cheaper than a mapper, but not free.
+   `copy()`, and the property getter hands back a write-back reference. The host used to keep
+   its own copy of the slip in a `StateFlow`, which meant rebuilding every value it received
+   and mirroring it back into the SDK's store with three `LaunchedEffect`s. It now holds the
+   store itself: `BetSlipStore` lives in the core, both hosts own one instance, and the event
+   screens, the bar above the tabs and the slip SDK all read it. skipstone backs each
+   `@Observable` property with a Compose `MutableState`, so a plain `store.slip` read inside a
+   composable recomposes when the SDK changes it — no flow, no collection, no copy.
 10. **Shared code is written against a narrower Swift** — two limits showed up the moment the
     catalogue moved into `sdks/events`. A generic `load<T: Decodable>` compiles on iOS and then
     fails as Kotlin with `Cannot use 'T' as reified type parameter`, so each file gets its own
@@ -239,9 +246,10 @@ Install: `brew install skiptools/skip/skip`
     `navigationTitle` and a toolbar with a Close button. On iOS the host sheet wraps it in a
     `NavigationStack`, so both appear; on Android `DepositComposeEntry` handed the view
     straight to a Compose bottom sheet, and a toolbar with no bar to live in renders nothing
-    at all — no title, no way out but the system back gesture. The entry point now carries its
-    own `NavigationStack`, which is one line of shared code instead of a Compose top bar per
-    host. Two follow-ons surfaced immediately: `navigationBarTitleDisplayMode(.inline)`
+    at all — no title, no way out but the system back gesture. The stack now lives in the SDK:
+    `DepositScreen` wraps the flow in a `NavigationStack`, and both hosts mount that one view,
+    so the iOS sheet no longer adds a stack of its own and Android needs no entry type to add
+    one. Two follow-ons surfaced immediately: `navigationBarTitleDisplayMode(.inline)`
     silently suppresses the title on Android (it is `#if !SKIP` now, so Android gets the large
     one), and a `ToolbarItemGroup(placement: .keyboard)` — written for a keyboard accessory —
     was rendered as a sliver clipped to the trailing edge of the navigation bar, because
@@ -277,7 +285,7 @@ Install: `brew install skiptools/skip/skip`
 
 ```
 Host (SwiftUI / Compose)
-  │  iOS: the SwiftUI view directly · Android: *ComposeEntry via SkipSDKBridge
+  │  iOS: the SwiftUI view directly · Android: the same view's Compose() via android/app/src/all/sdk
   ▼
 FightDeckDeposit / FightDeckBetslip / FightDeckFighter  (SwiftPM + skipstone)
   │  SkipUI Swift → Kotlin (Compose)

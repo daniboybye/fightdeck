@@ -19,18 +19,15 @@ struct HarnessRootView: View {
 
     var body: some View {
         TabView {
-            DepositFlowView(
+            DepositScreen(
                 params: DepositParams(currentBalance: Money.parse("500.00")),
-                theme: ThemeTokens.defaults,
                 onResult: { _ in }
             )
             BetSlipRootView(
                 store: store,
-                display: HarnessSlipDisplay(),
-                theme: ThemeTokens.defaults,
+                display: CatalogSlipDisplay(events: [], fighters: []),
                 onDeposit: {},
-                onBrowseEvents: {},
-                onHostSync: { _, _, _ in }
+                onBrowseEvents: {}
             )
             FighterRootView(
                 params: FighterParams(
@@ -46,16 +43,8 @@ struct HarnessRootView: View {
                         portrait: "assets/fighters/sample.jpg"
                     ),
                     portraitURL: ""
-                ),
-                theme: ThemeTokens.defaults
+                )
             )
         }
     }
-}
-
-@MainActor
-private final class HarnessSlipDisplay: SlipDisplayContext {
-    func fighterName(id: String) -> String { id }
-    func opponentName(for selection: Selection) -> String { selection.fighterID }
-    func eventName(for selection: Selection) -> String { selection.boutID }
 }

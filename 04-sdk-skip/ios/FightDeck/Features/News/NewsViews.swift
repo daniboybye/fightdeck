@@ -69,7 +69,7 @@ struct NewsArticleView: View {
 
     @ViewBuilder
     private var relatedVideo: some View {
-        if case .loaded(let media) = state.mediaState {
+        if case .loaded(let media) = state.catalog.media {
             let clips = media.filter { $0.eventId == item.eventId }
             if !clips.isEmpty {
                 Divider()

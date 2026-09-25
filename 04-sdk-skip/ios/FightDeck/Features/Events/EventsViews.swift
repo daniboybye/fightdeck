@@ -19,7 +19,7 @@ struct EventsTabView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            LoadStateView(state: state.eventsState, retry: { Task { await state.loadEvents() } }) { events in
+            LoadStateView(state: state.catalog.events, retry: { Task { await state.catalog.loadEvents() } }) { events in
                 eventsList(events)
             } empty: {
                 ContentUnavailableView("No events", systemImage: "calendar")
@@ -27,7 +27,7 @@ struct EventsTabView: View {
             .navigationTitle(mode.title)
             .balanceToolbar(state: state)
             .navigationDestination(for: EventsRoute.self) { route in
-                destination(for: route, events: eventsOrEmpty)
+                destination(for: route, events: state.catalog.loadedEvents)
                     .balanceToolbar(state: state)
             }
         }
@@ -48,14 +48,14 @@ struct EventsTabView: View {
             }
         }
         .listStyle(.insetGrouped)
-        .refreshable { await state.refreshAll() }
+        .refreshable { await state.catalog.loadAll() }
     }
 
     /// Every article carries its event, and the feed mixes both cards, so the row has to say
     /// which event it belongs to — otherwise the list reads as unrelated stories.
     @ViewBuilder
     private func newsSection(events: [Event]) -> some View {
-        if case .loaded(let items) = state.newsState, !items.isEmpty {
+        if case .loaded(let items) = state.catalog.news, !items.isEmpty {
             Section("News") {
                 ForEach(items) { item in
                     NavigationLink(value: EventsRoute.article(item.id)) {
@@ -74,7 +74,7 @@ struct EventsTabView: View {
     /// conference, so the feed carries them next to the news.
     @ViewBuilder
     private func videoSection(events: [Event]) -> some View {
-        if case .loaded(let clips) = state.mediaState, !clips.isEmpty {
+        if case .loaded(let clips) = state.catalog.media, !clips.isEmpty {
             Section("Video") {
                 ForEach(clips) { clip in
                     NavigationLink(value: EventsRoute.video(clip.id)) {
@@ -87,11 +87,6 @@ struct EventsTabView: View {
                 }
             }
         }
-    }
-
-    private var eventsOrEmpty: [Event] {
-        if case .loaded(let events) = state.eventsState { return events }
-        return []
     }
 
     @ViewBuilder
@@ -110,13 +105,11 @@ struct EventsTabView: View {
             FighterBridgeView(state: state, fighterID: id)
                 .navigationTransition(.zoom(sourceID: id, in: posterNamespace))
         case .article(let id):
-            if case .loaded(let items) = state.newsState,
-               let item = items.first(where: { $0.id == id }) {
+            if let item = state.catalog.loadedNews.first(where: { $0.id == id }) {
                 NewsArticleView(state: state, item: item, imageURL: state.imageURL(item.heroImage))
             }
         case .video(let id):
-            if case .loaded(let media) = state.mediaState,
-               let item = media.first(where: { $0.id == id }) {
+            if let item = state.catalog.loadedMedia.first(where: { $0.id == id }) {
                 VideoScreenView(item: item)
             }
         }
@@ -206,7 +199,7 @@ struct EventDetailView: View {
 
     @ViewBuilder
     private var mediaSection: some View {
-        if case .loaded(let media) = state.mediaState {
+        if case .loaded(let media) = state.catalog.media {
             let clips = media.filter { $0.eventId == event.id }
             if !clips.isEmpty {
                 Section("Video") {
@@ -280,7 +273,7 @@ struct BoutRowView: View {
             VStack(alignment: .leading) {
                 Text(corner.name)
                     .font(.callout)
-                Text(state.record(for: corner.fighterId))
+                Text(state.catalog.record(for: corner.fighterId))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -295,9 +288,13 @@ struct BoutRowView: View {
         OddsButton(
             label: FightCoreDisplay.formatOdds(Money.parse(corner.closingOdds.decimal)),
             fractional: corner.closingOdds.fractional,
-            isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
+            isSelected: state.slipStore.isSelected(boutID: bout.id, fighterID: corner.fighterId)
         ) {
-            state.toggleSelection(bout: bout, fighterID: corner.fighterId, odds: corner.closingOdds.decimal)
+            state.slipStore.toggleSelection(
+                boutID: bout.id,
+                fighterID: corner.fighterId,
+                odds: Money.parse(corner.closingOdds.decimal)
+            )
         }
     }
 }

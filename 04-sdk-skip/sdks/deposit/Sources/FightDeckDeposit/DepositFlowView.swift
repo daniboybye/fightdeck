@@ -22,19 +22,18 @@ private enum DepositLimits {
     static let maximum = Money.parse("2000")
 }
 
-public struct DepositFlowView: View {
-    public let params: DepositParams
-    public let theme: ThemeTokens
-    public let onResult: @Sendable (DepositResult) -> Void
+struct DepositFlowView: View {
+    let params: DepositParams
+    let onResult: @Sendable (DepositResult) -> Void
 
+    @Environment(\.fightDeckTheme) private var theme: ThemeTokens
     @State private var amountText = ""
     @State private var method = DepositMethod.card
     @State private var didSucceed = false
     @FocusState private var amountFocused: Bool
 
-    public init(params: DepositParams, theme: ThemeTokens, onResult: @escaping @Sendable (DepositResult) -> Void) {
+    init(params: DepositParams, onResult: @escaping @Sendable (DepositResult) -> Void) {
         self.params = params
-        self.theme = theme
         self.onResult = onResult
     }
 
@@ -80,7 +79,7 @@ public struct DepositFlowView: View {
         }
     }
 
-    public var body: some View {
+    var body: some View {
         platformChrome(
             Group {
                 if didSucceed {
@@ -102,6 +101,7 @@ public struct DepositFlowView: View {
                 }
             }
         }
+        .modifier(FightDeckScreen(theme: theme))
     }
 
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
@@ -155,59 +155,70 @@ public struct DepositFlowView: View {
         }
     }
 
+    /// The confirmation replaces the form it sits on.
     private var successContent: some View {
-        successChrome(
-            VStack(spacing: theme.spacingLG) {
-                successIcon
-                Text("Deposit successful")
-                    .font(Typography.bold(theme.fontTitle))
-                Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
-                    .foregroundStyle(theme.textSecondary)
-                secondaryDoneButton
-            }
-            .padding(theme.spacingXL)
-        )
+        VStack(spacing: theme.spacingLG) {
+            successIcon
+            Text("Deposit successful")
+                .font(Typography.bold(theme.fontTitle))
+            Text("New balance: \(Money.formatCurrency(params.currentBalance + parsedAmount))")
+                .foregroundStyle(theme.textSecondary)
+            doneButton
+        }
+        .padding(theme.spacingXL)
+        .modifier(ConfirmationTransition())
     }
 
-    /// A section header, through a function — never `Text(…)` carrying a modifier of *ours* at
-    /// the call site. A `View` extension of our own transpiles to a Kotlin extension function
-    /// that `skipstone` does not recognise as producing a view: it emits the call with no
-    /// `.Compose(context)` after it and the header silently renders nothing. That is attempt (2)
-    /// in `GroupedList.swift`, reached by a different road. A plain function call is composed.
-    ///
-    /// The font is the whole of the Android fix — see `Typography.sectionHeader`. iOS gets a
-    /// bare `Text` and therefore exactly the header SwiftUI drew before.
+    // The confirm button rides above the form rather than at the end of it, the same shape the
+    // slip uses: as the last row of a scroll it ends up behind the keyboard the amount field
+    // raises, and on Android the scroll view will not extend its range far enough to reach it.
+    //
+    // `.filled` on Android because this screen's native counterpart puts the row on a solid
+    // strip the form scrolls under; the slip's floats, so that its selections pill below reads
+    // as part of the same bar.
+    private var formContent: some View {
+        depositForm
+            .modifier(InsetGroupedList(theme: theme))
+            .modifier(PinnedActionBar(ActionBar(
+                "Confirm deposit",
+                isEnabled: canConfirm,
+                showsDone: amountFocused,
+                style: ActionBarStyle.filled,
+                theme: theme,
+                onPrimary: { didSucceed = true },
+                onDone: { amountFocused = false }
+            )))
+    }
+
+    // MARK: - The core's controls
+    //
+    // Each reached through a function or property, never as a bare initialiser in a
+    // `@ViewBuilder`, which `skipstone` would drop (see `GroupedList.swift`).
+
     private func sectionTitle(_ title: String) -> some View {
-        Text(title)
-        #if SKIP
-            .font(Typography.sectionHeader(theme))
-        #endif
+        SectionHeader(title, theme: theme)
     }
 
-    /// Identical on both platforms, so not behind an `#if`. It used to be, from when a shared
-    /// view of ours was thought not to render on Android.
     private func summaryRow(_ label: String, _ value: String) -> some View {
         LabeledRow(theme: theme, label: label, value: value, valueStyle: theme.textPrimary)
     }
 
-    /// One icon, one size. Only the bounce is iOS's — SwiftUI's symbol effects have no SkipUI
-    /// mapping, and Compose animates its own state changes anyway.
     private var successIcon: some View {
-        Image(systemName: "checkmark.circle.fill")
-            .font(Typography.body(64.0))
-            .foregroundStyle(theme.positive)
-        #if !SKIP
-            .symbolEffect(.bounce, options: .nonRepeating)
-        #endif
+        ConfirmationIcon(size: 64.0, theme: theme)
     }
 
-    /// The confirmation replaces the content it sits on, so iOS scales it in. Compose animates
-    /// its own state changes, so Android needs nothing.
-    private func successChrome(_ content: some View) -> some View {
-        content
-        #if !SKIP
-            .transition(.scale(scale: 0.92).combined(with: .opacity))
-        #endif
+    private var doneButton: some View {
+        SecondaryActionButton("Done", theme: theme) {
+            onResult(DepositResult.completed(amount: parsedAmount))
+        }
+    }
+
+    /// The core's chip row, reached through a property rather than written bare into the
+    /// section's builder, which `skipstone` would drop (see `GroupedList.swift`).
+    private var amountChipRow: some View {
+        PresetChipRow(values: ["10", "25", "50", "100"], theme: theme.chipTheme) { value in
+            amountText = value
+        }
     }
 
     private var parsedAmount: Decimal {
@@ -289,127 +300,10 @@ extension DepositFlowView {
         .frame(width: Layout.radioDiameter, height: Layout.radioDiameter)
     }
 
-    /// Compose supplies the screen's own chrome. What it does not supply is the host's palette:
-    /// SkipUI wraps every screen in a `MaterialTheme` of its own, so the scheme is handed in
-    /// here or the Form comes back in Material You's wallpaper colours. See
-    /// `fightDeckColorScheme`.
+    /// Compose supplies the screen's own chrome and animates its own state changes; the palette
+    /// comes from `FightDeckScreen` on the body.
     fileprivate func platformChrome(_ content: some View) -> some View {
         content
-            .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
-    }
-
-    // The confirm button rides above the scroll rather than at the end of it, the same shape the
-    // slip screen uses: as the last row of a scroll it ends up behind the keyboard the amount
-    // field raises, and SkipUI's scroll view will not extend its range far enough to reach it.
-    fileprivate var formContent: some View {
-        ZStack(alignment: .bottom) {
-            // Without this the form paints its own container — `surfaceColorAtElevation(3dp)` —
-            // over the root's background, on a slightly different shade from the rest of the app.
-            depositForm
-                .scrollContentBackground(.hidden)
-                // The closest a SkipUI form gets to Material cards: `.listStyle(.insetGrouped)`
-                // is unavailable and the section radius is a constant inside SkipUI, so the
-                // slabs can only be moved off the screen edges from out here.
-                .padding(.horizontal, theme.spacingLG)
-            actionBar
-        }
-    }
-
-    /// Done sits beside Confirm rather than on a keyboard toolbar: `ToolbarItemGroup` is
-    /// supported, but its `.keyboard` placement draws nothing on Android, so the button would
-    /// simply never appear. This is the shape the native screen uses anyway.
-    ///
-    /// On a fill: this screen's native counterpart puts the row in a `Surface(surfaceContainer)`
-    /// so the form scrolls *under* a solid strip. The slip screen deliberately does not — three
-    /// stacked surface tones there stop the selections pill reading as part of the same bar —
-    /// which is why only this one has a background. Padding matches the native row: a smaller
-    /// gap above the button than below it.
-    private var actionBar: some View {
-        HStack(spacing: theme.spacingSM) {
-            confirmButton
-            if amountFocused {
-                doneButton
-            }
-        }
-        .padding(.horizontal, theme.spacingLG)
-        .padding(.top, theme.spacingSM)
-        .padding(.bottom, Metrics.actionBarGap)
-        .frame(maxWidth: .infinity)
-        .background(theme.surface)
-    }
-
-    /// The one place this SDK drops to Compose. Setting `@FocusState` to false does clear
-    /// SkipUI's focus — the button hides itself on the next pass — but it does not dismiss the
-    /// Android IME. Only Compose's own focus manager does that, and reaching it needs a
-    /// composable scope, which `ComposeView` is the documented way to open under Skip Lite.
-    ///
-    /// `FilledTonalButton`, not `TextButton`: a text button paints no container, so beside the
-    /// filled Confirm button it read as loose text over the form. This is also the component
-    /// `00-native` uses for the same button, and it takes its colours from
-    /// `secondaryContainer`/`onSecondaryContainer` — which now resolve to the FightDeck palette
-    /// because `platformChrome` hands SkipUI the host's scheme.
-    private var doneButton: some View {
-        ComposeView { _ in
-            let focusManager = androidx.compose.ui.platform.LocalFocusManager.current
-            androidx.compose.material3.FilledTonalButton(
-                onClick: {
-                    focusManager.clearFocus()
-                    amountFocused = false
-                },
-                shape: androidx.compose.foundation.shape.RoundedCornerShape(percent: 50)
-            ) {
-                androidx.compose.material3.Text("Done")
-            }
-        }
-        .frame(height: Metrics.secondaryActionHeight)
-    }
-
-    /// `.disabled()` stops the taps but changes nothing about how the button looks: the fill is
-    /// ours, painted by `.background`, and SkipUI has no reason to touch a colour we chose. So
-    /// a button with nothing typed in it sat there at full strength, reading as ready. Material
-    /// dims both halves to 0.38, which is what `00-native`'s `PrimaryActionButton` does too.
-    ///
-    /// A capsule, not a rounded rectangle, for the same reason: the native button is
-    /// `RoundedCornerShape(percent = 50)`, and so is the slip's Place bet beside it.
-    private var confirmButton: some View {
-        Button {
-            didSucceed = true
-        } label: {
-            Text("Confirm deposit")
-                .font(Typography.semibold(theme.fontCallout))
-                .foregroundStyle(canConfirm ? theme.onAccent : theme.onAccent.opacity(Metrics.disabledOpacity))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .frame(height: Metrics.primaryActionHeight)
-        .background(canConfirm ? theme.accent : theme.accent.opacity(Metrics.disabledOpacity))
-        .clipShape(Capsule())
-        .disabled(!canConfirm)
-    }
-
-
-    /// Through a function, never as a bare `PresetChipButton(...)` in the builder: `skipstone`
-    /// emits a constructor written straight into a `@ViewBuilder` as a statement and drops the
-    /// result, so the chips came out invisible with no error anywhere. See `GroupedList.swift`.
-    private func chipButton(_ title: String, _ action: @escaping () -> Void) -> some View {
-        PresetChipButton(title: title, theme: theme.chipTheme, action: action)
-    }
-    /// No glass container on Android — the chips themselves are the shared `PresetChipButton`.
-    fileprivate var amountChipRow: some View {
-        HStack(spacing: theme.spacingSM) {
-            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                chipButton("€\(chip)") { amountText = chip }
-            }
-        }
-    }
-
-    fileprivate var secondaryDoneButton: some View {
-        Button("Done") { onResult(DepositResult.completed(amount: parsedAmount)) }
-            .font(Typography.semibold(theme.fontCallout))
-            .foregroundStyle(theme.onAccent)
-            .padding(.horizontal, Metrics.secondaryActionPadding)
-            .frame(height: Metrics.secondaryActionHeight)
-            .background(theme.accent)
-            .clipShape(Capsule())
     }
 }
 #endif
@@ -450,100 +344,6 @@ extension DepositFlowView {
             .navigationBarTitleDisplayMode(NavigationBarItem.TitleDisplayMode.inline)
             .animation(.smooth(duration: 0.35), value: didSucceed)
             .sensoryFeedback(.success, trigger: didSucceed)
-    }
-
-    fileprivate var formContent: some View {
-        depositForm
-            .scrollDismissesKeyboard(.interactively)
-            .modifier(DepositBottomBarModifier(
-                theme: theme,
-                amountFocused: amountFocused,
-                isEnabled: canConfirm,
-                onConfirm: { didSucceed = true },
-                onDismissKeyboard: { amountFocused = false }
-            ))
-    }
-
-    fileprivate var amountChipRow: some View {
-        PresetChipRow(theme: theme.chipTheme) {
-            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                PresetChipButton(title: "€\(chip)", theme: theme.chipTheme) { amountText = chip }
-            }
-        }
-    }
-
-    fileprivate var secondaryDoneButton: some View {
-        Button {
-            onResult(DepositResult.completed(amount: parsedAmount))
-        } label: {
-            Text("Done")
-                .font(.headline)
-                .foregroundStyle(theme.onAccent)
-                .padding(.horizontal, Metrics.secondaryActionPadding)
-                .frame(height: Metrics.secondaryActionHeight)
-                .contentShape(.capsule)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.tint(theme.accent).interactive(), in: .capsule)
-    }
-}
-
-private struct DepositBottomBarModifier: ViewModifier {
-    let theme: ThemeTokens
-    let amountFocused: Bool
-    let isEnabled: Bool
-    let onConfirm: () -> Void
-    let onDismissKeyboard: () -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .safeAreaBar(edge: .bottom) { barContent }
-            .scrollDismissesKeyboard(.interactively)
-    }
-
-    private var barContent: some View {
-        HStack(spacing: theme.spacingSM) {
-            primaryConfirmButton
-            if amountFocused {
-                keyboardDoneButton
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-            }
-        }
-        .padding(.horizontal, theme.spacingLG)
-        .padding(.bottom, Metrics.actionBarGap)
-        .animation(.snappy(duration: 0.25), value: amountFocused)
-    }
-
-    private var primaryConfirmButton: some View {
-        Button(action: onConfirm) {
-            Text("Confirm deposit")
-                .font(.headline)
-                .foregroundStyle(isEnabled ? theme.onAccent : Color.secondary)
-                .frame(maxWidth: .infinity)
-                .frame(height: Metrics.primaryActionHeight)
-                .contentShape(.capsule)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(
-            .regular
-                .tint(isEnabled ? theme.accent : nil)
-                .interactive(isEnabled),
-            in: .capsule
-        )
-        .disabled(!isEnabled)
-    }
-
-    private var keyboardDoneButton: some View {
-        Button(action: onDismissKeyboard) {
-            Text("Done")
-                .font(.headline)
-                .foregroundStyle(theme.accent)
-                .padding(.horizontal, theme.spacingLG)
-                .frame(height: Metrics.primaryActionHeight)
-                .contentShape(.capsule)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .capsule)
     }
 }
 #endif

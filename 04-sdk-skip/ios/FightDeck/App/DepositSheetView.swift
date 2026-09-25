@@ -15,19 +15,16 @@ struct DepositSheetView: View {
     let onDismiss: () -> Void
 
     var body: some View {
-        NavigationStack {
-            DepositFlowView(
-                params: DepositParams(currentBalance: state.balance),
-                theme: ThemeTokens.defaults,
-                onResult: { result in
-                    Task { @MainActor in
-                        if case .completed(let amount) = result {
-                            state.deposit(amount: amount)
-                        }
-                        onDismiss()
+        DepositScreen(
+            params: DepositParams(currentBalance: state.slipStore.balance),
+            onResult: { result in
+                Task { @MainActor in
+                    if case .completed(let amount) = result {
+                        state.slipStore.deposit(amount: amount)
                     }
+                    onDismiss()
                 }
-            )
-        }
+            }
+        )
     }
 }

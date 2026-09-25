@@ -180,7 +180,7 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
             // out over the keyboard, so the surface is shrunk to the space the keys leave —
             // the same glue the slip screen needs.
             Box(Modifier.imePadding()) {
-                com.fightdeck.baseline.sdk.SkipSDKBridge.DepositScreen(
+                com.fightdeck.baseline.sdk.DepositSdkScreen(
                     viewModel = viewModel,
                     saveKey = "deposit-screen",
                     onDone = { nav.popBackStack() },
@@ -192,8 +192,10 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
 
 @Composable
 private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
-        val slip by viewModel.slip.collectAsStateWithLifecycle()
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        // Plain reads, not collected flows: the store's properties are Compose state already.
+        val store = viewModel.slipStore
+        val slip = store.slip
+        val balance = store.balance
 
         // Saveable, not plain remember: pushing the deposit destination takes the tab host out
         // of composition, and a plain remember would hand the user back the first tab instead
@@ -220,7 +222,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         if (showsSlipToolbar) {
                             BetSlipToolbar(
                                 legCount = slip.selections.count,
-                                potentialReturn = Money.formatCurrency(viewModel.slipState.potentialReturn),
+                                potentialReturn = Money.formatCurrency(store.slipState.potentialReturn),
                                 onClick = { selectedTab = SLIP_TAB },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
@@ -345,15 +347,17 @@ private fun EventsNavHost(
     onDeposit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val events by viewModel.events.collectAsStateWithLifecycle()
-    val fighters by viewModel.fighters.collectAsStateWithLifecycle()
-    val news by viewModel.news.collectAsStateWithLifecycle()
-    val media by viewModel.media.collectAsStateWithLifecycle()
-    // Collected here, not read through viewModel.isSelected(): a plain getter is invisible to
-    // Compose, so an odds tap only showed up once something else forced a recomposition.
-    val slip by viewModel.slip.collectAsStateWithLifecycle()
-    val loadedEvents = (events as? LoadState.Loaded)?.value.orEmpty()
-    val loadedFighters = (fighters as? LoadState.Loaded)?.value.orEmpty()
+    // The shared catalogue's properties are Compose state: reading them here is what
+    // recomposes this host when a list arrives. Its arrays are Swift's, so the screens get
+    // Kotlin lists.
+    val catalog = viewModel.catalog
+    val events = catalog.events
+    val news = catalog.loadedNews.toList()
+    val media = catalog.loadedMedia.toList()
+    // Read here and handed down, so every odds button below recomposes with the slip.
+    val slip = viewModel.slipStore.slip
+    val loadedEvents = catalog.loadedEvents.toList()
+    val loadedFighters = catalog.loadedFighters.toList()
 
     NavHost(navController = nav, startDestination = "events", modifier = modifier) {
         composable("events") {
@@ -428,7 +432,7 @@ private fun EventsNavHost(
                     balance = balance,
                     onDeposit = onDeposit,
                 ) { padding ->
-                    com.fightdeck.baseline.sdk.SkipSDKBridge.FighterScreen(
+                    com.fightdeck.baseline.sdk.FighterSdkScreen(
                         fighter = fighter,
                         viewModel = viewModel,
                         saveKey = "fighter-${fighter.id}",
@@ -443,8 +447,8 @@ private fun EventsNavHost(
             "article/{articleId}",
             arguments = listOf(navArgument("articleId") { type = NavType.StringType }),
         ) { entry ->
-            val article = (news as? LoadState.Loaded)?.value
-                ?.firstOrNull { it.id == entry.arguments?.getString("articleId") }
+            val article = news
+                .firstOrNull { it.id == entry.arguments?.getString("articleId") }
             if (article != null) {
                 NewsArticleScreen(
                     item = article,
@@ -461,8 +465,8 @@ private fun EventsNavHost(
             "video/{videoId}",
             arguments = listOf(navArgument("videoId") { type = NavType.StringType }),
         ) { entry ->
-            val clip = (media as? LoadState.Loaded)?.value
-                ?.firstOrNull { it.id == entry.arguments?.getString("videoId") }
+            val clip = media
+                .firstOrNull { it.id == entry.arguments?.getString("videoId") }
             if (clip != null) {
                 VideoScreen(clip, balance = balance, onDeposit = onDeposit, onBack = { nav.popBackStack() })
             }
@@ -479,7 +483,7 @@ private fun SlipNavHost(
     onBrowseEvents: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val balance by viewModel.balance.collectAsStateWithLifecycle()
+    val balance = viewModel.slipStore.balance
 
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {
@@ -501,7 +505,7 @@ private fun SlipNavHost(
                     )
                 },
             ) { padding ->
-                com.fightdeck.baseline.sdk.SkipSDKBridge.BetslipScreen(
+                com.fightdeck.baseline.sdk.BetslipSdkScreen(
                     viewModel = viewModel,
                     saveKey = "betslip-root",
                     onDeposit = onDeposit,

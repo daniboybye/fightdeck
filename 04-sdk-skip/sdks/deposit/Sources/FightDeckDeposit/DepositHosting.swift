@@ -20,38 +20,24 @@ public struct DepositParams: Sendable {
 public enum DepositResult: Sendable {
     case completed(amount: Decimal)
     case cancelled
-    case failed(reason: String)
 }
 
-// MARK: - Compose (Android)
+/// The deposit flow inside the navigation stack its title and Close button need. Both hosts
+/// mount this one view: the iOS sheet and the Android destination used to add the stack
+/// themselves — the iOS host in its own code, Android through an entry type that existed only
+/// for that — and a toolbar with no bar to live in renders nothing at all.
+public struct DepositScreen: View {
+    let params: DepositParams
+    let onResult: @Sendable (DepositResult) -> Void
 
-#if SKIP
-public struct DepositComposeEntry: View {
-    public let params: DepositParams
-    public let theme: ThemeTokens
-    public let onResult: @Sendable (DepositResult) -> Void
-
-    public init(
-        params: DepositParams,
-        theme: ThemeTokens,
-        onResult: @escaping @Sendable (DepositResult) -> Void
-    ) {
+    public init(params: DepositParams, onResult: @escaping @Sendable (DepositResult) -> Void) {
         self.params = params
-        self.theme = theme
         self.onResult = onResult
     }
 
     public var body: some View {
-        // The iOS host presents this inside its own navigation stack; the Compose host drops it
-        // straight into a destination. Carrying a stack here is what puts the screen's toolbar
-        // — its title and its Close button — on the Android side too.
         NavigationStack {
-            DepositFlowView(
-                params: params,
-                theme: theme,
-                onResult: onResult
-            )
+            DepositFlowView(params: params, onResult: onResult)
         }
     }
 }
-#endif

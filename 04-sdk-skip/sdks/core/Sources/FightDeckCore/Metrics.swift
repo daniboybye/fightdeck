@@ -25,6 +25,10 @@ public enum Metrics {
     public static let secondaryActionHeight: CGFloat = 44
     public static let secondaryActionPadding: CGFloat = 24
     public static let actionBarGap: CGFloat = 12
+    /// The Android gap under a bar that floats over a list rather than sitting on a strip of
+    /// its own — the slip's, above the host's selections pill.
+    public static let floatingActionBarGap: CGFloat = 20
+    public static let minTapTarget: CGFloat = 44
 
     /// Material's disabled alpha for a filled button — the same 0.38 `00-native` writes into
     /// `ButtonDefaults.buttonColors(disabledContainerColor:)`. Only the Android branches read

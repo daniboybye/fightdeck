@@ -104,12 +104,15 @@ its original build column was dominated by Rust packaging rather than by the app
 | `02-core-rust` | 1,208 | 2,058 | 1,548 | — | — | −27% | **4,814** | 37 | 27 | **4,878** | 8,473 | 601 |
 | `01-core-swift` | 1,429 | 2,284 | 770 | — | — | −18% | **4,483** | 50 | 567 | **5,100** | 3,017 | 617 |
 | `03-sdk-rn` | 1,405 | 1,960 | 1,409 | — | — | −25% | **4,774** | 420 | 313 | **5,507** | 282 | 1,183 |
-| `04-sdk-skip` | 1,087 | 1,724 | 1,305 | 225 | 177 | −38% | **4,518** | 31 | 262 | **4,811** | 2,478 | 732 |
+| `04-sdk-skip` | 861 | 1,590 | 1,615 | 123 | 136 | −46% | **4,325** | 66 | 150 | **4,541** | 2,785 | 739 |
 
 **Measured at `1e29d5c`** by `python3 tools/count-significant-lines.py`, except the
 `03-sdk-rn` row, re-measured at `532d99c` after its host and SDK simplification, and the
 `02-core-rust` row, re-measured at `52b1d66` after its slip snapshot and shared-record
-changes. To refresh it, read the commits since that hash rather than the whole tree;
+changes, and the
+`04-sdk-skip` row, re-measured at `4be3552` after the Skip simplification — which includes
+moving the image server into the events SDK, as `02-core-rust` did in `7632bbb`; the other
+approaches keep it in the host. To refresh it, read the commits since that hash rather than the whole tree;
 `--audit` prints every file and the column it landed in, and `--tsv` prints the table ready
 to paste into a slide.
 
@@ -148,11 +151,11 @@ a real cost of choosing one. Lockfiles are excluded — `package-lock.json` alon
 React Native 9,300 lines nobody typed.
 
 Three things to read off it. First, **the columns tell three different stories about Skip,
-and all three are true.** Counting host code and genuinely shared code, Skip is **9% below**
-writing both apps natively (4,116 against 4,508) — the number you would expect from sharing
+and all three are true.** Counting host code and genuinely shared code, Skip is **10% below**
+writing both apps natively (4,066 against 4,508) — the number you would expect from sharing
 three screens and a betting core. Add the platform-specific branches that live inside the
-shared files and it is **level** (4,518). Add the adapters that let shared code run at all
-and it is **7% above** (4,811). Everything interesting about these approaches lives in the
+shared files and it is **4% below** (4,325). Add the adapters that let shared code run at all
+and it is **level** (4,541). Everything interesting about these approaches lives in the
 distance between those three figures.
 
 Second, **the adapter columns say where each technology puts its platform code, and the
@@ -161,13 +164,14 @@ generates the bindings — it pays 8,304 generated lines instead. Swift has 50 o
 Apple half of the `#if os(Android)` branches (35 of them in `Money`), and 567 on Android:
 300 lines of `*Java` facade that jextract needs, 200 of Kotlin turning what crosses back into
 types, and 46 of decimal formatting written by hand because `FoundationEssentials` has no
-`NumberFormatter`. Skip has 293 adapter lines — host bridges, the SDKs' `*Hosting` entry
-points and the Material palette mapping — plus 402 platform-specific ones, 357 of which are
-the two screens with the most UI, bet slip and deposit. React Native has 1,920, hand-written
+`NumberFormatter`. Skip has 216 adapter lines — host bridges, the Material palette mapping
+and the two sockets under the shared image server — plus 259 platform-specific ones: 113 in
+the two screens with the most UI, bet slip and deposit, and 111 in the core's action controls
+they are built from. React Native has 1,920, hand-written
 code to embed, size and feed a surface; 233 of those are the dead sources described above.
 
 Third, **every approach takes work out of the hosts, but only Skip takes out a lot.** Skip's
-two hosts hold 2,811 lines against the baseline's 4,508 (−38%); Swift's and Rust's 3,713 and
+two hosts hold 2,451 lines against the baseline's 4,508 (−46%); Swift's and Rust's 3,713 and
 3,694 (−18%); React Native's 4,001 (−11%), and it then adds 1,920 lines of adapter back, so
 its hosts end up carrying more than writing both apps natively.
 
@@ -179,42 +183,47 @@ platforms, against what Skip writes once:
 
 | | `00-native`, both platforms | `04-sdk-skip`, shared | |
 | --- | ---: | ---: | --- |
-| Betting core | 585 | 396 | **−32%** |
-| Dataset and models | 214 | 302 | +41% |
-| Bet slip screen | 405 | 400 | −1% |
-| Deposit screen | 346 | 310 | −10% |
-| Fighter screen | 147 | 149 | +1% |
-| Shared components (preset chips, labelled row) | 43 | 83 | +93% |
-| Design tokens | 63 | 227 | +260% |
+| Betting core | 584 | 396 | **−32%** |
+| Dataset and models | 204 | 294 | +44% |
+| Bet slip screen | 405 | 261 | **−36%** |
+| Deposit screen | 346 | 192 | **−45%** |
+| Fighter screen | 147 | 140 | −5% |
+| Shared components (preset chips, labelled row, action buttons) | 146 | 369 | +153% |
+| Image server | 167 | 113 | −32% |
+| Design tokens | 62 | 245 | +295% |
 
 Produced by `python3 tools/feature-lines.py`, which counts with the same rules as the table
 above and refuses to print if a file in Skip's shared SDKs has not been assigned to a row.
 Where the baseline keeps a component inside a larger file — the preset chip in `CommonUi.kt`
-and `SharedViews.swift` — only that declaration is counted. Skip's three `*Hosting` entry
-points (84 lines) have no native counterpart and are in no row.
+and `SharedViews.swift` — only that declaration is counted. Skip's three `*Hosting` files
+(47 lines) have no native counterpart and are in no row. Neither is `CatalogModel` (67), the
+catalogue's load states: the baseline has the same code, but inside `AppState` and
+`MainViewModel`, where it cannot be cut out to line up against.
 
-**Logic shares almost perfectly and UI barely shares at all.** Splitting the shared files by
-`#if`, the three SDK screens are 48% genuinely shared — 376 common lines against 200 inside
-`#if SKIP` and 211 inside `#if !SKIP`, near-perfectly balanced, because each platform's UI is
-written separately inside one file. The logic files are 99% shared. That is not a Skip
+**Logic shares almost perfectly and UI shares about two thirds.** Splitting the shared files
+by `#if`, the three SDK screens are 74% genuinely shared — 389 common lines against 78 inside
+`#if SKIP` and 61 inside `#if !SKIP`. That is after the platform branches they had in common
+moved into the core's `ActionControls`; counted together with it, the screens are 67% shared
+— 516 common lines against 131 and 119, still near-perfectly balanced, because each
+platform's controls are written separately inside one file. The logic files are 99% shared. That is not a Skip
 limitation; it is the house rule that an SDK screen must be 1:1 with iOS native and as close
 as it can get to Android native. Two native looks means two implementations, wherever they
 are stored.
 
 The rest is overhead that does not shrink with the app. The palette is written down once, in
 `Palette`, but still mapped three times — into `ThemeTokens` to cross the boundary and into
-each host's own token file, because the hosts' screens need it too. The two shared components
-cost nearly twice their native pair, since each carries Liquid Glass on one side and a
-Material capsule on the other. Types are re-declared to cross the boundary, and every module
+each host's own token file, because the hosts' screens need it too. The shared components
+cost two and a half times their native counterparts, since each carries Liquid Glass on one
+side and a Material capsule on the other. Types are re-declared to cross the boundary, and every module
 carries a hosting seam.
 
-So the break-even is arithmetic. Skip ends **303 lines above** writing both apps natively
-(`Total + adapters`, 4,811 against 4,508), and that is *after* the betting core has saved
-189. If further logic shares the way the betting core does — about a third saved — it takes
-roughly another 950 lines of it before Skip drops below native: **around 1,500 lines of logic
-written across both platforms**, against the 585 this demo has. Adding more *screens* would
-not change that under the current rule, because a screen arrives as two implementations in
-one file; adding more *logic* — cash-out, settlement, limits, free bets, odds movement — is
+So the break-even is arithmetic. Skip ends **33 lines above** writing both apps natively
+(`Total + adapters`, 4,541 against 4,508), and that is *after* the betting core has saved
+188. If further logic shares the way the betting core does — about a third saved — it takes
+roughly another 100 lines of it before Skip drops below native: **around 700 lines of logic
+written across both platforms**, against the 584 this demo has. Adding more *screens* helps
+less than logic under the current rule, because a screen still arrives as two sets of
+platform branches in one file; adding more *logic* — cash-out, settlement, limits, free bets, odds movement — is
 what would, and that is the kind of code a real betting app has far more of than this one.
 The catalogue row is the warning: shared logic can also cost *more* when it shares types and
 formatting the native apps never had to write at all.

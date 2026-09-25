@@ -66,7 +66,6 @@ struct FighterItem: Codable, Identifiable, Sendable {
 struct FighterRecord: Codable, Sendable {
     let wins: Int
     let losses: Int
-    let draws: Int
     let noContests: Int
     let display: String
 }

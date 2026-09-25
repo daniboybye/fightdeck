@@ -1,7 +1,5 @@
 package com.fightdeck.baseline.data
 
-import android.content.Context
-import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.baseline.services.LocalAssetServer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,11 +34,6 @@ class JsonFileRepository(
             val wrapper = json.decodeFromString<Map<String, List<T>>>(text)
             wrapper[key] ?: error("missing $key")
         }
-
-    companion object {
-        fun create(context: Context): JsonFileRepository =
-            JsonFileRepository(DatasetLocator.datasetRoot(context))
-    }
 }
 
 @Serializable
@@ -104,8 +97,6 @@ data class FighterRecord(
     val display: String,
     val wins: Int = 0,
     val losses: Int = 0,
-    val draws: Int = 0,
-    val noContests: Int = 0,
 )
 
 @Serializable
@@ -116,7 +107,6 @@ data class NewsItem(
     val body: String,
     val source: String,
     val heroImage: String,
-    val publishedAt: String,
     val readMinutes: Int,
 )
 

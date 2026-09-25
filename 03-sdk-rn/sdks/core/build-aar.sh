@@ -15,19 +15,11 @@ if [[ ! -x "$ANDROID_HOST/gradlew" ]]; then
     exit 1
 fi
 
-echo "Bundling JS for Android…"
-mkdir -p "$ROOT/android/build"
-if ! command -v npx >/dev/null 2>&1; then
-    echo "error: npx not found" >&2
-    exit 1
-fi
+# Only for the Gradle plugin and codegen under node_modules. The JavaScript itself is not
+# packed here: every app flavour bundles its own entry into assets/index.android.bundle,
+# and an app asset replaces a library asset of the same name, so a copy in this AAR was
+# 0.9 MB that no build ever loaded.
 (cd "$ROOT" && npm install --silent)
-(cd "$ROOT" && npx react-native bundle \
-    --platform android \
-    --dev false \
-    --entry-file src/runtime/index.js \
-    --bundle-output android/build/index.android.bundle \
-    --assets-dest android/build)
 
 (
     cd "$ANDROID_HOST"
@@ -35,7 +27,7 @@ fi
 )
 
 GRADLE_AAR="$ROOT/android/runtime/build/outputs/aar/fightdeck-rn-runtime-release.aar"
-pack_rn_runtime_aars "$OUT" "$GRADLE_AAR" "$ROOT/android/build/index.android.bundle"
+pack_rn_runtime_aars "$OUT" "$GRADLE_AAR"
 
 echo "Wrote runtime AARs in $OUT:"
 ls -lh "$OUT"/*.aar

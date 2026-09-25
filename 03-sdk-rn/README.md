@@ -107,7 +107,7 @@ All-surfaces bundle (`FIGHTDECK_FEATURES=all`); the deposit-only entry is roughl
 | Artifact | Size | Shipped |
 | --- | --- | --- |
 | Metro `fightdeck.jsbundle` | 924 KB | no — staged under `ios/.jsbundle-staging/`, input to hermesc |
-| Hermes `fightdeck.hbc` | 1.28 MB | yes — iOS zip and runtime AAR assets |
+| Hermes `fightdeck.hbc` | 1.28 MB | yes — iOS zip (Android apps bundle their own entry at build time) |
 
 ## Verification — RN is real, not a placeholder
 

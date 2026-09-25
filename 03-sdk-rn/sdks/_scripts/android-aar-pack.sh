@@ -16,26 +16,9 @@ find_gradle_aar() {
     printf '%s\n' "$found"
 }
 
-repack_aar_with_assets() {
-    local src_aar="$1"
-    local dest_aar="$2"
-    local assets_dir="$3"
-    local staging
-    staging="$(mktemp -d)"
-    unzip -q "$src_aar" -d "$staging"
-    mkdir -p "$staging/assets"
-    cp -R "$assets_dir/." "$staging/assets/"
-    (
-        cd "$staging"
-        zip -qr "$dest_aar" .
-    )
-    rm -rf "$staging"
-}
-
 pack_rn_runtime_aars() {
     local out_dir="$1"
     local gradle_aar="$2"
-    local js_bundle="$3"
 
     mkdir -p "$out_dir"
     rm -f "$out_dir"/*.aar
@@ -44,17 +27,7 @@ pack_rn_runtime_aars() {
         echo "error: Gradle AAR missing: $gradle_aar" >&2
         exit 1
     fi
-    if [[ ! -f "$js_bundle" ]]; then
-        echo "error: JS bundle missing: $js_bundle" >&2
-        exit 1
-    fi
-
-    local assets_staging
-    assets_staging="$(mktemp -d)"
-    cp "$js_bundle" "$assets_staging/index.android.bundle"
-
-    repack_aar_with_assets "$gradle_aar" "$out_dir/FightDeckRNRuntime.aar" "$assets_staging"
-    rm -rf "$assets_staging"
+    cp "$gradle_aar" "$out_dir/FightDeckRNRuntime.aar"
 
     local react_aar hermes_aar
     react_aar="$(find_gradle_aar "react-android-${RN_VERSION}-release.aar")"

@@ -1,5 +1,6 @@
 package com.fightdeck.swiftcore.core
 
+import com.fightdeck.fightcore.FightCoreJava
 import com.fightdeck.fightslip.SlipEngine
 
 /**
@@ -22,5 +23,39 @@ fun SlipEngine.readSnapshot(): SlipSnapshot {
         summaryRows = snapshot.summaryLabels().zip(snapshot.summaryValues()),
         errors = snapshot.errors().toList(),
         confirmation = snapshot.confirmation().orElse(null),
+    )
+}
+
+data class DepositMethodOption(val id: String, val title: String, val feeNote: String)
+
+data class DepositQuote(
+    /** Two places, ready for `SlipEngine.deposit`. */
+    val amount: String,
+    val amountDisplay: String,
+    val feeDisplay: String,
+    val totalDisplay: String,
+    val newBalanceDisplay: String,
+    val validationMessage: String?,
+    val canConfirm: Boolean,
+)
+
+fun depositMethods(): List<DepositMethodOption> {
+    val methods = FightCoreJava.depositMethods()
+    return methods.ids().indices.map {
+        DepositMethodOption(methods.ids()[it], methods.titles()[it], methods.feeNotes()[it])
+    }
+}
+
+/** One JNI call per keystroke, answered in plain values. */
+fun depositQuote(amountText: String, methodId: String, balance: String): DepositQuote {
+    val quote = FightCoreJava.depositQuote(amountText, methodId, balance)
+    return DepositQuote(
+        amount = quote.amount(),
+        amountDisplay = quote.amountDisplay(),
+        feeDisplay = quote.feeDisplay(),
+        totalDisplay = quote.totalDisplay(),
+        newBalanceDisplay = quote.newBalanceDisplay(),
+        validationMessage = quote.validationMessage().orElse(null),
+        canConfirm = quote.canConfirm(),
     )
 }

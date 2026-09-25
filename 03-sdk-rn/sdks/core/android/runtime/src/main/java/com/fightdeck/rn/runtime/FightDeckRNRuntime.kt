@@ -5,8 +5,6 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -54,16 +52,14 @@ object FightDeckRNRuntime {
             R.style.Theme_MaterialComponents_DayNight_NoActionBar,
         )
         val surface: ReactSurface = host.createSurface(themedContext, moduleName, initialProps)
+        // ReactSurfaceView hands Fabric its size from its own onMeasure, and the AndroidView
+        // around it measures it exactly, so starting straight away is enough — the same order
+        // ReactDelegate uses for a full-screen React activity.
+        surface.start()
         val surfaceView = requireNotNull(surface.view) {
             "ReactSurface did not produce a view for module $moduleName"
         }
-        surfaceView.layoutParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-        )
-        val container = RNSurfaceContainer(themedContext, surface)
-        container.setTag(surfaceTagKey, surface)
-        container.addView(surfaceView)
+        surfaceView.setTag(surfaceTagKey, surface)
         if (cold) {
             // start() only schedules the host, so timing it alone measured almost nothing. This
             // is host start plus surface creation — the synchronous half of a cold start, the
@@ -71,7 +67,7 @@ object FightDeckRNRuntime {
             coldStartMs = (System.nanoTime() - start) / 1_000_000
             Log.i("FightDeckStartup", "cold=${coldStartMs}ms")
         }
-        return container
+        return surfaceView
     }
 
     fun updateSurfaceProps(hostView: View, props: Bundle) {

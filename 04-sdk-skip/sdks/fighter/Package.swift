@@ -32,9 +32,9 @@ let fightDeckFighterLibrary: Product = buildFromSource
 // compiled xcframework. See the note in core/Package.swift.
 let skipDependencies: [Package.Dependency] = buildFromSource
     ? [
-        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.8"),
-        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.4"),
-        .package(url: "https://github.com/skiptools/skip-ui.git", exact: "1.59.3"),
+        .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.11"),
+        .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.6"),
+        .package(url: "https://github.com/skiptools/skip-ui.git", exact: "1.60.0"),
     ]
     : []
 

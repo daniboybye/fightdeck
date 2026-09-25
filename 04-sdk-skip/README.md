@@ -147,9 +147,10 @@ Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/all/java/com/fig
 
 ## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
 
-The pin has since moved to 1.9.8; this block is the original capture and has not been
-re-run, so read the version lines as historical. What *was* re-verified on 12 Sep 2026 is
-the thing that matters here — all three AARs export cleanly on 1.9.8 from a clean `.build`.
+The pin has since moved to 1.9.11; this block is the original capture and has not been
+re-run, so read the version lines as historical. What *was* re-verified — on 12 Sep 2026
+for 1.9.8 and on 25 Sep 2026 for 1.9.11 — is the thing that matters here: every AAR
+exports cleanly from a clean `.build`.
 
 ```
 [✓] Skip version 1.9.6 (= 1.9.6)

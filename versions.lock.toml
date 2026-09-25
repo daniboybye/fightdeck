@@ -2,7 +2,8 @@
 #
 # Rule: latest stable everywhere. Nothing here is a beta or a release candidate.
 # Verified 20 August 2026, and the Apple/Android sections again on 11 September 2026
-# when 01-core-swift moved to a swift-java JNI bridge. Every workflow in
+# when 01-core-swift moved to a swift-java JNI bridge; Skip and swift-java re-checked on
+# 25 September 2026. Every workflow in
 # .github/workflows reads from this file so a version bump happens in one place.
 #
 # When a value changes, note WHY in the comment on the line. A version with no
@@ -35,7 +36,7 @@ android_checksum = "d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69d
 # pre-1.0: no API stability guarantee, expect churn. The 0.4.2 written here in June was two
 # minor versions stale by September — 0.5.0, 0.5.1 and 0.6.0 shipped in ten weeks, most of
 # the changes in the JNI generator this approach depends on.
-swift_java = "0.6.0"
+swift_java = "0.6.0"                   # 5 Sep 2026, and still the latest release on 25 Sep 2026.
 swiftkit_core = "0.6.0"                # the Java runtime the generated bindings compile against
 
 
@@ -110,12 +111,14 @@ apple = [
 # Free and open source since 21 January 2026 (v1.7). Frameworks are MPL-2.0,
 # but the skipstone build engine is AGPL-3.0 — that distinction matters and is a slide.
 [skip]
-skipstone = "1.9.8"                    # 29 Aug 2026. CLI and SPM plugin ship in lockstep.
-skip_ui = "1.59.3"                     # 3 Sep 2026
-skip_foundation = "1.4.4"              # 21 Aug 2026
-skip_model = "1.7.9"                   # 20 Aug 2026. Transitive via skip-ui; pinned for audit only.
-skip_fuse = "1.0.3"                    # 19 Aug 2026. Fuse is not shipped here — see 04-sdk-skip/README.md.
-skip_fuse_ui = "1.18.2"                # 8 Sep 2026
+skipstone = "1.9.11"                   # 19 Sep 2026. CLI and SPM plugin ship in lockstep.
+skip_ui = "1.60.0"                     # 23 Sep 2026. Cuts Android recomposition; opacity now layers within the clip.
+skip_foundation = "1.4.6"              # 23 Sep 2026
+skip_model = "1.8.0"                   # 18 Sep 2026. Transitive via skip-ui; pinned for audit only.
+skip_lib = "1.4.3"                     # 23 Sep 2026. Transitive via skip-foundation; audit only.
+skip_unit = "1.7.2"                    # 16 Sep 2026. Transitive via skip-foundation; audit only.
+skip_fuse = "1.0.3"                    # 19 Aug 2026, still the latest. Fuse is not shipped here — see 04-sdk-skip/README.md.
+skip_fuse_ui = "1.18.3"                # 24 Sep 2026. Not shipped here either; audit only.
 license_frameworks = "MPL-2.0"
 license_skipstone = "AGPL-3.0"
 

@@ -1,13 +1,13 @@
 {
-  "originHash" : "72beb1d398dea766dbbbfd5df7ba15648a44dff37fb1f3c8768f1c0bd590cd98",
+  "originHash" : "03eb62f248ee98d45b376eeb5517747662d60a788acbd6f7c1227bed8a5f2abf",
   "pins" : [
     {
       "identity" : "skip",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/skiptools/skip.git",
       "state" : {
-        "revision" : "c9cf31ac886248b3733963f89f289c18ebce8ca1",
-        "version" : "1.9.8"
+        "revision" : "211ad40b5828e418ecb1c033d6a502a900f1be31",
+        "version" : "1.9.11"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/skiptools/skip-foundation.git",
       "state" : {
-        "revision" : "6ec484b619726050731b14b8612de8e7eda8e904",
-        "version" : "1.4.4"
+        "revision" : "79b422dc6612b1a392ae0b6b6ac4724a6ffdb7af",
+        "version" : "1.4.6"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/skiptools/skip-lib.git",
       "state" : {
-        "revision" : "320f72a7f7af2f2355a59da29362f68e53341b09",
-        "version" : "1.4.1"
+        "revision" : "21a1c7c8f97730b3a3d88058daf8c9d78a9c7c43",
+        "version" : "1.4.3"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/skiptools/skip-model.git",
       "state" : {
-        "revision" : "9879f0b2b618ccbeeedeef34311e4024c4a9692a",
-        "version" : "1.7.9"
+        "revision" : "3de7c8315f35035a905225b9057d4272772aa0ef",
+        "version" : "1.8.0"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/skiptools/skip-ui.git",
       "state" : {
-        "revision" : "6aab56857926a60f462e5b3b0718752d9fd062c8",
-        "version" : "1.59.3"
+        "revision" : "b5cc6c92c087e7c0011cee7da6982e93103c1fcc",
+        "version" : "1.60.0"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/skiptools/skip-unit.git",
       "state" : {
-        "revision" : "314b1278f4965c8518b7833c8d15f18a5bc0301d",
-        "version" : "1.7.1"
+        "revision" : "fc58e058f3d25675e047a758281c39dba5d52570",
+        "version" : "1.7.2"
       }
     }
   ],

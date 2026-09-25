@@ -34,6 +34,18 @@ pub struct Quote {
     pub can_confirm: bool,
 }
 
+/// Why an amount, already rounded to cents, is outside the limits; `None` when it is inside.
+/// The deposit form shows this, and the bet slip store refuses to credit anything it names.
+pub fn limit_message(amount: Decimal) -> Option<&'static str> {
+    if amount < money::parse_exact(MIN_DEPOSIT) {
+        Some("Minimum deposit is €10")
+    } else if amount > money::parse_exact(MAX_DEPOSIT) {
+        Some("Maximum deposit is €2,000")
+    } else {
+        None
+    }
+}
+
 /// The amount is rounded before anything else reads it, so the limits judge — and the fee is
 /// charged on — the figure that will actually reach the balance. A decimal comma reads as a
 /// point: that is what the number pad types in a comma locale.
@@ -45,15 +57,8 @@ pub fn quote(amount_text: &str, method_id: &str, balance: Decimal) -> Quote {
         .find(|method| method.id == method_id)
         .map_or(Decimal::ZERO, |method| money::parse_exact(method.fee_rate));
     let fee = money::money(amount * rate);
-    let validation_message = if amount_text.is_empty() {
-        None
-    } else if amount < money::parse_exact(MIN_DEPOSIT) {
-        Some("Minimum deposit is €10")
-    } else if amount > money::parse_exact(MAX_DEPOSIT) {
-        Some("Maximum deposit is €2,000")
-    } else {
-        None
-    };
+    let validation_message =
+        if amount_text.is_empty() { None } else { limit_message(amount) };
     Quote {
         amount,
         fee,

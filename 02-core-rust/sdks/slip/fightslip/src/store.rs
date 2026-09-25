@@ -3,7 +3,7 @@
 
 use crate::engine::SlipEngine;
 use crate::ffi::{parse_amount, SlipError, SlipSnapshot, SlipStateRecord};
-use fightcore::money;
+use fightcore::{deposit, money};
 use fightcore::types::{BetSlip, BoutIndex, Selection};
 use rust_decimal::Decimal;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -114,15 +114,17 @@ impl BetSlipStore {
         self.notify();
     }
 
-    pub fn deposit(&self, amount: String) -> Result<String, SlipError> {
-        let parsed = parse_amount("amount", &amount)?;
-        let balance = {
-            let mut inner = lock(&self.inner);
-            inner.balance += parsed;
-            inner.balance
-        };
+    /// Credits `DepositQuote::amount`. The store applies the same limits as the quote, so an
+    /// amount the form would not have confirmed never reaches the balance, whichever host
+    /// sent it.
+    pub fn deposit(&self, amount: String) -> Result<(), SlipError> {
+        let amount = money::money(parse_amount("amount", &amount)?);
+        if let Some(reason) = deposit::limit_message(amount) {
+            return Err(SlipError::DepositRefused { reason: reason.to_string() });
+        }
+        lock(&self.inner).balance += amount;
         self.notify();
-        Ok(money::format(balance))
+        Ok(())
     }
 
     /// Validates, takes the stake, empties the slip and leaves the confirmation in the next

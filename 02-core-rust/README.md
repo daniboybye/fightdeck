@@ -89,7 +89,7 @@ Splitting the crates was the excuse to move logic that both hosts were maintaini
 | Opponent and event lookup per slip leg | 23 lines Swift + 18 lines Kotlin | `EventCatalog::leg_context` |
 | Tale of the tape, plus who holds each advantage | Five hand-written rows in each host | `EventCatalog::tale_of_the_tape` |
 | `split_decision` → `Split decision`, clip durations | `displayMethod` / `formattedDuration` in both | `humanise_code`, `format_duration` |
-| Deposit limits, method fees, fee rounding, preset amounts | `DepositFlowView` + `DepositMoney` in Swift, `DepositScreen` in Kotlin | `deposit_methods`, `deposit_presets`, `deposit_quote` |
+| Deposit limits, method fees, fee rounding, preset amounts | `DepositFlowView` + `DepositMoney` in Swift, `DepositScreen` in Kotlin | `deposit_methods`, `deposit_presets`, `deposit_quote`; `BetSlipStore::deposit` refuses what the limits refuse |
 | Reading the dataset, news and media | Each host read the files, and kept a JSON repository and news/media models | `EventCatalog::load`, `news`, `media` |
 | Serving dataset images over localhost | `LocalAssetServer` on Network.framework and on `ServerSocket` | `start_asset_server`, `asset_url` |
 | Balance, potential return, odds labels, validation messages | `formatCurrency` / `formatMoney` / `humaniseCode(validationErrorCode(…))` across FFI on every body pass | `SlipSnapshot::balance_display`, `SlipStateRecord::potential_return_display`, `ValidationIssue::message`, `CornerSummary::odds_decimal` |
@@ -148,7 +148,7 @@ Toolchain pins: [`versions.lock.toml`](../versions.lock.toml).
 export PATH="$HOME/.cargo/bin:$PATH"
 cd 02-core-rust/sdks
 
-cargo test --workspace          # 30 tests: fixtures, store + unit
+cargo test --workspace          # 31 tests: fixtures, store + unit
 
 ./build-apple.sh                # all three SPM packages: {core,slip,events}/out/*.xcframework
 ./build-android.sh              # one fightdeck.aar/.so + three generated Kotlin packages

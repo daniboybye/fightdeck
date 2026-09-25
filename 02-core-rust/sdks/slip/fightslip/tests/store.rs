@@ -1,5 +1,5 @@
 use fightcore::BoutIndex;
-use fightslip::{BetSlipStore, SlipSnapshot, SlipSnapshotListener};
+use fightslip::{BetSlipStore, SlipError, SlipSnapshot, SlipSnapshotListener};
 use std::sync::{Arc, Mutex, Weak};
 
 fn store() -> Arc<BetSlipStore> {
@@ -121,4 +121,20 @@ fn a_slip_with_errors_is_not_placed() {
     let snapshot = store.current_snapshot();
     assert_eq!(snapshot.balance, "500.00");
     assert_eq!(snapshot.confirmation, None);
+}
+
+#[test]
+fn only_an_amount_the_deposit_form_allows_reaches_the_balance() {
+    let store = store();
+    store.deposit("10.00".into()).unwrap();
+    assert_eq!(store.current_snapshot().balance, "510.00");
+
+    for refused in ["9.99", "2000.01", "-50.00"] {
+        assert!(
+            matches!(store.deposit(refused.into()), Err(SlipError::DepositRefused { .. })),
+            "{refused}"
+        );
+    }
+    assert!(matches!(store.deposit("ten".into()), Err(SlipError::Decoding { .. })));
+    assert_eq!(store.current_snapshot().balance, "510.00");
 }

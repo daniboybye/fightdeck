@@ -14,6 +14,8 @@ use std::sync::Arc;
 pub enum SlipError {
     #[error("decoding")]
     Decoding { field: String },
+    #[error("deposit refused: {reason}")]
+    DepositRefused { reason: String },
 }
 
 impl SlipError {

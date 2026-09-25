@@ -43,8 +43,15 @@ final class ObservableBetSlipStore {
         store.removeSelection(boutId: boutId, fighterId: fighterId)
     }
 
+    /// `amount` is `DepositQuote.amount` from a quote whose `canConfirm` enabled the button,
+    /// and FightSlip checks it against the same limits, so a refusal here is a bug to stop on
+    /// rather than a deposit to lose without a word.
     func deposit(amount: String) {
-        _ = try? store.deposit(amount: amount)
+        do {
+            try store.deposit(amount: amount)
+        } catch {
+            preconditionFailure("FightSlip refused a confirmed deposit: \(error)")
+        }
     }
 
     func placeBet() {

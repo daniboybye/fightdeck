@@ -40,9 +40,12 @@ class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
     fun removeSelection(boutId: String, fighterId: String) =
         store.removeSelection(boutId, fighterId)
 
-    fun deposit(amount: String) {
-        store.deposit(amount)
-    }
+    /**
+     * [amount] is `DepositQuote.amount` from a quote whose `canConfirm` enabled the button, and
+     * FightSlip checks it against the same limits, so a `SlipException` here is a bug and is
+     * left to surface rather than caught.
+     */
+    fun deposit(amount: String) = store.deposit(amount)
 
     fun placeBet() = store.placeBet()
 

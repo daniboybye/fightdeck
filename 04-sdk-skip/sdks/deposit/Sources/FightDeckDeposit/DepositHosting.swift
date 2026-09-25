@@ -20,7 +20,6 @@ public struct DepositParams: Sendable {
 public enum DepositResult: Sendable {
     case completed(amount: Decimal)
     case cancelled
-    case failed(reason: String)
 }
 
 // MARK: - Compose (Android)

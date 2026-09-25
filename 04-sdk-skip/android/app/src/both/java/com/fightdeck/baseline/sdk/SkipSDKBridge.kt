@@ -111,7 +111,6 @@ object SkipSDKBridge {
                     when (result) {
                         is DepositResult.CompletedCase -> viewModel.deposit(result.amount)
                         is DepositResult.CancelledCase -> Unit
-                        is DepositResult.FailedCase -> Unit
                     }
                     onDone()
                 },

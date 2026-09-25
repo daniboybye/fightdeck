@@ -19,7 +19,7 @@ private enum Layout {
 
 public struct BetSlipRootView: View {
     @Bindable var store: BetSlipStore
-    let display: SlipDisplayContext
+    let display: CatalogSlipDisplay
     let theme: ThemeTokens
     let onDeposit: @Sendable () -> Void
     let onBrowseEvents: @Sendable () -> Void
@@ -29,7 +29,7 @@ public struct BetSlipRootView: View {
 
     public init(
         store: BetSlipStore,
-        display: SlipDisplayContext,
+        display: CatalogSlipDisplay,
         theme: ThemeTokens,
         onDeposit: @escaping @Sendable () -> Void,
         onBrowseEvents: @escaping @Sendable () -> Void

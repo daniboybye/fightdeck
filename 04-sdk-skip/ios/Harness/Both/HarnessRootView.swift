@@ -26,20 +26,11 @@ struct HarnessRootView: View {
             )
             BetSlipRootView(
                 store: store,
-                display: HarnessSlipDisplay(),
+                display: CatalogSlipDisplay(events: [], fighters: []),
                 theme: ThemeTokens.defaults,
                 onDeposit: {},
                 onBrowseEvents: {}
             )
         }
     }
-}
-
-// The bet slip asks its host to resolve fighter and event names. A harness has no dataset,
-// so it answers with the identifier it was given.
-@MainActor
-private final class HarnessSlipDisplay: SlipDisplayContext {
-    func fighterName(id: String) -> String { id }
-    func opponentName(for selection: Selection) -> String { selection.fighterID }
-    func eventName(for selection: Selection) -> String { selection.boutID }
 }

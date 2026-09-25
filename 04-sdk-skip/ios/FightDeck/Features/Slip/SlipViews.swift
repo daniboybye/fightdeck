@@ -32,21 +32,6 @@ struct BetslipBridgeView: View {
     let onBrowseEvents: @MainActor @Sendable () -> Void
     let onDeposit: @MainActor @Sendable () -> Void
 
-    // The SDK holds the display context by reference, so a fresh one per body pass would
-    // hand it a new identity on every render for a lookup table that never changes.
-    @State private var display: HostSlipDisplayContext
-
-    init(
-        state: AppState,
-        onBrowseEvents: @escaping @MainActor @Sendable () -> Void,
-        onDeposit: @escaping @MainActor @Sendable () -> Void
-    ) {
-        self.state = state
-        self.onBrowseEvents = onBrowseEvents
-        self.onDeposit = onDeposit
-        _display = State(initialValue: HostSlipDisplayContext(state: state))
-    }
-
     var body: some View {
         // The SDK's callbacks are `@Sendable` because they also have to cross into Kotlin, so
         // they arrive with no actor. Everything they touch here is main-actor state, which is
@@ -59,41 +44,14 @@ struct BetslipBridgeView: View {
             onBrowseEvents: { Task { @MainActor in onBrowseEvents() } }
         )
     }
-}
 
-@MainActor
-final class HostSlipDisplayContext: SlipDisplayContext {
-    private let state: AppState
-
-    init(state: AppState) {
-        self.state = state
-    }
-
-    func fighterName(id: String) -> String {
-        guard case .loaded(let fighters) = state.fightersState,
-              let fighter = fighters.first(where: { $0.id == id }) else {
-            return id
-        }
-        return fighter.name
-    }
-
-    func opponentName(for selection: Selection) -> String {
-        guard case .loaded(let events) = state.eventsState else { return "—" }
-        for event in events {
-            if let bout = event.bouts.first(where: { $0.id == selection.boutID }) {
-                let opponentID = bout.redCorner.fighterId == selection.fighterID
-                    ? bout.blueCorner.fighterId : bout.redCorner.fighterId
-                return fighterName(id: opponentID)
-            }
-        }
-        return "—"
-    }
-
-    func eventName(for selection: Selection) -> String {
-        guard case .loaded(let events) = state.eventsState,
-              let event = events.first(where: { $0.bouts.contains { $0.id == selection.boutID } }) else {
-            return "—"
-        }
-        return event.name
+    /// Built from the lists as they stand on this pass, so the rows pick up the names once the
+    /// catalogue finishes loading.
+    private var display: CatalogSlipDisplay {
+        var events: [Event] = []
+        var fighters: [Fighter] = []
+        if case .loaded(let loaded) = state.eventsState { events = loaded }
+        if case .loaded(let loaded) = state.fightersState { fighters = loaded }
+        return CatalogSlipDisplay(events: events, fighters: fighters)
     }
 }

@@ -12,12 +12,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fightdeck.baseline.ui.LoadState
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetSlipRootView
+import fight.deck.betslip.CatalogSlipDisplay
 import fight.deck.core.ThemeTokens
 import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
+import skip.lib.Array as SkipArray
 
 /**
  * Each SDK screen sits in a `SaveableStateProvider` whose slot is removed when the screen leaves
@@ -34,14 +37,20 @@ object SkipSDKBridge {
         onBrowseEvents: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        // Collected rather than read off the flow inside the display context: a plain `.value`
+        // Collected rather than read with `.value`: a plain `.value`
         // read is not a composition input, so selection rows kept showing fighter ids when the
         // slip opened before the roster finished loading.
         val fighters by viewModel.fighters.collectAsStateWithLifecycle()
         val events by viewModel.events.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
-            val display = remember(fighters, events) { HostSlipDisplayContext(fighters, events) }
+            // Rebuilt whenever either list changes, so rows show names once the roster lands.
+            val display = remember(fighters, events) {
+                CatalogSlipDisplay(
+                    events = SkipArray((events as? LoadState.Loaded)?.value.orEmpty()),
+                    fighters = SkipArray((fighters as? LoadState.Loaded)?.value.orEmpty()),
+                )
+            }
             val theme = remember { ThemeTokens.defaults }
             // The SDK view composes into whatever box it is given and reads no insets of its
             // own, so the host's top-bar padding has to be a real box around it. Without one the

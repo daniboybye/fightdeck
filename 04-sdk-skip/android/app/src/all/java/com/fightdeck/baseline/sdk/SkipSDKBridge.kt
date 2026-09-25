@@ -10,13 +10,16 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fight.deck.core.Fighter
 import fight.deck.core.ThemeTokens
+import com.fightdeck.baseline.ui.LoadState
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetSlipRootView
+import fight.deck.betslip.CatalogSlipDisplay
 import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
 import fight.deck.fighter.FighterRootView
 import fight.deck.fighter.FighterParams
+import skip.lib.Array as SkipArray
 
 /**
  * Each SDK screen sits in a `SaveableStateProvider` whose slot is removed when the screen leaves
@@ -37,7 +40,13 @@ object SkipSDKBridge {
         val events by viewModel.events.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
-            val display = remember(fighters, events) { HostSlipDisplayContext(fighters, events) }
+            // Rebuilt whenever either list changes, so rows show names once the roster lands.
+            val display = remember(fighters, events) {
+                CatalogSlipDisplay(
+                    events = SkipArray((events as? LoadState.Loaded)?.value.orEmpty()),
+                    fighters = SkipArray((fighters as? LoadState.Loaded)?.value.orEmpty()),
+                )
+            }
             val theme = remember { ThemeTokens.defaults }
             // Same reason as the fighter screen below: the SDK view composes into whatever box
             // it is given and reads no insets of its own, so the host's top-bar padding has to

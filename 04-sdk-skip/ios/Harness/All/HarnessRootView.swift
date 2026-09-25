@@ -26,7 +26,7 @@ struct HarnessRootView: View {
             )
             BetSlipRootView(
                 store: store,
-                display: HarnessSlipDisplay(),
+                display: CatalogSlipDisplay(events: [], fighters: []),
                 theme: ThemeTokens.defaults,
                 onDeposit: {},
                 onBrowseEvents: {}
@@ -50,11 +50,4 @@ struct HarnessRootView: View {
             )
         }
     }
-}
-
-@MainActor
-private final class HarnessSlipDisplay: SlipDisplayContext {
-    func fighterName(id: String) -> String { id }
-    func opponentName(for selection: Selection) -> String { selection.fighterID }
-    func eventName(for selection: Selection) -> String { selection.boutID }
 }

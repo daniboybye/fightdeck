@@ -8,18 +8,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import fight.deck.betslip.BetSlipRootView
-import fight.deck.betslip.SlipDisplayContext
+import fight.deck.betslip.CatalogSlipDisplay
 import fight.deck.core.BetSlipStore
 import fight.deck.core.FightCore
-import fight.deck.core.Selection
 import fight.deck.core.ThemeTokens
 import skip.lib.Array as SkipArray
-
-private object StubSlipDisplay : SlipDisplayContext {
-    override fun fighterName(id: String): String = id
-    override fun opponentName(for_: Selection): String = "—"
-    override fun eventName(for_: Selection): String = "—"
-}
 
 /**
  * Links only Maven-published Skip SDK artifacts — no host-side kotlin-reflect/commonmark/material patches.
@@ -35,7 +28,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     BetSlipRootView(
                         store = store,
-                        display = StubSlipDisplay,
+                        display = CatalogSlipDisplay(events = SkipArray(emptyList()), fighters = SkipArray(emptyList())),
                         theme = theme,
                         onDeposit = {},
                         onBrowseEvents = {},

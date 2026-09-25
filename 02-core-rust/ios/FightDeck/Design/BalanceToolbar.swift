@@ -21,7 +21,7 @@ struct BalanceToolbarModifier: ViewModifier {
                         Label("Deposit", systemImage: "plus.circle")
                     }
                 } label: {
-                    Text(FightCoreDisplay.formatCurrencyAmount(state.slipStore.balance))
+                    Text(state.slipStore.snapshot.balanceDisplay)
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
                         .contentTransition(.numericText())

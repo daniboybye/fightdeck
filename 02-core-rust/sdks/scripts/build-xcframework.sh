@@ -6,13 +6,16 @@
 # crates statically link fightcore; the app-level linker keeps a single copy, which is why three
 # packages do not cost three copies of the kernel.
 #
-# usage: build-xcframework.sh <crate> <uniffi-namespace> <FrameworkName> <package-dir>
+# usage: build-xcframework.sh <crate> <uniffi-namespace> <FrameworkName> <package-dir> [<import>...]
 set -euo pipefail
 
-CRATE="${1:?usage: build-xcframework.sh <crate> <namespace> <FrameworkName> <package-dir>}"
+CRATE="${1:?usage: build-xcframework.sh <crate> <namespace> <FrameworkName> <package-dir> [<import>...]}"
 NAMESPACE="${2:?missing uniffi namespace}"
 FRAMEWORK="${3:?missing framework name}"
 PKG="$(cd "${4:?missing package dir}" && pwd)"
+# Swift modules whose UniFFI types this SDK's bindings use, e.g. FightCore for BoutIndex.
+shift 4
+IMPORTS=("$@")
 
 SDKS="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$SDKS"
@@ -48,7 +51,13 @@ for file in "$NAMESPACE.swift" "${NAMESPACE}FFI.h"; do
   [ -f "$SCRATCH/$file" ] || { echo "build-xcframework: $NAMESPACE did not produce $file" >&2; exit 1; }
 done
 
+# UniFFI's Swift generator calls an external type's public converter by name but never imports
+# the module that declares it; Kotlin gets the import, Swift has to be told. The line goes
+# straight after `import Foundation`, where UniFFI puts its own imports.
 cp "$SCRATCH/$NAMESPACE.swift" "$SWIFT_SRC/$NAMESPACE.swift"
+for module in ${IMPORTS[@]+"${IMPORTS[@]}"}; do
+  perl -pi -e "s/^import Foundation\$/import Foundation\nimport $module/" "$SWIFT_SRC/$NAMESPACE.swift"
+done
 cp "$SCRATCH/${NAMESPACE}FFI.h" "$FFI_INCLUDE/${NAMESPACE}FFI.h"
 
 # UniFFI's own modulemap carries `use` declarations for Darwin submodules that SwiftPM does not

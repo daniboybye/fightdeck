@@ -71,7 +71,7 @@ pub struct DepositMethod {
 /// Everything the deposit form shows, worked out from what has been typed so far.
 #[derive(uniffi::Record, Clone, Debug)]
 pub struct DepositQuote {
-    /// Two places, ready for `BetSlipStore::deposit`.
+    /// Two places, ready for `BetSlipStore::deposit` once `can_confirm` says so.
     pub amount: String,
     pub amount_display: String,
     pub fee_display: String,

@@ -7,7 +7,6 @@
 // validation, settlement, the place-bet workflow — stays in FightSlip.
 //
 
-import FightCore
 import FightSlip
 import Foundation
 import Observation
@@ -15,21 +14,19 @@ import Observation
 @Observable
 @MainActor
 final class ObservableBetSlipStore {
-    private(set) var slipState: SlipStateRecord
-    private(set) var slip: BetSlipRecord
-    private(set) var balance: String
+    /// The slip, its derived state and the balance, as FightSlip last reported them.
+    private(set) var snapshot: SlipSnapshot
     private let store: BetSlipStore
-    private let listener: SlipStateListenerBridge
+    private let listener: SlipSnapshotListenerBridge
 
     init(store: BetSlipStore) {
         self.store = store
-        self.slipState = store.currentState()
-        self.slip = store.currentSlip()
-        self.balance = store.balance()
-        let bridge = SlipStateListenerBridge()
+        // Read once here; the listener only reports changes, it does not replay this.
+        self.snapshot = store.currentSnapshot()
+        let bridge = SlipSnapshotListenerBridge()
         self.listener = bridge
-        bridge.onUpdate = { [weak self] state in
-            self?.applyListenerUpdate(state)
+        bridge.apply = { [weak self] snapshot in
+            self?.snapshot = snapshot
         }
         store.addListener(listener: bridge)
     }
@@ -46,43 +43,33 @@ final class ObservableBetSlipStore {
         store.removeSelection(boutId: boutId, fighterId: fighterId)
     }
 
-    func isSelected(boutId: String, fighterId: String) -> Bool {
-        store.isSelected(boutId: boutId, fighterId: fighterId)
-    }
-
+    /// `amount` is `DepositQuote.amount` from a quote whose `canConfirm` enabled the button,
+    /// and FightSlip checks it against the same limits, so a refusal here is a bug to stop on
+    /// rather than a deposit to lose without a word.
     func deposit(amount: String) {
-        _ = try? store.deposit(amount: amount)
-    }
-
-    func placeBet() -> PlaceBetOutcome {
-        store.placeBet()
-    }
-
-    private func applyListenerUpdate(_ state: SlipStateRecord) {
-        slipState = state
-        slip = store.currentSlip()
-        balance = store.balance()
-    }
-}
-
-private final class SlipStateListenerBridge: SlipStateListener, @unchecked Sendable {
-    var onUpdate: (@MainActor (SlipStateRecord) -> Void)?
-
-    func onSlipStateChanged(state: SlipStateRecord) {
-        Task { @MainActor in
-            onUpdate?(state)
+        do {
+            try store.deposit(amount: amount)
+        } catch {
+            preconditionFailure("FightSlip refused a confirmed deposit: \(error)")
         }
     }
+
+    func placeBet() {
+        store.placeBet()
+    }
 }
 
-/// Thin `try?` wrappers over FightCore. The kernel returns an error for unparseable input;
-/// a label has nothing useful to do with one, so it shows the raw value instead.
-enum FightCoreDisplay {
-    static func formatMoneyAmount(_ amount: String) -> String {
-        (try? formatMoney(amount: amount)) ?? amount
-    }
+private final class SlipSnapshotListenerBridge: SlipSnapshotListener, @unchecked Sendable {
+    var apply: (@MainActor (SlipSnapshot) -> Void)?
 
-    static func formatCurrencyAmount(_ amount: String) -> String {
-        (try? formatCurrency(amount: amount)) ?? amount
+    /// Every mutation starts on the main thread, so the snapshot is applied before the call
+    /// that caused it returns and the next body pass already sees it. Hopping through a Task
+    /// here left the observed state one turn of the run loop behind the store.
+    func onSnapshot(snapshot: SlipSnapshot) {
+        if Thread.isMainThread {
+            MainActor.assumeIsolated { apply?(snapshot) }
+        } else {
+            Task { @MainActor in apply?(snapshot) }
+        }
     }
 }

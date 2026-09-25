@@ -83,9 +83,31 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:2.4.10")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+    // The unit tests drive the generated bindings on the JVM. The AAR above carries only the
+    // Android dispatch libraries; the plain jar brings the one for the machine running Gradle.
+    testImplementation("net.java.dev.jna:jna:5.19.1")
+    // android.jar stubs org.json out; the fixtures are JSON.
+    testImplementation("org.json:json:20251224")
+}
+
+// UniFFI's Kotlin reaches Rust through JNA, which loads a library by name from wherever
+// jna.library.path points. So the unit tests need no emulator: the same crates built for the
+// host give the bindings a libfightdeck to call, and the tests check the boundary itself —
+// money as strings, enums, optionals, typed errors — rather than the rules the Rust tests
+// already cover.
+val rustSdks = rootProject.file("../sdks")
+// Studio does not inherit a shell's PATH, so rustup's default location is tried first.
+val cargo = File(System.getProperty("user.home"), ".cargo/bin/cargo")
+    .takeIf { it.canExecute() }?.path ?: "cargo"
+val buildHostRust = tasks.register<Exec>("buildHostRust") {
+    description = "Builds libfightdeck for the host so the JVM unit tests can load it."
+    workingDir = rustSdks
+    commandLine(cargo, "build", "-p", "fightdeck-android")
 }
 
 tasks.withType<Test>().configureEach {
+    dependsOn(buildHostRust)
+    systemProperty("jna.library.path", File(rustSdks, "target/debug").absolutePath)
     systemProperty("fightdeck.dataset.root", rootProject.file("../../dataset").absolutePath)
     systemProperty("fightdeck.fixtures.root", rootProject.file("../../contract/fixtures").absolutePath)
 }

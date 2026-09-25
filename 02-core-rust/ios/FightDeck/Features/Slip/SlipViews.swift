@@ -30,17 +30,17 @@ struct BetSlipView: View {
 
     var body: some View {
         Group {
-            if !state.slipStore.slip.selections.isEmpty {
+            if !state.slip.selections.isEmpty {
                 slipContent
-            } else if let message = state.betPlacedMessage {
+            } else if let message = state.slipStore.snapshot.confirmation {
                 placedState(message)
             } else {
                 emptyState
             }
         }
-        .animation(.smooth(duration: 0.35), value: state.slipStore.slip.selections.count)
-        .animation(.smooth(duration: 0.35), value: state.betPlacedMessage)
-        .sensoryFeedback(.success, trigger: state.betPlacedMessage) { _, new in new != nil }
+        .animation(.smooth(duration: 0.35), value: state.slip.selections.count)
+        .animation(.smooth(duration: 0.35), value: state.slipStore.snapshot.confirmation)
+        .sensoryFeedback(.success, trigger: state.slipStore.snapshot.confirmation) { _, new in new != nil }
     }
 
     private var emptyState: some View {
@@ -73,12 +73,12 @@ struct BetSlipView: View {
 
     private var slipContent: some View {
         List {
-            Section(betTypeTitle(mode: state.slipState.mode)) {
-                ForEach(state.slipStore.slip.selections, id: \.self) { selection in
+            Section(state.slipState.modeTitle) {
+                ForEach(state.slip.selections, id: \.self) { selection in
                     selectionRow(selection)
                 }
                 .onDelete { offsets in
-                    let toRemove = offsets.map { state.slipStore.slip.selections[$0] }
+                    let toRemove = offsets.map { state.slip.selections[$0] }
                     for selection in toRemove {
                         state.removeSelection(boutID: selection.boutId, fighterID: selection.fighterId)
                     }
@@ -95,8 +95,8 @@ struct BetSlipView: View {
             }
             if !state.slipState.errors.isEmpty {
                 Section {
-                    ForEach(state.slipState.errors) { error in
-                        Label(error.displayName, systemImage: "exclamationmark.triangle.fill")
+                    ForEach(state.slipState.errors, id: \.error) { issue in
+                        Label(issue.message, systemImage: "exclamationmark.triangle.fill")
                             .font(.callout)
                             .foregroundStyle(DesignTokens.ColorToken.negative)
                     }
@@ -104,7 +104,7 @@ struct BetSlipView: View {
             }
             Section("Deposit") {
                 LabeledContent("Balance") {
-                    Text(FightCoreDisplay.formatCurrencyAmount(state.slipStore.balance))
+                    Text(state.slipStore.snapshot.balanceDisplay)
                         .contentTransition(.numericText())
                 }
                 Button(action: state.presentDeposit) {
@@ -136,7 +136,7 @@ struct BetSlipView: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text(FightCoreDisplay.formatMoneyAmount(selection.odds))
+            Text(selection.odds)
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(DesignTokens.ColorToken.accent)
@@ -148,7 +148,7 @@ struct BetSlipView: View {
             TextField(
                 "Stake",
                 text: Binding(
-                    get: { state.slipStore.slip.stake },
+                    get: { state.slip.stake },
                     set: { state.slipStore.setStake($0) }
                 )
             )
@@ -160,8 +160,8 @@ struct BetSlipView: View {
 
     private var stakeChips: some View {
         PresetChipRow {
-            ForEach([5, 10, 25, 50], id: \.self) { chip in
-                PresetChipButton(title: "€\(chip)") { state.slipStore.setStake(String(format: "%.2f", Double(chip))) }
+            ForEach(stakePresets(), id: \.stake) { preset in
+                PresetChipButton(title: preset.title) { state.slipStore.setStake(preset.stake) }
             }
         }
     }

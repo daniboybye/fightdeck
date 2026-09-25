@@ -14,6 +14,8 @@ use std::sync::Arc;
 pub enum SlipError {
     #[error("decoding")]
     Decoding { field: String },
+    #[error("deposit refused: {reason}")]
+    DepositRefused { reason: String },
 }
 
 impl SlipError {
@@ -66,14 +68,41 @@ pub enum ValidationErrorRecord {
 #[derive(uniffi::Record, Clone, Debug)]
 pub struct SlipStateRecord {
     pub mode: BetModeRecord,
+    /// `Single` or `Accumulator`, the label above the legs.
+    pub mode_title: String,
     pub combined_odds_exact: Option<String>,
     pub combined_odds_display: Option<String>,
     pub total_stake: String,
     pub potential_return: String,
+    /// `€361.11`, for the bar that follows the user from tab to tab.
+    pub potential_return_display: String,
     pub potential_profit: String,
-    pub errors: Vec<ValidationErrorRecord>,
+    pub errors: Vec<ValidationIssue>,
     /// Ready-made summary rows, so both hosts render the same labels in the same order.
     pub summary_rows: Vec<SummaryRow>,
+}
+
+/// A validation error and the line the slip screen prints for it, so a host neither maps the
+/// enum to a code nor humanises the code on every pass.
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct ValidationIssue {
+    pub error: ValidationErrorRecord,
+    pub message: String,
+}
+
+/// Everything a host shows about the slip, delivered whole after every change. The hosts used
+/// to receive the state and then call back for the slip and the balance, which was two more
+/// crossings, two more locks and two more copies per tap.
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct SlipSnapshot {
+    pub slip: BetSlipRecord,
+    pub state: SlipStateRecord,
+    /// Two places, for `deposit_quote`.
+    pub balance: String,
+    pub balance_display: String,
+    /// The copy shown where the slip was, after a bet is placed. Any change to the legs
+    /// clears it; a stake edit or a deposit does not.
+    pub confirmation: Option<String>,
 }
 
 #[derive(uniffi::Record, Clone, Debug)]
@@ -117,22 +146,6 @@ pub struct CashOutOfferRecord {
     pub available: bool,
     pub amount: String,
     pub reason: Option<String>,
-}
-
-#[derive(uniffi::Record, Clone, Debug)]
-pub struct BoutIndexRecord {
-    pub id: String,
-    pub red_fighter_id: String,
-    pub blue_fighter_id: String,
-    pub winner_id: String,
-}
-
-/// What `place_bet` did, so neither host has to work out the balance or the message.
-#[derive(uniffi::Record, Clone, Debug)]
-pub struct PlaceBetOutcome {
-    pub potential_return: String,
-    pub message: Option<String>,
-    pub errors: Vec<ValidationErrorRecord>,
 }
 
 // MARK: - Conversions
@@ -257,12 +270,21 @@ impl SlipStateRecord {
 
         SlipStateRecord {
             mode: slip.mode.into(),
+            mode_title: match slip.mode {
+                BetMode::Single => "Single".to_string(),
+                BetMode::Accumulator => "Accumulator".to_string(),
+            },
             combined_odds_exact: state.combined_odds_exact.map(money::format_exact_odds),
             combined_odds_display: state.combined_odds_display.map(money::format),
             total_stake: money::format(state.total_stake),
             potential_return: money::format(state.potential_return),
+            potential_return_display: money::format_currency(state.potential_return),
             potential_profit: money::format(state.potential_profit),
-            errors: state.errors.into_iter().map(Into::into).collect(),
+            errors: state
+                .errors
+                .into_iter()
+                .map(|error| ValidationIssue { error: error.into(), message: error.message() })
+                .collect(),
             summary_rows,
         }
     }
@@ -318,17 +340,6 @@ impl From<CashOutOffer> for CashOutOfferRecord {
     }
 }
 
-impl From<BoutIndexRecord> for BoutIndex {
-    fn from(value: BoutIndexRecord) -> Self {
-        BoutIndex {
-            id: value.id,
-            red_fighter_id: value.red_fighter_id,
-            blue_fighter_id: value.blue_fighter_id,
-            winner_id: value.winner_id,
-        }
-    }
-}
-
 // MARK: - Stateless handle
 
 #[derive(uniffi::Object)]
@@ -339,8 +350,7 @@ pub struct SlipHandle {
 #[uniffi::export]
 impl SlipHandle {
     #[uniffi::constructor]
-    pub fn new(bouts: Vec<BoutIndexRecord>) -> Arc<Self> {
-        let bouts = bouts.into_iter().map(Into::into).collect();
+    pub fn new(bouts: Vec<BoutIndex>) -> Arc<Self> {
         Arc::new(Self { engine: Arc::new(SlipEngine::new(bouts)) })
     }
 
@@ -388,11 +398,23 @@ pub fn validation_error_code(error: ValidationErrorRecord) -> String {
     ValidationError::from(error).code().to_string()
 }
 
-/// The label the slip screen puts above the legs.
+/// A quick-stake chip: what it says and the stake it sets.
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct StakePreset {
+    pub title: String,
+    pub stake: String,
+}
+
+/// The chips under the stake field. The hosts used to write the amounts twice and format them
+/// through a `Double`, and Kotlin's `String.format` wrote `5,00` in a comma locale, which the
+/// store then rejected as an invalid stake.
 #[uniffi::export]
-pub fn bet_type_title(mode: BetModeRecord) -> String {
-    match mode {
-        BetModeRecord::Single => "Single".to_string(),
-        BetModeRecord::Accumulator => "Accumulator".to_string(),
-    }
+pub fn stake_presets() -> Vec<StakePreset> {
+    ["5", "10", "25", "50"]
+        .into_iter()
+        .map(|amount| {
+            let stake = money::parse_exact(amount);
+            StakePreset { title: format!("€{amount}"), stake: money::format(stake) }
+        })
+        .collect()
 }

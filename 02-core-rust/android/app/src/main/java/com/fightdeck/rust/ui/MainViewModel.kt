@@ -20,10 +20,7 @@ import uniffi.fightevents.MediaItem
 import uniffi.fightevents.NewsItem
 import uniffi.fightevents.assetUrl
 import uniffi.fightevents.startAssetServer
-import uniffi.fightslip.BetSlipRecord
-import uniffi.fightslip.BoutIndexRecord
-import uniffi.fightslip.SlipHandle
-import uniffi.fightslip.SlipStateRecord
+import uniffi.fightslip.SlipSnapshot
 
 sealed interface LoadState<out T> {
     data object Loading : LoadState<Nothing>
@@ -38,10 +35,9 @@ sealed interface BootstrapState {
     data object Ready : BootstrapState
 }
 
-/** The three Rust SDKs, available after background bootstrap completes. */
+/** The Rust objects the screens use, available after background bootstrap completes. */
 data class RustEngine(
     val catalog: EventCatalog,
-    val slip: SlipHandle,
     val slipStore: StateFlowBetSlipStore,
 )
 
@@ -62,9 +58,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _media = MutableStateFlow<LoadState<List<MediaItem>>>(LoadState.Loading)
     val media: StateFlow<LoadState<List<MediaItem>>> = _media.asStateFlow()
 
-    private val _betPlacedMessage = MutableStateFlow<String?>(null)
-    val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
-
     init {
         bootstrap()
     }
@@ -76,7 +69,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun bootstrap() {
         viewModelScope.launch {
             _engine.value?.slipStore?.close()
-            _engine.value?.slip?.close()
             _engine.value?.catalog?.close()
             _engine.value = null
             _bootstrapState.value = BootstrapState.Loading("Loading fight core…")
@@ -112,14 +104,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun fighter(id: String): FighterSummary? =
         runCatching { requireCatalog().fighter(id) }.getOrNull()
 
-    val slip: StateFlow<BetSlipRecord>
-        get() = requireSlipStore().slip
-
-    val slipState: StateFlow<SlipStateRecord>
-        get() = requireSlipStore().slipState
-
-    val balance: StateFlow<String>
-        get() = requireSlipStore().balance
+    val snapshot: StateFlow<SlipSnapshot>
+        get() = requireSlipStore().snapshot
 
     fun refreshEvents() {
         _events.value = loadState("Could not load events") { requireCatalog().events() }
@@ -143,7 +129,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleSelection(bout: BoutSummary, fighterId: String, odds: String) {
         requireSlipStore().toggleSelection(bout.id, fighterId, odds)
-        _betPlacedMessage.value = null
     }
 
     fun updateStake(stake: String) {
@@ -152,11 +137,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun removeSelection(boutId: String, fighterId: String) {
         requireSlipStore().removeSelection(boutId, fighterId)
-        _betPlacedMessage.value = null
     }
 
     fun placeBet() {
-        _betPlacedMessage.value = requireSlipStore().placeBet().message
+        requireSlipStore().placeBet()
     }
 
     fun deposit(amount: String) {
@@ -165,7 +149,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         _engine.value?.slipStore?.close()
-        _engine.value?.slip?.close()
         _engine.value?.catalog?.close()
         super.onCleared()
     }
@@ -185,16 +168,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Log.i(TAG, "EventCatalog ready")
 
             onStep("Starting bet slip…")
-            val slip = SlipHandle(
-                catalog.boutIndex().map {
-                    BoutIndexRecord(it.id, it.redFighterId, it.blueFighterId, it.winnerId)
-                },
+            val slipStore = StateFlowBetSlipStore(
+                uniffi.fightslip.BetSlipStore(catalog.boutIndex(), "500.00"),
             )
-            val slipStore = StateFlowBetSlipStore(uniffi.fightslip.BetSlipStore(slip, "500.00"))
             Log.i(TAG, "BetSlipStore ready")
 
             onStep("Preparing UI…")
-            return RustEngine(catalog, slip, slipStore)
+            return RustEngine(catalog, slipStore)
         }
     }
 }

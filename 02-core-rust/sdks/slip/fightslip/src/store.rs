@@ -2,24 +2,27 @@
 //! `placeBet`; those live here now, so a rule change lands once.
 
 use crate::engine::SlipEngine;
-use crate::ffi::{
-    parse_amount, BetSlipRecord, PlaceBetOutcome, SlipError, SlipHandle, SlipStateRecord,
-};
-use fightcore::money;
-use fightcore::types::{BetSlip, Selection};
+use crate::ffi::{parse_amount, SlipError, SlipSnapshot, SlipStateRecord};
+use fightcore::{deposit, money};
+use fightcore::types::{BetSlip, BoutIndex, Selection};
 use rust_decimal::Decimal;
 use std::sync::{Arc, Mutex, MutexGuard};
 
+/// Receives the whole slip after every change. There is no replay on registration: a host
+/// reads `current_snapshot` once to start from, and is told about every change after that.
 #[uniffi::export(foreign)]
-pub trait SlipStateListener: Send + Sync {
-    fn on_slip_state_changed(&self, state: SlipStateRecord);
+pub trait SlipSnapshotListener: Send + Sync {
+    fn on_snapshot(&self, snapshot: SlipSnapshot);
 }
 
 struct StoreInner {
     slip: BetSlip,
     balance: Decimal,
+    /// Set by a successful `place_bet`, cleared by the next change to the legs. Both hosts
+    /// used to keep this and decide for themselves when it went away.
+    confirmation: Option<String>,
     engine: Arc<SlipEngine>,
-    listeners: Vec<Arc<dyn SlipStateListener>>,
+    listeners: Vec<Arc<dyn SlipSnapshotListener>>,
 }
 
 fn lock(inner: &Mutex<StoreInner>) -> MutexGuard<'_, StoreInner> {
@@ -33,8 +36,10 @@ pub struct BetSlipStore {
 
 #[uniffi::export]
 impl BetSlipStore {
+    /// Takes the catalogue's bout index directly. `SlipHandle` is the stateless API for
+    /// settlement and cash-out; a host that only shows a slip never needs to hold one.
     #[uniffi::constructor]
-    pub fn new(handle: Arc<SlipHandle>, balance: String) -> Result<Arc<Self>, SlipError> {
+    pub fn new(bouts: Vec<BoutIndex>, balance: String) -> Result<Arc<Self>, SlipError> {
         let balance = parse_amount("balance", &balance)?;
         Ok(Arc::new(Self {
             inner: Mutex::new(StoreInner {
@@ -45,28 +50,19 @@ impl BetSlipStore {
                     stake_raw: "10.00".to_string(),
                 },
                 balance,
-                engine: Arc::clone(&handle.engine),
+                confirmation: None,
+                engine: Arc::new(SlipEngine::new(bouts)),
                 listeners: vec![],
             }),
         }))
     }
 
-    pub fn add_listener(&self, listener: Arc<dyn SlipStateListener>) {
+    pub fn add_listener(&self, listener: Arc<dyn SlipSnapshotListener>) {
         lock(&self.inner).listeners.push(listener);
-        self.notify();
     }
 
-    pub fn current_state(&self) -> SlipStateRecord {
-        let inner = lock(&self.inner);
-        Self::state_of(&inner)
-    }
-
-    pub fn current_slip(&self) -> BetSlipRecord {
-        lock(&self.inner).slip.clone().into()
-    }
-
-    pub fn balance(&self) -> String {
-        money::format(lock(&self.inner).balance)
+    pub fn current_snapshot(&self) -> SlipSnapshot {
+        Self::snapshot_of(&lock(&self.inner))
     }
 
     pub fn set_stake(&self, stake: String) {
@@ -100,6 +96,7 @@ impl BetSlipStore {
                     .push(Selection { bout_id, fighter_id, odds: parsed_odds }),
             }
             Self::sync_mode(&mut inner);
+            inner.confirmation = None;
         }
         self.notify();
     }
@@ -112,57 +109,43 @@ impl BetSlipStore {
                 .selections
                 .retain(|s| !(s.bout_id == bout_id && s.fighter_id == fighter_id));
             Self::sync_mode(&mut inner);
+            inner.confirmation = None;
         }
         self.notify();
     }
 
-    pub fn is_selected(&self, bout_id: String, fighter_id: String) -> bool {
-        lock(&self.inner)
-            .slip
-            .selections
-            .iter()
-            .any(|s| s.bout_id == bout_id && s.fighter_id == fighter_id)
-    }
-
-    pub fn deposit(&self, amount: String) -> Result<String, SlipError> {
-        let parsed = parse_amount("amount", &amount)?;
-        let balance = {
-            let mut inner = lock(&self.inner);
-            inner.balance += parsed;
-            inner.balance
-        };
+    /// Credits `DepositQuote::amount`. The store applies the same limits as the quote, so an
+    /// amount the form would not have confirmed never reaches the balance, whichever host
+    /// sent it.
+    pub fn deposit(&self, amount: String) -> Result<(), SlipError> {
+        let amount = money::money(parse_amount("amount", &amount)?);
+        if let Some(reason) = deposit::limit_message(amount) {
+            return Err(SlipError::DepositRefused { reason: reason.to_string() });
+        }
+        lock(&self.inner).balance += amount;
         self.notify();
-        Ok(money::format(balance))
+        Ok(())
     }
 
-    /// Validates, takes the stake, empties the slip and reports the confirmation copy. This
-    /// was the last betting workflow still written twice in Swift and Kotlin.
-    pub fn place_bet(&self) -> PlaceBetOutcome {
-        let outcome = {
+    /// Validates, takes the stake, empties the slip and leaves the confirmation in the next
+    /// snapshot. A slip with errors is left exactly as it was: the hosts disable the button
+    /// while any error stands, so there is nothing to report back.
+    pub fn place_bet(&self) {
+        {
             let mut inner = lock(&self.inner);
             let state = inner.engine.slip_state(&inner.slip, inner.balance);
             if !state.errors.is_empty() {
-                PlaceBetOutcome {
-                    potential_return: money::format(state.potential_return),
-                    message: None,
-                    errors: state.errors.into_iter().map(Into::into).collect(),
-                }
-            } else {
-                inner.balance -= state.total_stake;
-                inner.slip.selections.clear();
-                Self::sync_mode(&mut inner);
-                PlaceBetOutcome {
-                    potential_return: money::format(state.potential_return),
-                    message: Some(format!(
-                        "{} returns if it lands",
-                        money::format_currency(state.potential_return)
-                    )),
-                    errors: vec![],
-                }
+                return;
             }
-        };
+            inner.balance -= state.total_stake;
+            inner.slip.selections.clear();
+            Self::sync_mode(&mut inner);
+            inner.confirmation = Some(format!(
+                "{} returns if it lands",
+                money::format_currency(state.potential_return)
+            ));
+        }
         self.notify();
-        outcome
     }
 }
 
@@ -171,21 +154,27 @@ impl BetSlipStore {
         inner.slip.mode = SlipEngine::mode_for(inner.slip.selections.len());
     }
 
-    fn state_of(inner: &StoreInner) -> SlipStateRecord {
-        SlipStateRecord::new(
-            inner.engine.slip_state(&inner.slip, inner.balance),
-            &inner.slip,
-        )
+    fn snapshot_of(inner: &StoreInner) -> SlipSnapshot {
+        SlipSnapshot {
+            slip: inner.slip.clone().into(),
+            state: SlipStateRecord::new(
+                inner.engine.slip_state(&inner.slip, inner.balance),
+                &inner.slip,
+            ),
+            balance: money::format(inner.balance),
+            balance_display: money::format_currency(inner.balance),
+            confirmation: inner.confirmation.clone(),
+        }
     }
 
     /// Listeners may re-enter and call back into the store; never hold the mutex across them.
     fn notify(&self) {
-        let (state, listeners) = {
+        let (snapshot, listeners) = {
             let inner = lock(&self.inner);
-            (Self::state_of(&inner), inner.listeners.clone())
+            (Self::snapshot_of(&inner), inner.listeners.clone())
         };
         for listener in listeners {
-            listener.on_slip_state_changed(state.clone());
+            listener.on_snapshot(snapshot.clone());
         }
     }
 }

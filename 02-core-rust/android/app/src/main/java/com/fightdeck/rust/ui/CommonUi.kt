@@ -48,7 +48,6 @@ import com.fightdeck.rust.design.Tokens
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import uniffi.fightcore.formatCurrency
 
 @Composable
 internal fun SectionHeader(title: String, modifier: Modifier = Modifier) {
@@ -183,7 +182,7 @@ internal fun DetailScaffold(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
                     BalanceMenuAction(
-                        balanceLabel = formatCurrency(balance),
+                        balanceLabel = balance,
                         onDeposit = onDeposit,
                     )
                 },

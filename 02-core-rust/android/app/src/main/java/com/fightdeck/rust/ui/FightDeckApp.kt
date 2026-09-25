@@ -49,7 +49,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.fightdeck.rust.design.Tokens
-import uniffi.fightcore.formatCurrency
 
 /**
  * Both event tabs render the same two events. The mode decides which half of the data is
@@ -164,9 +163,9 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
             FightDeckMain(viewModel = viewModel, onDeposit = { nav.navigate("deposit") })
         }
         composable("deposit") {
-            val balance by viewModel.balance.collectAsStateWithLifecycle()
+            val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
             DepositScreen(
-                balance = balance,
+                balance = snapshot.balance,
                 onDone = {
                     viewModel.deposit(it)
                     nav.popBackStack()
@@ -180,9 +179,10 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
-        val slip by viewModel.slip.collectAsStateWithLifecycle()
-        val slipState by viewModel.slipState.collectAsStateWithLifecycle()
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
+        val slip = snapshot.slip
+        // Formatted by FightSlip: every screen below only prints it.
+        val balance = snapshot.balanceDisplay
 
         // Saveable, not plain remember: pushing the deposit destination takes the tab host out
         // of composition, and a plain remember would hand the user back the first tab instead
@@ -208,7 +208,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         if (showsSlipToolbar) {
                             BetSlipToolbar(
                                 legCount = slip.selections.size,
-                                potentialReturn = formatCurrency(slipState.potentialReturn),
+                                potentialReturn = snapshot.state.potentialReturnDisplay,
                                 onClick = { selectedTab = SLIP_TAB },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
@@ -335,7 +335,7 @@ private fun EventsNavHost(
     val media by viewModel.media.collectAsStateWithLifecycle()
     // Collected here, not read through viewModel.isSelected(): a plain getter is invisible to
     // Compose, so an odds tap only showed up once something else forced a recomposition.
-    val slip by viewModel.slip.collectAsStateWithLifecycle()
+    val slip = viewModel.snapshot.collectAsStateWithLifecycle().value.slip
     val loadedEvents = (events as? LoadState.Loaded)?.value.orEmpty()
 
     NavHost(navController = nav, startDestination = "events", modifier = modifier) {
@@ -456,20 +456,13 @@ private fun SlipNavHost(
     onBrowseEvents: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val slip by viewModel.slip.collectAsStateWithLifecycle()
-    val balance by viewModel.balance.collectAsStateWithLifecycle()
-    val placedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
-
-    val slipState by viewModel.slipState.collectAsStateWithLifecycle()
+    val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
 
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {
             BetSlipScreen(
                 viewModel = viewModel,
-                slip = slip,
-                slipState = slipState,
-                balance = balance,
-                placedMessage = placedMessage,
+                snapshot = snapshot,
                 onBrowseEvents = onBrowseEvents,
                 onDeposit = onDeposit,
             )

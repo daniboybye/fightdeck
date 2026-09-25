@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01CD6FAC6AD6F583001F2480 /* ObservableBetSlipStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9E4B53903701D9143EC65E5 /* ObservableBetSlipStoreTests.swift */; };
 		0694C0054D1E2960174E2156 /* DatasetLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 072C0B77630BA46C802A220E /* DatasetLocator.swift */; };
 		0FE2600B8D971FE1ED1E412B /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = 78720776C9C05B178D7B6255 /* FightCore */; };
 		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
@@ -86,6 +87,7 @@
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		EABF49CC023575873495AFCA /* DepositContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositContract.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
+		F9E4B53903701D9143EC65E5 /* ObservableBetSlipStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableBetSlipStoreTests.swift; sourceTree = "<group>"; };
 		FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -119,6 +121,7 @@
 			children = (
 				5D66837804C3536582216021 /* FightCoreFixtureTests.swift */,
 				8F09AEF29810752187509740 /* FixtureLoader.swift */,
+				F9E4B53903701D9143EC65E5 /* ObservableBetSlipStoreTests.swift */,
 			);
 			path = FightDeckTests;
 			sourceTree = "<group>";
@@ -436,6 +439,7 @@
 			files = (
 				F1060FA2A462524D25A47296 /* FightCoreFixtureTests.swift in Sources */,
 				3541578715FFE9CEC805A044 /* FixtureLoader.swift in Sources */,
+				01CD6FAC6AD6F583001F2480 /* ObservableBetSlipStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

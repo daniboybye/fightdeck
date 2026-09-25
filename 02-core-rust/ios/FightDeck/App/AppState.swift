@@ -40,8 +40,6 @@ final class AppState {
     /// never reference each other — the app is the only place they meet.
     let catalog: EventCatalog
 
-    var betPlacedMessage: String?
-
     /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
     /// toolbars depend on observable state rather than on a closure handed down through the
     /// environment, which is a new value on every `RootView` body pass.
@@ -51,12 +49,13 @@ final class AppState {
         // An unreadable dataset shows as empty lists rather than stopping the app at launch.
         self.catalog = (try? EventCatalog.load(datasetRoot: DatasetLocator.datasetRoot().path))
             ?? EventCatalog.empty()
-        let handle = SlipHandle(bouts: catalog.boutIndex().map(BoutIndexRecord.init))
-        let store = try! BetSlipStore(handle: handle, balance: "500.00")
+        let store = try! BetSlipStore(bouts: catalog.boutIndex(), balance: "500.00")
         self.slipStore = ObservableBetSlipStore(store: store)
     }
 
-    var slipState: SlipStateRecord { slipStore.slipState }
+    var slip: BetSlipRecord { slipStore.snapshot.slip }
+
+    var slipState: SlipStateRecord { slipStore.snapshot.state }
 
     func bootstrap() async {
         bootstrapState = .loading
@@ -99,20 +98,20 @@ final class AppState {
 
     func toggleSelection(bout: BoutSummary, fighterID: String, odds: String) {
         slipStore.toggleSelection(boutId: bout.id, fighterId: fighterID, odds: odds)
-        betPlacedMessage = nil
     }
 
+    /// Read from the snapshot every other view draws from, not asked of the store: a second
+    /// source could answer for a change the rest of the screen has not seen yet.
     func isSelected(boutID: String, fighterID: String) -> Bool {
-        slipStore.isSelected(boutId: boutID, fighterId: fighterID)
+        slip.selections.contains { $0.boutId == boutID && $0.fighterId == fighterID }
     }
 
     func removeSelection(boutID: String, fighterID: String) {
         slipStore.removeSelection(boutId: boutID, fighterId: fighterID)
-        betPlacedMessage = nil
     }
 
     func placeBet() {
-        betPlacedMessage = slipStore.placeBet().message
+        slipStore.placeBet()
     }
 
     func presentDeposit() {
@@ -132,19 +131,6 @@ final class AppState {
     }
 }
 
-private extension BoutIndexRecord {
-    /// FightEvents produces the index, FightSlip consumes it. Independent SDKs mean
-    /// independent types, and the app pays four lines for that independence.
-    init(_ entry: BoutIndexEntry) {
-        self.init(
-            id: entry.id,
-            redFighterId: entry.redFighterId,
-            blueFighterId: entry.blueFighterId,
-            winnerId: entry.winnerId
-        )
-    }
-}
-
 // Retroactive because the records are the SDKs' and Identifiable is the standard library's.
 // UniFFI will not emit the conformance, so the app has to own it and accept that a future
 // version of an SDK could add its own.
@@ -158,10 +144,3 @@ extension NewsItem: @retroactive Identifiable {}
 
 extension MediaItem: @retroactive Identifiable {}
 
-extension ValidationErrorRecord: @retroactive Identifiable {
-    public var id: String { validationErrorCode(error: self) }
-}
-
-extension ValidationErrorRecord {
-    var displayName: String { humaniseCode(raw: id) }
-}

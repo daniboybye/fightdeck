@@ -4,7 +4,7 @@ use crate::catalog::{Catalog, CatalogError};
 use crate::dataset::{Bout, Event, Fighter, MediaFile, MediaItem, NewsFile, NewsItem};
 use crate::display;
 use crate::tape;
-use fightcore::{money, odds};
+use fightcore::{money, odds, BoutIndex};
 use serde::de::DeserializeOwned;
 use std::fs;
 use std::path::Path;
@@ -111,14 +111,6 @@ pub struct TaleOfTheTape {
     pub edge_summary: Option<String>,
 }
 
-#[derive(uniffi::Record, Clone, Debug)]
-pub struct BoutIndexEntry {
-    pub id: String,
-    pub red_fighter_id: String,
-    pub blue_fighter_id: String,
-    pub winner_id: String,
-}
-
 /// Everything the slip row needs about one leg. This replaced two nested lookups that the
 /// slip screen was doing by hand on every body pass.
 #[derive(uniffi::Record, Clone, Debug)]
@@ -134,7 +126,8 @@ fn corner_summary(
     corner: &crate::dataset::Corner,
 ) -> CornerSummary {
     let fighter = catalog.fighter(&corner.fighter_id);
-    let implied = money::try_parse(&corner.closing_odds.decimal)
+    let decimal = money::try_parse(&corner.closing_odds.decimal).ok();
+    let implied = decimal
         .map(|value| money::format_implied_probability(odds::implied_probability(value)))
         .unwrap_or_default();
     CornerSummary {
@@ -145,7 +138,8 @@ fn corner_summary(
             || format!("assets/fighters/{}.jpg", corner.fighter_id),
             |f| f.portrait.clone(),
         ),
-        odds_decimal: corner.closing_odds.decimal.clone(),
+        // Two places whatever the dataset wrote, so no odds button formats its own label.
+        odds_decimal: decimal.map_or_else(|| corner.closing_odds.decimal.clone(), money::format),
         odds_fractional: corner.closing_odds.fractional.clone(),
         implied_probability: implied,
     }
@@ -319,11 +313,11 @@ impl EventCatalog {
         })
     }
 
-    pub fn bout_index(&self) -> Vec<BoutIndexEntry> {
+    pub fn bout_index(&self) -> Vec<BoutIndex> {
         self.catalog
             .bout_index()
             .into_iter()
-            .map(|(id, red, blue, winner)| BoutIndexEntry {
+            .map(|(id, red, blue, winner)| BoutIndex {
                 id: id.to_string(),
                 red_fighter_id: red.to_string(),
                 blue_fighter_id: blue.to_string(),

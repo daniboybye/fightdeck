@@ -92,6 +92,11 @@ impl ValidationError {
             Self::PayoutExceedsLimit => "payout_exceeds_limit",
         }
     }
+
+    /// What the slip screen prints under the summary: the code, humanised.
+    pub fn message(&self) -> String {
+        crate::display::humanise(self.code())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -162,7 +167,10 @@ pub struct CashOutOffer {
     pub reason: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+/// One bout as the slip needs to know it: who is in it and who won. `fightevents` builds the
+/// index and `fightslip` validates and settles against it. Declaring it here, where both feature
+/// SDKs already depend, is what lets the host pass one straight to the other.
+#[derive(Debug, Clone, uniffi::Record)]
 pub struct BoutIndex {
     pub id: String,
     pub red_fighter_id: String,

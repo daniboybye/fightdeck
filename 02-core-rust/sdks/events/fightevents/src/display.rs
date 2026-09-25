@@ -1,15 +1,7 @@
 //! Presentation strings that are pure functions of the data. Every one of these existed
 //! twice — once in `DisplayFormatting.swift`, once inline in `FightDeckScreens.kt`.
 
-/// `split_decision` reads as a database column; `Split decision` reads as a result.
-pub fn humanise(raw: &str) -> String {
-    let spaced = raw.replace('_', " ");
-    let mut chars = spaced.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-        None => String::new(),
-    }
-}
+pub use fightcore::display::humanise;
 
 /// Clock style, not "3 min" — a media player never drops the seconds.
 pub fn duration(total_seconds: u32) -> String {

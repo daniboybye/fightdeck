@@ -40,6 +40,13 @@ struct DepositTests {
         )
     }
 
+    @Test("a decimal comma reads as a point")
+    func decimalComma() {
+        let quote = Deposit.quote(amountText: "10,50", method: .card, balance: 500)
+        #expect(quote.amount == Decimal(string: "10.50"))
+        #expect(quote.validationMessage == nil)
+    }
+
     @Test("an empty field is not an error but cannot be confirmed")
     func emptyField() {
         let quote = Deposit.quote(amountText: "", method: .card, balance: 500)

@@ -63,9 +63,11 @@ public enum Deposit {
     public static let maximum = Decimal(2_000)
 
     /// The amount is rounded before anything else reads it, so the limits judge — and the fee
-    /// is charged on — the figure that will actually reach the balance.
+    /// is charged on — the figure that will actually reach the balance. A decimal comma reads
+    /// as a point: that is what the number pad types in a comma locale. A character map rather
+    /// than `replacingOccurrences`, which Android would pay ICU for.
     public static func quote(amountText: String, method: DepositMethod, balance: Decimal) -> DepositQuote {
-        let amount = Money.money(Money.parse(amountText))
+        let amount = Money.money(Money.parse(String(amountText.map { $0 == "," ? "." : $0 })))
         let fee = Money.money(amount * method.feeRate)
         let validationMessage: String? = if amountText.isEmpty {
             nil

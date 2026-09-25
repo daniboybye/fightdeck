@@ -323,8 +323,11 @@ public struct InsetGroupedList: ViewModifier {
         content
             .scrollContentBackground(.hidden)
             .padding(.horizontal, theme.spacingLG)
-        #else
+        #elseif os(iOS)
         content.listStyle(.insetGrouped)
+        #else
+        // macOS builds this package only for the core's fixture tests, and has no inset style.
+        content
         #endif
     }
 }

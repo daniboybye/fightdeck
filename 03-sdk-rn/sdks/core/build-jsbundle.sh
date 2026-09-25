@@ -21,21 +21,12 @@ if ! command -v npx >/dev/null 2>&1; then
     exit 1
 fi
 
-# Android already selects an entry point per flavour: syncRnEntry copies index.<flavour>.js
-# to index.active.js before Gradle bundles. iOS always bundled the all-surfaces entry, so a
-# deposit-only host still shipped the bet slip's JavaScript, and the measured cost of the
-# second feature was native code only.
+# The entry point registers exactly the surfaces of one measurement stage. Android's Gradle
+# build calls the same script per flavour, so both platforms bundle from one list. iOS once
+# bundled the all-surfaces entry for every stage, so a deposit-only host still shipped the
+# bet slip's JavaScript and the measured cost of the second feature was native code only.
 FEATURES="${FIGHTDECK_FEATURES:-all}"
-case "$FEATURES" in
-    runtime) ENTRY="src/runtime/index.runtime.js" ;;
-    deposit) ENTRY="src/runtime/index.deposit.js" ;;
-    both)    ENTRY="src/runtime/index.js" ;;
-    all)     ENTRY="src/runtime/index.all.js" ;;
-    *)
-        echo "error: FIGHTDECK_FEATURES must be runtime, deposit, both or all (got '$FEATURES')" >&2
-        exit 1
-        ;;
-esac
+ENTRY="$(node "$ROOT/scripts/runtime-entry.mjs" "$FEATURES")"
 
 echo "Bundling JS runtime — features: $FEATURES (entry $ENTRY)"
 mkdir -p "$ROOT/ios/Resources" "$ROOT/ios/.jsbundle-staging"

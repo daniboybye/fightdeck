@@ -1,3 +1,5 @@
+import com.facebook.react.tasks.BundleHermesCTask
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -5,12 +7,13 @@ plugins {
     id("com.facebook.react")
 }
 
-val rnEntryRoot = rootProject.file("../sdks/core/src/runtime")
-val rnActiveEntry = rnEntryRoot.resolve("index.active.js")
+// Which surfaces a flavour's bundle registers is decided by the same script that picks the
+// iOS bundle's entry, so each measurement stage carries only its own features' JavaScript.
+val rnEntryScript = rootProject.file("../sdks/core/scripts/runtime-entry.mjs")
+val rnEntryDir = rootProject.file("../sdks/core/build/entry")
 
 react {
     root = file("../../")
-    entryFile = rnActiveEntry
     debuggableVariants.set(emptyList())
     autolinkLibrariesWithApp()
 }
@@ -100,26 +103,22 @@ android {
     }
 }
 
-fun syncRnEntry(flavor: String) {
-    val source = when (flavor) {
-        "runtime" -> rnEntryRoot.resolve("index.runtime.js")
-        "deposit" -> rnEntryRoot.resolve("index.deposit.js")
-        "both" -> rnEntryRoot.resolve("index.js")
-        else -> rnEntryRoot.resolve("index.all.js")
-    }
-    source.copyTo(rnActiveEntry, overwrite = true)
-}
-
 androidComponents {
     onVariants { variant ->
-        val flavor = variant.productFlavors.firstOrNull { it.first == "features" }?.second ?: "both"
+        val flavor = variant.productFlavors.firstOrNull { it.first == "features" }?.second ?: "all"
         val capitalized = variant.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-        tasks.register("syncRnEntry$capitalized") {
-            doLast { syncRnEntry(flavor) }
+        val entry = rnEntryDir.resolve("index.$flavor.js")
+        val writeEntry = tasks.register<Exec>("writeRnEntry$capitalized") {
+            inputs.file(rnEntryScript)
+            outputs.file(entry)
+            commandLine("node", rnEntryScript.path, flavor)
         }
-        tasks.matching { it.name == "createBundle${capitalized}JsAndAssets" }.configureEach {
-            dependsOn("syncRnEntry$capitalized")
-        }
+        tasks.withType<BundleHermesCTask>()
+            .matching { it.name == "createBundle${capitalized}JsAndAssets" }
+            .configureEach {
+                dependsOn(writeEntry)
+                entryFile.set(entry)
+            }
     }
 }
 

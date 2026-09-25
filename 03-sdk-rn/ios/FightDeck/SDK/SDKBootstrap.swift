@@ -38,11 +38,11 @@ final class SDKBootstrap {
         if !Self.shouldSkipRNPrewarm {
             FightDeckRuntime.shared.prewarm()
         }
-        let metrics = FightDeckRuntime.shared.startupMetrics()
+        // The cold figure is logged by the runtime once the first surface exists; here it
+        // would always read zero.
         NSLog(
-            "[FightDeckStartup] prewarm=%.0fms cold=%.0fms skipPrewarm=%@",
-            metrics.prewarmedMilliseconds,
-            metrics.coldMilliseconds,
+            "[FightDeckStartup] prewarm=%.0fms skipPrewarm=%@",
+            FightDeckRuntime.shared.startupMetrics().prewarmedMilliseconds,
             Self.shouldSkipRNPrewarm ? "true" : "false"
         )
         didConfigure = true

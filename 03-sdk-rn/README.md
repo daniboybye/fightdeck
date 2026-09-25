@@ -134,9 +134,9 @@ Money uses `decimal.js` — never JavaScript `number`.
 | Path | iOS simulator | Android emulator (arm64) |
 | --- | --- | --- |
 | **Prewarm** (`ReactHost.start()` / `initializeReactHostWithLaunchOptions`) | **12–37 ms** | **113 ms** |
-| **Cold** (first surface without prior prewarm) | **0 ms** in current host | **0 ms** in current host |
+| **Cold** (first surface without prior prewarm) | **7 ms** | **19 ms** |
 
-The hooks report **synchronous host init**, not time-to-first-paint. The cold path is intentionally not exercised — prewarm is the production pattern. A `-SkipRNPrewarm` launch flag would be needed to quote a meaningful cold-vs-warm delta on stage.
+The hooks report **synchronous host init**, not time-to-first-paint: prewarm times the call that starts the host, cold times host start plus creating the first surface. Neither waits for the JavaScript to load, which happens on the JS thread afterwards. The cold row was measured on 25 Sep 2026, one run each, by launching with `-SkipRNPrewarm` (iOS, `iPhone 17 Pro` simulator, iOS 26.5) or `--ez SkipRNPrewarm true` (Android, `Medium_Phone_API_36.1` emulator, arm64), opening the Slip tab, and reading `[FightDeckStartup] cold=` from the log. The machine was under heavy load at the time, so read it as an order of magnitude. Before that, both hosts read the clock before creating the surface and reported 0 ms. Prewarm is the production pattern; the cold path exists to measure against it.
 
 ## Host app split
 
@@ -154,7 +154,7 @@ The hooks report **synchronous host init**, not time-to-first-paint. The cold pa
 2. **Android binary host (RN)** — SDK adapter AARs come from `sdks/*/out`;
    `react-android` / `hermes-android` still resolve from Maven to avoid duplicate classes.
 3. **Codegen writes the boundary, but not in the languages the hosts are written in** — `sdks/core/src/specs/NativeFightDeckRuntimeBridge.ts` is the one place the calls between React and the hosts are declared. Codegen turns it into an ObjC++ protocol with JSI glue at `pod install`, and a Java base class with JNI glue in Gradle. Swift cannot conform to a protocol whose header is C++, so `FightDeckRuntimeBridge.mm` forwards each generated method to `FeatureResults` in Swift. On Android the JNI half has to be compiled into the app's `libappmodules.so` while the Java half ships in the runtime AAR, so Codegen runs twice from the same `package.json` and the app build deletes its own copy of the Java class, which would otherwise not dex. What Codegen does not reach is a surface's own properties: React Native's root props are an untyped dictionary, so `*Params` → dictionary / `Bundle` is still written by hand on both sides.
-4. **Startup metrics** — measure host init, not TTI; cold path not wired in production hosts.
+4. **Startup metrics** — measure synchronous host init, not TTI. The cold path runs only behind the `SkipRNPrewarm` launch flag, and each runtime logs it when the first surface is created.
 5. **Visual parity on RN surfaces** — deposit and bet slip render through React Native widgets (`View`, `Text`, `TextInput`), not SwiftUI Liquid Glass or Material 3 expressive components. Theme JSON aligns colours and spacing with the native host, but the toolkit seam is visible by design.
 6. **iOS feature gating is a build-time concern only** — Which pods a target links is fixed by target name in the `Podfile`, so the demo app needs no conditional compilation and the four `ios/Harness/` measurement hosts each compile against exactly the SDKs they import. `FIGHTDECK_FEATURES` survives for one job the target name cannot do: picking the JS bundle's entry point when the SDK is built. Nothing ties the bundle to the host, so the `Podfile` compares the value against the `ios/.fightdeck-features` stamp and refuses a mismatch rather than producing an app whose size means nothing.
 7. **Android Fabric layout specs** — `FabricLayoutSpecsBridge` reflects `ReactSurfaceImpl.updateLayoutSpecs$ReactAndroid` because bridgeless RN 0.87 exposes no public pre-start layout API. Coupled to the pinned `react_native.version` in `versions.lock.toml`; upgrade RN only after re-verifying this seam.

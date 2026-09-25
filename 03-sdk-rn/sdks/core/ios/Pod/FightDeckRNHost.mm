@@ -124,12 +124,17 @@ static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mo
     return existing;
   }
 
-  if (!host->_prewarmed) {
-    host->_coldStartMs = (CFAbsoluteTimeGetCurrent() - start) * 1000.0;
-  }
-
+  BOOL cold = !host->_prewarmed;
   UIView *surfaceView = [host->_factory.rootViewFactory viewWithModuleName:moduleName
                                                          initialProperties:properties ?: @{}];
+  if (cold) {
+    // Without a prewarm the first surface starts the React host itself, so this is host start
+    // plus surface creation — the synchronous half of a cold start, the same half `prewarm`
+    // times. It was read before the surface was made, and so always said 0 ms.
+    host->_coldStartMs = (CFAbsoluteTimeGetCurrent() - start) * 1000.0;
+    host->_prewarmed = YES;
+    NSLog(@"[FightDeckStartup] cold=%.0fms", host->_coldStartMs);
+  }
 
   FightDeckRNSurfaceController *controller = [FightDeckRNSurfaceController new];
   controller.surfaceView = surfaceView;

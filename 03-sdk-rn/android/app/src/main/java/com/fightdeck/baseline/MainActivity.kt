@@ -24,11 +24,10 @@ class MainActivity : ComponentActivity(), DefaultHardwareBackBtnHandler {
         if (!skip) {
             FightDeckRNRuntime.prewarm(application)
         }
-        val (cold, prewarm) = FightDeckRNRuntime.startupMetrics()
-        android.util.Log.i(
-            "FightDeckStartup",
-            "prewarm=${prewarm}ms cold=${cold}ms skipPrewarm=$skip",
-        )
+        // The cold figure is logged by the runtime once the first surface exists; here it
+        // would always read zero.
+        val (_, prewarm) = FightDeckRNRuntime.startupMetrics()
+        android.util.Log.i("FightDeckStartup", "prewarm=${prewarm}ms skipPrewarm=$skip")
         enableEdgeToEdge()
         setContent {
             FightDeckApp()

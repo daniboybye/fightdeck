@@ -3,6 +3,7 @@ package com.fightdeck.rn.runtime
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -43,9 +44,10 @@ object FightDeckRNRuntime {
     ): View {
         val start = System.nanoTime()
         val host = reactHost(context.applicationContext as Application)
-        if (!prewarmed) {
+        val cold = !prewarmed
+        if (cold) {
             host.start()
-            coldStartMs = (System.nanoTime() - start) / 1_000_000
+            prewarmed = true
         }
         val themedContext = ContextThemeWrapper(
             context,
@@ -63,6 +65,13 @@ object FightDeckRNRuntime {
         val container = RNSurfaceContainer(themedContext, surface)
         container.setTag(surfaceTagKey, surface)
         container.addView(surfaceView)
+        if (cold) {
+            // start() only schedules the host, so timing it alone measured almost nothing. This
+            // is host start plus surface creation — the synchronous half of a cold start, the
+            // same half the iOS runtime times.
+            coldStartMs = (System.nanoTime() - start) / 1_000_000
+            Log.i("FightDeckStartup", "cold=${coldStartMs}ms")
+        }
         return container
     }
 

@@ -41,6 +41,18 @@ android {
         }
     }
 
+    // Each SDK's bridge is written once, under src/all/sdk/<sdk>, and compiled into every flavour
+    // that links that SDK. A flavour that does not link it gets a placeholder from its own
+    // source set instead — different files, not branches, so no flavour compiles against an SDK
+    // it does not have.
+    mapOf(
+        "deposit" to listOf("deposit"),
+        "both" to listOf("deposit", "slip"),
+        "all" to listOf("deposit", "slip", "fighter"),
+    ).forEach { (flavor, sdks) ->
+        sourceSets.getByName(flavor).kotlin.srcDirs(sdks.map { "src/all/sdk/$it" })
+    }
+
     buildTypes {
         release {
             // R8 is on by default: release is the variant that gets measured and the one that

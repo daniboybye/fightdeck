@@ -180,7 +180,7 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
             // out over the keyboard, so the surface is shrunk to the space the keys leave —
             // the same glue the slip screen needs.
             Box(Modifier.imePadding()) {
-                com.fightdeck.baseline.sdk.SkipSDKBridge.DepositScreen(
+                com.fightdeck.baseline.sdk.DepositSdkScreen(
                     viewModel = viewModel,
                     saveKey = "deposit-screen",
                     onDone = { nav.popBackStack() },
@@ -429,7 +429,7 @@ private fun EventsNavHost(
                     balance = balance,
                     onDeposit = onDeposit,
                 ) { padding ->
-                    com.fightdeck.baseline.sdk.SkipSDKBridge.FighterScreen(
+                    com.fightdeck.baseline.sdk.FighterSdkScreen(
                         fighter = fighter,
                         viewModel = viewModel,
                         saveKey = "fighter-${fighter.id}",
@@ -502,7 +502,7 @@ private fun SlipNavHost(
                     )
                 },
             ) { padding ->
-                com.fightdeck.baseline.sdk.SkipSDKBridge.BetslipScreen(
+                com.fightdeck.baseline.sdk.BetslipSdkScreen(
                     viewModel = viewModel,
                     saveKey = "betslip-root",
                     onDeposit = onDeposit,

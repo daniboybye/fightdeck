@@ -134,16 +134,16 @@ stateHolder.SaveableStateProvider("myKey") {
 }
 ```
 
-Implemented in [`android/.../SkipSDKBridge.kt`](android/app/src/all/java/com/fightdeck/baseline/sdk/SkipSDKBridge.kt). Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. The cleanup looks as if it throws away exactly what the provider should keep, and it does — but it is also the one thing keeping the app up. `NavHost` already wraps every destination in a provider of its own, so without this one the SDK's `@State` (skipstone writes it as `rememberSaveable`) *is* saved across an activity recreation, and SkipUI cannot restore it: the slip dies in `BetSlipRootView.getStakeFocused` on a null `FocusState`, the deposit form in `NavigationStack.Render` on a null preference. Checked on the Pixel 9 emulator (API 36, Skip 1.9.11, SkipUI 1.60.0) by toggling `cmd uimode night` with the form filled in — rotation alone shows nothing, because `MainActivity` handles orientation changes itself. With the cleanup in place the recreated deposit form comes back empty and the slip keeps its stake, because the stake lives in the store rather than in view state. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositComposeEntry`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. The bet slip and the fighter profile need no entry type on Android either: every transpiled SkipUI `View` has a `Compose()` of its own, so the bridge calls `BetSlipRootView(...).Compose()` directly. iOS has no seam at all: the host puts `DepositFlowView`, `BetSlipRootView` and `FighterRootView` straight into its own SwiftUI tree, so there is nothing to bridge and nothing to wrap.
+Implemented once per SDK under [`android/app/src/all/sdk/`](android/app/src/all/sdk) — `DepositSdkBridge.kt`, `BetslipSdkBridge.kt`, `FighterSdkBridge.kt` — and compiled into every flavour that links that SDK; the flavours that do not get a placeholder from their own source set. Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. The cleanup looks as if it throws away exactly what the provider should keep, and it does — but it is also the one thing keeping the app up. `NavHost` already wraps every destination in a provider of its own, so without this one the SDK's `@State` (skipstone writes it as `rememberSaveable`) *is* saved across an activity recreation, and SkipUI cannot restore it: the slip dies in `BetSlipRootView.getStakeFocused` on a null `FocusState`, the deposit form in `NavigationStack.Render` on a null preference. Checked on the Pixel 9 emulator (API 36, Skip 1.9.11, SkipUI 1.60.0) by toggling `cmd uimode night` with the form filled in — rotation alone shows nothing, because `MainActivity` handles orientation changes itself. With the cleanup in place the recreated deposit form comes back empty and the slip keeps its stake, because the stake lives in the store rather than in view state. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositComposeEntry`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. The bet slip and the fighter profile need no entry type on Android either: every transpiled SkipUI `View` has a `Compose()` of its own, so the bridge calls `BetSlipRootView(...).Compose()` directly. iOS has no seam at all: the host puts `DepositFlowView`, `BetSlipRootView` and `FighterRootView` straight into its own SwiftUI tree, so there is nothing to bridge and nothing to wrap.
 
 ## Host split
 
 | Screen | iOS | Android |
 | --- | --- | --- |
 | Event list / card / bout | Native SwiftUI | Native Compose |
-| Bet slip | **FightDeckBetslip** SDK → `BetSlipRootView` | **SkipSDKBridge** → `BetSlipRootView(...).Compose()` |
-| Deposit | **FightDeckDeposit** SDK → `DepositFlowView` | **SkipSDKBridge** → `DepositComposeEntry(...).Compose()` |
-| Fighter profile | **FightDeckFighter** SDK → `FighterRootView` | **SkipSDKBridge** → `FighterRootView(...).Compose()` |
+| Bet slip | **FightDeckBetslip** SDK → `BetSlipRootView` | `BetslipSdkScreen` → `BetSlipRootView(...).Compose()` |
+| Deposit | **FightDeckDeposit** SDK → `DepositFlowView` | `DepositSdkScreen` → `DepositComposeEntry(...).Compose()` |
+| Fighter profile | **FightDeckFighter** SDK → `FighterRootView` | `FighterSdkScreen` → `FighterRootView(...).Compose()` |
 
 ## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
 
@@ -282,7 +282,7 @@ Install: `brew install skiptools/skip/skip`
 
 ```
 Host (SwiftUI / Compose)
-  │  iOS: the SwiftUI view directly · Android: the same view's Compose() via SkipSDKBridge
+  │  iOS: the SwiftUI view directly · Android: the same view's Compose() via android/app/src/all/sdk
   ▼
 FightDeckDeposit / FightDeckBetslip / FightDeckFighter  (SwiftPM + skipstone)
   │  SkipUI Swift → Kotlin (Compose)

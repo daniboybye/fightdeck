@@ -74,24 +74,42 @@ public struct PresetChipButton: View {
     #endif
 }
 
-/// The container stays iOS-only: `GlassEffectContainer` is what makes neighbouring chips
-/// share one glass surface, and Android has nothing to group.
-#if !SKIP
-public struct PresetChipRow<Content: View>: View {
+/// A row of preset amounts, each a `PresetChipButton` titled "€<value>". Built from values
+/// rather than from `@ViewBuilder` content: a stored builder closure transpiles to a Kotlin
+/// lambda that yields only its last view (attempt 1 in `GroupedList.swift`).
+///
+/// On iOS the row sits in a `GlassEffectContainer`, which is what makes neighbouring chips share
+/// one glass surface; Android has nothing to group.
+public struct PresetChipRow: View {
+    let values: [String]
     let theme: SkipChipTheme
-    @ViewBuilder var content: () -> Content
+    let onSelect: (String) -> Void
 
-    public init(theme: SkipChipTheme, @ViewBuilder content: @escaping () -> Content) {
+    public init(values: [String], theme: SkipChipTheme, onSelect: @escaping (String) -> Void) {
+        self.values = values
         self.theme = theme
-        self.content = content
+        self.onSelect = onSelect
     }
 
     public var body: some View {
+        #if SKIP
+        chips
+        #else
         GlassEffectContainer(spacing: theme.spacingSM) {
-            HStack(spacing: theme.spacingSM) {
-                content()
+            chips
+        }
+        #endif
+    }
+
+    private var chips: some View {
+        HStack(spacing: theme.spacingSM) {
+            ForEach(values, id: \.self) { value in
+                chip(value)
             }
         }
     }
+
+    private func chip(_ value: String) -> some View {
+        PresetChipButton(title: "€\(value)", theme: theme) { onSelect(value) }
+    }
 }
-#endif

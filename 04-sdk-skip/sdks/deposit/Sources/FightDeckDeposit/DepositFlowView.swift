@@ -210,6 +210,14 @@ struct DepositFlowView: View {
         #endif
     }
 
+    /// The core's chip row, reached through a property rather than written bare into the
+    /// section's builder, which `skipstone` would drop (see `GroupedList.swift`).
+    private var amountChipRow: some View {
+        PresetChipRow(values: ["10", "25", "50", "100"], theme: theme.chipTheme) { value in
+            amountText = value
+        }
+    }
+
     private var parsedAmount: Decimal {
         Money.parse(amountText.isEmpty ? "0" : amountText)
     }
@@ -384,21 +392,6 @@ extension DepositFlowView {
     }
 
 
-    /// Through a function, never as a bare `PresetChipButton(...)` in the builder: `skipstone`
-    /// emits a constructor written straight into a `@ViewBuilder` as a statement and drops the
-    /// result, so the chips came out invisible with no error anywhere. See `GroupedList.swift`.
-    private func chipButton(_ title: String, _ action: @escaping () -> Void) -> some View {
-        PresetChipButton(title: title, theme: theme.chipTheme, action: action)
-    }
-    /// No glass container on Android — the chips themselves are the shared `PresetChipButton`.
-    fileprivate var amountChipRow: some View {
-        HStack(spacing: theme.spacingSM) {
-            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                chipButton("€\(chip)") { amountText = chip }
-            }
-        }
-    }
-
     fileprivate var secondaryDoneButton: some View {
         Button("Done") { onResult(DepositResult.completed(amount: parsedAmount)) }
             .font(Typography.semibold(theme.fontCallout))
@@ -459,14 +452,6 @@ extension DepositFlowView {
                 onConfirm: { didSucceed = true },
                 onDismissKeyboard: { amountFocused = false }
             ))
-    }
-
-    fileprivate var amountChipRow: some View {
-        PresetChipRow(theme: theme.chipTheme) {
-            ForEach(["10", "25", "50", "100"], id: \.self) { chip in
-                PresetChipButton(title: "€\(chip)", theme: theme.chipTheme) { amountText = chip }
-            }
-        }
     }
 
     fileprivate var secondaryDoneButton: some View {

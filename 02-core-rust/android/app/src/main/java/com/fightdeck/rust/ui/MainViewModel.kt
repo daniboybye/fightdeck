@@ -61,9 +61,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _media = MutableStateFlow<LoadState<List<MediaItem>>>(LoadState.Loading)
     val media: StateFlow<LoadState<List<MediaItem>>> = _media.asStateFlow()
 
-    private val _betPlacedMessage = MutableStateFlow<String?>(null)
-    val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
-
     init {
         bootstrap()
     }
@@ -136,7 +133,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleSelection(bout: BoutSummary, fighterId: String, odds: String) {
         requireSlipStore().toggleSelection(bout.id, fighterId, odds)
-        _betPlacedMessage.value = null
     }
 
     fun updateStake(stake: String) {
@@ -145,11 +141,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun removeSelection(boutId: String, fighterId: String) {
         requireSlipStore().removeSelection(boutId, fighterId)
-        _betPlacedMessage.value = null
     }
 
     fun placeBet() {
-        _betPlacedMessage.value = requireSlipStore().placeBet().message
+        requireSlipStore().placeBet()
     }
 
     fun deposit(amount: String) {

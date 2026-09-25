@@ -98,6 +98,9 @@ pub struct SlipSnapshot {
     /// Two places, for `deposit_quote`.
     pub balance: String,
     pub balance_display: String,
+    /// The copy shown where the slip was, after a bet is placed. Any change to the legs
+    /// clears it; a stake edit or a deposit does not.
+    pub confirmation: Option<String>,
 }
 
 #[derive(uniffi::Record, Clone, Debug)]
@@ -149,14 +152,6 @@ pub struct BoutIndexRecord {
     pub red_fighter_id: String,
     pub blue_fighter_id: String,
     pub winner_id: String,
-}
-
-/// What `place_bet` did, so neither host has to work out the balance or the message.
-#[derive(uniffi::Record, Clone, Debug)]
-pub struct PlaceBetOutcome {
-    pub potential_return: String,
-    pub message: Option<String>,
-    pub errors: Vec<ValidationErrorRecord>,
 }
 
 // MARK: - Conversions

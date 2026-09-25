@@ -80,7 +80,8 @@ Splitting the crates was the excuse to move logic that both hosts were maintaini
 | Logic | Was | Now |
 | --- | --- | --- |
 | Single vs accumulator mode | `syncMode()` in Swift **and** Kotlin | `SlipEngine::mode_for` |
-| Place bet: validate, take stake, clear slip, compose message | 13 lines Swift + 14 lines Kotlin | `BetSlipStore::place_bet` → `PlaceBetOutcome` |
+| Place bet: validate, take stake, clear slip, compose message | 13 lines Swift + 14 lines Kotlin | `BetSlipStore::place_bet` |
+| The "Bet placed" copy, and clearing it when the legs change | `betPlacedMessage` in `AppState` and `MainViewModel`, reset by hand in toggle and remove | `SlipSnapshot::confirmation` |
 | Slip summary rows and their order | `slipSummary` in both hosts | `SlipStateRecord::summary_rows` |
 | Bout index from `events.json` | `Codable` mirror + map in Swift, `@Serializable` mirror + map in Kotlin | `EventCatalog::bout_index` |
 | Opponent and event lookup per slip leg | 23 lines Swift + 18 lines Kotlin | `EventCatalog::leg_context` |
@@ -101,11 +102,13 @@ Hand-written glue shrank accordingly:
 Non-blank lines. What is left in those files is the part UniFFI genuinely cannot generate: a listener bridge republished as `@Observable` on iOS and `StateFlow` on Android. No betting rule survives in either.
 
 The bridge carries one value. `BetSlipStore` hands every listener a `SlipSnapshot` — the slip, its
-derived state, the balance and the balance as text — after each change, so applying an update is
+derived state, the balance and the "Bet placed" confirmation — after each change, so applying an update is
 one assignment. It used to hand over only the derived state, and each host then called
 `current_slip()` and `balance()`: three crossings, three locks and three copies per tap instead of
 one. Registering a listener does not replay the current value; a host reads
-`current_snapshot()` once when it starts and hears about every change after that.
+`current_snapshot()` once when it starts and hears about every change after that. Whether an odds
+button shows as selected is read off the same snapshot's legs, so nothing on screen can answer
+from a newer state than the rest of it.
 
 ## Hand-written Rust vs generated bindings
 
@@ -140,7 +143,7 @@ Toolchain pins: [`versions.lock.toml`](../versions.lock.toml).
 export PATH="$HOME/.cargo/bin:$PATH"
 cd 02-core-rust/sdks
 
-cargo test --workspace          # 28 tests: fixtures, store + unit
+cargo test --workspace          # 30 tests: fixtures, store + unit
 
 ./build-apple.sh                # all three SPM packages: {core,slip,events}/out/*.xcframework
 ./build-android.sh              # one fightdeck.aar/.so + three generated Kotlin packages

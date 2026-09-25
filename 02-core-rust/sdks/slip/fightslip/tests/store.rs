@@ -96,3 +96,37 @@ fn listeners_can_reenter_the_store() {
     assert_eq!(*listener.reads.lock().unwrap(), vec![1, 2]);
     assert_eq!(store.current_snapshot().state.mode_title, "Accumulator");
 }
+
+#[test]
+fn a_placed_bet_leaves_its_confirmation_until_the_legs_change() {
+    let store = store();
+    store.toggle_selection("b1".into(), "r1".into(), "2.50".into());
+    store.place_bet();
+
+    let placed = store.current_snapshot();
+    assert!(placed.slip.selections.is_empty());
+    assert_eq!(placed.balance, "490.00");
+    assert_eq!(placed.confirmation.as_deref(), Some("€25.00 returns if it lands"));
+
+    // What the screen showing the confirmation can still reach does not clear it.
+    store.set_stake("20.00".into());
+    store.deposit("10.00".into()).unwrap();
+    assert!(store.current_snapshot().confirmation.is_some());
+
+    store.toggle_selection("b2".into(), "u2".into(), "1.50".into());
+    assert_eq!(store.current_snapshot().confirmation, None);
+
+    store.place_bet();
+    store.toggle_selection("b1".into(), "r1".into(), "2.50".into());
+    store.remove_selection("b1".into(), "r1".into());
+    assert_eq!(store.current_snapshot().confirmation, None);
+}
+
+#[test]
+fn a_slip_with_errors_is_not_placed() {
+    let store = store();
+    store.place_bet();
+    let snapshot = store.current_snapshot();
+    assert_eq!(snapshot.balance, "500.00");
+    assert_eq!(snapshot.confirmation, None);
+}

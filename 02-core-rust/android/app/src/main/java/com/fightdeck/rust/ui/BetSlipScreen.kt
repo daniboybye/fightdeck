@@ -123,7 +123,6 @@ private fun BetPlacedState(message: String, onBrowseEvents: () -> Unit, modifier
 internal fun BetSlipScreen(
     viewModel: MainViewModel,
     snapshot: SlipSnapshot,
-    placedMessage: String?,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,
 ) {
@@ -180,7 +179,7 @@ internal fun BetSlipScreen(
     ) { padding ->
         val screenState = when {
             slip.selections.isNotEmpty() -> 0
-            placedMessage != null -> 1
+            snapshot.confirmation != null -> 1
             else -> 2
         }
         AnimatedContent(
@@ -307,7 +306,7 @@ internal fun BetSlipScreen(
                         }
                     }
                 }
-                1 -> BetPlacedState(placedMessage.orEmpty(), onBrowseEvents, Modifier.fillMaxSize())
+                1 -> BetPlacedState(snapshot.confirmation.orEmpty(), onBrowseEvents, Modifier.fillMaxSize())
                 else -> EmptyState("No selections yet", Modifier.fillMaxSize(), onBrowseEvents)
             }
         }

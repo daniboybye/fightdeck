@@ -43,15 +43,11 @@ final class ObservableBetSlipStore {
         store.removeSelection(boutId: boutId, fighterId: fighterId)
     }
 
-    func isSelected(boutId: String, fighterId: String) -> Bool {
-        store.isSelected(boutId: boutId, fighterId: fighterId)
-    }
-
     func deposit(amount: String) {
         _ = try? store.deposit(amount: amount)
     }
 
-    func placeBet() -> PlaceBetOutcome {
+    func placeBet() {
         store.placeBet()
     }
 }

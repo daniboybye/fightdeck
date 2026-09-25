@@ -2,9 +2,7 @@
 //! `placeBet`; those live here now, so a rule change lands once.
 
 use crate::engine::SlipEngine;
-use crate::ffi::{
-    parse_amount, PlaceBetOutcome, SlipError, SlipHandle, SlipSnapshot, SlipStateRecord,
-};
+use crate::ffi::{parse_amount, SlipError, SlipHandle, SlipSnapshot, SlipStateRecord};
 use fightcore::money;
 use fightcore::types::{BetSlip, Selection};
 use rust_decimal::Decimal;
@@ -20,6 +18,9 @@ pub trait SlipSnapshotListener: Send + Sync {
 struct StoreInner {
     slip: BetSlip,
     balance: Decimal,
+    /// Set by a successful `place_bet`, cleared by the next change to the legs. Both hosts
+    /// used to keep this and decide for themselves when it went away.
+    confirmation: Option<String>,
     engine: Arc<SlipEngine>,
     listeners: Vec<Arc<dyn SlipSnapshotListener>>,
 }
@@ -47,6 +48,7 @@ impl BetSlipStore {
                     stake_raw: "10.00".to_string(),
                 },
                 balance,
+                confirmation: None,
                 engine: Arc::clone(&handle.engine),
                 listeners: vec![],
             }),
@@ -92,6 +94,7 @@ impl BetSlipStore {
                     .push(Selection { bout_id, fighter_id, odds: parsed_odds }),
             }
             Self::sync_mode(&mut inner);
+            inner.confirmation = None;
         }
         self.notify();
     }
@@ -104,16 +107,9 @@ impl BetSlipStore {
                 .selections
                 .retain(|s| !(s.bout_id == bout_id && s.fighter_id == fighter_id));
             Self::sync_mode(&mut inner);
+            inner.confirmation = None;
         }
         self.notify();
-    }
-
-    pub fn is_selected(&self, bout_id: String, fighter_id: String) -> bool {
-        lock(&self.inner)
-            .slip
-            .selections
-            .iter()
-            .any(|s| s.bout_id == bout_id && s.fighter_id == fighter_id)
     }
 
     pub fn deposit(&self, amount: String) -> Result<String, SlipError> {
@@ -127,34 +123,25 @@ impl BetSlipStore {
         Ok(money::format(balance))
     }
 
-    /// Validates, takes the stake, empties the slip and reports the confirmation copy. This
-    /// was the last betting workflow still written twice in Swift and Kotlin.
-    pub fn place_bet(&self) -> PlaceBetOutcome {
-        let outcome = {
+    /// Validates, takes the stake, empties the slip and leaves the confirmation in the next
+    /// snapshot. A slip with errors is left exactly as it was: the hosts disable the button
+    /// while any error stands, so there is nothing to report back.
+    pub fn place_bet(&self) {
+        {
             let mut inner = lock(&self.inner);
             let state = inner.engine.slip_state(&inner.slip, inner.balance);
             if !state.errors.is_empty() {
-                PlaceBetOutcome {
-                    potential_return: money::format(state.potential_return),
-                    message: None,
-                    errors: state.errors.into_iter().map(Into::into).collect(),
-                }
-            } else {
-                inner.balance -= state.total_stake;
-                inner.slip.selections.clear();
-                Self::sync_mode(&mut inner);
-                PlaceBetOutcome {
-                    potential_return: money::format(state.potential_return),
-                    message: Some(format!(
-                        "{} returns if it lands",
-                        money::format_currency(state.potential_return)
-                    )),
-                    errors: vec![],
-                }
+                return;
             }
-        };
+            inner.balance -= state.total_stake;
+            inner.slip.selections.clear();
+            Self::sync_mode(&mut inner);
+            inner.confirmation = Some(format!(
+                "{} returns if it lands",
+                money::format_currency(state.potential_return)
+            ));
+        }
         self.notify();
-        outcome
     }
 }
 
@@ -172,6 +159,7 @@ impl BetSlipStore {
             ),
             balance: money::format(inner.balance),
             balance_display: money::format_currency(inner.balance),
+            confirmation: inner.confirmation.clone(),
         }
     }
 

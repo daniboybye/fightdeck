@@ -40,8 +40,6 @@ final class AppState {
     /// never reference each other — the app is the only place they meet.
     let catalog: EventCatalog
 
-    var betPlacedMessage: String?
-
     /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
     /// toolbars depend on observable state rather than on a closure handed down through the
     /// environment, which is a new value on every `RootView` body pass.
@@ -101,20 +99,20 @@ final class AppState {
 
     func toggleSelection(bout: BoutSummary, fighterID: String, odds: String) {
         slipStore.toggleSelection(boutId: bout.id, fighterId: fighterID, odds: odds)
-        betPlacedMessage = nil
     }
 
+    /// Read from the snapshot every other view draws from, not asked of the store: a second
+    /// source could answer for a change the rest of the screen has not seen yet.
     func isSelected(boutID: String, fighterID: String) -> Bool {
-        slipStore.isSelected(boutId: boutID, fighterId: fighterID)
+        slip.selections.contains { $0.boutId == boutID && $0.fighterId == fighterID }
     }
 
     func removeSelection(boutID: String, fighterID: String) {
         slipStore.removeSelection(boutId: boutID, fighterId: fighterID)
-        betPlacedMessage = nil
     }
 
     func placeBet() {
-        betPlacedMessage = slipStore.placeBet().message
+        slipStore.placeBet()
     }
 
     func presentDeposit() {

@@ -457,14 +457,12 @@ private fun SlipNavHost(
     modifier: Modifier = Modifier,
 ) {
     val snapshot by viewModel.snapshot.collectAsStateWithLifecycle()
-    val placedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
 
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {
             BetSlipScreen(
                 viewModel = viewModel,
                 snapshot = snapshot,
-                placedMessage = placedMessage,
                 onBrowseEvents = onBrowseEvents,
                 onDeposit = onDeposit,
             )

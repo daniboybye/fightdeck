@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import uniffi.fightslip.BetSlipStore
-import uniffi.fightslip.PlaceBetOutcome
 import uniffi.fightslip.SlipSnapshot
 import uniffi.fightslip.SlipSnapshotListener
 
@@ -44,7 +43,7 @@ class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
         store.deposit(amount)
     }
 
-    fun placeBet(): PlaceBetOutcome = store.placeBet()
+    fun placeBet() = store.placeBet()
 
     override fun close() {
         store.close()

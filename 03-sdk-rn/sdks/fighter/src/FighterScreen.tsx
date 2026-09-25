@@ -50,10 +50,6 @@ function capitalize(value: string): string {
 }
 
 export function FighterScreen(props: FighterProps) {
-  return <FighterScreenContent {...props} />;
-}
-
-function FighterScreenContent(props: FighterProps) {
   const layoutFrame = useSurfaceLayout('FighterFeature');
   const theme = useMemo(() => parseThemeJSON(String(props.themeJSON ?? '{}')), [props.themeJSON]);
   const fighter = useMemo(() => parseFighter(String(props.fighterJSON ?? '{}')), [props.fighterJSON]);

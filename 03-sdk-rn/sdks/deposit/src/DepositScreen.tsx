@@ -34,10 +34,6 @@ const METHODS = [
 ];
 
 export function DepositScreen(props: Record<string, unknown>) {
-  return <DepositScreenContent {...props} />;
-}
-
-function DepositScreenContent(props: Record<string, unknown>) {
   const layoutFrame = useSurfaceLayout('DepositFeature');
 
   const theme = useMemo(

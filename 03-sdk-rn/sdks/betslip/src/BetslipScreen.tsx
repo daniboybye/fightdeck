@@ -99,10 +99,6 @@ function parseSelections(
 }
 
 export function BetslipScreen(props: SlipProps) {
-  return <BetslipScreenContent {...props} />;
-}
-
-function BetslipScreenContent(props: SlipProps) {
   const layoutFrame = useSurfaceLayout('BetslipFeature');
 
   const theme = useMemo(() => parseThemeJSON(String(props.themeJSON ?? '{}')), [props.themeJSON]);

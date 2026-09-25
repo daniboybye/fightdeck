@@ -1,6 +1,5 @@
 {
   "name": "@fightdeck/fighter-feature",
   "version": "0.1.0",
-  "private": true,
-  "main": "src/index.js"
+  "private": true
 }

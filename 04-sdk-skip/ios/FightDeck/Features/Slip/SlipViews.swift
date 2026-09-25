@@ -39,7 +39,6 @@ struct BetslipBridgeView: View {
         BetSlipRootView(
             store: state.slipStore,
             display: display,
-            theme: ThemeTokens.defaults,
             onDeposit: { Task { @MainActor in onDeposit() } },
             onBrowseEvents: { Task { @MainActor in onBrowseEvents() } }
         )

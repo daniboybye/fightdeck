@@ -8,7 +8,6 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.core.Fighter
-import fight.deck.core.ThemeTokens
 import fight.deck.fighter.FighterParams
 import fight.deck.fighter.FighterRootView
 
@@ -25,7 +24,6 @@ fun FighterSdkScreen(
 ) {
     val stateHolder = rememberSaveableStateHolder()
     stateHolder.SaveableStateProvider(saveKey) {
-        val theme = remember { ThemeTokens.defaults }
         val params = remember(fighter) {
             FighterParams(
                 fighter = fighter,
@@ -38,7 +36,6 @@ fun FighterSdkScreen(
         Box(modifier) {
             FighterRootView(
                 params = params,
-                theme = theme,
             ).Compose()
         }
         DisposableEffect(saveKey) {

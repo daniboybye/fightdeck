@@ -17,7 +17,6 @@ struct HarnessRootView: View {
     var body: some View {
         DepositFlowView(
             params: DepositParams(currentBalance: Money.parse("500.00")),
-            theme: ThemeTokens.defaults,
             onResult: { _ in }
         )
     }

@@ -12,7 +12,6 @@ import com.fightdeck.baseline.ui.LoadState
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.betslip.BetSlipRootView
 import fight.deck.betslip.CatalogSlipDisplay
-import fight.deck.core.ThemeTokens
 import skip.lib.Array as SkipArray
 
 /**
@@ -45,7 +44,6 @@ fun BetslipSdkScreen(
                 fighters = SkipArray((fighters as? LoadState.Loaded)?.value.orEmpty()),
             )
         }
-        val theme = remember { ThemeTokens.defaults }
         // The SDK view composes into whatever box it is given and reads no insets of its own, so
         // the host's top-bar padding has to be a real box around it. Without one the list
         // scrolls under the Bet Slip toolbar.
@@ -53,7 +51,6 @@ fun BetslipSdkScreen(
             BetSlipRootView(
                 store = viewModel.slipStore,
                 display = display,
-                theme = theme,
                 onDeposit = onDeposit,
                 onBrowseEvents = onBrowseEvents,
             ).Compose()

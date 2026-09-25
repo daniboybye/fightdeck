@@ -27,16 +27,13 @@ public enum DepositResult: Sendable {
 #if SKIP
 public struct DepositComposeEntry: View {
     public let params: DepositParams
-    public let theme: ThemeTokens
     public let onResult: @Sendable (DepositResult) -> Void
 
     public init(
         params: DepositParams,
-        theme: ThemeTokens,
         onResult: @escaping @Sendable (DepositResult) -> Void
     ) {
         self.params = params
-        self.theme = theme
         self.onResult = onResult
     }
 
@@ -47,7 +44,6 @@ public struct DepositComposeEntry: View {
         NavigationStack {
             DepositFlowView(
                 params: params,
-                theme: theme,
                 onResult: onResult
             )
         }

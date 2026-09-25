@@ -20,23 +20,21 @@ private enum Layout {
 public struct BetSlipRootView: View {
     @Bindable var store: BetSlipStore
     let display: CatalogSlipDisplay
-    let theme: ThemeTokens
     let onDeposit: @Sendable () -> Void
     let onBrowseEvents: @Sendable () -> Void
 
+    @Environment(\.fightDeckTheme) private var theme: ThemeTokens
     @FocusState private var stakeFocused: Bool
     @State private var stakeText: String = ""
 
     public init(
         store: BetSlipStore,
         display: CatalogSlipDisplay,
-        theme: ThemeTokens,
         onDeposit: @escaping @Sendable () -> Void,
         onBrowseEvents: @escaping @Sendable () -> Void
     ) {
         self.store = store
         self.display = display
-        self.theme = theme
         self.onDeposit = onDeposit
         self.onBrowseEvents = onBrowseEvents
     }

@@ -41,7 +41,7 @@ func displayStance(_ stance: String) -> String {
 
 public struct FighterRootView: View {
     public let params: FighterParams
-    public let theme: ThemeTokens
+    @Environment(\.fightDeckTheme) private var theme: ThemeTokens
 
     /// Built in the initialiser rather than read from a function inside `body`: `body` runs on
     /// every state change, and on Android on every recomposition, so building the rows there
@@ -49,9 +49,8 @@ public struct FighterRootView: View {
     private let profileRows: [FighterDetailRow]
     private let physicalRows: [FighterDetailRow]
 
-    public init(params: FighterParams, theme: ThemeTokens) {
+    public init(params: FighterParams) {
         self.params = params
-        self.theme = theme
         self.profileRows = Self.profileRows(for: params.fighter)
         self.physicalRows = Self.physicalRows(for: params.fighter)
     }

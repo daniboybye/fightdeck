@@ -114,3 +114,17 @@ public struct ThemeTokens: Sendable {
         )
     }
 }
+
+/// The SDK screens read their theme from the environment instead of taking it as an argument
+/// the host always filled in with `ThemeTokens.defaults`. A host with a palette of its own sets
+/// `.environment(\.fightDeckTheme, …)` once, above whatever SDK screens it mounts.
+struct FightDeckThemeKey: EnvironmentKey {
+    static let defaultValue = ThemeTokens.defaults
+}
+
+extension EnvironmentValues {
+    public var fightDeckTheme: ThemeTokens {
+        get { self[FightDeckThemeKey.self] }
+        set { self[FightDeckThemeKey.self] = newValue }
+    }
+}

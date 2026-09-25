@@ -18,7 +18,6 @@ struct DepositSheetView: View {
         NavigationStack {
             DepositFlowView(
                 params: DepositParams(currentBalance: state.slipStore.balance),
-                theme: ThemeTokens.defaults,
                 onResult: { result in
                     Task { @MainActor in
                         if case .completed(let amount) = result {

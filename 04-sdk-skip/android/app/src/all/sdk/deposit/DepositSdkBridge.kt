@@ -6,7 +6,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import com.fightdeck.baseline.ui.MainViewModel
-import fight.deck.core.ThemeTokens
 import fight.deck.deposit.DepositComposeEntry
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
@@ -25,13 +24,11 @@ fun DepositSdkScreen(
     val balance = viewModel.slipStore.balance
     val stateHolder = rememberSaveableStateHolder()
     stateHolder.SaveableStateProvider(saveKey) {
-        val theme = remember { ThemeTokens.defaults }
         val params = remember(balance) {
             DepositParams(currentBalance = balance)
         }
         DepositComposeEntry(
             params = params,
-            theme = theme,
             onResult = { result ->
                 when (result) {
                     is DepositResult.CompletedCase -> viewModel.slipStore.deposit(amount = result.amount)

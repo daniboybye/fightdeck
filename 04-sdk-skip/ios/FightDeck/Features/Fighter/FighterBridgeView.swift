@@ -21,8 +21,7 @@ struct FighterBridgeView: View {
                     params: FighterParams(
                         fighter: fighter,
                         portraitURL: state.imageURL(fighter.portrait)?.absoluteString ?? ""
-                    ),
-                    theme: ThemeTokens.defaults
+                    )
                 )
             } else {
                 ProgressView()

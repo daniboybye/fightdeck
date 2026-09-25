@@ -21,13 +21,11 @@ struct HarnessRootView: View {
         TabView {
             DepositFlowView(
                 params: DepositParams(currentBalance: Money.parse("500.00")),
-                theme: ThemeTokens.defaults,
                 onResult: { _ in }
             )
             BetSlipRootView(
                 store: store,
                 display: CatalogSlipDisplay(events: [], fighters: []),
-                theme: ThemeTokens.defaults,
                 onDeposit: {},
                 onBrowseEvents: {}
             )

@@ -11,7 +11,6 @@ import fight.deck.betslip.BetSlipRootView
 import fight.deck.betslip.CatalogSlipDisplay
 import fight.deck.core.BetSlipStore
 import fight.deck.core.FightCore
-import fight.deck.core.ThemeTokens
 import skip.lib.Array as SkipArray
 
 /**
@@ -22,14 +21,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val fightCore = FightCore(bouts = SkipArray(emptyList()))
         val store = BetSlipStore(fightCore = fightCore)
-        val theme = ThemeTokens.defaults
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     BetSlipRootView(
                         store = store,
                         display = CatalogSlipDisplay(events = SkipArray(emptyList()), fighters = SkipArray(emptyList())),
-                        theme = theme,
                         onDeposit = {},
                         onBrowseEvents = {},
                     ).Compose()

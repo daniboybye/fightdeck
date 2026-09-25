@@ -24,17 +24,16 @@ private enum DepositLimits {
 
 public struct DepositFlowView: View {
     public let params: DepositParams
-    public let theme: ThemeTokens
     public let onResult: @Sendable (DepositResult) -> Void
 
+    @Environment(\.fightDeckTheme) private var theme: ThemeTokens
     @State private var amountText = ""
     @State private var method = DepositMethod.card
     @State private var didSucceed = false
     @FocusState private var amountFocused: Bool
 
-    public init(params: DepositParams, theme: ThemeTokens, onResult: @escaping @Sendable (DepositResult) -> Void) {
+    public init(params: DepositParams, onResult: @escaping @Sendable (DepositResult) -> Void) {
         self.params = params
-        self.theme = theme
         self.onResult = onResult
     }
 

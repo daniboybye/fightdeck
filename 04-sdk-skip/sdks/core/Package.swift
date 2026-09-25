@@ -48,6 +48,11 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [
         .iOS("26.0"),
+        // Not for an app: `swift test` builds this package for the Mac it runs on, and without a
+        // macOS entry SwiftPM assumes 10.13 — below the macOS 13 SkipFoundation and SkipUI
+        // declare, so the fixture tests would not even resolve. 26 because the core's chips use
+        // Liquid Glass, which is as new on the Mac as it is on iOS.
+        .macOS("26.0"),
     ],
     products: [
         coreLibrary,

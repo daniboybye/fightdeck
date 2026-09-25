@@ -28,7 +28,7 @@ Skip has been free and open source since 21 January 2026 (v1.7).
 
 ```
 sdks/core/      — FightCore (headless, skipstone): betting logic, the slip store, DTOs, design tokens
-sdks/events/    — Fight catalogue (headless): dataset loading, the catalogue model both hosts observe, and display formatting
+sdks/events/    — Fight catalogue (headless): dataset loading, the catalogue model both hosts observe, display formatting, and the localhost server the images are fetched from
 sdks/deposit/   — Deposit SwiftUI → Compose
 sdks/betslip/   — Bet slip SwiftUI → Compose
 sdks/fighter/   — Fighter profile SwiftUI → Compose

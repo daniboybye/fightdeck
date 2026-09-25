@@ -4,9 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.baseline.services.DatasetLocator
-import com.fightdeck.baseline.services.LocalAssetServer
 import fight.deck.core.BetSlipStore
 import fight.deck.core.FightCore
+import fight.deck.events.AssetServer
 import fight.deck.events.CatalogModel
 import fight.deck.events.EventCatalog
 import skip.foundation.URL
@@ -84,7 +84,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun bootstrapEngine(application: Application): Engine {
         val root = DatasetLocator.datasetRoot(application)
-        LocalAssetServer.start(root)
+        AssetServer.shared.start(root.absolutePath)
         // The shared catalogue speaks Foundation's URL, so the host's File has to be converted
         // once here rather than at every call.
         val catalog = EventCatalog(datasetRoot = URL(fileURLWithPath = root.absolutePath))
@@ -95,10 +95,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { catalog.loadEvents() }
     }
 
-    /**
-     * Dataset images are served over localhost, so the URL depends on the port the host's asset
-     * server happened to bind — nothing the shared catalogue can know.
-     */
-    fun imageUrl(path: String): String? =
-        if (LocalAssetServer.port > 0) "http://127.0.0.1:${LocalAssetServer.port}/$path" else null
+    fun imageUrl(path: String): String? = AssetServer.shared.url(path)
 }

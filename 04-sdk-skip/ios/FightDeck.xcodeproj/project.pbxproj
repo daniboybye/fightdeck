@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0694C0054D1E2960174E2156 /* DatasetLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 072C0B77630BA46C802A220E /* DatasetLocator.swift */; };
 		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
 		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
@@ -39,7 +40,6 @@
 		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
 		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
-		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
 		E6E8B3C39142ADA333F006B9 /* FightDeckCore in Frameworks */ = {isa = PBXBuildFile; productRef = 2C8ED382D8C72D7DFBF6D4ED /* FightDeckCore */; };
 		E7C0BE155D20655E42ADE364 /* FighterBridgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFFD0E35C9DDE6DB64B016ED /* FighterBridgeView.swift */; };
 		EA15655DA2F6BF0E14F07420 /* FightDeckDeposit in Frameworks */ = {isa = PBXBuildFile; productRef = 3E74BE59645D6F73439CE3D5 /* FightDeckDeposit */; };
@@ -64,6 +64,7 @@
 		00A86AC3AAB9806288EA6E90 /* fighter */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fighter; path = ../sdks/fighter; sourceTree = SOURCE_ROOT; };
 		04FF4541992DC2C0DF8B91E5 /* FightDeckHarnessDeposit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessDeposit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0647ED8C093622F890944CA4 /* HarnessApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessApp.swift; sourceTree = "<group>"; };
+		072C0B77630BA46C802A220E /* DatasetLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetLocator.swift; sourceTree = "<group>"; };
 		1855FA16DD4899AFA6BC8E0E /* FightDeckHarnessBoth.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeckHarnessBoth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		19C6FAF6C14F3469B54DAE14 /* FightDeckUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E1C7202AD7E58476A06D92F /* HarnessRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRootView.swift; sourceTree = "<group>"; };
@@ -77,7 +78,6 @@
 		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
 		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		671EA38BCD5536798738A94F /* betslip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = betslip; path = ../sdks/betslip; sourceTree = SOURCE_ROOT; };
-		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
 		813BD28F72479374E713963B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		992440A70F2E2DCD051FFF1F /* FightDeck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -339,7 +339,7 @@
 		FE9EE388C310ED4AB6AE0712 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */,
+				072C0B77630BA46C802A220E /* DatasetLocator.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -552,12 +552,12 @@
 				8CC540AE2FD450B9960879BA /* AppState.swift in Sources */,
 				4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */,
 				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
+				0694C0054D1E2960174E2156 /* DatasetLocator.swift in Sources */,
 				F4CF0C26D9CF8D4D4900BF3F /* DepositSheetView.swift in Sources */,
 				72A0C1EFE8F1504E099601BC /* DesignTokens.swift in Sources */,
 				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
 				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
 				E7C0BE155D20655E42ADE364 /* FighterBridgeView.swift in Sources */,
-				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
 				1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */,
 				B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */,
 				DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */,

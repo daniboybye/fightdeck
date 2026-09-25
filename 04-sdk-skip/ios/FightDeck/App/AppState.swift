@@ -43,9 +43,8 @@ final class AppState {
 
     func bootstrap() async {
         bootstrapState = .loading
-        let datasetRoot = DatasetLocator.datasetRoot()
         do {
-            try await LocalAssetServer.shared.start(assetsRoot: datasetRoot)
+            _ = try AssetServer.shared.start(datasetRoot: DatasetLocator.datasetRoot().path)
             bootstrapState = .ready
             await catalog.loadAll()
         } catch {
@@ -57,10 +56,7 @@ final class AppState {
         isPresentingDeposit = true
     }
 
-    /// Dataset images are served over localhost, so the URL depends on the port the host's
-    /// asset server happened to bind — nothing the shared catalogue can know.
     func imageURL(_ path: String) -> URL? {
-        guard LocalAssetServer.port > 0 else { return nil }
-        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(path)")
+        AssetServer.shared.url(for: path).flatMap(URL.init(string:))
     }
 }

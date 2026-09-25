@@ -58,6 +58,7 @@ public struct BetSlipRootView: View {
                     ? Money.format(store.slip.stake)
                     : Money.formatCurrency(store.slip.stake)
             }
+            .modifier(FightDeckScreen(theme: theme))
     }
 
     @ViewBuilder
@@ -288,13 +289,10 @@ public struct BetSlipRootView: View {
 
 #if SKIP
 extension BetSlipRootView {
-    /// Compose animates its own state changes and has no haptic to arm. What it does need is the
-    /// host's palette: SkipUI wraps every screen in a `MaterialTheme` of its own, built from
-    /// Material You's dynamic colours, so the `List` below would otherwise be drawn in the
-    /// device wallpaper's scheme. See `fightDeckColorScheme`.
+    /// Compose animates its own state changes and has no haptic to arm; the palette comes from
+    /// `FightDeckScreen` on the body.
     fileprivate func platformChrome(_ content: some View) -> some View {
         content
-            .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
     fileprivate var slipContent: some View {

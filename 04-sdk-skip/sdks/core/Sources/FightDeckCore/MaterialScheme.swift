@@ -6,9 +6,33 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
-#if SKIP
 import SwiftUI
 
+/// What every SDK screen puts around itself so that it draws in the FightDeck palette on
+/// Android: `.modifier(FightDeckScreen(theme: theme))`. On iOS the screen is real SwiftUI and
+/// takes its colours from the tokens directly, so this does nothing there.
+///
+/// A `ViewModifier` rather than a `View` extension on purpose. An extension of ours at the end
+/// of a `@ViewBuilder` chain transpiles without the `.Compose(composectx)` that SkipUI's own
+/// modifiers get — the deposit body failed to compile with "expected 'ComposeResult', actual
+/// 'View'" — while `.modifier(_:)` is SkipUI's and is composed like any other.
+public struct FightDeckScreen: ViewModifier {
+    let theme: ThemeTokens
+
+    public init(theme: ThemeTokens) {
+        self.theme = theme
+    }
+
+    public func body(content: Content) -> some View {
+        #if SKIP
+        content.material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
+        #else
+        content
+        #endif
+    }
+}
+
+#if SKIP
 /// The host app's `MaterialTheme` does not reach the SDK screens. SkipUI installs one of its own
 /// around every view it renders: `ColorScheme.asMaterialTheme()` builds it from
 /// `dynamicDarkColorScheme(context)` on Android 12 and up, so the transpiled screens came out in
@@ -22,9 +46,11 @@ import SwiftUI
 /// palette, so starting from `darkColorScheme` rather than patching the default keeps the result
 /// the same on a light-mode device and on one with no dynamic colour at all.
 ///
-/// The field list mirrors the host's own `darkColorScheme` in `FightDeckApp.kt`. Keep the two in
-/// step: the point of this function is that an SDK screen and a hand-written Compose screen
-/// beside it resolve `MaterialTheme.colorScheme` to the same values.
+/// This is not the host's scheme, and it deliberately does not replace it. The two agree on the
+/// accent, the surfaces and the tonal-button pair, but not on `background` — rows here, the
+/// page behind them in the host — and the host leaves the text and outline roles at Material's
+/// defaults, the same ones `00-native` uses. One definition for both would recolour the host's
+/// own screens.
 @Composable public func fightDeckColorScheme(_ theme: ThemeTokens) -> androidx.compose.material3.ColorScheme {
     return androidx.compose.material3.darkColorScheme(
         primary: theme.accent.asComposeColor(),

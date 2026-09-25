@@ -101,6 +101,7 @@ public struct DepositFlowView: View {
                 }
             }
         }
+        .modifier(FightDeckScreen(theme: theme))
     }
 
     // One screen rather than an amount/method/confirm wizard: the whole flow is four fields
@@ -288,13 +289,10 @@ extension DepositFlowView {
         .frame(width: Layout.radioDiameter, height: Layout.radioDiameter)
     }
 
-    /// Compose supplies the screen's own chrome. What it does not supply is the host's palette:
-    /// SkipUI wraps every screen in a `MaterialTheme` of its own, so the scheme is handed in
-    /// here or the Form comes back in Material You's wallpaper colours. See
-    /// `fightDeckColorScheme`.
+    /// Compose supplies the screen's own chrome and animates its own state changes; the palette
+    /// comes from `FightDeckScreen` on the body.
     fileprivate func platformChrome(_ content: some View) -> some View {
         content
-            .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
     // The confirm button rides above the scroll rather than at the end of it, the same shape the

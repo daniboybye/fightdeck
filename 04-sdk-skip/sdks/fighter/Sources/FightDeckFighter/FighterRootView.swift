@@ -58,6 +58,7 @@ public struct FighterRootView: View {
     public var body: some View {
         profile(params.fighter)
             .background(theme.background)
+            .modifier(FightDeckScreen(theme: theme))
     }
 
     /// One `List` for both platforms. `Form`, `List` and `Section` are all supported by SkipUI,
@@ -235,8 +236,7 @@ extension FighterRootView {
 
     /// `.listStyle(.insetGrouped)` and `.listRowInsets` are both unsupported by SkipUI, so the
     /// list keeps Compose's own Material styling — which is the Android-native look anyway.
-    /// That styling reads `MaterialTheme.colorScheme`, and the scheme SkipUI installs is not the
-    /// host's, so the palette has to be handed in here. See `fightDeckColorScheme`.
+    /// That styling reads `MaterialTheme.colorScheme`, which `FightDeckScreen` on the body sets.
     fileprivate func listChrome(_ content: some View) -> some View {
         content
             // Without this the list paints its own container — `surfaceColorAtElevation(3dp)` —
@@ -249,7 +249,6 @@ extension FighterRootView {
             // The cost is on this screen only: the hero row is inset with everything else,
             // where `00-native` runs it edge to edge. Drop this line to get the photo back.
             .padding(.horizontal, theme.spacingLG)
-            .material3ColorScheme { _, _ in fightDeckColorScheme(theme) }
     }
 
 }

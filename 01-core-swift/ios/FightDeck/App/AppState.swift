@@ -47,11 +47,7 @@ final class AppState {
     init() {
         // An unreadable dataset shows as empty lists rather than stopping the app at launch.
         self.catalog = (try? Catalog.load(datasetRoot: DatasetLocator.datasetRoot())) ?? .empty
-        let slipEngine = SlipEngine(bouts: catalog.boutIndex())
-        self.slipStore = BetSlipStore(
-            slipEngine: slipEngine,
-            slip: BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
-        )
+        self.slipStore = BetSlipStore(slipEngine: SlipEngine(bouts: catalog.boutIndex()))
     }
 
     var slip: BetSlip {

@@ -25,13 +25,21 @@ public struct SlipSession: Sendable {
 
     public init(
         slipEngine: SlipEngine,
-        slip: BetSlip = BetSlip(mode: .accumulator, selections: [], stake: Decimal(string: "10.00")!),
+        slip: BetSlip = SlipSession.emptySlip,
         balance: Decimal = Decimal(string: "500.00")!
     ) {
         self.slipEngine = slipEngine
         self.slip = slip
         self.balance = balance
     }
+
+    /// No legs and the default stake, in the mode no legs call for. Both hosts start here: iOS
+    /// used to override an accumulator default with `.single` and Android took it as it was.
+    public static let emptySlip = BetSlip(
+        mode: SlipEngine.modeFor(selectionCount: 0),
+        selections: [],
+        stake: Decimal(string: "10.00")!
+    )
 
     public var slipState: SlipState {
         slipEngine.slipState(slip: slip, balance: balance)

@@ -30,7 +30,7 @@ public final class BetSlipStore {
 
     public init(
         slipEngine: SlipEngine,
-        slip: BetSlip = BetSlip(mode: .accumulator, selections: [], stake: Decimal(string: "10.00")!),
+        slip: BetSlip = SlipSession.emptySlip,
         balance: Decimal = Decimal(string: "500.00")!
     ) {
         session = SlipSession(slipEngine: slipEngine, slip: slip, balance: balance)

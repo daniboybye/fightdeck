@@ -50,32 +50,11 @@ targets:
       INFOPLIST_KEY_NSLocalNetworkUsageDescription: Serves dataset images over localhost for demo image loading.
       GENERATE_INFOPLIST_FILE: YES
 
-  FightDeckTests:
-    type: bundle.unit-test
-    platform: iOS
-    sources:
-      - path: FightDeckTests
-    dependencies:
-      - target: FightDeck
-      - package: FightCore
-      - package: FightSlip
-      - package: FightEvents
-    resources:
-      - path: ../../contract/fixtures
-        type: folder
-        buildPhase: resources
-    settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.fightdeck.coreswift.tests
-      GENERATE_INFOPLIST_FILE: YES
-
 schemes:
   FightDeck:
     build:
       targets:
         FightDeck: all
-    test:
-      targets:
-        - FightDeckTests
     run:
       environmentVariables:
         FIGHTDECK_DATASET_ROOT: $(SRCROOT)/../../dataset

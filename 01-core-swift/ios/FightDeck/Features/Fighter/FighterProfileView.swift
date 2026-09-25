@@ -6,7 +6,6 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
-import FightCore
 import FightEvents
 import SwiftUI
 

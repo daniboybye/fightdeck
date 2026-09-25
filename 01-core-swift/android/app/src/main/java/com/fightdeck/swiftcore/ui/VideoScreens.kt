@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.navigation.compose.composable
 import com.fightdeck.fightevents.FightEventsJava
 import com.fightdeck.fightevents.MediaItem
 import com.fightdeck.swiftcore.design.Tokens

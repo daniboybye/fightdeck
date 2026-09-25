@@ -1,8 +1,6 @@
 package com.fightdeck.swiftcore.catalog
 
 import com.fightdeck.fightevents.EventCatalogBridge
-import com.fightdeck.fightevents.TaleOfTheTapeBridge
-import com.fightdeck.fightevents.TapeRowBridge
 
 data class EventCard(
     val id: String,

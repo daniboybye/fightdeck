@@ -55,6 +55,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.fightdeck.baseline.core.Money
+import com.fightdeck.baseline.core.potentialReturn
 import com.fightdeck.baseline.design.BalanceMenuAction
 import com.fightdeck.baseline.design.Tokens
 import java.math.BigDecimal
@@ -222,7 +223,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         if (showsSlipToolbar) {
                             BetSlipToolbar(
                                 legCount = slip.selections.size,
-                                potentialReturn = Money.formatCurrency(viewModel.slipState.potentialReturn),
+                                potentialReturn = Money.formatCurrency(slip.potentialReturn),
                                 onClick = { selectedTab = SLIP_TAB },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)

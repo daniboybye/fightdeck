@@ -62,7 +62,7 @@ struct RootView: View {
         .tabViewBottomAccessory(isEnabled: showsBetSlipAccessory) {
             BetSlipAccessory(
                 legCount: state.slip.selections.count,
-                potentialReturn: Money.formatCurrency(state.slipState.potentialReturn)
+                potentialReturn: Money.formatCurrency(state.slip.potentialReturn)
             ) {
                 selectedTab = .slip
             }

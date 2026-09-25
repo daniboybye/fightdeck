@@ -14,6 +14,4 @@ object Money {
     fun format(value: BigDecimal): String = money(value).toPlainString()
 
     fun formatCurrency(value: BigDecimal): String = "€${format(value)}"
-
-    fun round(value: BigDecimal, scale: Int): BigDecimal = value.setScale(scale, RoundingMode.HALF_UP)
 }

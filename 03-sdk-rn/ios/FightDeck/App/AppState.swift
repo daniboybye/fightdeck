@@ -45,15 +45,9 @@ final class AppState {
     var isPresentingDeposit = false
 
     let repository: JSONFileRepository
-    let fightCore: FightCore
 
     init(repository: JSONFileRepository = JSONFileRepository()) {
         self.repository = repository
-        self.fightCore = AppState.makeFightCore()
-    }
-
-    var slipState: SlipState {
-        fightCore.slipState(slip: slip, balance: balance)
     }
 
     func bootstrap() async {
@@ -174,52 +168,12 @@ final class AppState {
     }
 
     private func syncMode() {
-        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
+        slip.mode = slip.selections.count >= BetMode.minAccaLegs ? .accumulator : .single
     }
 
     func imageURL(_ path: String) -> URL? {
         repository.imageURL(for: path)
     }
-
-    private static func makeFightCore() -> FightCore {
-        let datasetRoot = DatasetLocator.datasetRoot()
-        let url = datasetRoot.appendingPathComponent("events.json")
-        guard let data = try? Data(contentsOf: url),
-              let file = try? JSONDecoder().decode(EventsEnvelope.self, from: data) else {
-            return FightCore(bouts: [])
-        }
-        let bouts = file.events.flatMap(\.bouts).map { bout in
-            BoutIndex(
-                id: bout.id,
-                redFighterID: bout.redCorner.fighterId,
-                blueFighterID: bout.blueCorner.fighterId
-            )
-        }
-        return FightCore(bouts: bouts)
-    }
-}
-
-private struct EventsEnvelope: Decodable {
-    let events: [EventEnvelope]
-}
-
-private struct EventEnvelope: Decodable {
-    let bouts: [BoutEnvelope]
-}
-
-private struct BoutEnvelope: Decodable {
-    let id: String
-    let redCorner: CornerEnvelope
-    let blueCorner: CornerEnvelope
-    let result: ResultEnvelope
-}
-
-private struct CornerEnvelope: Decodable {
-    let fighterId: String
-}
-
-private struct ResultEnvelope: Decodable {
-    let winnerId: String
 }
 
 struct SlipPayload: Codable {

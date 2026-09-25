@@ -5,11 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.baseline.core.BetMode
 import com.fightdeck.baseline.core.BetSlip
-import com.fightdeck.baseline.core.BoutIndex
-import com.fightdeck.baseline.core.FightCore
+import com.fightdeck.baseline.core.MIN_ACCA_LEGS
 import com.fightdeck.baseline.core.Money
 import com.fightdeck.baseline.core.Selection
-import com.fightdeck.baseline.core.SlipState
 import com.fightdeck.baseline.data.BoutItem
 import com.fightdeck.baseline.data.EventItem
 import com.fightdeck.baseline.data.FighterItem
@@ -46,7 +44,6 @@ private val lenientJson = Json { ignoreUnknownKeys = true }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var repository: JsonFileRepository? = null
-    private var fightCore: FightCore? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
         BootstrapState.Loading("Loading fight core…"),
@@ -76,9 +73,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _betPlacedMessage = MutableStateFlow<String?>(null)
     val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
 
-    val slipState: SlipState
-        get() = requireNotNull(fightCore).slipState(_slip.value, _balance.value)
-
     init {
         bootstrap()
     }
@@ -91,12 +85,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _bootstrapState.value = BootstrapState.Loading("Loading fight core…")
             val booted = withContext(Dispatchers.Default) {
-                runCatching { bootstrapEngine(getApplication()) }
+                runCatching { bootstrapRepository(getApplication()) }
             }
             booted.fold(
-                onSuccess = { engine ->
-                    repository = engine.repository
-                    fightCore = engine.fightCore
+                onSuccess = { loaded ->
+                    repository = loaded
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
                     refreshFighters()
@@ -112,18 +105,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private data class Engine(
-        val repository: JsonFileRepository,
-        val fightCore: FightCore,
-    )
-
-    private fun bootstrapEngine(application: Application): Engine {
+    private fun bootstrapRepository(application: Application): JsonFileRepository {
         val root = DatasetLocator.datasetRoot(application)
         if (!root.resolve("events.json").exists()) {
             error("Dataset not found. Push the repo dataset to /data/local/tmp/fightdeck/dataset and retry.")
         }
         LocalAssetServer.start(root)
-        return Engine(JsonFileRepository(root), buildFightCore(root))
+        return JsonFileRepository(root)
     }
 
     fun refreshEvents() {
@@ -193,7 +181,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun modeFor(legCount: Int): BetMode =
-        if (legCount >= FightCore.MIN_ACCA_LEGS) BetMode.accumulator else BetMode.single
+        if (legCount >= MIN_ACCA_LEGS) BetMode.accumulator else BetMode.single
 
     fun applySlipJSON(slipJSON: String) {
         val slip = parseSlipJSON(slipJSON) ?: return
@@ -233,17 +221,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             stake = Money.parse(envelope.stake),
         )
     }.getOrNull()
-
-    private fun buildFightCore(root: java.io.File): FightCore {
-        val events = lenientJson
-            .decodeFromString<EventsEnvelope>(
-                root.resolve("events.json").readText(),
-            )
-        val bouts = events.events.flatMap { it.bouts }.map {
-            BoutIndex(it.id, it.redCorner.fighterId, it.blueCorner.fighterId, it.result.winnerId)
-        }
-        return FightCore(bouts.associateBy { it.id })
-    }
 }
 
 @kotlinx.serialization.Serializable
@@ -259,23 +236,3 @@ private data class SlipSelectionEnvelope(
     val fighterId: String,
     val odds: String,
 )
-
-@kotlinx.serialization.Serializable
-private data class EventsEnvelope(val events: List<EventEnvelope>)
-
-@kotlinx.serialization.Serializable
-private data class EventEnvelope(val bouts: List<BoutEnvelope>)
-
-@kotlinx.serialization.Serializable
-private data class BoutEnvelope(
-    val id: String,
-    val redCorner: CornerEnvelope,
-    val blueCorner: CornerEnvelope,
-    val result: ResultEnvelope,
-)
-
-@kotlinx.serialization.Serializable
-private data class CornerEnvelope(@kotlinx.serialization.SerialName("fighterId") val fighterId: String)
-
-@kotlinx.serialization.Serializable
-private data class ResultEnvelope(@kotlinx.serialization.SerialName("winnerId") val winnerId: String)

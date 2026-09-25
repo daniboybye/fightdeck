@@ -28,6 +28,14 @@ final class ScreenshotTour: XCTestCase {
             app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "1.2")).firstMatch.tap()
             sleep(1)
             shot("04-bout-selected")
+            let fighter = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ilia Topuria")).firstMatch
+            if fighter.waitForExistence(timeout: 2) {
+                fighter.tap()
+                sleep(2)
+                shot("04b-fighter")
+                app.navigationBars.buttons.firstMatch.tap()
+                sleep(1)
+            }
             app.swipeUp()
             sleep(1)
             shot("05-tape")

@@ -104,11 +104,14 @@ its original build column was dominated by Rust packaging rather than by the app
 | `02-core-rust` | 1,445 | 2,249 | 1,557 | — | — | −18% | **5,251** | 51 | 58 | **5,360** | 8,304 | 585 |
 | `01-core-swift` | 1,429 | 2,284 | 770 | — | — | −18% | **4,483** | 50 | 567 | **5,100** | 3,017 | 617 |
 | `03-sdk-rn` | 1,738 | 2,263 | 1,528 | — | — | −11% | **5,529** | 1,142 | 778 | **7,449** | — | 1,209 |
-| `04-sdk-skip` | 1,087 | 1,724 | 1,280 | 225 | 167 | −38% | **4,483** | 31 | 261 | **4,775** | 2,433 | 727 |
+| `04-sdk-skip` | 861 | 1,590 | 1,615 | 123 | 136 | −46% | **4,325** | 66 | 150 | **4,541** | 2,785 | 739 |
 
-**Measured at `4f67dc6`** by `python3 tools/count-significant-lines.py`. To refresh it,
-read the commits since that hash rather than the whole tree; `--audit` prints every file
-and the column it landed in.
+**Measured at `4f67dc6`** by `python3 tools/count-significant-lines.py`, except the
+`04-sdk-skip` row, re-measured at `4be3552` after the Skip simplification; its host decrease
+is taken against the native row above. That row includes `a6ed8f2`, which moves the image
+server into the events SDK as `02-core-rust` did in `7632bbb` — the other approaches keep
+it in the host. To refresh it, read the commits since that hash rather than the whole tree;
+`--audit` prints every file and the column it landed in.
 
 A line counts when something executes or declares. Blank lines, `//` and `/* */` comments
 and lines made only of punctuation are dropped — that is about a third of a Swift file, and

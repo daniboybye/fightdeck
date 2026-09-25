@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.navigation.compose.composable
 import com.fightdeck.rust.design.Tokens
 import kotlinx.coroutines.delay
 import uniffi.fightevents.MediaItem

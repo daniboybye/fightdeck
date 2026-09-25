@@ -22,7 +22,6 @@ public struct SlipSession: Sendable {
     public var slipEngine: SlipEngine
     public var slip: BetSlip
     public var balance: Decimal
-    public var settlement: Settlement?
 
     public init(
         slipEngine: SlipEngine,
@@ -38,10 +37,6 @@ public struct SlipSession: Sendable {
         slipEngine.slipState(slip: slip, balance: balance)
     }
 
-    public var cashOutOffer: CashOutOffer {
-        slipEngine.cashOutOffer(slip: slip, settledBouts: [])
-    }
-
     public mutating func toggleSelection(boutID: String, fighterID: String, odds: Decimal) {
         if let index = slip.selections.firstIndex(where: { $0.boutID == boutID }) {
             let existing = slip.selections[index]
@@ -53,7 +48,6 @@ public struct SlipSession: Sendable {
         } else {
             slip.selections.append(Selection(boutID: boutID, fighterID: fighterID, odds: odds))
         }
-        settlement = nil
         syncMode()
     }
 
@@ -63,13 +57,11 @@ public struct SlipSession: Sendable {
 
     public mutating func removeSelection(boutID: String, fighterID: String) {
         slip.selections.removeAll { $0.boutID == boutID && $0.fighterID == fighterID }
-        settlement = nil
         syncMode()
     }
 
     public mutating func removeSelection(id: String) {
         slip.selections.removeAll { $0.id == id }
-        settlement = nil
         syncMode()
     }
 
@@ -80,12 +72,7 @@ public struct SlipSession: Sendable {
         balance -= state.totalStake
         slip.selections.removeAll()
         syncMode()
-        settlement = nil
         return state
-    }
-
-    public mutating func settleSlip() {
-        settlement = slipEngine.settle(slip: slip)
     }
 
     public mutating func deposit(amount: Decimal) {

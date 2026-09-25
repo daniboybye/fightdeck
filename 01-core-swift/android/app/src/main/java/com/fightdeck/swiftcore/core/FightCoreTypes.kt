@@ -23,7 +23,6 @@ data class BetSlip(
 )
 
 data class SlipState(
-    val combinedOddsExact: BigDecimal?,
     val combinedOddsDisplay: BigDecimal?,
     val totalStake: BigDecimal,
     val potentialReturn: BigDecimal,

@@ -6,9 +6,6 @@ import com.fightdeck.fightcore.FightCoreJava
  * Loads the three cross-compiled Swift SDKs that `swift-java jextract --mode=jni` generated.
  */
 object SwiftCoreBridge {
-    val isStub: Boolean
-        get() = false
-
     init {
         System.loadLibrary("fightcore")
         System.loadLibrary("fightslip")

@@ -76,7 +76,6 @@ public final class SlipEngine {
             stake: Money.parse(stake)
         )
         session.balance = Money.parse(balance)
-        session.settlement = nil
     }
 
     public func addSelection(boutID: String, fighterID: String, odds: String) {
@@ -93,10 +92,6 @@ public final class SlipEngine {
         session.removeSelection(boutID: boutID, fighterID: fighterID)
     }
 
-    public func isSelected(boutID: String, fighterID: String) -> Bool {
-        session.isSelected(boutID: boutID, fighterID: fighterID)
-    }
-
     public func updateStake(_ stake: String) {
         session.slip.stake = Money.parse(stake)
     }
@@ -106,14 +101,10 @@ public final class SlipEngine {
     }
 
     /// Returns false when the slip has validation errors, matching `BetSlipStore.placeBet`
-    /// returning nil. The placed slip's figures stay readable through `lastPlaced…`.
+    /// returning nil.
     public func placeBet() -> Bool {
-        guard let placed = session.placeBet() else { return false }
-        lastPlacedReturnText = Money.format(placed.potentialReturn)
-        return true
+        session.placeBet() != nil
     }
-
-    public private(set) var lastPlacedReturnText: String = ""
 
     public func settle(voidedBoutIDs: [String]) -> SettlementResult {
         SettlementResult(

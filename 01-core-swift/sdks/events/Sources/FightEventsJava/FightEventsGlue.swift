@@ -22,31 +22,23 @@ public func formatDuration(totalSeconds: Int) -> String {
     Display.duration(totalSeconds: totalSeconds)
 }
 
-public func segmentTitle(_ segment: String) -> String {
-    Display.segmentTitle(segment)
-}
-
 public final class TapeRowBridge {
     public let label: String
     public let red: String
     public let blue: String
-    public let advantage: String
 
     init(_ row: TapeRow) {
         label = row.label
         red = row.red
         blue = row.blue
-        advantage = row.advantage.rawValue
     }
 }
 
 public final class TaleOfTheTapeBridge {
     public let rows: [TapeRowBridge]
-    public let edgeSummary: String
 
     init(_ tape: TaleOfTheTape) {
         rows = tape.rows.map(TapeRowBridge.init)
-        edgeSummary = tape.edgeSummary ?? ""
     }
 }
 
@@ -57,7 +49,6 @@ public final class NewsItem {
     public let eventId: String
     public let headline: String
     public let body: String
-    public let publishedAt: String
     public let readMinutes: Int
     public let source: String
     public let heroImage: String
@@ -67,7 +58,6 @@ public final class NewsItem {
         eventId = item.eventId
         headline = item.headline
         body = item.body
-        publishedAt = item.publishedAt
         readMinutes = item.readMinutes
         source = item.source
         heroImage = item.heroImage
@@ -99,14 +89,10 @@ public final class MediaItem {
 
 public final class LegContextBridge {
     public let fighterName: String
-    public let opponentName: String
-    public let eventName: String
     public let subtitle: String
 
     init(_ context: LegContext) {
         fighterName = context.fighterName
-        opponentName = context.opponentName
-        eventName = context.eventName
         subtitle = context.subtitle
     }
 }
@@ -286,9 +272,9 @@ public final class EventCatalogBridge {
     }
 
     public func taleOfTheTape(boutID: String) -> TaleOfTheTapeBridge {
-        let tape = catalog.taleOfTheTape(boutID: boutID)
-            ?? TaleOfTheTape(rows: Tape.rows(red: nil, blue: nil), edgeSummary: nil)
-        return TaleOfTheTapeBridge(tape)
+        TaleOfTheTapeBridge(
+            catalog.taleOfTheTape(boutID: boutID) ?? Tape.taleOfTheTape(red: nil, blue: nil)
+        )
     }
 
     public func legContext(boutID: String, fighterID: String) -> LegContextBridge {

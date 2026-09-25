@@ -17,7 +17,7 @@ public enum BetMode: String, Codable, Sendable {
     case accumulator
 }
 
-public struct Selection: Codable, Sendable, Hashable, Identifiable {
+public struct Selection: Decodable, Sendable, Hashable, Identifiable {
     public var id: String { "\(boutID)-\(fighterID)" }
     public let boutID: String
     public let fighterID: String
@@ -41,13 +41,6 @@ public struct Selection: Codable, Sendable, Hashable, Identifiable {
         fighterID = try container.decode(String.self, forKey: .fighterID)
         let oddsString = try container.decode(String.self, forKey: .odds)
         odds = Money.parse(oddsString)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(boutID, forKey: .boutID)
-        try container.encode(fighterID, forKey: .fighterID)
-        try container.encode(Money.format(odds), forKey: .odds)
     }
 }
 
@@ -150,10 +143,4 @@ public struct CashOutOffer: Sendable {
         self.amount = amount
         self.reason = reason
     }
-}
-
-public enum FightCoreError: Error, Sendable {
-    case network(retryable: Bool)
-    case decoding(field: String)
-    case validation(errors: [ValidationError])
 }

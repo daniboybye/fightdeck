@@ -21,25 +21,11 @@ public enum CatalogError: Error, Sendable {
 public struct CardSection: Sendable {
     public let title: String
     public let bouts: [Bout]
-
-    public init(title: String, bouts: [Bout]) {
-        self.title = title
-        self.bouts = bouts
-    }
 }
 
 public struct LegContext: Sendable {
     public let fighterName: String
-    public let opponentName: String
-    public let eventName: String
     public let subtitle: String
-
-    public init(fighterName: String, opponentName: String, eventName: String, subtitle: String) {
-        self.fighterName = fighterName
-        self.opponentName = opponentName
-        self.eventName = eventName
-        self.subtitle = subtitle
-    }
 }
 
 public struct Catalog: Sendable {
@@ -71,10 +57,6 @@ public struct Catalog: Sendable {
             try decode(MediaFile.self, from: read("media.json"), field: "media").media
         }
         return catalog
-    }
-
-    public static func parse(eventsJSON: String, fightersJSON: String) throws -> Catalog {
-        try parse(eventsData: Data(eventsJSON.utf8), fightersData: Data(fightersJSON.utf8))
     }
 
     private static func parse(eventsData: Data, fightersData: Data) throws -> Catalog {
@@ -179,11 +161,6 @@ public struct Catalog: Sendable {
         let fighterName = fighter(id: fighterID)?.name ?? fighterID
         let opponentName = opponentOf(boutID: boutID, fighterID: fighterID)?.name ?? "—"
         let eventName = eventOfBout(boutID: boutID)?.name ?? "—"
-        return LegContext(
-            fighterName: fighterName,
-            opponentName: opponentName,
-            eventName: eventName,
-            subtitle: "vs \(opponentName) · \(eventName)"
-        )
+        return LegContext(fighterName: fighterName, subtitle: "vs \(opponentName) · \(eventName)")
     }
 }

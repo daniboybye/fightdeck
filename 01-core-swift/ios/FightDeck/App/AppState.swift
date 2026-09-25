@@ -59,10 +59,7 @@ final class AppState {
         set { slipStore.slip = newValue }
     }
 
-    var balance: Decimal {
-        get { slipStore.balance }
-        set { slipStore.balance = newValue }
-    }
+    var balance: Decimal { slipStore.balance }
 
     var slipState: SlipState { slipStore.slipState }
 
@@ -121,11 +118,6 @@ final class AppState {
 
     func removeSelection(id: String) {
         slipStore.removeSelection(id: id)
-        betPlacedMessage = nil
-    }
-
-    func removeSelection(boutID: String, fighterID: String) {
-        slipStore.removeSelection(boutID: boutID, fighterID: fighterID)
         betPlacedMessage = nil
     }
 

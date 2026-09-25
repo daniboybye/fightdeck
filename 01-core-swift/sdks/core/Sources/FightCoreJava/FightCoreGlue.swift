@@ -28,15 +28,6 @@ public func formatCurrency(_ amount: String) -> String {
     Money.formatCurrency(Money.parse(amount))
 }
 
-public func formatOdds(_ odds: String) -> String {
-    Money.formatOdds(Money.parse(odds))
-}
-
-/// Full precision, for the accumulator row where rounding would hide the trap.
-public func formatExactOdds(_ odds: String) -> String {
-    Money.formatExactOdds(Money.parse(odds))
-}
-
 public func decimalToFractional(_ odds: String) -> String {
     OddsEngine.decimalToFractional(Money.parse(odds))
 }

@@ -112,9 +112,7 @@ private func fixtureSlipEngine() -> SlipEngine {
     let repoRoot = FixtureLoader.fixturesDirectory
         .deletingLastPathComponent()
         .deletingLastPathComponent()
-    let eventsJSON = try! String(contentsOf: repoRoot.appendingPathComponent("dataset/events.json"))
-    let fightersJSON = try! String(contentsOf: repoRoot.appendingPathComponent("dataset/fighters.json"))
-    let catalog = try! Catalog.parse(eventsJSON: eventsJSON, fightersJSON: fightersJSON)
+    let catalog = try! Catalog.load(datasetRoot: repoRoot.appendingPathComponent("dataset"))
     return SlipEngine(bouts: catalog.boutIndex())
 }
 

@@ -5,8 +5,6 @@ import com.fightdeck.fightslip.SlipEngine
 import java.math.BigDecimal
 
 object Money {
-    fun money(value: BigDecimal): BigDecimal = BigDecimal(format(value))
-
     fun parse(string: String): BigDecimal =
         runCatching { BigDecimal(string.trim()) }.getOrDefault(BigDecimal.ZERO)
 
@@ -14,17 +12,6 @@ object Money {
 
     fun formatCurrency(value: BigDecimal): String =
         FightCoreJava.formatCurrency(value.toPlainString())
-}
-
-object OddsEngine {
-    fun decimalToFractional(odds: BigDecimal): String =
-        FightCoreJava.decimalToFractional(odds.toPlainString())
-
-    fun fractionalToDecimal(fractional: String): BigDecimal =
-        BigDecimal(FightCoreJava.fractionalToDecimal(fractional))
-
-    fun impliedProbability(odds: BigDecimal): String =
-        FightCoreJava.impliedProbability(odds.toPlainString())
 }
 
 /** [boutIndexJSON] is `EventCatalogBridge.boutIndexJSON`, handed over untouched. */
@@ -38,7 +25,7 @@ class SwiftSlipStore(boutIndexJSON: String) {
         private set
 
     var slipState: SlipState =
-        SlipState(null, null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, emptyList())
+        SlipState(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, emptyList())
         private set
 
     init {
@@ -54,8 +41,6 @@ class SwiftSlipStore(boutIndexJSON: String) {
         engine.removeSelection(boutId, fighterId)
         readBack()
     }
-
-    fun isSelected(boutId: String, fighterId: String): Boolean = engine.isSelected(boutId, fighterId)
 
     fun updateStake(stake: BigDecimal) {
         engine.updateStake(stake.toPlainString())
@@ -84,7 +69,6 @@ class SwiftSlipStore(boutIndexJSON: String) {
         )
         balance = BigDecimal(engine.balanceText)
         slipState = SlipState(
-            combinedOddsExact = engine.combinedOddsExactText.toBigDecimalOrNull(),
             combinedOddsDisplay = engine.combinedOddsText.toBigDecimalOrNull(),
             totalStake = BigDecimal(engine.totalStakeText),
             potentialReturn = BigDecimal(engine.potentialReturnText),

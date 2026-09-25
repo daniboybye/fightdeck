@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.fightdeck.fightevents.EventCatalogBridge
 import com.fightdeck.fightevents.MediaItem
 import com.fightdeck.fightevents.NewsItem
-import com.fightdeck.swiftcore.bridge.SharedPreferencesStore
 import com.fightdeck.swiftcore.bridge.SwiftCoreBridge
 import com.fightdeck.swiftcore.catalog.BoutCard
 import com.fightdeck.swiftcore.catalog.CardSectionCard
@@ -45,7 +44,6 @@ sealed interface BootstrapState {
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val preferences = SharedPreferencesStore(application)
     private var catalog: EventCatalogBridge? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
@@ -54,11 +52,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val bootstrapState: StateFlow<BootstrapState> = _bootstrapState.asStateFlow()
 
     init {
-        check(!SwiftCoreBridge.isStub) { "Expected the cross-compiled Swift core, not a stub" }
         check(SwiftCoreBridge.verifyNativeCore() == "€361.11") {
             "libfightcore.so did not answer through JNI"
         }
-        preferences.write("swift_core_mode", "swift")
         bootstrap()
     }
 

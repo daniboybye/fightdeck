@@ -26,17 +26,7 @@ public final class BetSlipStore {
         set { session.slip = newValue }
     }
 
-    public var balance: Decimal {
-        get { session.balance }
-        set { session.balance = newValue }
-    }
-
-    public var settlement: Settlement? {
-        get { session.settlement }
-        set { session.settlement = newValue }
-    }
-
-    public var slipEngine: SlipEngine { session.slipEngine }
+    public var balance: Decimal { session.balance }
 
     public init(
         slipEngine: SlipEngine,
@@ -48,18 +38,12 @@ public final class BetSlipStore {
 
     public var slipState: SlipState { session.slipState }
 
-    public var cashOutOffer: CashOutOffer { session.cashOutOffer }
-
     public func toggleSelection(boutID: String, fighterID: String, odds: Decimal) {
         session.toggleSelection(boutID: boutID, fighterID: fighterID, odds: odds)
     }
 
     public func isSelected(boutID: String, fighterID: String) -> Bool {
         session.isSelected(boutID: boutID, fighterID: fighterID)
-    }
-
-    public func removeSelection(boutID: String, fighterID: String) {
-        session.removeSelection(boutID: boutID, fighterID: fighterID)
     }
 
     public func removeSelection(id: String) {
@@ -69,10 +53,6 @@ public final class BetSlipStore {
     /// Validates, deducts stake, clears selections. Returns the pre-clear slip state when successful.
     public func placeBet() -> SlipState? {
         session.placeBet()
-    }
-
-    public func settleSlip() {
-        session.settleSlip()
     }
 
     public func deposit(amount: Decimal) {

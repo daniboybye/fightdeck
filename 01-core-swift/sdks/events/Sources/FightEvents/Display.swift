@@ -63,13 +63,6 @@ public enum Display {
         "\(winnerName) · \(humanise(method)) · R\(endRound) \(endTime)"
     }
 
-    public static func recordDisplay(wins: Int, losses: Int, draws: Int, noContests: Int) -> String {
-        if noContests > 0 {
-            return "\(wins)-\(losses)-\(draws) (\(noContests) NC)"
-        }
-        return "\(wins)-\(losses)-\(draws)"
-    }
-
     public static func segmentTitle(_ segment: String) -> String {
         switch segment {
         case "main": "Main Event"

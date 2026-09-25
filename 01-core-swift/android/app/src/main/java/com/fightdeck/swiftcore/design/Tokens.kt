@@ -40,9 +40,6 @@ object Tokens {
     /** Horizontal breathing room for a button that hugs its label instead of filling a bar. */
     val secondaryActionPadding = 24.dp
 
-    /** What an odds pill asks for before padding brings it to the tap target. */
-    val oddsLabelHeight = 30.dp
-
     /** Keeps a pinned action bar off whatever sits below it — nav bar or IME. */
     val actionBarGap = 12.dp
 }

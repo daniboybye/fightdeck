@@ -148,7 +148,7 @@ Each package carries its own `Sources/*Java/swift-java.config` with a distinct
 ```
 [swift-java] Generated: SlipEngine.java, SlipSelection.java, SettlementResult.java,
              CashOutResult.java, FightSlipJava.java
-[swift-java] Generated linker export list (37 symbols)
+[swift-java] Generated linker export list (35 symbols)
 ```
 
 The Java it emits is unremarkable in the best way — the Swift doc comments come across,
@@ -172,11 +172,11 @@ validation errors used one until it turned out Kotlin only ever wanted the contr
 | --- | ---: | --- |
 | Generated Java classes (three packages) | 1,300+ | nobody |
 | Generated JNI thunks (Swift, three packages) | 2,378+ | nobody |
-| `FightCoreGlue.swift` — money, odds and deposit facade | 100 | us |
-| `FightSlipGlue.swift` — slip engine facade | 173 | us |
-| `FightEventsGlue.swift` — catalog, news and media facade | 311 | us |
-| `FightCoreGlue.kt` — marshalling and read-back | 97 | us |
-| `SwiftCoreBridge.kt` — loads the `.so` files | 15 | us |
+| `FightCoreGlue.swift` — money, odds and deposit facade | 91 | us |
+| `FightSlipGlue.swift` — slip engine facade | 164 | us |
+| `FightEventsGlue.swift` — catalog, news and media facade | 297 | us |
+| `FightCoreGlue.kt` — marshalling and read-back | 81 | us |
+| `SwiftCoreBridge.kt` — loads the `.so` files | 16 | us |
 
 Three quarters of the boundary is written by a tool, and none of the part that is left is
 JNI. What survives is the part no generator can decide: which API crosses, what happens to

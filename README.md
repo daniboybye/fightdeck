@@ -101,13 +101,14 @@ its original build column was dominated by Rust packaging rather than by the app
 | Approach | iOS host | Android host | Shared | iOS specific | Android specific | Decrease hosts | Total | iOS adapters | Android adapters | Total + adapters | Generated | Config |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `00-native` baseline | 1,904 | 2,604 | — | — | — | — | **4,508** | — | — | **4,508** | — | 229 |
-| `02-core-rust` | 1,445 | 2,249 | 1,557 | — | — | −18% | **5,251** | 51 | 58 | **5,360** | 8,304 | 585 |
+| `02-core-rust` | 1,208 | 2,058 | 1,548 | — | — | −27% | **4,814** | 37 | 27 | **4,878** | 8,473 | 601 |
 | `01-core-swift` | 1,429 | 2,284 | 770 | — | — | −18% | **4,483** | 50 | 567 | **5,100** | 3,017 | 617 |
 | `03-sdk-rn` | 1,405 | 1,960 | 1,409 | — | — | −25% | **4,774** | 420 | 313 | **5,507** | 282 | 1,183 |
 | `04-sdk-skip` | 1,087 | 1,724 | 1,280 | 225 | 167 | −38% | **4,483** | 31 | 261 | **4,775** | 2,433 | 727 |
 
 **Measured at `4f67dc6`** by `python3 tools/count-significant-lines.py`, except the
-`03-sdk-rn` row, re-measured at `532d99c` after its host and SDK simplification. To refresh it,
+`03-sdk-rn` row, re-measured at `532d99c` after its host and SDK simplification, and the
+`02-core-rust` row, re-measured at `52b1d66` after its slip snapshot and shared-record changes. To refresh it,
 read the commits since that hash rather than the whole tree; `--audit` prints every file
 and the column it landed in.
 

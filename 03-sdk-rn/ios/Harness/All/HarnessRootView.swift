@@ -21,7 +21,6 @@ struct HarnessRootView: View {
                 FightDeckRuntime.shared.prewarm()
                 return hosting.makeViewController(
                     params: DepositParams(
-                        themeJSON: "{}",
                         currentBalance: 500
                     ),
                     onResult: { _ in onResult() }
@@ -31,7 +30,6 @@ struct HarnessRootView: View {
                 let hosting: BetslipHosting = BetslipAdapter()
                 return hosting.makeViewController(
                     params: BetslipParams(
-                        themeJSON: "{}",
                         balance: 500,
                         slipJSON: "{}",
                         eventsJSON: "{\"events\":[]}"
@@ -43,7 +41,6 @@ struct HarnessRootView: View {
                 let hosting: FighterHosting = FighterAdapter()
                 return hosting.makeViewController(
                     params: FighterParams(
-                        themeJSON: "{}",
                         fighterJSON: """
                         {"name":"Sample Fighter","record":{"wins":20,"losses":2,"noContests":0,"display":"20-2-0"}}
                         """,

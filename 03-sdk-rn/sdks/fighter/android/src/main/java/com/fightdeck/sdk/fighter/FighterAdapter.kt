@@ -5,7 +5,6 @@ import com.fightdeck.rn.runtime.FeatureAdapter
 
 /** Data only: the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`. */
 data class FighterParams(
-    val themeJSON: String,
     val fighterJSON: String,
     val portraitURL: String,
 )
@@ -14,7 +13,6 @@ data class FighterParams(
 class FighterAdapter : FeatureAdapter<FighterParams>("FighterFeature") {
     override fun propsBundle(params: FighterParams): Bundle =
         Bundle().apply {
-            putString("themeJSON", params.themeJSON)
             putString("fighterJSON", params.fighterJSON)
             putString("portraitURL", params.portraitURL)
         }

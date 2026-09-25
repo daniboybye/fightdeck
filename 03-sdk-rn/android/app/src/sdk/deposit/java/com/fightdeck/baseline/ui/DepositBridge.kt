@@ -16,7 +16,7 @@ fun RNDepositScreen(
     modifier: Modifier = Modifier,
 ) {
     val adapter = remember { DepositAdapter() }
-    val params = DepositParams(themeJSON = rememberThemeJSON(), currentBalance = balance)
+    val params = DepositParams(currentBalance = balance)
     RNSurface(
         includesTabBarClearance = false,
         create = { context ->

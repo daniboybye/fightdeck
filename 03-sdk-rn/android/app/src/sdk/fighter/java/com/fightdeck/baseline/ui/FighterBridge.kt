@@ -14,7 +14,6 @@ fun RNFighterProfileScreen(
 ) {
     val adapter = remember { FighterAdapter() }
     val params = FighterParams(
-        themeJSON = rememberThemeJSON(),
         fighterJSON = fighterJSON,
         portraitURL = portraitURL,
     )

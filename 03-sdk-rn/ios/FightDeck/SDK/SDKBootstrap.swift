@@ -12,12 +12,6 @@ import FighterSDK
 import FightDeckRNRuntime
 import Foundation
 
-enum ThemeLoader {
-    static func tokensJSON() -> String {
-        DatasetLocator.tokensJSON()
-    }
-}
-
 @MainActor
 final class SDKBootstrap {
     static let shared = SDKBootstrap()

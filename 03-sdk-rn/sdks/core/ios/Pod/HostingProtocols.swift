@@ -6,11 +6,9 @@ import UIKit
 /// Parameters carry data only. The chrome a surface has to clear travels separately, through
 /// `FightDeckRuntime.publishLayout(_:for:)`, so a keyboard frame never re-renders the form.
 public struct DepositParams: Equatable, Sendable {
-    public let themeJSON: String
     public let currentBalance: Decimal
 
-    public init(themeJSON: String, currentBalance: Decimal) {
-        self.themeJSON = themeJSON
+    public init(currentBalance: Decimal) {
         self.currentBalance = currentBalance
     }
 }
@@ -30,7 +28,6 @@ public protocol DepositHosting: AnyObject {
 }
 
 public struct BetslipParams: Equatable, Sendable {
-    public let themeJSON: String
     public let balance: Decimal
     public let slipJSON: String
     public let eventsJSON: String
@@ -39,13 +36,11 @@ public struct BetslipParams: Equatable, Sendable {
     public let betPlacedMessage: String
 
     public init(
-        themeJSON: String,
         balance: Decimal,
         slipJSON: String,
         eventsJSON: String,
         betPlacedMessage: String = ""
     ) {
-        self.themeJSON = themeJSON
         self.balance = balance
         self.slipJSON = slipJSON
         self.eventsJSON = eventsJSON
@@ -70,12 +65,10 @@ public protocol BetslipHosting: AnyObject {
 }
 
 public struct FighterParams: Equatable, Sendable {
-    public let themeJSON: String
     public let fighterJSON: String
     public let portraitURL: String
 
-    public init(themeJSON: String, fighterJSON: String, portraitURL: String) {
-        self.themeJSON = themeJSON
+    public init(fighterJSON: String, portraitURL: String) {
         self.fighterJSON = fighterJSON
         self.portraitURL = portraitURL
     }

@@ -10,7 +10,6 @@ import java.math.BigDecimal
 
 /** Data only: the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`. */
 data class DepositParams(
-    val themeJSON: String,
     val currentBalance: BigDecimal,
 )
 
@@ -22,7 +21,6 @@ class DepositAdapter : FeatureAdapter<DepositParams>("DepositFeature") {
 
     override fun propsBundle(params: DepositParams): Bundle =
         Bundle().apply {
-            putString("themeJSON", params.themeJSON)
             putString("currentBalance", params.currentBalance.toPlainString())
         }
 }

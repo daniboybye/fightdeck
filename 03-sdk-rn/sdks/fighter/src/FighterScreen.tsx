@@ -9,10 +9,9 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { useSurfaceLayout } from '../../core/src/ui/layout';
-import { parseThemeJSON, type ThemeTokens } from '../../core/src/ui/theme';
+import { theme, type ThemeTokens } from '../../core/src/ui/theme';
 
 interface FighterProps extends Record<string, unknown> {
-  themeJSON: string;
   fighterJSON: string;
   portraitURL: string;
 }
@@ -51,12 +50,11 @@ function capitalize(value: string): string {
 
 export function FighterScreen(props: FighterProps) {
   const layoutFrame = useSurfaceLayout('FighterFeature');
-  const theme = useMemo(() => parseThemeJSON(String(props.themeJSON ?? '{}')), [props.themeJSON]);
   const fighter = useMemo(() => parseFighter(String(props.fighterJSON ?? '{}')), [props.fighterJSON]);
   const portraitURL = String(props.portraitURL ?? '');
   const styles = useMemo(
     () => makeStyles(theme, layoutFrame.chromeBackground),
-    [theme, layoutFrame.chromeBackground],
+    [layoutFrame.chromeBackground],
   );
 
   if (fighter == null) {
@@ -240,7 +238,7 @@ function groupedStyles(c: Record<string, string>, theme: ThemeTokens) {
   });
 }
 
-function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: string) {
+function makeStyles(theme: ThemeTokens, chromeBackground: string) {
   const c = theme.colors;
   const s = theme.spacing;
   const pageBackground = chromeBackground || c.background || '#0B0E14';

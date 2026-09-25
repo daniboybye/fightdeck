@@ -10,7 +10,6 @@ import java.math.BigDecimal
 
 /** Data only: the chrome the surface has to clear goes through `FightDeckRNRuntime.publishLayout`. */
 data class BetslipParams(
-    val themeJSON: String,
     val balance: BigDecimal,
     val slipJSON: String,
     val eventsJSON: String,
@@ -25,7 +24,6 @@ class BetslipAdapter : FeatureAdapter<BetslipParams>("BetslipFeature") {
 
     override fun propsBundle(params: BetslipParams): Bundle =
         Bundle().apply {
-            putString("themeJSON", params.themeJSON)
             putString("balance", params.balance.toPlainString())
             putString("slipJSON", params.slipJSON)
             putString("eventsJSON", params.eventsJSON)

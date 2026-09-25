@@ -5,7 +5,6 @@ public final class FighterAdapter: FeatureAdapter<FighterParams>, FighterHosting
     public init() {
         super.init(moduleName: "FighterFeature") { params in
             [
-                "themeJSON": params.themeJSON,
                 "fighterJSON": params.fighterJSON,
                 "portraitURL": params.portraitURL,
             ]

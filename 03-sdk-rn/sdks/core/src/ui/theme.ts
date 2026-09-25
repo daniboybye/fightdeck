@@ -1,3 +1,5 @@
+import tokens from '../../../../../shared-ui-spec/tokens.json';
+
 export interface ThemeTokens {
   colors: Record<string, string>;
   spacing: Record<string, number>;
@@ -5,8 +7,14 @@ export interface ThemeTokens {
   fontSize: Record<string, number>;
 }
 
-export function parseThemeJSON(themeJSON: string): ThemeTokens {
-  const raw = JSON.parse(themeJSON) as Record<string, unknown>;
+/**
+ * The design tokens every host is built from, compiled into the bundle. They are the same file
+ * for every screen and never change at runtime, so they are not something a host has to read
+ * from disk and send along with each property update.
+ */
+export const theme: ThemeTokens = parseTokens(tokens as Record<string, unknown>);
+
+function parseTokens(raw: Record<string, unknown>): ThemeTokens {
   const colors: Record<string, string> = {};
   const colorBlock = raw.color as Record<string, { $value?: { hex?: string } }>;
   for (const [key, value] of Object.entries(colorBlock ?? {})) {

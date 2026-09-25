@@ -22,7 +22,6 @@ fun RNBetslipScreen(
 ) {
     val adapter = remember { BetslipAdapter() }
     val params = BetslipParams(
-        themeJSON = rememberThemeJSON(),
         balance = balance,
         slipJSON = slipJSON,
         eventsJSON = eventsJSON,

@@ -66,7 +66,6 @@ struct BetslipBridgeView: View {
         let eventsURL = DatasetLocator.datasetRoot().appendingPathComponent("events.json")
         let eventsJSON = (try? String(contentsOf: eventsURL, encoding: .utf8)) ?? "{\"events\":[]}"
         return BetslipParams(
-            themeJSON: ThemeLoader.tokensJSON(),
             balance: state.balance,
             slipJSON: slipJSON,
             eventsJSON: eventsJSON,

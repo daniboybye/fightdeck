@@ -142,7 +142,6 @@ androidComponents {
 
 val syncDemoAssets = tasks.register<Copy>("syncDemoAssets") {
     from(rootProject.file("../../dataset"))
-    from(rootProject.file("../../shared-ui-spec/tokens.json"))
     into(demoAssetsDir)
 }
 

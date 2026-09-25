@@ -5,7 +5,6 @@ public final class DepositAdapter: FeatureAdapter<DepositParams>, DepositHosting
     public init() {
         super.init(moduleName: "DepositFeature") { params in
             [
-                "themeJSON": params.themeJSON,
                 "currentBalance": NSDecimalNumber(decimal: params.currentBalance).stringValue,
             ]
         }

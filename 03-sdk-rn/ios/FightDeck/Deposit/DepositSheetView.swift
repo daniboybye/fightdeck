@@ -52,6 +52,6 @@ struct DepositSheetView: View {
     }
 
     private var params: DepositParams {
-        DepositParams(themeJSON: ThemeLoader.tokensJSON(), currentBalance: state.balance)
+        DepositParams(currentBalance: state.balance)
     }
 }

@@ -21,7 +21,7 @@ import {
   useSurfaceLayout,
 } from '../../core/src/ui/layout';
 import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
-import { parseThemeJSON } from '../../core/src/ui/theme';
+import { theme, type ThemeTokens } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
 
 const MIN_DEPOSIT = parseMoney('10.00');
@@ -36,10 +36,6 @@ const METHODS = [
 export function DepositScreen(props: Record<string, unknown>) {
   const layoutFrame = useSurfaceLayout('DepositFeature');
 
-  const theme = useMemo(
-    () => parseThemeJSON(String(props.themeJSON ?? '{}')),
-    [props.themeJSON],
-  );
   const balance = parseMoney(String(props.currentBalance ?? '0'));
   const [amountText, setAmountText] = useState('');
   const [methodId, setMethodId] = useState('card');
@@ -48,7 +44,7 @@ export function DepositScreen(props: Record<string, unknown>) {
 
   const styles = useMemo(
     () => makeStyles(theme, layoutFrame.chromeBackground),
-    [theme, layoutFrame.chromeBackground],
+    [layoutFrame.chromeBackground],
   );
   const amount = parseMoney(amountText || '0');
   const method = METHODS.find((m) => m.id === methodId) ?? METHODS[0];
@@ -226,7 +222,7 @@ function SummaryRow({
   );
 }
 
-function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: string) {
+function makeStyles(theme: ThemeTokens, chromeBackground: string) {
   const c = theme.colors;
   const s = theme.spacing;
   const r = theme.radius;

@@ -14,13 +14,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.rn.runtime.FightDeckRNRuntime
 import com.fightdeck.rn.runtime.SurfaceChrome
 import com.fightdeck.rn.runtime.SurfaceLayout
@@ -137,8 +135,3 @@ private fun SurfaceLayout.inDensityIndependentUnits(scale: Float) = copy(
     keyboardBottomInset = keyboardBottomInset / scale,
 )
 
-@Composable
-internal fun rememberThemeJSON(): String {
-    val context = LocalContext.current
-    return remember { DatasetLocator.tokensJSON(context) }
-}

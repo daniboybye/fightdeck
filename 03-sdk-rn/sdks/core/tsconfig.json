@@ -9,6 +9,7 @@
     "src/**/*",
     "__tests__/**/*",
     "../deposit/src/**/*",
-    "../betslip/src/**/*"
+    "../betslip/src/**/*",
+    "../fighter/src/**/*"
   ]
 }

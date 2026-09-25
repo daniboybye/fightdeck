@@ -39,7 +39,6 @@ struct FighterBridgeView: View {
         let fighterJSON = fighter.flatMap { try? String(data: encoder.encode($0), encoding: .utf8) } ?? "{}"
         let portraitURL = fighter.flatMap { state.imageURL($0.portrait)?.absoluteString } ?? ""
         return FighterParams(
-            themeJSON: ThemeLoader.tokensJSON(),
             fighterJSON: fighterJSON,
             portraitURL: portraitURL
         )

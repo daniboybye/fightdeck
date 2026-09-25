@@ -10,6 +10,8 @@ const config = {
     path.resolve(monorepoRoot, 'deposit'),
     path.resolve(monorepoRoot, 'betslip'),
     path.resolve(monorepoRoot, 'fighter'),
+    // The design tokens, which the theme imports rather than receiving from the host.
+    path.resolve(monorepoRoot, '../../shared-ui-spec'),
   ],
   resolver: {
     nodeModulesPaths: [

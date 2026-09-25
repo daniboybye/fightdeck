@@ -21,7 +21,6 @@ struct HarnessRootView: View {
             FightDeckRuntime.shared.prewarm()
             return hosting.makeViewController(
                 params: DepositParams(
-                    themeJSON: "{}",
                     currentBalance: 500
                 ),
                 onResult: { _ in onResult() }

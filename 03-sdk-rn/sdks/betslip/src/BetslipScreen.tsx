@@ -29,12 +29,11 @@ import {
   useSurfaceLayout,
 } from '../../core/src/ui/layout';
 import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
-import { parseThemeJSON, slipSummaryRows, type ThemeTokens } from '../../core/src/ui/theme';
+import { slipSummaryRows, theme, type ThemeTokens } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
 import type { BetMode, Selection } from '../../core/src/fightcore/types';
 
 interface SlipProps extends Record<string, unknown> {
-  themeJSON: string;
   balance: string;
   slipJSON: string;
   eventsJSON: string;
@@ -101,10 +100,9 @@ function parseSelections(
 export function BetslipScreen(props: SlipProps) {
   const layoutFrame = useSurfaceLayout('BetslipFeature');
 
-  const theme = useMemo(() => parseThemeJSON(String(props.themeJSON ?? '{}')), [props.themeJSON]);
   const styles = useMemo(
     () => makeStyles(theme, layoutFrame.chromeBackground),
-    [theme, layoutFrame.chromeBackground],
+    [layoutFrame.chromeBackground],
   );
   const eventsJSON = String(props.eventsJSON ?? '{"events":[]}');
   const slipJSONProp = String(props.slipJSON ?? '{}');
@@ -426,7 +424,7 @@ function groupedStyles(c: Record<string, string>, theme: ThemeTokens, overflowVi
   });
 }
 
-function makeStyles(theme: ReturnType<typeof parseThemeJSON>, chromeBackground: string) {
+function makeStyles(theme: ThemeTokens, chromeBackground: string) {
   const c = theme.colors;
   const s = theme.spacing;
   const r = theme.radius;

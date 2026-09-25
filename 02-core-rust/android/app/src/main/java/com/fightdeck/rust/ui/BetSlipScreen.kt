@@ -63,6 +63,7 @@ import com.fightdeck.rust.design.BalanceMenuAction
 import com.fightdeck.rust.design.Tokens
 import uniffi.fightslip.SlipSnapshot
 import uniffi.fightslip.SlipStateRecord
+import uniffi.fightslip.stakePresets
 
 @Composable
 private fun LinkRowButton(
@@ -129,6 +130,7 @@ internal fun BetSlipScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val focusManager = LocalFocusManager.current
     var stakeFocused by remember { mutableStateOf(false) }
+    val stakePresets = remember { stakePresets() }
     val slip = snapshot.slip
     val state = snapshot.state
 
@@ -259,12 +261,10 @@ internal fun BetSlipScreen(
                     }
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm)) {
-                            listOf(5, 10, 25, 50).forEach { chip ->
+                            stakePresets.forEach { preset ->
                                 PresetChipButton(
-                                    title = "€$chip",
-                                    onClick = {
-                                        viewModel.updateStake(String.format("%.2f", chip.toDouble()))
-                                    },
+                                    title = preset.title,
+                                    onClick = { viewModel.updateStake(preset.stake) },
                                     modifier = Modifier.weight(1f),
                                 )
                             }

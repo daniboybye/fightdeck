@@ -138,3 +138,12 @@ fn only_an_amount_the_deposit_form_allows_reaches_the_balance() {
     assert!(matches!(store.deposit("ten".into()), Err(SlipError::Decoding { .. })));
     assert_eq!(store.current_snapshot().balance, "510.00");
 }
+
+#[test]
+fn stake_presets_set_two_place_stakes_in_any_locale() {
+    let presets = fightslip::stake_presets();
+    let titles: Vec<_> = presets.iter().map(|p| p.title.as_str()).collect();
+    let stakes: Vec<_> = presets.iter().map(|p| p.stake.as_str()).collect();
+    assert_eq!(titles, ["€5", "€10", "€25", "€50"]);
+    assert_eq!(stakes, ["5.00", "10.00", "25.00", "50.00"]);
+}

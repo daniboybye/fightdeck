@@ -398,3 +398,23 @@ pub fn validation_error_code(error: ValidationErrorRecord) -> String {
     ValidationError::from(error).code().to_string()
 }
 
+/// A quick-stake chip: what it says and the stake it sets.
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct StakePreset {
+    pub title: String,
+    pub stake: String,
+}
+
+/// The chips under the stake field. The hosts used to write the amounts twice and format them
+/// through a `Double`, and Kotlin's `String.format` wrote `5,00` in a comma locale, which the
+/// store then rejected as an invalid stake.
+#[uniffi::export]
+pub fn stake_presets() -> Vec<StakePreset> {
+    ["5", "10", "25", "50"]
+        .into_iter()
+        .map(|amount| {
+            let stake = money::parse_exact(amount);
+            StakePreset { title: format!("€{amount}"), stake: money::format(stake) }
+        })
+        .collect()
+}

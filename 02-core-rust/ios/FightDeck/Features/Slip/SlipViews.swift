@@ -160,8 +160,8 @@ struct BetSlipView: View {
 
     private var stakeChips: some View {
         PresetChipRow {
-            ForEach([5, 10, 25, 50], id: \.self) { chip in
-                PresetChipButton(title: "€\(chip)") { state.slipStore.setStake(String(format: "%.2f", Double(chip))) }
+            ForEach(stakePresets(), id: \.stake) { preset in
+                PresetChipButton(title: preset.title) { state.slipStore.setStake(preset.stake) }
             }
         }
     }

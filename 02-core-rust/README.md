@@ -83,6 +83,7 @@ Splitting the crates was the excuse to move logic that both hosts were maintaini
 | --- | --- | --- |
 | Single vs accumulator mode | `syncMode()` in Swift **and** Kotlin | `SlipEngine::mode_for` |
 | Place bet: validate, take stake, clear slip, compose message | 13 lines Swift + 14 lines Kotlin | `BetSlipStore::place_bet` |
+| Quick-stake chips €5–€50 and the stake each sets | `[5, 10, 25, 50]` formatted through a `Double` in each host; Kotlin's `String.format` wrote `5,00` in a comma locale, which the store rejected | `stake_presets` |
 | The "Bet placed" copy, and clearing it when the legs change | `betPlacedMessage` in `AppState` and `MainViewModel`, reset by hand in toggle and remove | `SlipSnapshot::confirmation` |
 | Slip summary rows and their order | `slipSummary` in both hosts | `SlipStateRecord::summary_rows` |
 | Bout index from `events.json` | `Codable` mirror + map in Swift, `@Serializable` mirror + map in Kotlin | `EventCatalog::bout_index` |
@@ -148,7 +149,7 @@ Toolchain pins: [`versions.lock.toml`](../versions.lock.toml).
 export PATH="$HOME/.cargo/bin:$PATH"
 cd 02-core-rust/sdks
 
-cargo test --workspace          # 31 tests: fixtures, store + unit
+cargo test --workspace          # 32 tests: fixtures, store + unit
 
 ./build-apple.sh                # all three SPM packages: {core,slip,events}/out/*.xcframework
 ./build-android.sh              # one fightdeck.aar/.so + three generated Kotlin packages

@@ -45,13 +45,13 @@ done'
 
 echo "01-core-swift — Swift compiled for Android"
 ck "the AAR carries the Swift runtime" "libswiftCore.so" bash -c \
-    "unzip -l $REPO/01-core-swift/sdks/core/out/fightcore.aar | grep '\.so'"
+    "unzip -l $REPO/01-core-swift/sdks/android/out/fightdeck.aar | grep '\.so'"
 ck "jextract's shape leaks into Kotlin" "toInt()" bash -c \
     "rg -n 'toInt\(\)|RED|BLUE' $REPO/01-core-swift/android/app/src/main/java/com/fightdeck/swiftcore/catalog/CatalogHost.kt | head -3"
 ck "the .so has Swift debug info" "DW_LANG_Swift" bash -c \
-    "xcrun dwarfdump --debug-info $REPO/01-core-swift/sdks/core/out/android-libs/arm64-v8a/libfightcore.so | grep -m3 DW_AT_language"
+    "xcrun dwarfdump --debug-info $REPO/01-core-swift/sdks/android/out/android-libs/arm64-v8a/libfightdeck.so | grep -m3 DW_AT_language"
 ck "Android consumes a prebuilt AAR, not sources" ".aar" bash -c \
-    "rg -n 'fightCoreAar|\.aar' $REPO/01-core-swift/android/app/build.gradle.kts | head -3"
+    "rg -n 'fightDeckAar|\.aar' $REPO/01-core-swift/android/app/build.gradle.kts | head -3"
 
 echo "02-core-rust — Rust behind UniFFI"
 ck "the Apple artifact has Rust debug info" "DW_LANG_Rust" bash -c \

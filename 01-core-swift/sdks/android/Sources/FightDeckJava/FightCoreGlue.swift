@@ -1,6 +1,6 @@
 //
 // FightCoreGlue.swift
-// FightCoreJava
+// FightDeckJava
 //
 // Created by FightDeck on 09.09.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.

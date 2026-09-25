@@ -54,7 +54,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.fightdeck.fightcore.FightCoreJava
+import com.fightdeck.sdk.FightDeckJava
 import com.fightdeck.swiftcore.core.depositMethods
 import com.fightdeck.swiftcore.core.depositQuote
 import com.fightdeck.swiftcore.design.Tokens
@@ -63,7 +63,7 @@ import com.fightdeck.swiftcore.design.Tokens
 @Composable
 internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: () -> Unit) {
     val methods = remember { depositMethods() }
-    val presets = remember { FightCoreJava.depositPresets().toList() }
+    val presets = remember { FightDeckJava.depositPresets().toList() }
     var amountText by remember { mutableStateOf("") }
     var method by remember { mutableStateOf(methods.first()) }
     var didSucceed by remember { mutableStateOf(false) }

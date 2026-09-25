@@ -1,16 +1,16 @@
 package com.fightdeck.swiftcore.core
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.fightdeck.fightcore.FightCoreJava
-import com.fightdeck.fightevents.EventCatalogBridge
-import com.fightdeck.fightslip.SlipEngine
+import com.fightdeck.sdk.EventCatalogBridge
+import com.fightdeck.sdk.FightDeckJava
+import com.fightdeck.sdk.SlipEngine
+import java.io.File
+import kotlin.test.assertEquals
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
-import kotlin.test.assertEquals
 
 /**
  * The contract fixtures, evaluated by the cross-compiled Swift core on the device.
@@ -29,14 +29,14 @@ class SwiftCoreFixtureTests {
     fun oddsConversion() {
         val root = json.decodeFromString<OddsConversionRoot>(fixture("odds-conversion"))
         root.cases.forEach { case ->
-            assertEquals(case.fractional, FightCoreJava.decimalToFractional(case.decimal), case.id)
+            assertEquals(case.fractional, FightDeckJava.decimalToFractional(case.decimal), case.id)
             assertEquals(
                 case.impliedProbability,
-                FightCoreJava.impliedProbability(case.decimal),
+                FightDeckJava.impliedProbability(case.decimal),
                 case.id,
             )
-            val roundTrip = FightCoreJava.fractionalToDecimal(case.fractional)
-            assertEquals(FightCoreJava.formatMoney(case.decimal), roundTrip, case.id)
+            val roundTrip = FightDeckJava.fractionalToDecimal(case.fractional)
+            assertEquals(FightDeckJava.formatMoney(case.decimal), roundTrip, case.id)
         }
     }
 
@@ -109,7 +109,7 @@ class SwiftCoreFixtureTests {
     }
 
     private fun engineForFixtures(): SlipEngine =
-        SlipEngine.init(EventCatalogBridge.`init`(DATASET_ROOT).boutIndexJSON)
+        SlipEngine.init(EventCatalogBridge.`init`(DATASET_ROOT))
 
     private fun fixture(name: String): String {
         val file = File(FIXTURES_ROOT, "$name.json")

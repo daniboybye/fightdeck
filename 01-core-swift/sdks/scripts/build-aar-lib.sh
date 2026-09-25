@@ -1,24 +1,18 @@
 #!/usr/bin/env bash
-# Cross-compile one Swift SDK for Android and package its AAR with jextract JNI bindings.
+# Cross-compile a Swift package for Android and package its AAR with jextract JNI bindings,
+# the Swift runtime its library needs and the SwiftKit jar the bindings compile against.
 #
-# usage: build-aar-lib.sh <package-dir> <lib-name> <shared-product> <java-bridge-target> <java-bridge-env> [runtime-baseline-dir]
-#
-# The Swift runtime for Android is a directory of shared objects, and every module that
-# links Swift needs the same ones. Given a baseline directory — the module that already
-# ships them — this walks past a library instead of copying it, so the runtime travels in
-# exactly one AAR. Without that, three modules mean three copies of the same 68 MB and AGP
-# refuses to merge them.
+# usage: build-aar-lib.sh <package-dir> <lib-name> <shared-product> <java-bridge-target> <java-package>
 set -euo pipefail
 
-PKG_ROOT="$(cd "${1:?usage: build-aar-lib.sh <package-dir> <lib-name> <shared-product> <java-bridge-target> <java-bridge-env> [runtime-baseline-dir]}" && pwd)"
+PKG_ROOT="$(cd "${1:?usage: build-aar-lib.sh <package-dir> <lib-name> <shared-product> <java-bridge-target> <java-package>}" && pwd)"
 LIB_NAME="${2:?missing lib name}"
 SHARED_PRODUCT="${3:?missing shared product name}"
 JAVA_BRIDGE_TARGET="${4:?missing java bridge target}"
-JAVA_BRIDGE_ENV="${5:?missing java bridge env var}"
-BASELINE_ROOT="${6:-}"
+JAVA_PACKAGE="${5:?missing java package}"
 
-# shellcheck source=../core/setup-android-sdk.sh
-source "$(cd "$(dirname "$0")/../core" && pwd)/setup-android-sdk.sh"
+# shellcheck source=setup-android-sdk.sh
+source "$(cd "$(dirname "$0")" && pwd)/setup-android-sdk.sh"
 
 OUT="$PKG_ROOT/out"
 MIN_SDK="${MIN_SDK:-28}"
@@ -27,11 +21,8 @@ ABIS=(
     "x86_64-unknown-linux-android${MIN_SDK}"
 )
 
-JAVA_PACKAGE="${LIB_NAME//./}"
-JAVA_PACKAGE="com.fightdeck.${LIB_NAME}"
 JAVA_PACKAGE_DIR="${JAVA_PACKAGE//.//}"
 
-export "${JAVA_BRIDGE_ENV}=1"
 PKG_FOLDER="$(basename "$PKG_ROOT")"
 PLUGIN_OUT="$PKG_ROOT/.build/plugins/outputs/${PKG_FOLDER}/${JAVA_BRIDGE_TARGET}/destination/JExtractSwiftPlugin"
 GENERATED_JAVA="$PLUGIN_OUT/src/generated/java"
@@ -46,7 +37,6 @@ mkdir -p "$OUT/android-libs"
 copy_swift_runtime() {
     local arch="$1"
     local dest="$2"
-    local baseline="$3"
     local runtime readelf
     runtime="$(find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
         "$HOME/Library/org.swift.swiftpm/swift-sdks" \
@@ -77,12 +67,6 @@ copy_swift_runtime() {
         while read -r needed; do
             [[ "$visited" == *" $needed "* ]] && continue
             visited+="$needed "
-            # Already in the baseline AAR: still walked, so anything only it pulls in is
-            # accounted for, but not shipped a second time.
-            if [[ -n "$baseline" && -f "$baseline/$needed" ]]; then
-                queue+=("$baseline/$needed")
-                continue
-            fi
             src=""
             if [[ -f "$runtime/$needed" ]]; then
                 src="$runtime/$needed"
@@ -127,20 +111,10 @@ for triple in "${ABIS[@]}"; do
     esac
     mkdir -p "$OUT/android-libs/$abi"
     cp "$lib_src" "$OUT/android-libs/$abi/lib${LIB_NAME}.so"
-    baseline=""
-    if [[ -n "$BASELINE_ROOT" ]]; then
-        baseline="$BASELINE_ROOT/$abi"
-        if [[ ! -d "$baseline" ]]; then
-            echo "ERROR: no runtime baseline at $baseline — build the core module first" >&2
-            exit 1
-        fi
-    fi
     # libSwiftJava.so is a dynamic product of the dependency rather than part of the Swift
     # SDK, so it is not reached by walking the runtime and has to be named here.
-    if [[ -z "$baseline" || ! -f "$baseline/libSwiftJava.so" ]]; then
-        cp "$build_dir/libSwiftJava.so" "$OUT/android-libs/$abi/libSwiftJava.so"
-    fi
-    copy_swift_runtime "${triple%%-*}" "$OUT/android-libs/$abi" "$baseline"
+    cp "$build_dir/libSwiftJava.so" "$OUT/android-libs/$abi/libSwiftJava.so"
+    copy_swift_runtime "${triple%%-*}" "$OUT/android-libs/$abi"
     echo "  $(du -h "$OUT/android-libs/$abi/lib${LIB_NAME}.so" | cut -f1)  $abi/lib${LIB_NAME}.so"
 done
 
@@ -199,11 +173,7 @@ cat > "$AAR_DIR/proguard.txt" <<EOF
 EOF
 
 cp "$OUT/classes.jar" "$AAR_DIR/classes.jar"
-# Still needed on the javac classpath above, but bundling it in every AAR puts
-# org.swift.swiftkit.core on the app's classpath three times over.
-if [[ -z "$BASELINE_ROOT" ]]; then
-    cp "$SWIFTKIT_CORE_JAR" "$AAR_DIR/libs/"
-fi
+cp "$SWIFTKIT_CORE_JAR" "$AAR_DIR/libs/"
 
 for abi_dir in "$OUT/android-libs"/*; do
     abi="$(basename "$abi_dir")"

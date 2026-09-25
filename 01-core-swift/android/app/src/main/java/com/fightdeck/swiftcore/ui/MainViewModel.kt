@@ -3,8 +3,8 @@ package com.fightdeck.swiftcore.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.fightdeck.fightevents.EventCatalogBridge
-import com.fightdeck.fightslip.SlipEngine
+import com.fightdeck.sdk.EventCatalogBridge
+import com.fightdeck.sdk.SlipEngine
 import com.fightdeck.swiftcore.bridge.SwiftCoreBridge
 import com.fightdeck.swiftcore.catalog.BoutCard
 import com.fightdeck.swiftcore.catalog.CardSectionCard
@@ -56,7 +56,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         check(SwiftCoreBridge.verifyNativeCore() == "€361.11") {
-            "libfightcore.so did not answer through JNI"
+            "libfightdeck.so did not answer through JNI"
         }
         bootstrap()
     }
@@ -97,7 +97,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             booted.fold(
                 onSuccess = { loaded ->
                     catalog = loaded
-                    slipEngine = SlipEngine.`init`(loaded.boutIndexJSON)
+                    slipEngine = SlipEngine.`init`(loaded)
                     updateSlip {}
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()

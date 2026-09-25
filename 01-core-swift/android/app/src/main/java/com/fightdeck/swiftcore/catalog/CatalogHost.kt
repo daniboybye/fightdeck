@@ -1,6 +1,6 @@
 package com.fightdeck.swiftcore.catalog
 
-import com.fightdeck.fightevents.EventCatalogBridge
+import com.fightdeck.sdk.EventCatalogBridge
 
 // FightEvents' presentation models, as Compose holds them. Every value is already worded and
 // formatted on the Swift side; each read below is one JNI call returning a tuple of plain Java

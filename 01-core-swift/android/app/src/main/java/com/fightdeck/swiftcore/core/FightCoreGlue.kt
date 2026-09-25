@@ -1,7 +1,7 @@
 package com.fightdeck.swiftcore.core
 
-import com.fightdeck.fightcore.FightCoreJava
-import com.fightdeck.fightslip.SlipEngine
+import com.fightdeck.sdk.FightDeckJava
+import com.fightdeck.sdk.SlipEngine
 
 /**
  * The whole slip in one JNI call. `snapshot()` returns a tuple of plain Java values, so there
@@ -40,7 +40,7 @@ data class DepositQuote(
 )
 
 fun depositMethods(): List<DepositMethodOption> {
-    val methods = FightCoreJava.depositMethods()
+    val methods = FightDeckJava.depositMethods()
     return methods.ids().indices.map {
         DepositMethodOption(methods.ids()[it], methods.titles()[it], methods.feeNotes()[it])
     }
@@ -48,7 +48,7 @@ fun depositMethods(): List<DepositMethodOption> {
 
 /** One JNI call per keystroke, answered in plain values. */
 fun depositQuote(amountText: String, methodId: String, balance: String): DepositQuote {
-    val quote = FightCoreJava.depositQuote(amountText, methodId, balance)
+    val quote = FightDeckJava.depositQuote(amountText, methodId, balance)
     return DepositQuote(
         amount = quote.amount(),
         amountDisplay = quote.amountDisplay(),

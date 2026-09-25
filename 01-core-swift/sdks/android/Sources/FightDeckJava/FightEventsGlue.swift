@@ -1,6 +1,6 @@
 //
 // FightEventsGlue.swift
-// FightEventsJava
+// FightDeckJava
 //
 // Created by FightDeck on 13.09.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
@@ -27,7 +27,8 @@ struct NotFound: Error {
 /// Android-facing handle over `Catalog`. The host finds the dataset directory; reading and
 /// parsing it happens on this side.
 public final class EventCatalogBridge {
-    private let catalog: Catalog
+    /// Internal rather than private so the slip glue beside it can read the bout index.
+    let catalog: Catalog
 
     public init(datasetRoot: String) throws {
         catalog = try Catalog.load(datasetRoot: URL(fileURLWithPath: datasetRoot, isDirectory: true))
@@ -129,12 +130,6 @@ public final class EventCatalogBridge {
     public func legContext(boutID: String, fighterID: String) -> (fighterName: String, subtitle: String) {
         let context = catalog.legContext(boutID: boutID, fighterID: fighterID)
         return (fighterName: context.fighterName, subtitle: context.subtitle)
-    }
-
-    /// Handed straight to the slip glue's `SlipEngine`, which decodes it on its own side.
-    public var boutIndexJSON: String {
-        let data = (try? JSONEncoder().encode(catalog.boutIndex())) ?? Data("[]".utf8)
-        return String(decoding: data, as: UTF8.self)
     }
 
     public func news() throws -> (

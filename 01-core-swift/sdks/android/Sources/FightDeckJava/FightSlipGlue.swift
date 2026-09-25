@@ -1,12 +1,13 @@
 //
 // FightSlipGlue.swift
-// FightSlipJava
+// FightDeckJava
 //
 // Created by FightDeck on 09.09.26.
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
 import FightCore
+import FightEvents
 import FightSlip
 #if os(Android)
 import FoundationEssentials
@@ -28,11 +29,11 @@ import Foundation
 public final class SlipEngine {
     private var session: SlipSession
 
-    /// Takes `EventCatalogBridge.boutIndexJSON` as it is. Handing jextract a `[BoutIndex]`
-    /// would mean extracting FightCore itself — and its public API is Decimal from end to end.
-    public init(boutIndexJSON: String) {
-        let bouts = (try? JSONDecoder().decode([BoutIndex].self, from: Data(boutIndexJSON.utf8))) ?? []
-        session = SlipSession(slipEngine: FightSlip.SlipEngine(bouts: bouts))
+    /// Reads the bout index straight off the catalogue. The two are one Swift module on
+    /// Android, so the index is an argument; it used to leave one `.so` as JSON and enter the
+    /// other through Kotlin.
+    public init(catalog: EventCatalogBridge) {
+        session = SlipSession(slipEngine: FightSlip.SlipEngine(bouts: catalog.catalog.boutIndex()))
     }
 
     /// Replaces the slip wholesale. `toggleSelection` derives the mode from the leg count,

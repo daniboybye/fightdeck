@@ -51,19 +51,12 @@ android {
 }
 
 dependencies {
-    val fightCoreAar = rootProject.file("../sdks/core/out/fightcore.aar")
-    val fightSlipAar = rootProject.file("../sdks/slip/out/fightslip.aar")
-    val fightEventsAar = rootProject.file("../sdks/events/out/fightevents.aar")
-    require(fightCoreAar.exists()) {
-        "Missing $fightCoreAar — run `swiftly run ./build-aars.sh +6.3.3` in 01-core-swift/sdks"
+    // All three Swift SDKs, linked into one libfightdeck.so.
+    val fightDeckAar = rootProject.file("../sdks/android/out/fightdeck.aar")
+    require(fightDeckAar.exists()) {
+        "Missing $fightDeckAar — run `swiftly run ./build-aars.sh +6.3.3` in 01-core-swift/sdks"
     }
-    require(fightSlipAar.exists()) {
-        "Missing $fightSlipAar — run `swiftly run ./build-aars.sh +6.3.3` in 01-core-swift/sdks"
-    }
-    require(fightEventsAar.exists()) {
-        "Missing $fightEventsAar — run `swiftly run ./build-aars.sh +6.3.3` in 01-core-swift/sdks"
-    }
-    implementation(files(fightCoreAar, fightSlipAar, fightEventsAar))
+    implementation(files(fightDeckAar))
 
     val composeBom = platform("androidx.compose:compose-bom:2026.08.00")
     implementation(composeBom)

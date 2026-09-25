@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Export Android SDK/NDK paths for Swift SDK for Android cross-compilation.
-# Source this before `swift build --swift-sdk …-android28` or `./build-aar.sh`.
+# Source this before `swift build --swift-sdk …-android28`; build-aars.sh does.
 set -euo pipefail
 
 ANDROID_HOME="${ANDROID_HOME:-${HOME}/Library/Android/sdk}"

@@ -315,9 +315,9 @@ run_sdk_core_swift_android() {
     pinned="$(./tools/versions.py apple.swift)"
     ndk="$(./tools/versions.py android.ndk)"
     (
-        cd 01-core-swift/sdks/core
+        cd 01-core-swift/sdks
         ANDROID_NDK_HOME="$(android_sdk_home)/ndk/${ndk}" \
-            swiftly run ./build-aar.sh "+${pinned}"
+            swiftly run ./build-aars.sh "+${pinned}"
     )
 }
 

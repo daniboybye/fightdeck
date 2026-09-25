@@ -26,8 +26,6 @@ tasks.named("generateCodegenArtifactsFromSchema") {
     doLast { codegenJavaHalf.get().asFile.deleteRecursively() }
 }
 
-val demoAssetsDir = file("build/generated/demo-assets")
-
 /** The feature SDKs each measurement flavour links; `all` is the demo app. */
 val features = listOf("deposit", "betslip", "fighter")
 val featureSets = mapOf(
@@ -106,9 +104,6 @@ android {
     }
 
     sourceSets {
-        getByName("main") {
-            assets.srcDir(demoAssetsDir)
-        }
         // A flavour compiles the real bridge of each feature it links and a stand-in for the
         // rest, so the flavours differ only in which SDKs they can see.
         featureSets.forEach { (flavor, linked) ->
@@ -138,15 +133,6 @@ androidComponents {
                 entryFile.set(entry)
             }
     }
-}
-
-val syncDemoAssets = tasks.register<Copy>("syncDemoAssets") {
-    from(rootProject.file("../../dataset"))
-    into(demoAssetsDir)
-}
-
-tasks.named("preBuild") {
-    dependsOn(syncDemoAssets)
 }
 
 dependencies {

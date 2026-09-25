@@ -124,31 +124,7 @@ object DatasetLocator {
                 return candidate
             }
         }
-        return extractBundledDataset(context)
-    }
-
-    private fun extractBundledDataset(context: Context): File {
-        val cache = File(context.filesDir, "dataset")
-        if (cache.resolve("events.json").exists()) {
-            return cache
-        }
-        cache.mkdirs()
-        listOf("events.json", "fighters.json", "news.json", "media.json").forEach { name ->
-            runCatching {
-                context.assets.open(name).use { input ->
-                    cache.resolve(name).outputStream().use { output -> input.copyTo(output) }
-                }
-            }
-        }
-        val assetImages = File(cache, "assets")
-        assetImages.mkdirs()
-        context.assets.list("assets")?.forEach { name ->
-            runCatching {
-                context.assets.open("assets/$name").use { input ->
-                    assetImages.resolve(name).outputStream().use { output -> input.copyTo(output) }
-                }
-            }
-        }
-        return cache
+        // Where pushDataset puts it; the view model reports the missing events.json from here.
+        return File("/data/local/tmp/fightdeck/dataset")
     }
 }

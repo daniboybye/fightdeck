@@ -127,14 +127,14 @@ Skip warns that SwiftUI state (`@AppStorage`, `NavigationPath`, etc.) **does not
 ```kotlin
 val stateHolder = rememberSaveableStateHolder()
 stateHolder.SaveableStateProvider("myKey") {
-    DepositComposeEntry(...).Compose()
+    DepositScreen(...).Compose()
     DisposableEffect("myKey") {
         onDispose { stateHolder.removeState("myKey") }
     }
 }
 ```
 
-Implemented once per SDK under [`android/app/src/all/sdk/`](android/app/src/all/sdk) — `DepositSdkBridge.kt`, `BetslipSdkBridge.kt`, `FighterSdkBridge.kt` — and compiled into every flavour that links that SDK; the flavours that do not get a placeholder from their own source set. Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. The cleanup looks as if it throws away exactly what the provider should keep, and it does — but it is also the one thing keeping the app up. `NavHost` already wraps every destination in a provider of its own, so without this one the SDK's `@State` (skipstone writes it as `rememberSaveable`) *is* saved across an activity recreation, and SkipUI cannot restore it: the slip dies in `BetSlipRootView.getStakeFocused` on a null `FocusState`, the deposit form in `NavigationStack.Render` on a null preference. Checked on the Pixel 9 emulator (API 36, Skip 1.9.11, SkipUI 1.60.0) by toggling `cmd uimode night` with the form filled in — rotation alone shows nothing, because `MainActivity` handles orientation changes itself. With the cleanup in place the recreated deposit form comes back empty and the slip keeps its stake, because the stake lives in the store rather than in view state. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositComposeEntry`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. The bet slip and the fighter profile need no entry type on Android either: every transpiled SkipUI `View` has a `Compose()` of its own, so the bridge calls `BetSlipRootView(...).Compose()` directly. iOS has no seam at all: the host puts `DepositFlowView`, `BetSlipRootView` and `FighterRootView` straight into its own SwiftUI tree, so there is nothing to bridge and nothing to wrap.
+Implemented once per SDK under [`android/app/src/all/sdk/`](android/app/src/all/sdk) — `DepositSdkBridge.kt`, `BetslipSdkBridge.kt`, `FighterSdkBridge.kt` — and compiled into every flavour that links that SDK; the flavours that do not get a placeholder from their own source set. Cleanup runs when the provider leaves composition — not on every recomposition, which would delete the slot `SaveableStateProvider` just wrote. The cleanup looks as if it throws away exactly what the provider should keep, and it does — but it is also the one thing keeping the app up. `NavHost` already wraps every destination in a provider of its own, so without this one the SDK's `@State` (skipstone writes it as `rememberSaveable`) *is* saved across an activity recreation, and SkipUI cannot restore it: the slip dies in `BetSlipRootView.getStakeFocused` on a null `FocusState`, the deposit form in `NavigationStack.Render` on a null preference. Checked on the Pixel 9 emulator (API 36, Skip 1.9.11, SkipUI 1.60.0) by toggling `cmd uimode night` with the form filled in — rotation alone shows nothing, because `MainActivity` handles orientation changes itself. With the cleanup in place the recreated deposit form comes back empty and the slip keeps its stake, because the stake lives in the store rather than in view state. `MainActivity` calls `ProcessInfo.launch(context = applicationContext)` once at startup (required by SkipFoundation). Verified: `./gradlew :app:assembleAllDebug` links real AARs; APK dex contains `DepositScreen`, `DepositFlowView`, `BetSlipRootView`, `FighterRootView`. No screen needs an entry type on Android: every transpiled SkipUI `View` has a `Compose()` of its own, so the bridge calls `BetSlipRootView(...).Compose()` directly. iOS has no seam at all: the host puts `DepositScreen`, `BetSlipRootView` and `FighterRootView` straight into its own SwiftUI tree, the same three views Android composes.
 
 ## Host split
 
@@ -142,7 +142,7 @@ Implemented once per SDK under [`android/app/src/all/sdk/`](android/app/src/all/
 | --- | --- | --- |
 | Event list / card / bout | Native SwiftUI | Native Compose |
 | Bet slip | **FightDeckBetslip** SDK → `BetSlipRootView` | `BetslipSdkScreen` → `BetSlipRootView(...).Compose()` |
-| Deposit | **FightDeckDeposit** SDK → `DepositFlowView` | `DepositSdkScreen` → `DepositComposeEntry(...).Compose()` |
+| Deposit | **FightDeckDeposit** SDK → `DepositScreen` | `DepositSdkScreen` → `DepositScreen(...).Compose()` |
 | Fighter profile | **FightDeckFighter** SDK → `FighterRootView` | `FighterSdkScreen` → `FighterRootView(...).Compose()` |
 
 ## `skip checkup` (verbatim summary, captured 20 Aug 2026 against Skip 1.9.6)
@@ -244,9 +244,10 @@ Install: `brew install skiptools/skip/skip`
     `navigationTitle` and a toolbar with a Close button. On iOS the host sheet wraps it in a
     `NavigationStack`, so both appear; on Android `DepositComposeEntry` handed the view
     straight to a Compose bottom sheet, and a toolbar with no bar to live in renders nothing
-    at all — no title, no way out but the system back gesture. The entry point now carries its
-    own `NavigationStack`, which is one line of shared code instead of a Compose top bar per
-    host. Two follow-ons surfaced immediately: `navigationBarTitleDisplayMode(.inline)`
+    at all — no title, no way out but the system back gesture. The stack now lives in the SDK:
+    `DepositScreen` wraps the flow in a `NavigationStack`, and both hosts mount that one view,
+    so the iOS sheet no longer adds a stack of its own and Android needs no entry type to add
+    one. Two follow-ons surfaced immediately: `navigationBarTitleDisplayMode(.inline)`
     silently suppresses the title on Android (it is `#if !SKIP` now, so Android gets the large
     one), and a `ToolbarItemGroup(placement: .keyboard)` — written for a keyboard accessory —
     was rendered as a sliver clipped to the trailing edge of the navigation bar, because

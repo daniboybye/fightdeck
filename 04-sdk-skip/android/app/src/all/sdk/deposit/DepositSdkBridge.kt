@@ -6,7 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import com.fightdeck.baseline.ui.MainViewModel
-import fight.deck.deposit.DepositComposeEntry
+import fight.deck.deposit.DepositScreen
 import fight.deck.deposit.DepositParams
 import fight.deck.deposit.DepositResult
 
@@ -27,7 +27,7 @@ fun DepositSdkScreen(
         val params = remember(balance) {
             DepositParams(currentBalance = balance)
         }
-        DepositComposeEntry(
+        DepositScreen(
             params = params,
             onResult = { result ->
                 when (result) {

@@ -19,7 +19,7 @@ struct HarnessRootView: View {
 
     var body: some View {
         TabView {
-            DepositFlowView(
+            DepositScreen(
                 params: DepositParams(currentBalance: Money.parse("500.00")),
                 onResult: { _ in }
             )

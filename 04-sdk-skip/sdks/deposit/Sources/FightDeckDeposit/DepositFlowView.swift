@@ -22,9 +22,9 @@ private enum DepositLimits {
     static let maximum = Money.parse("2000")
 }
 
-public struct DepositFlowView: View {
-    public let params: DepositParams
-    public let onResult: @Sendable (DepositResult) -> Void
+struct DepositFlowView: View {
+    let params: DepositParams
+    let onResult: @Sendable (DepositResult) -> Void
 
     @Environment(\.fightDeckTheme) private var theme: ThemeTokens
     @State private var amountText = ""
@@ -32,7 +32,7 @@ public struct DepositFlowView: View {
     @State private var didSucceed = false
     @FocusState private var amountFocused: Bool
 
-    public init(params: DepositParams, onResult: @escaping @Sendable (DepositResult) -> Void) {
+    init(params: DepositParams, onResult: @escaping @Sendable (DepositResult) -> Void) {
         self.params = params
         self.onResult = onResult
     }
@@ -79,7 +79,7 @@ public struct DepositFlowView: View {
         }
     }
 
-    public var body: some View {
+    var body: some View {
         platformChrome(
             Group {
                 if didSucceed {

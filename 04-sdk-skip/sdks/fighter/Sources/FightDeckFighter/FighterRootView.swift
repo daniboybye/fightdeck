@@ -66,7 +66,7 @@ public struct FighterRootView: View {
     /// inset-grouped cards on iOS, a Material list on Android. Only the row's contents differ,
     /// because `LabeledContent` has no SkipUI mapping.
     private func profile(_ fighter: Fighter) -> some View {
-        listChrome(List {
+        List {
             Section {
                 heroRow(fighter)
             }
@@ -86,7 +86,8 @@ public struct FighterRootView: View {
                     sectionTitle("Physicals")
                 }
             }
-        })
+        }
+        .modifier(InsetGroupedList(theme: theme))
     }
 
     private func hero(_ fighter: Fighter) -> some View {
@@ -156,19 +157,10 @@ public struct FighterRootView: View {
         Rectangle().fill(theme.surface)
     }
 
-    /// A section header, through a function — never `Text(…)` carrying a modifier of *ours* at
-    /// the call site. A `View` extension of our own transpiles to a Kotlin extension function
-    /// that `skipstone` does not recognise as producing a view: it emits the call with no
-    /// `.Compose(context)` after it and the header silently renders nothing. That is attempt (2)
-    /// in `GroupedList.swift`, reached by a different road. A plain function call is composed.
-    ///
-    /// The font is the whole of the Android fix — see `Typography.sectionHeader`. iOS gets a
-    /// bare `Text` and therefore exactly the header SwiftUI drew before.
+    /// The core's header, through a function rather than bare in the builder, which `skipstone`
+    /// would drop (see `GroupedList.swift`).
     private func sectionTitle(_ title: String) -> some View {
-        Text(title)
-        #if SKIP
-            .font(Typography.sectionHeader(theme))
-        #endif
+        SectionHeader(title, theme: theme)
     }
 
     /// Identical on both platforms, so it is not behind an `#if`. It used to be, from when a
@@ -179,7 +171,9 @@ public struct FighterRootView: View {
 
     /// The photo *is* the row, so a row background behind it draws a card frame around the
     /// picture — both platforms clear it. iOS also zeroes the row's insets so the image runs
-    /// edge to edge; `.listRowInsets` has no SkipUI mapping, so Android keeps its own inset.
+    /// edge to edge; `.listRowInsets` has no SkipUI mapping, so Android keeps its own inset — and
+    /// the horizontal padding `InsetGroupedList` gives the whole list, where `00-native` runs the
+    /// photo edge to edge.
     private func heroRow(_ fighter: Fighter) -> some View {
         hero(fighter)
             .listRowBackground(Color.clear)
@@ -233,24 +227,6 @@ extension FighterRootView {
     fileprivate var heroRecordFont: Font {
         Typography.medium(theme.fontCaption)
     }
-
-    /// `.listStyle(.insetGrouped)` and `.listRowInsets` are both unsupported by SkipUI, so the
-    /// list keeps Compose's own Material styling — which is the Android-native look anyway.
-    /// That styling reads `MaterialTheme.colorScheme`, which `FightDeckScreen` on the body sets.
-    fileprivate func listChrome(_ content: some View) -> some View {
-        content
-            // Without this the list paints its own container — `surfaceColorAtElevation(3dp)` —
-            // over the root's background, on a slightly different shade from the rest of the app.
-            .scrollContentBackground(.hidden)
-            // The closest a SkipUI list gets to Material cards. `.listStyle(.insetGrouped)` is
-            // unavailable and `listSectionCornerRadius` is a constant inside SkipUI, so the
-            // slabs cannot be inset or rounded from the row side — but padding the whole list
-            // moves them off the screen edges, which is the difference the eye actually reads.
-            // The cost is on this screen only: the hero row is inset with everything else,
-            // where `00-native` runs it edge to edge. Drop this line to get the photo back.
-            .padding(.horizontal, theme.spacingLG)
-    }
-
 }
 #endif
 
@@ -269,10 +245,5 @@ extension FighterRootView {
     fileprivate var heroRecordFont: Font {
         .subheadline.weight(.medium)
     }
-
-    fileprivate func listChrome(_ content: some View) -> some View {
-        content.listStyle(.insetGrouped)
-    }
-
 }
 #endif

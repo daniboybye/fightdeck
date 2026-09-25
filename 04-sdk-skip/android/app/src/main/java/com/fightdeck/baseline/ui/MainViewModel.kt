@@ -49,7 +49,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /// one out beats parsing the dataset a second time to construct an identical core.
     val sharedFightCore: FightCore
         get() = requireNotNull(fightCore)
-    private var datasetRoot: java.io.File? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
         BootstrapState.Loading("Loading fight core…"),
@@ -100,7 +99,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             booted.fold(
                 onSuccess = { engine ->
-                    datasetRoot = engine.root
                     catalog = engine.catalog
                     fightCore = engine.fightCore
                     _bootstrapState.value = BootstrapState.Ready
@@ -119,7 +117,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private data class Engine(
-        val root: java.io.File,
         val catalog: EventCatalog,
         val fightCore: FightCore,
     )
@@ -130,7 +127,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // The shared catalogue speaks Foundation's URL, so the host's File has to be converted
         // once here rather than at every call.
         val catalog = EventCatalog(datasetRoot = URL(fileURLWithPath = root.absolutePath))
-        return Engine(root, catalog, catalog.loadFightCore())
+        return Engine(catalog, catalog.loadFightCore())
     }
 
     fun refreshEvents() {
@@ -220,7 +217,4 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deposit(amount: BigDecimal) {
         _balance.update { it.add(amount) }
     }
-
-    fun eventsJSON(): String =
-        requireNotNull(datasetRoot).resolve("events.json").readText()
 }

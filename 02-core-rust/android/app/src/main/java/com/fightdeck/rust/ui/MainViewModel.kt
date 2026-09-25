@@ -20,7 +20,6 @@ import uniffi.fightevents.MediaItem
 import uniffi.fightevents.NewsItem
 import uniffi.fightevents.assetUrl
 import uniffi.fightevents.startAssetServer
-import uniffi.fightslip.SlipHandle
 import uniffi.fightslip.SlipSnapshot
 
 sealed interface LoadState<out T> {
@@ -36,10 +35,9 @@ sealed interface BootstrapState {
     data object Ready : BootstrapState
 }
 
-/** The three Rust SDKs, available after background bootstrap completes. */
+/** The Rust objects the screens use, available after background bootstrap completes. */
 data class RustEngine(
     val catalog: EventCatalog,
-    val slip: SlipHandle,
     val slipStore: StateFlowBetSlipStore,
 )
 
@@ -71,7 +69,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun bootstrap() {
         viewModelScope.launch {
             _engine.value?.slipStore?.close()
-            _engine.value?.slip?.close()
             _engine.value?.catalog?.close()
             _engine.value = null
             _bootstrapState.value = BootstrapState.Loading("Loading fight core…")
@@ -152,7 +149,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         _engine.value?.slipStore?.close()
-        _engine.value?.slip?.close()
         _engine.value?.catalog?.close()
         super.onCleared()
     }
@@ -172,12 +168,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Log.i(TAG, "EventCatalog ready")
 
             onStep("Starting bet slip…")
-            val slip = SlipHandle(catalog.boutIndex())
-            val slipStore = StateFlowBetSlipStore(uniffi.fightslip.BetSlipStore(slip, "500.00"))
+            val slipStore = StateFlowBetSlipStore(
+                uniffi.fightslip.BetSlipStore(catalog.boutIndex(), "500.00"),
+            )
             Log.i(TAG, "BetSlipStore ready")
 
             onStep("Preparing UI…")
-            return RustEngine(catalog, slip, slipStore)
+            return RustEngine(catalog, slipStore)
         }
     }
 }

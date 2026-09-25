@@ -198,4 +198,4 @@ cd 02-core-rust/android && ./gradlew :app:test    # 8 JVM tests against a host l
 
 - **`invalid_stake`** is a Rust-specific validation not present in `contract/fightcore-api.md`; it fires when the raw stake text will not parse, which the other approaches surface as a zero stake.
 - **American odds** are explicitly out of scope per the contract; fractional display only.
-- **`settle` and `cash_out_offer`** are implemented and fixture-tested but not yet on screen in either host.
+- **`settle` and `cash_out_offer`** are implemented and fixture-tested but not yet on screen in either host. They live on the stateless `SlipHandle`; `BetSlipStore` takes the bout index itself, so neither host holds a handle only to build the store.

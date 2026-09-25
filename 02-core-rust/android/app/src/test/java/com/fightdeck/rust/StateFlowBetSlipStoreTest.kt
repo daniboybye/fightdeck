@@ -6,11 +6,10 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import uniffi.fightcore.BoutIndex
 import uniffi.fightslip.BetSlipStore
-import uniffi.fightslip.SlipHandle
 
 class StateFlowBetSlipStoreTest {
     private val store = StateFlowBetSlipStore(
-        BetSlipStore(SlipHandle(listOf(BoutIndex("b1", "r1", "u1", "r1"))), "500.00"),
+        BetSlipStore(listOf(BoutIndex("b1", "r1", "u1", "r1")), "500.00"),
     )
 
     /** No looper and no dispatcher: the flow holds the new snapshot when the call returns. */

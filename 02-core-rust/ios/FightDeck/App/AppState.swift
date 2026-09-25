@@ -49,8 +49,7 @@ final class AppState {
         // An unreadable dataset shows as empty lists rather than stopping the app at launch.
         self.catalog = (try? EventCatalog.load(datasetRoot: DatasetLocator.datasetRoot().path))
             ?? EventCatalog.empty()
-        let handle = SlipHandle(bouts: catalog.boutIndex())
-        let store = try! BetSlipStore(handle: handle, balance: "500.00")
+        let store = try! BetSlipStore(bouts: catalog.boutIndex(), balance: "500.00")
         self.slipStore = ObservableBetSlipStore(store: store)
     }
 

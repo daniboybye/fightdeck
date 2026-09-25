@@ -2,9 +2,9 @@
 //! `placeBet`; those live here now, so a rule change lands once.
 
 use crate::engine::SlipEngine;
-use crate::ffi::{parse_amount, SlipError, SlipHandle, SlipSnapshot, SlipStateRecord};
+use crate::ffi::{parse_amount, SlipError, SlipSnapshot, SlipStateRecord};
 use fightcore::money;
-use fightcore::types::{BetSlip, Selection};
+use fightcore::types::{BetSlip, BoutIndex, Selection};
 use rust_decimal::Decimal;
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -36,8 +36,10 @@ pub struct BetSlipStore {
 
 #[uniffi::export]
 impl BetSlipStore {
+    /// Takes the catalogue's bout index directly. `SlipHandle` is the stateless API for
+    /// settlement and cash-out; a host that only shows a slip never needs to hold one.
     #[uniffi::constructor]
-    pub fn new(handle: Arc<SlipHandle>, balance: String) -> Result<Arc<Self>, SlipError> {
+    pub fn new(bouts: Vec<BoutIndex>, balance: String) -> Result<Arc<Self>, SlipError> {
         let balance = parse_amount("balance", &balance)?;
         Ok(Arc::new(Self {
             inner: Mutex::new(StoreInner {
@@ -49,7 +51,7 @@ impl BetSlipStore {
                 },
                 balance,
                 confirmation: None,
-                engine: Arc::clone(&handle.engine),
+                engine: Arc::new(SlipEngine::new(bouts)),
                 listeners: vec![],
             }),
         }))

@@ -12,10 +12,8 @@ import Testing
 @MainActor
 struct ObservableBetSlipStoreTests {
     private func makeStore() throws -> ObservableBetSlipStore {
-        let handle = SlipHandle(bouts: [
-            BoutIndex(id: "b1", redFighterId: "r1", blueFighterId: "u1", winnerId: "r1"),
-        ])
-        return ObservableBetSlipStore(store: try BetSlipStore(handle: handle, balance: "500.00"))
+        let bouts = [BoutIndex(id: "b1", redFighterId: "r1", blueFighterId: "u1", winnerId: "r1")]
+        return ObservableBetSlipStore(store: try BetSlipStore(bouts: bouts, balance: "500.00"))
     }
 
     /// The observed snapshot must already reflect a mutation when the call returns, with no

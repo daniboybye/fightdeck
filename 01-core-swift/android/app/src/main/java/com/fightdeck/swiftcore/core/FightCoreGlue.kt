@@ -25,7 +25,7 @@ class SwiftSlipStore(boutIndexJSON: String) {
         private set
 
     var slipState: SlipState =
-        SlipState(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, emptyList())
+        SlipState(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, emptyList(), emptyList())
         private set
 
     /** Set by the core when a bet is placed and cleared when the legs change. */
@@ -75,6 +75,7 @@ class SwiftSlipStore(boutIndexJSON: String) {
             potentialReturn = BigDecimal(engine.potentialReturnText),
             potentialProfit = BigDecimal(engine.potentialProfitText),
             errors = engine.errorCodes.toList(),
+            summaryRows = engine.summaryLabels.zip(engine.summaryValues),
         )
         confirmation = engine.confirmation.orElse(null)
     }

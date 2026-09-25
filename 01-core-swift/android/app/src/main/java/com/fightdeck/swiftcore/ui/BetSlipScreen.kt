@@ -328,10 +328,7 @@ private fun SummaryBlock(state: SlipState) {
             Modifier.padding(Tokens.spacingLg),
             verticalArrangement = Arrangement.spacedBy(Tokens.spacingSm),
         ) {
-            DetailRow("Total stake", Money.formatCurrency(state.totalStake))
-            state.combinedOddsDisplay?.let { DetailRow("Combined odds", Money.format(it)) }
-            DetailRow("Potential return", Money.formatCurrency(state.potentialReturn))
-            DetailRow("Potential profit", Money.formatCurrency(state.potentialProfit))
+            state.summaryRows.forEach { (label, value) -> DetailRow(label, value) }
         }
     }
 }

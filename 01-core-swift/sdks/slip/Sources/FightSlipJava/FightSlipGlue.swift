@@ -157,6 +157,16 @@ public final class SlipEngine {
         return Money.formatExactOdds(exact)
     }
 
+    /// `SlipDisplay.slipSummary`, split in two because jextract has no mapping for an array
+    /// of tuples. Same length, same order.
+    public var summaryLabels: [String] {
+        SlipDisplay.slipSummary(state: session.slipState).map(\.label)
+    }
+
+    public var summaryValues: [String] {
+        SlipDisplay.slipSummary(state: session.slipState).map(\.value)
+    }
+
     /// Nil until a bet is placed, and again once the legs change.
     public var confirmation: String? {
         session.confirmation

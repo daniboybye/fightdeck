@@ -29,4 +29,6 @@ data class SlipState(
     val potentialProfit: BigDecimal,
     /** The contract's error codes, in the contract's order. */
     val errors: List<String>,
+    /** Label and formatted value, in the order the core lists them. */
+    val summaryRows: List<Pair<String, String>>,
 )

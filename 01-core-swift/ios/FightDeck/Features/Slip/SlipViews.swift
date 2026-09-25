@@ -88,7 +88,7 @@ struct BetSlipView: View {
                 stakeChips
             }
             Section {
-                ForEach(Array(SlipDisplay.slipSummary(state: state.slipState).enumerated()), id: \.offset) { _, row in
+                ForEach(SlipDisplay.slipSummary(state: state.slipState), id: \.label) { row in
                     LabeledContent(row.label, value: row.value)
                 }
             }

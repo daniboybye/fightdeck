@@ -96,7 +96,7 @@ struct BetSlipView: View {
             if !state.slipState.errors.isEmpty {
                 Section {
                     ForEach(state.slipState.errors) { error in
-                        Label(error.displayName.displayMethod, systemImage: "exclamationmark.triangle.fill")
+                        Label(error.displayName, systemImage: "exclamationmark.triangle.fill")
                             .font(.callout)
                             .foregroundStyle(DesignTokens.ColorToken.negative)
                     }
@@ -136,7 +136,7 @@ struct BetSlipView: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Text(FightCoreDisplay.formatOdds(selection.odds))
+            Text(FightCoreDisplay.formatMoneyAmount(selection.odds))
                 .font(.callout.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(DesignTokens.ColorToken.accent)

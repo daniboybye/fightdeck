@@ -215,7 +215,7 @@ struct EventDetailView: View {
         Label {
             VStack(alignment: .leading) {
                 Text(clip.title)
-                Text(clip.durationSeconds.formattedDuration)
+                Text(formatDuration(totalSeconds: clip.durationSeconds))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -264,7 +264,7 @@ struct BoutRowView: View {
             Spacer()
             if mode.showsOdds {
                 OddsButton(
-                    label: FightCoreDisplay.formatOdds(corner.oddsDecimal),
+                    label: FightCoreDisplay.formatMoneyAmount(corner.oddsDecimal),
                     fractional: corner.oddsFractional,
                     isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
                 ) {
@@ -304,7 +304,7 @@ struct VideoRow: View {
     }
 
     private var durationBadge: some View {
-        Text(item.durationSeconds.formattedDuration)
+        Text(formatDuration(totalSeconds: item.durationSeconds))
             .font(.caption2.weight(.semibold))
             .monospacedDigit()
             .padding(.horizontal, DesignTokens.Spacing.sm)

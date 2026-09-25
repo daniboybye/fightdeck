@@ -59,9 +59,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.design.BalanceMenuAction
 import com.fightdeck.rust.design.Tokens
+import uniffi.fightcore.formatCurrency
+import uniffi.fightcore.formatMoney
 import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.SlipStateRecord
 import uniffi.fightslip.betTypeTitle
@@ -147,7 +148,7 @@ internal fun BetSlipScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
                     BalanceMenuAction(
-                        balanceLabel = FightCoreDisplay.formatCurrencyAmount(balance),
+                        balanceLabel = formatCurrency(balance),
                         onDeposit = onDeposit,
                     )
                 },
@@ -232,7 +233,7 @@ internal fun BetSlipScreen(
                                     )
                                 }
                                 Text(
-                                    FightCoreDisplay.formatOdds(selection.odds),
+                                    formatMoney(selection.odds),
                                     color = Tokens.accent,
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(start = Tokens.spacingMd),
@@ -304,7 +305,7 @@ internal fun BetSlipScreen(
                                 Modifier.padding(Tokens.spacingLg),
                                 verticalArrangement = Arrangement.spacedBy(Tokens.spacingMd),
                             ) {
-                                DetailRow("Balance", FightCoreDisplay.formatCurrencyAmount(balance))
+                                DetailRow("Balance", formatCurrency(balance))
                                 LinkRowButton(title = "Add funds", onClick = onDeposit)
 
                             }

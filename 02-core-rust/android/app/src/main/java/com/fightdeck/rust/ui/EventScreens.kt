@@ -50,9 +50,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.design.BalanceMenuAction
 import com.fightdeck.rust.design.Tokens
+import uniffi.fightcore.formatCurrency
 import uniffi.fightevents.BoutSummary
 import uniffi.fightevents.CornerSummary
 import uniffi.fightevents.EventCatalog
@@ -88,7 +88,7 @@ internal fun EventListScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 actions = {
                     BalanceMenuAction(
-                        balanceLabel = FightCoreDisplay.formatCurrencyAmount(balance),
+                        balanceLabel = formatCurrency(balance),
                         onDeposit = onDeposit,
                     )
                 },

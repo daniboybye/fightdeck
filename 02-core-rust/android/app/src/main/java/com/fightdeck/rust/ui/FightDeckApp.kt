@@ -51,8 +51,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.design.Tokens
+import uniffi.fightcore.formatCurrency
 
 /**
  * Both event tabs render the same two events. The mode decides which half of the data is
@@ -211,9 +211,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         if (showsSlipToolbar) {
                             BetSlipToolbar(
                                 legCount = slip.selections.size,
-                                potentialReturn = FightCoreDisplay.formatCurrencyAmount(
-                                    slipState.potentialReturn,
-                                ),
+                                potentialReturn = formatCurrency(slipState.potentialReturn),
                                 onClick = { selectedTab = SLIP_TAB },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)

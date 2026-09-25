@@ -38,7 +38,7 @@ struct BoutDetailView: View {
                         Text(bout.winnerName)
                             .foregroundStyle(DesignTokens.ColorToken.positive)
                     }
-                    LabeledContent("Method", value: bout.resultMethod.displayMethod)
+                    LabeledContent("Method", value: humaniseCode(raw: bout.resultMethod))
                     LabeledContent("Detail", value: bout.resultDetail)
                     LabeledContent("Ended", value: "Round \(bout.endRound) · \(bout.endTime)")
                 }
@@ -146,7 +146,7 @@ struct BoutDetailView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             OddsButton(
-                label: FightCoreDisplay.formatOdds(corner.oddsDecimal),
+                label: FightCoreDisplay.formatMoneyAmount(corner.oddsDecimal),
                 fractional: corner.oddsFractional,
                 isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
             ) {

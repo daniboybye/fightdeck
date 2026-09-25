@@ -3,8 +3,6 @@ package com.fightdeck.rust.core
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import uniffi.fightcore.formatCurrency
-import uniffi.fightcore.formatMoney
 import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.BetSlipStore
 import uniffi.fightslip.PlaceBetOutcome
@@ -75,10 +73,4 @@ class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
             mainHandler.post { callback(state) }
         }
     }
-}
-
-/** Thin wrappers over FightCore, so a label never formats money itself. */
-object FightCoreDisplay {
-    fun formatOdds(odds: String): String = formatMoney(odds)
-    fun formatCurrencyAmount(amount: String): String = formatCurrency(amount)
 }

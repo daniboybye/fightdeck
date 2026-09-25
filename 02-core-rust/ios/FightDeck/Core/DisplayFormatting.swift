@@ -6,7 +6,6 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
-import FightEvents
 import Foundation
 
 /// Both parsers are reused: building one per cell shows up while scrolling long lists. They are
@@ -33,15 +32,5 @@ extension String {
     var formattedRelativeDate: String {
         guard let date = DateParsers.timestamp.date(from: self) else { return self }
         return date.formatted(.relative(presentation: .named))
-    }
-
-    var displayMethod: String {
-        humaniseCode(raw: self)
-    }
-}
-
-extension UInt32 {
-    var formattedDuration: String {
-        formatDuration(totalSeconds: self)
     }
 }

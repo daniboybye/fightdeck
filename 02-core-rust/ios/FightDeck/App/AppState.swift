@@ -164,5 +164,5 @@ extension ValidationErrorRecord: @retroactive Identifiable {
 }
 
 extension ValidationErrorRecord {
-    var displayName: String { validationErrorCode(error: self) }
+    var displayName: String { humaniseCode(raw: id) }
 }

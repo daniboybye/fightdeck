@@ -7,7 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fightdeck.baseline.ui.MainViewModel
 import fight.deck.core.ThemeTokens
 import fight.deck.deposit.DepositComposeEntry
@@ -51,7 +50,7 @@ object SkipSDKBridge {
         onDone: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        val balance = viewModel.slipStore.balance
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
             val theme = remember { ThemeTokens.defaults }
@@ -63,7 +62,7 @@ object SkipSDKBridge {
                 theme = theme,
                 onResult = { result ->
                     when (result) {
-                        is DepositResult.CompletedCase -> viewModel.deposit(result.amount)
+                        is DepositResult.CompletedCase -> viewModel.slipStore.deposit(amount = result.amount)
                         is DepositResult.CancelledCase -> Unit
                     }
                     onDone()

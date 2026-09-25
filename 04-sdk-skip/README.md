@@ -27,7 +27,7 @@ Skip has been free and open source since 21 January 2026 (v1.7).
 ## Layout
 
 ```
-sdks/core/      — FightCore (headless, skipstone): betting logic, DTOs, design tokens
+sdks/core/      — FightCore (headless, skipstone): betting logic, the slip store, DTOs, design tokens
 sdks/events/    — Fight catalogue (headless): dataset loading and display formatting
 sdks/deposit/   — Deposit SwiftUI → Compose
 sdks/betslip/   — Bet slip SwiftUI → Compose
@@ -206,8 +206,13 @@ Install: `brew install skiptools/skip/skip`
 9. **Consuming transpiled Swift from hand-written Kotlin** — a `BetSlip` reaching the host is
    a `MutableStruct` with emulated value semantics: `selections` is a `skip.lib.Array` so
    `size`/`isNotEmpty()` do not apply, fields keep Swift `ID` casing, there is no generated
-   `copy()`, and the property getter hands back a write-back reference. Anything stored in a
-   `StateFlow` has to be rebuilt rather than mutated. Cheaper than a mapper, but not free.
+   `copy()`, and the property getter hands back a write-back reference. The host used to keep
+   its own copy of the slip in a `StateFlow`, which meant rebuilding every value it received
+   and mirroring it back into the SDK's store with three `LaunchedEffect`s. It now holds the
+   store itself: `BetSlipStore` lives in the core, both hosts own one instance, and the event
+   screens, the bar above the tabs and the slip SDK all read it. skipstone backs each
+   `@Observable` property with a Compose `MutableState`, so a plain `store.slip` read inside a
+   composable recomposes when the SDK changes it — no flow, no collection, no copy.
 10. **Shared code is written against a narrower Swift** — two limits showed up the moment the
     catalogue moved into `sdks/events`. A generic `load<T: Decodable>` compiles on iOS and then
     fails as Kotlin with `Cannot use 'T' as reified type parameter`, so each file gets its own

@@ -295,9 +295,13 @@ struct BoutRowView: View {
         OddsButton(
             label: FightCoreDisplay.formatOdds(Money.parse(corner.closingOdds.decimal)),
             fractional: corner.closingOdds.fractional,
-            isSelected: state.isSelected(boutID: bout.id, fighterID: corner.fighterId)
+            isSelected: state.slipStore.isSelected(boutID: bout.id, fighterID: corner.fighterId)
         ) {
-            state.toggleSelection(bout: bout, fighterID: corner.fighterId, odds: corner.closingOdds.decimal)
+            state.slipStore.toggleSelection(
+                boutID: bout.id,
+                fighterID: corner.fighterId,
+                odds: Money.parse(corner.closingOdds.decimal)
+            )
         }
     }
 }

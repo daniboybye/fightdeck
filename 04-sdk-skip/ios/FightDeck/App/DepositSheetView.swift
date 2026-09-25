@@ -17,12 +17,12 @@ struct DepositSheetView: View {
     var body: some View {
         NavigationStack {
             DepositFlowView(
-                params: DepositParams(currentBalance: state.balance),
+                params: DepositParams(currentBalance: state.slipStore.balance),
                 theme: ThemeTokens.defaults,
                 onResult: { result in
                     Task { @MainActor in
                         if case .completed(let amount) = result {
-                            state.deposit(amount: amount)
+                            state.slipStore.deposit(amount: amount)
                         }
                         onDismiss()
                     }

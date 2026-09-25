@@ -462,7 +462,11 @@ private fun CornerLine(
                     it.boutID == bout.id && it.fighterID == corner.fighterId
                 },
                 onClick = {
-                    viewModel.toggleSelection(bout, corner.fighterId, corner.closingOdds.decimal)
+                    viewModel.slipStore.toggleSelection(
+                        boutID = bout.id,
+                        fighterID = corner.fighterId,
+                        odds = Money.parse(corner.closingOdds.decimal),
+                    )
                 },
             )
         }

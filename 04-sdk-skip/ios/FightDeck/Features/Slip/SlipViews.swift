@@ -32,10 +32,6 @@ struct BetslipBridgeView: View {
     let onBrowseEvents: @MainActor @Sendable () -> Void
     let onDeposit: @MainActor @Sendable () -> Void
 
-    // Built in `init`, not in `onAppear`. An optional store leaves the `if let` branch empty
-    // on first render, and SwiftUI drops lifecycle modifiers attached to an empty view — so
-    // the store was never created and the tab stayed blank.
-    @State private var store: BetSlipStore
     // The SDK holds the display context by reference, so a fresh one per body pass would
     // hand it a new identity on every render for a lookup table that never changes.
     @State private var display: HostSlipDisplayContext
@@ -48,11 +44,6 @@ struct BetslipBridgeView: View {
         self.state = state
         self.onBrowseEvents = onBrowseEvents
         self.onDeposit = onDeposit
-        _store = State(initialValue: BetSlipStore(
-            fightCore: state.fightCore,
-            slip: state.slip,
-            balance: state.balance
-        ))
         _display = State(initialValue: HostSlipDisplayContext(state: state))
     }
 
@@ -61,28 +52,12 @@ struct BetslipBridgeView: View {
         // they arrive with no actor. Everything they touch here is main-actor state, which is
         // what the hop is for.
         BetSlipRootView(
-            store: store,
+            store: state.slipStore,
             display: display,
             theme: ThemeTokens.defaults,
             onDeposit: { Task { @MainActor in onDeposit() } },
-            onBrowseEvents: { Task { @MainActor in onBrowseEvents() } },
-            onHostSync: { slip, balance, message in
-                Task { @MainActor in
-                    state.applySdkSlip(slip, balance: balance, betPlacedMessage: message)
-                }
-            }
+            onBrowseEvents: { Task { @MainActor in onBrowseEvents() } }
         )
-        .onChange(of: state.slip) { _, newSlip in
-            store.slip = newSlip
-        }
-        .onChange(of: state.balance) { _, newBalance in
-            store.balance = newBalance
-        }
-        // The host clears the confirmation when the slip changes from another tab; without
-        // pushing that back the SDK keeps showing "bet placed" over an empty slip.
-        .onChange(of: state.betPlacedMessage) { _, message in
-            store.betPlacedMessage = message
-        }
     }
 }
 

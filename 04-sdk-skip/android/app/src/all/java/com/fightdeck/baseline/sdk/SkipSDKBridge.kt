@@ -3,7 +3,6 @@ package com.fightdeck.baseline.sdk
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -34,23 +33,10 @@ object SkipSDKBridge {
         onBrowseEvents: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        val slip by viewModel.slip.collectAsStateWithLifecycle()
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
-        val betPlacedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
         val fighters by viewModel.fighters.collectAsStateWithLifecycle()
         val events by viewModel.events.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
-            val store = SdkBetSlipStoreRegistry.store(viewModel)
-            LaunchedEffect(slip) {
-                store.slip = slip
-            }
-            LaunchedEffect(balance) {
-                store.balance = balance
-            }
-            LaunchedEffect(betPlacedMessage) {
-                store.betPlacedMessage = betPlacedMessage
-            }
             val display = remember(fighters, events) { HostSlipDisplayContext(fighters, events) }
             val theme = remember { ThemeTokens.defaults }
             // Same reason as the fighter screen below: the SDK view composes into whatever box
@@ -58,18 +44,11 @@ object SkipSDKBridge {
             // be a real box around it. Without one the list scrolls under the Bet Slip toolbar.
             Box(modifier) {
                 BetSlipRootView(
-                    store = store,
+                    store = viewModel.slipStore,
                     display = display,
                     theme = theme,
                     onDeposit = onDeposit,
                     onBrowseEvents = onBrowseEvents,
-                    onHostSync = { sdkSlip, sdkBalance, message ->
-                        viewModel.applySdkSlip(
-                            sdkSlip,
-                            sdkBalance,
-                            message,
-                        )
-                    },
                 ).Compose()
             }
             DisposableEffect(saveKey) {
@@ -87,7 +66,7 @@ object SkipSDKBridge {
         onDone: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        val balance = viewModel.slipStore.balance
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
             val theme = remember { ThemeTokens.defaults }
@@ -99,7 +78,7 @@ object SkipSDKBridge {
                 theme = theme,
                 onResult = { result ->
                     when (result) {
-                        is DepositResult.CompletedCase -> viewModel.deposit(result.amount)
+                        is DepositResult.CompletedCase -> viewModel.slipStore.deposit(amount = result.amount)
                         is DepositResult.CancelledCase -> Unit
                     }
                     onDone()

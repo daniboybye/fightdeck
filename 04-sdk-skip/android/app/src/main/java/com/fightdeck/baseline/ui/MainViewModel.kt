@@ -5,25 +5,18 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.baseline.services.DatasetLocator
 import com.fightdeck.baseline.services.LocalAssetServer
-import fight.deck.core.BetMode
-import fight.deck.core.BetSlip
-import fight.deck.core.Bout
+import fight.deck.core.BetSlipStore
 import fight.deck.core.Event
 import fight.deck.core.FightCore
 import fight.deck.core.Fighter
-import fight.deck.core.Money
-import fight.deck.core.Selection
-import fight.deck.core.SlipState
 import fight.deck.events.EventCatalog
 import fight.deck.events.MediaItem
 import fight.deck.events.NewsItem
-import java.math.BigDecimal
 import skip.foundation.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import skip.lib.Array as SkipArray
@@ -43,12 +36,15 @@ sealed interface BootstrapState {
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var catalog: EventCatalog? = null
-    private var fightCore: FightCore? = null
 
-    /// The SDK's bet-slip store needs the same bout index the host already built. Handing this
-    /// one out beats parsing the dataset a second time to construct an identical core.
-    val sharedFightCore: FightCore
-        get() = requireNotNull(fightCore)
+    /**
+     * The slip, the balance and the bet confirmation, shared with the bet slip SDK. Its reads
+     * are Compose state — skipstone backs every `@Observable` property with a `MutableState` —
+     * so a composable that reads `slipStore.slip` recomposes when the SDK changes it. Set once
+     * the dataset has produced a core, which is before anything leaves the bootstrap screen.
+     */
+    lateinit var slipStore: BetSlipStore
+        private set
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
         BootstrapState.Loading("Loading fight core…"),
@@ -61,27 +57,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _fighters = MutableStateFlow<LoadState<List<Fighter>>>(LoadState.Loading)
     val fighters: StateFlow<LoadState<List<Fighter>>> = _fighters.asStateFlow()
 
-    // BetSlip arrives from the SDK as transpiled Swift, so its selections are a
-    // skip.lib.Array rather than a Kotlin List.
-    private val _slip = MutableStateFlow(
-        BetSlip(BetMode.single, SkipArray(emptyList()), BigDecimal("10.00")),
-    )
-    val slip: StateFlow<BetSlip> = _slip.asStateFlow()
-
-    private val _balance = MutableStateFlow(BigDecimal("500.00"))
-    val balance: StateFlow<BigDecimal> = _balance.asStateFlow()
-
     private val _news = MutableStateFlow<LoadState<List<NewsItem>>>(LoadState.Loading)
     val news: StateFlow<LoadState<List<NewsItem>>> = _news.asStateFlow()
 
     private val _media = MutableStateFlow<LoadState<List<MediaItem>>>(LoadState.Loading)
     val media: StateFlow<LoadState<List<MediaItem>>> = _media.asStateFlow()
-
-    private val _betPlacedMessage = MutableStateFlow<String?>(null)
-    val betPlacedMessage: StateFlow<String?> = _betPlacedMessage.asStateFlow()
-
-    val slipState: SlipState
-        get() = requireNotNull(fightCore).slipState(_slip.value, _balance.value)
 
     init {
         bootstrap()
@@ -100,7 +80,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             booted.fold(
                 onSuccess = { engine ->
                     catalog = engine.catalog
-                    fightCore = engine.fightCore
+                    slipStore = BetSlipStore(fightCore = engine.fightCore)
                     _bootstrapState.value = BootstrapState.Ready
                     refreshEvents()
                     refreshFighters()
@@ -181,40 +161,4 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun imageUrl(path: String): String? =
         if (LocalAssetServer.port > 0) "http://127.0.0.1:${LocalAssetServer.port}/$path" else null
-
-    // A transpiled Swift struct has no generated copy(), so an edited slip is rebuilt rather
-    // than copied. Mutating one in place would be worse than verbose: BetSlip is a reference
-    // type on this side, and the instance is shared with whatever the SDK still holds.
-    fun toggleSelection(bout: Bout, fighterId: String, odds: String) {
-        _slip.update { slip ->
-            val parsedOdds = Money.parse(odds)
-            val selections = slip.selections.toList().toMutableList()
-            val existingIndex = selections.indexOfFirst { it.boutID == bout.id }
-            if (existingIndex >= 0) {
-                if (selections[existingIndex].fighterID == fighterId) {
-                    selections.removeAt(existingIndex)
-                } else {
-                    selections[existingIndex] = Selection(bout.id, fighterId, parsedOdds)
-                }
-            } else {
-                selections += Selection(bout.id, fighterId, parsedOdds)
-            }
-            BetSlip(modeFor(selections.size), SkipArray(selections), slip.stake)
-        }
-        _betPlacedMessage.value = null
-    }
-
-    private fun modeFor(legCount: Int): BetMode =
-        if (legCount >= FightCore.minAccaLegs) BetMode.accumulator else BetMode.single
-
-    fun applySdkSlip(slip: BetSlip, balance: BigDecimal, betPlacedMessage: String?) {
-        // Rebuilt for the same reason: the SDK keeps its own reference to this slip.
-        _slip.value = BetSlip(slip.mode, SkipArray(slip.selections.toList()), slip.stake)
-        _balance.value = balance
-        _betPlacedMessage.value = betPlacedMessage
-    }
-
-    fun deposit(amount: BigDecimal) {
-        _balance.update { it.add(amount) }
-    }
 }

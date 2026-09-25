@@ -8,8 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import fight.deck.betslip.BetSlipRootView
-import fight.deck.betslip.BetSlipStore
 import fight.deck.betslip.SlipDisplayContext
+import fight.deck.core.BetSlipStore
 import fight.deck.core.FightCore
 import fight.deck.core.Selection
 import fight.deck.core.ThemeTokens
@@ -39,7 +39,6 @@ class MainActivity : ComponentActivity() {
                         theme = theme,
                         onDeposit = {},
                         onBrowseEvents = {},
-                        onHostSync = { _, _, _ -> },
                     ).Compose()
                 }
             }

@@ -23,7 +23,6 @@ public struct BetSlipRootView: View {
     let theme: ThemeTokens
     let onDeposit: @Sendable () -> Void
     let onBrowseEvents: @Sendable () -> Void
-    let onHostSync: @Sendable (BetSlip, Decimal, String?) -> Void
 
     @FocusState private var stakeFocused: Bool
     @State private var stakeText: String = ""
@@ -33,15 +32,13 @@ public struct BetSlipRootView: View {
         display: SlipDisplayContext,
         theme: ThemeTokens,
         onDeposit: @escaping @Sendable () -> Void,
-        onBrowseEvents: @escaping @Sendable () -> Void,
-        onHostSync: @escaping @Sendable (BetSlip, Decimal, String?) -> Void
+        onBrowseEvents: @escaping @Sendable () -> Void
     ) {
         self.store = store
         self.display = display
         self.theme = theme
         self.onDeposit = onDeposit
         self.onBrowseEvents = onBrowseEvents
-        self.onHostSync = onHostSync
     }
 
     public var body: some View {
@@ -134,9 +131,9 @@ public struct BetSlipRootView: View {
                 // focused field is being edited, so anything else is teardown noise.
                 stakeText = newValue
                 if newValue.isEmpty {
-                    applyStake(Money.zero)
+                    store.setStake(Money.zero)
                 } else if let amount = Money.parseOrNil(newValue) {
-                    applyStake(amount)
+                    store.setStake(amount)
                 }
                 // Anything else is text the user is midway through, or the stray separator
                 // Compose sends as the field leaves composition. Treating it as zero is what
@@ -147,27 +144,7 @@ public struct BetSlipRootView: View {
 
     private func setStake(_ amount: Decimal) {
         stakeText = Money.format(amount)
-        applyStake(amount)
-    }
-
-    /// The slip handed to the host is built with the new stake rather than read back from the
-    /// store, because a read inside the text field's change callback can still see the value
-    /// from the composition that produced the callback and push a stale amount.
-    private func applyStake(_ amount: Decimal) {
         store.setStake(amount)
-        var synced = store.slip
-        synced.stake = amount
-        onHostSync(synced, store.balance, nil)
-    }
-
-    private func syncRemoval(of selectionID: String) {
-        store.removeSelection(id: selectionID)
-        onHostSync(store.slip, store.balance, nil)
-    }
-
-    private func placeBetAndSync() {
-        store.placeBet()
-        onHostSync(store.slip, store.balance, store.betPlacedMessage)
     }
 
     /// One icon, one size. `checkmark.seal.fill` has no Material mapping, so Android would draw
@@ -208,7 +185,7 @@ public struct BetSlipRootView: View {
         #if !SKIP
         .onDelete { offsets in
             for id in offsets.map({ store.slip.selections[$0].id }) {
-                syncRemoval(of: id)
+                store.removeSelection(id: id)
             }
         }
         #endif
@@ -397,7 +374,7 @@ extension BetSlipRootView {
     /// both halves to 0.38, which is what `00-native`'s `PrimaryActionButton` does too.
     private var placeBetButton: some View {
         let canPlace = store.slipState.errors.isEmpty
-        return Button(action: placeBetAndSync) {
+        return Button(action: { store.placeBet() }) {
             // Text, not a Label: SF Symbol names have no Material equivalent, and SkipUI
             // substitutes a warning triangle announced as "missing icon".
             Text("Place bet")
@@ -452,7 +429,7 @@ extension BetSlipRootView {
                 .font(Typography.semibold(theme.fontCallout))
                 .foregroundStyle(theme.accent)
             Button {
-                syncRemoval(of: selection.id)
+                store.removeSelection(id: selection.id)
             } label: {
                 // SkipUI has no Material mapping for xmark.circle.fill and renders a warning
                 // triangle labelled "missing icon", which is wrong for TalkBack.
@@ -518,7 +495,7 @@ extension BetSlipRootView {
                 theme: theme,
                 stakeFocused: stakeFocused,
                 isEnabled: store.slipState.errors.isEmpty,
-                onPlaceBet: placeBetAndSync,
+                onPlaceBet: { store.placeBet() },
                 onDismissKeyboard: { stakeFocused = false }
             ))
     }

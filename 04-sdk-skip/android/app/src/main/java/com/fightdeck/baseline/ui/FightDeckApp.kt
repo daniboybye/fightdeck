@@ -192,8 +192,10 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
 
 @Composable
 private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
-        val slip by viewModel.slip.collectAsStateWithLifecycle()
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        // Plain reads, not collected flows: the store's properties are Compose state already.
+        val store = viewModel.slipStore
+        val slip = store.slip
+        val balance = store.balance
 
         // Saveable, not plain remember: pushing the deposit destination takes the tab host out
         // of composition, and a plain remember would hand the user back the first tab instead
@@ -220,7 +222,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         if (showsSlipToolbar) {
                             BetSlipToolbar(
                                 legCount = slip.selections.count,
-                                potentialReturn = Money.formatCurrency(viewModel.slipState.potentialReturn),
+                                potentialReturn = Money.formatCurrency(store.slipState.potentialReturn),
                                 onClick = { selectedTab = SLIP_TAB },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
@@ -349,9 +351,8 @@ private fun EventsNavHost(
     val fighters by viewModel.fighters.collectAsStateWithLifecycle()
     val news by viewModel.news.collectAsStateWithLifecycle()
     val media by viewModel.media.collectAsStateWithLifecycle()
-    // Collected here, not read through viewModel.isSelected(): a plain getter is invisible to
-    // Compose, so an odds tap only showed up once something else forced a recomposition.
-    val slip by viewModel.slip.collectAsStateWithLifecycle()
+    // Read here and handed down, so every odds button below recomposes with the slip.
+    val slip = viewModel.slipStore.slip
     val loadedEvents = (events as? LoadState.Loaded)?.value.orEmpty()
     val loadedFighters = (fighters as? LoadState.Loaded)?.value.orEmpty()
 
@@ -479,7 +480,7 @@ private fun SlipNavHost(
     onBrowseEvents: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val balance by viewModel.balance.collectAsStateWithLifecycle()
+    val balance = viewModel.slipStore.balance
 
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {

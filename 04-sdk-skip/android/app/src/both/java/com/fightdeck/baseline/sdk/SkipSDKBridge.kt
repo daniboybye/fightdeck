@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -35,9 +34,6 @@ object SkipSDKBridge {
         onBrowseEvents: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        val slip by viewModel.slip.collectAsStateWithLifecycle()
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
-        val betPlacedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
         // Collected rather than read off the flow inside the display context: a plain `.value`
         // read is not a composition input, so selection rows kept showing fighter ids when the
         // slip opened before the roster finished loading.
@@ -45,18 +41,6 @@ object SkipSDKBridge {
         val events by viewModel.events.collectAsStateWithLifecycle()
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
-            val store = SdkBetSlipStoreRegistry.store(viewModel)
-            LaunchedEffect(slip) {
-                store.slip = slip
-            }
-            LaunchedEffect(balance) {
-                store.balance = balance
-            }
-            // The host clears the confirmation when the slip changes from another tab; without
-            // pushing that back the SDK keeps showing "bet placed" over an empty slip.
-            LaunchedEffect(betPlacedMessage) {
-                store.betPlacedMessage = betPlacedMessage
-            }
             val display = remember(fighters, events) { HostSlipDisplayContext(fighters, events) }
             val theme = remember { ThemeTokens.defaults }
             // The SDK view composes into whatever box it is given and reads no insets of its
@@ -64,18 +48,11 @@ object SkipSDKBridge {
             // list scrolls under the Bet Slip toolbar.
             Box(modifier) {
                 BetSlipRootView(
-                    store = store,
+                    store = viewModel.slipStore,
                     display = display,
                     theme = theme,
                     onDeposit = onDeposit,
                     onBrowseEvents = onBrowseEvents,
-                    onHostSync = { sdkSlip, sdkBalance, message ->
-                        viewModel.applySdkSlip(
-                            sdkSlip,
-                            sdkBalance,
-                            message,
-                        )
-                    },
                 ).Compose()
             }
             DisposableEffect(saveKey) {
@@ -103,7 +80,7 @@ object SkipSDKBridge {
         onDone: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        val balance = viewModel.slipStore.balance
         val stateHolder = rememberSaveableStateHolder()
         stateHolder.SaveableStateProvider(saveKey) {
             val theme = remember { ThemeTokens.defaults }
@@ -115,7 +92,7 @@ object SkipSDKBridge {
                 theme = theme,
                 onResult = { result ->
                     when (result) {
-                        is DepositResult.CompletedCase -> viewModel.deposit(result.amount)
+                        is DepositResult.CompletedCase -> viewModel.slipStore.deposit(amount = result.amount)
                         is DepositResult.CancelledCase -> Unit
                     }
                     onDone()

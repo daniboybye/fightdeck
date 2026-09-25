@@ -22,7 +22,7 @@ struct RootView: View {
     }
 
     private var showsBetSlipAccessory: Bool {
-        !state.slip.selections.isEmpty && !state.isPresentingDeposit
+        !state.slipStore.slip.selections.isEmpty && !state.isPresentingDeposit
     }
 
     var body: some View {
@@ -61,8 +61,8 @@ struct RootView: View {
         .tabBarMinimizeBehavior(.never)
         .tabViewBottomAccessory(isEnabled: showsBetSlipAccessory) {
             BetSlipAccessory(
-                legCount: state.slip.selections.count,
-                potentialReturn: Money.formatCurrency(state.slipState.potentialReturn)
+                legCount: state.slipStore.slip.selections.count,
+                potentialReturn: Money.formatCurrency(state.slipStore.slipState.potentialReturn)
             ) {
                 selectedTab = .slip
             }

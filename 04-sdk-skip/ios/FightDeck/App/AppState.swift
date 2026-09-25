@@ -35,28 +35,20 @@ final class AppState {
 
     var bootstrapState: AppBootstrapState = .loading
 
-    /// The mode follows the number of legs instead of a picker: one selection is a single,
-    /// two or more is an accumulator. Both modes stay covered by the golden fixtures.
-    var slip = BetSlip(mode: .single, selections: [], stake: Money.parse("10.00"))
-    var balance = Money.parse("500.00")
-    var betPlacedMessage: String?
-
     /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
     /// toolbars depend on observable state rather than on a closure handed down through the
     /// environment, which is a new value on every `RootView` body pass.
     var isPresentingDeposit = false
 
     let catalog: EventCatalog
-    let fightCore: FightCore
+    /// The slip, the balance and the bet confirmation. The bet slip SDK reads and writes this
+    /// same instance, so there is nothing to copy across in either direction.
+    let slipStore: BetSlipStore
 
     init(datasetRoot: URL = DatasetLocator.datasetRoot()) {
         let catalog = EventCatalog(datasetRoot: datasetRoot)
         self.catalog = catalog
-        self.fightCore = catalog.loadFightCore()
-    }
-
-    var slipState: SlipState {
-        fightCore.slipState(slip: slip, balance: balance)
+        self.slipStore = BetSlipStore(fightCore: catalog.loadFightCore())
     }
 
     func bootstrap() async {
@@ -116,47 +108,8 @@ final class AppState {
         }
     }
 
-    func toggleSelection(bout: Bout, fighterID: String, odds: String) {
-        if let index = slip.selections.firstIndex(where: { $0.boutID == bout.id }) {
-            let existing = slip.selections[index]
-            if existing.fighterID == fighterID {
-                slip.selections.remove(at: index)
-            } else {
-                slip.selections[index] = Selection(
-                    boutID: bout.id,
-                    fighterID: fighterID,
-                    odds: Money.parse(odds)
-                )
-            }
-        } else {
-            slip.selections.append(
-                Selection(boutID: bout.id, fighterID: fighterID, odds: Money.parse(odds))
-            )
-        }
-        syncMode()
-        betPlacedMessage = nil
-    }
-
-    func isSelected(boutID: String, fighterID: String) -> Bool {
-        slip.selections.contains { $0.boutID == boutID && $0.fighterID == fighterID }
-    }
-
-    func applySdkSlip(_ updatedSlip: BetSlip, balance: Decimal, betPlacedMessage: String?) {
-        slip = updatedSlip
-        self.balance = balance
-        self.betPlacedMessage = betPlacedMessage
-    }
-
-    private func syncMode() {
-        slip.mode = slip.selections.count >= FightCore.minAccaLegs ? .accumulator : .single
-    }
-
     func presentDeposit() {
         isPresentingDeposit = true
-    }
-
-    func deposit(amount: Decimal) {
-        balance += amount
     }
 
     /// Dataset images are served over localhost, so the URL depends on the port the host's

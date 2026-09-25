@@ -29,8 +29,7 @@ struct HarnessRootView: View {
                 display: HarnessSlipDisplay(),
                 theme: ThemeTokens.defaults,
                 onDeposit: {},
-                onBrowseEvents: {},
-                onHostSync: { _, _, _ in }
+                onBrowseEvents: {}
             )
             FighterRootView(
                 params: FighterParams(

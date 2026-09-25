@@ -22,7 +22,7 @@ struct BalanceToolbarModifier: ViewModifier {
                         Label("Deposit", systemImage: "plus.circle")
                     }
                 } label: {
-                    Text(Money.formatCurrency(state.balance))
+                    Text(Money.formatCurrency(state.slipStore.balance))
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
                         .contentTransition(.numericText())

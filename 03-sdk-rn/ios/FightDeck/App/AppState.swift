@@ -176,16 +176,11 @@ final class AppState {
     }
 }
 
-struct SlipPayload: Codable {
+/// A slip as the bet slip surface reports it back.
+struct SlipPayload: Decodable {
     let mode: BetMode
     let stake: String
     let selections: [SelectionPayload]
-
-    init(from slip: BetSlip) {
-        mode = slip.mode
-        stake = Money.format(slip.stake)
-        selections = slip.selections.map(SelectionPayload.init)
-    }
 
     func toBetSlip() -> BetSlip {
         BetSlip(
@@ -196,16 +191,10 @@ struct SlipPayload: Codable {
     }
 }
 
-struct SelectionPayload: Codable {
+struct SelectionPayload: Decodable {
     let boutId: String
     let fighterId: String
     let odds: String
-
-    init(from selection: Selection) {
-        boutId = selection.boutID
-        fighterId = selection.fighterID
-        odds = Money.format(selection.odds)
-    }
 
     func toSelection() -> Selection {
         Selection(boutID: boutId, fighterID: fighterId, odds: Money.parse(odds))

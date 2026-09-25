@@ -27,23 +27,54 @@ public protocol DepositHosting: AnyObject {
     func update(params: DepositParams)
 }
 
+/// One leg of the slip, with enough of its bout for the screen to name it and check it.
+public struct BetslipSelection: Equatable, Sendable {
+    public let boutID: String
+    public let fighterID: String
+    public let opponentID: String
+    public let odds: Decimal
+    public let fighterName: String
+    public let opponentName: String
+    public let eventName: String
+
+    public init(
+        boutID: String,
+        fighterID: String,
+        opponentID: String,
+        odds: Decimal,
+        fighterName: String,
+        opponentName: String,
+        eventName: String
+    ) {
+        self.boutID = boutID
+        self.fighterID = fighterID
+        self.opponentID = opponentID
+        self.odds = odds
+        self.fighterName = fighterName
+        self.opponentName = opponentName
+        self.eventName = eventName
+    }
+}
+
+/// Values, not JSON: the adapter compares them structurally and encodes only what it pushes,
+/// so a host no longer has to spell the same slip identically every time to avoid a re-render.
 public struct BetslipParams: Equatable, Sendable {
     public let balance: Decimal
-    public let slipJSON: String
-    public let eventsJSON: String
+    public let stake: Decimal
+    public let selections: [BetslipSelection]
     /// Set by the host, not the surface: a new presentation starts the React tree afresh, so
     /// a confirmation the SDK kept locally would not outlive it.
     public let betPlacedMessage: String
 
     public init(
         balance: Decimal,
-        slipJSON: String,
-        eventsJSON: String,
+        stake: Decimal,
+        selections: [BetslipSelection],
         betPlacedMessage: String = ""
     ) {
         self.balance = balance
-        self.slipJSON = slipJSON
-        self.eventsJSON = eventsJSON
+        self.stake = stake
+        self.selections = selections
         self.betPlacedMessage = betPlacedMessage
     }
 }

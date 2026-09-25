@@ -200,19 +200,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _balance.update { it.add(amount) }
     }
 
-    fun slipJSON(): String {
-        val slip = _slip.value
-        val selections = slip.selections.joinToString(",") { sel ->
-            """{"boutId":"${sel.boutId}","fighterId":"${sel.fighterId}","odds":"${Money.format(sel.odds)}"}"""
-        }
-        return """{"mode":"${slip.mode.name}","stake":"${Money.format(slip.stake)}","selections":[$selections]}"""
-    }
-
-    fun eventsJSON(): String =
-        requireNotNull(repository).let {
-            DatasetLocator.datasetRoot(getApplication()).resolve("events.json").readText()
-        }
-
     private fun parseSlipJSON(slipJSON: String): BetSlip? = runCatching {
         val envelope = lenientJson.decodeFromString<SlipEnvelope>(slipJSON)
         BetSlip(

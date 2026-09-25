@@ -31,8 +31,8 @@ struct HarnessRootView: View {
                 return hosting.makeViewController(
                     params: BetslipParams(
                         balance: 500,
-                        slipJSON: "{}",
-                        eventsJSON: "{\"events\":[]}"
+                        stake: 10,
+                        selections: []
                     ),
                     onResult: { _ in onResult() }
                 )

@@ -56,20 +56,31 @@ struct BetslipBridgeView: View {
     }
 
     private var params: BetslipParams {
-        // Sorted, because the encoder's key order changes from one call to the next, and the
-        // same slip spelled differently reads as a change the adapter has to push.
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = .sortedKeys
-        let slipJSON = (try? encoder.encode(SlipPayload(from: state.slip))).flatMap {
-            String(data: $0, encoding: .utf8)
-        } ?? "{}"
-        let eventsURL = DatasetLocator.datasetRoot().appendingPathComponent("events.json")
-        let eventsJSON = (try? String(contentsOf: eventsURL, encoding: .utf8)) ?? "{\"events\":[]}"
-        return BetslipParams(
+        BetslipParams(
             balance: state.balance,
-            slipJSON: slipJSON,
-            eventsJSON: eventsJSON,
+            stake: state.slip.stake,
+            selections: state.slip.selections.compactMap(leg),
             betPlacedMessage: state.betPlacedMessage ?? ""
         )
+    }
+
+    /// Names each pick from the catalogue the host already has in memory.
+    private func leg(_ selection: Selection) -> BetslipSelection? {
+        guard case .loaded(let events) = state.eventsState else { return nil }
+        for event in events {
+            guard let bout = event.bouts.first(where: { $0.id == selection.boutID }) else { continue }
+            let picked = bout.redCorner.fighterId == selection.fighterID ? bout.redCorner : bout.blueCorner
+            let opponent = picked.fighterId == bout.redCorner.fighterId ? bout.blueCorner : bout.redCorner
+            return BetslipSelection(
+                boutID: bout.id,
+                fighterID: selection.fighterID,
+                opponentID: opponent.fighterId,
+                odds: selection.odds,
+                fighterName: picked.name,
+                opponentName: opponent.name,
+                eventName: event.name
+            )
+        }
+        return nil
     }
 }

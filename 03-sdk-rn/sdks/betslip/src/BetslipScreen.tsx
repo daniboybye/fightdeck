@@ -11,11 +11,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import {
-  FightCore,
-  MIN_ACCA_LEGS,
-  boutIndexFromDataset,
-} from '../../core/src/fightcore/fightcore';
+import { FightCore, MIN_ACCA_LEGS } from '../../core/src/fightcore/fightcore';
 import { formatCurrency, formatMoney, parseMoney } from '../../core/src/fightcore/money';
 import { formatOdds, parseOdds } from '../../core/src/fightcore/odds';
 import Runtime from '../../core/src/specs/NativeFightDeckRuntimeBridge';
@@ -31,48 +27,36 @@ import {
 import { GlassPresetChipRow } from '../../core/src/ui/GlassPresetChipRow';
 import { slipSummaryRows, theme, type ThemeTokens } from '../../core/src/ui/theme';
 import { TestIds } from '../../core/src/ui/testIds';
-import type { BetMode, Selection } from '../../core/src/fightcore/types';
+import type { BetMode, BoutIndex, Selection } from '../../core/src/fightcore/types';
 
 interface SlipProps extends Record<string, unknown> {
   balance: string;
   slipJSON: string;
-  eventsJSON: string;
   betPlacedMessage?: unknown;
 }
 
-interface SelectionLabels {
+/**
+ * One leg as the host sends it: the pick, and enough of its bout to name it and to check it
+ * against. The host builds every selection from its own catalogue, so a copy of that catalogue
+ * here could only ever confirm what the host already knows.
+ */
+interface SlipLeg {
+  boutId: string;
+  fighterId: string;
+  opponentId: string;
+  odds: string;
   fighterName: string;
   opponentName: string;
   eventName: string;
 }
 
-function modeFor(count: number): BetMode {
-  return count >= MIN_ACCA_LEGS ? 'accumulator' : 'single';
+interface HostSlip {
+  stake?: string;
+  selections?: SlipLeg[];
 }
 
-function selectionLabels(eventsJSON: string, selection: Selection): SelectionLabels {
-  const events = JSON.parse(eventsJSON || '{"events":[]}').events ?? [];
-  for (const event of events) {
-    for (const bout of event.bouts ?? []) {
-      if (bout.id !== selection.boutId) {
-        continue;
-      }
-      const red = bout.redCorner;
-      const blue = bout.blueCorner;
-      const picked = red.fighterId === selection.fighterId ? red : blue;
-      const opponent = picked === red ? blue : red;
-      return {
-        fighterName: picked.name ?? selection.fighterId,
-        opponentName: opponent.name ?? '—',
-        eventName: event.name ?? '—',
-      };
-    }
-  }
-  return {
-    fighterName: selection.fighterId,
-    opponentName: '—',
-    eventName: '—',
-  };
+function modeFor(count: number): BetMode {
+  return count >= MIN_ACCA_LEGS ? 'accumulator' : 'single';
 }
 
 function slipPayload(selections: Selection[], stakeText: string): string {
@@ -87,9 +71,7 @@ function slipPayload(selections: Selection[], stakeText: string): string {
   });
 }
 
-function parseSelections(
-  raw: Array<{ boutId: string; fighterId: string; odds: string }> | undefined,
-): Selection[] {
+function parseSelections(raw: SlipLeg[] | undefined): Selection[] {
   return (raw ?? []).map((s) => ({
     boutId: s.boutId,
     fighterId: s.fighterId,
@@ -104,17 +86,22 @@ export function BetslipScreen(props: SlipProps) {
     () => makeStyles(theme, layoutFrame.chromeBackground),
     [layoutFrame.chromeBackground],
   );
-  const eventsJSON = String(props.eventsJSON ?? '{"events":[]}');
   const slipJSONProp = String(props.slipJSON ?? '{}');
-  const core = useMemo(() => {
-    const events = JSON.parse(eventsJSON);
-    return new FightCore(boutIndexFromDataset(events.events ?? []));
-  }, [eventsJSON]);
+  const legs = useMemo(
+    () => new Map(((JSON.parse(slipJSONProp) as HostSlip).selections ?? []).map((leg) => [leg.boutId, leg])),
+    [slipJSONProp],
+  );
+  const core = useMemo(
+    () => new FightCore([...legs.values()].map((leg): BoutIndex => ({
+      id: leg.boutId,
+      redFighterId: leg.fighterId,
+      blueFighterId: leg.opponentId,
+      winnerId: '',
+    }))),
+    [legs],
+  );
 
-  const initial = JSON.parse(slipJSONProp) as {
-    stake?: string;
-    selections?: Array<{ boutId: string; fighterId: string; odds: string }>;
-  };
+  const initial = JSON.parse(slipJSONProp) as HostSlip;
 
   const [stakeText, setStakeText] = useState(initial.stake ?? '10.00');
   const [selections, setSelections] = useState<Selection[]>(parseSelections(initial.selections));
@@ -126,10 +113,7 @@ export function BetslipScreen(props: SlipProps) {
   const stakeInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   useEffect(() => {
-    const parsed = JSON.parse(slipJSONProp) as {
-      stake?: string;
-      selections?: Array<{ boutId: string; fighterId: string; odds: string }>;
-    };
+    const parsed = JSON.parse(slipJSONProp) as HostSlip;
     setSelections(parseSelections(parsed.selections));
     if (!stakeFocusedRef.current) {
       setStakeText(parsed.stake ?? '10.00');
@@ -215,15 +199,15 @@ export function BetslipScreen(props: SlipProps) {
       >
         <GroupedSection title={betTypeTitle} theme={theme}>
           {selections.map((selection, index) => {
-            const labels = selectionLabels(eventsJSON, selection);
+            const leg = legs.get(selection.boutId);
             const isLast = index === selections.length - 1;
             return (
               <GroupedRow key={`${selection.boutId}-${selection.fighterId}`} theme={theme} isLast={isLast}>
                 <View style={styles.selectionMain}>
                   <View style={styles.flex}>
-                    <Text style={styles.body}>{labels.fighterName}</Text>
+                    <Text style={styles.body}>{leg?.fighterName ?? selection.fighterId}</Text>
                     <Text style={styles.secondary}>
-                      vs {labels.opponentName} · {labels.eventName}
+                      vs {leg?.opponentName ?? '—'} · {leg?.eventName ?? '—'}
                     </Text>
                   </View>
                   <Text style={styles.accent}>{formatOdds(selection.odds)}</Text>

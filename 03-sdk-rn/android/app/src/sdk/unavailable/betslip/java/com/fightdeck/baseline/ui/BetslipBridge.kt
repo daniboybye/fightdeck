@@ -7,14 +7,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.fightdeck.baseline.core.BetSlip
+import com.fightdeck.baseline.data.EventItem
 import java.math.BigDecimal
 
 /** Stands in for the feature in the measurement flavours that do not link its SDK. */
 @Composable
 fun RNBetslipScreen(
     balance: BigDecimal,
-    slipJSON: String,
-    eventsJSON: String,
+    slip: BetSlip,
+    events: List<EventItem>,
     betPlacedMessage: String,
     onBrowseEvents: () -> Unit,
     onDeposit: () -> Unit,

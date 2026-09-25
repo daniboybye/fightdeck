@@ -518,6 +518,8 @@ private fun SlipNavHost(
 ) {
     val balance by viewModel.balance.collectAsStateWithLifecycle()
     val betPlacedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
+    val slip by viewModel.slip.collectAsStateWithLifecycle()
+    val events by viewModel.events.collectAsStateWithLifecycle()
 
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {
@@ -541,8 +543,8 @@ private fun SlipNavHost(
             ) { padding ->
                 RNBetslipScreen(
                     balance = balance,
-                    slipJSON = viewModel.slipJSON(),
-                    eventsJSON = viewModel.eventsJSON(),
+                    slip = slip,
+                    events = (events as? LoadState.Loaded)?.value.orEmpty(),
                     betPlacedMessage = betPlacedMessage.orEmpty(),
                     onBrowseEvents = onBrowseEvents,
                     onDeposit = onDeposit,

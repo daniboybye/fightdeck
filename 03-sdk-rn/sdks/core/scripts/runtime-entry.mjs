@@ -41,7 +41,6 @@ const lines = features.length === 0
   ? ["import 'react-native';"]
   : [
     "import { AppRegistry } from 'react-native';",
-    "import { feature } from '../../src/runtime/feature';",
     ...features.map((name) => {
       const [, screen] = SURFACES[name];
       return `import { ${screen} } from '../../../${name}/src/${screen}';`;
@@ -49,7 +48,10 @@ const lines = features.length === 0
     '',
     ...features.map((name) => {
       const [module, screen] = SURFACES[name];
-      return `AppRegistry.registerComponent('${module}', feature(${screen}));`;
+      // The provider returns the screen itself, never a component made inside it: AppRegistry
+      // calls it on every property update, and a new type each time would remount the screen
+      // and take focus off the field being typed in.
+      return `AppRegistry.registerComponent('${module}', () => ${screen});`;
     }),
   ];
 

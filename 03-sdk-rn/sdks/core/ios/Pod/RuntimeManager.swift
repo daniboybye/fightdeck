@@ -26,8 +26,13 @@ public final class FightDeckRuntime {
         return FightDeckRNHost.makeViewController(withModuleName: moduleName, properties: properties)
     }
 
-    public func updateProperties(moduleName: String, properties: [String: Any]) {
-        FightDeckRNHost.updateProperties(properties, forModuleName: moduleName)
+    public func updateProperties(_ properties: [String: Any], for controller: UIViewController) {
+        FightDeckRNHost.updateProperties(properties, for: controller)
+    }
+
+    /// Stops the React surface behind a controller the host is done with.
+    public func stop(_ controller: UIViewController) {
+        FightDeckRNHost.stop(controller)
     }
 
     public func startupMetrics() -> RuntimeStartupMetrics {

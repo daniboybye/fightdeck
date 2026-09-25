@@ -9,9 +9,8 @@
 import SwiftUI
 import UIKit
 
-/// Hosts one SDK view controller. The demo app's `RNSurfaceWrapperViewController` re-adopts
-/// the runtime's cached controller when SwiftUI rebuilds a screen; a harness shows each
-/// surface once, so it needs none of that.
+/// Hosts one SDK view controller. A harness shows each surface once and never lets it go, so
+/// unlike the demo app's `RNSurfaceView` it has nothing to stop.
 struct HarnessSurface: UIViewControllerRepresentable {
     let make: (@escaping () -> Void) -> UIViewController
 

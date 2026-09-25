@@ -65,7 +65,7 @@ static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mo
 @implementation FightDeckRNHost {
   RCTReactNativeFactory *_factory;
   FightDeckRNFactoryDelegate *_delegate;
-  NSMutableDictionary<NSString *, FightDeckRNSurfaceController *> *_controllers;
+  NSHashTable<FightDeckRNSurfaceController *> *_controllers;
   NSTimeInterval _coldStartMs;
   NSTimeInterval _prewarmedStartMs;
   BOOL _prewarmed;
@@ -85,7 +85,7 @@ static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mo
 - (instancetype)init
 {
   if (self = [super init]) {
-    _controllers = [NSMutableDictionary new];
+    _controllers = [NSHashTable weakObjectsHashTable];
     _delegate = [FightDeckRNFactoryDelegate new];
     _delegate.dependencyProvider = [RCTAppDependencyProvider new];
     _factory = [[RCTReactNativeFactory alloc] initWithDelegate:_delegate];
@@ -117,13 +117,6 @@ static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mo
 {
   NSTimeInterval start = CFAbsoluteTimeGetCurrent();
   FightDeckRNHost *host = [self shared];
-
-  FightDeckRNSurfaceController *existing = host->_controllers[moduleName];
-  if (existing != nil) {
-    [self updateProperties:properties forModuleName:moduleName];
-    return existing;
-  }
-
   BOOL cold = !host->_prewarmed;
   UIView *surfaceView = [host->_factory.rootViewFactory viewWithModuleName:moduleName
                                                          initialProperties:properties ?: @{}];
@@ -138,30 +131,40 @@ static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mo
 
   FightDeckRNSurfaceController *controller = [FightDeckRNSurfaceController new];
   controller.surfaceView = surfaceView;
-  host->_controllers[moduleName] = controller;
-  [self updateProperties:properties forModuleName:moduleName];
+  [host->_controllers addObject:controller];
   if (host->_hostPaused) {
     FightDeckRNSetSurfaceDisplayMode(surfaceView, DisplayMode::Suspended);
   }
   return controller;
 }
 
-+ (void)updateProperties:(NSDictionary *)properties forModuleName:(NSString *)moduleName
++ (void)updateProperties:(NSDictionary *)properties forViewController:(UIViewController *)controller
 {
-  FightDeckRNSurfaceController *controller = [self shared]->_controllers[moduleName];
-  if (controller == nil || controller.surfaceView == nil) {
+  UIView *surfaceView = [controller isKindOfClass:[FightDeckRNSurfaceController class]]
+      ? ((FightDeckRNSurfaceController *)controller).surfaceView
+      : nil;
+  if ([surfaceView isKindOfClass:[RCTSurfaceHostingProxyRootView class]]) {
+    ((RCTSurfaceHostingProxyRootView *)surfaceView).appProperties = properties ?: @{};
+  }
+}
+
++ (void)stopViewController:(UIViewController *)controller
+{
+  if (![controller isKindOfClass:[FightDeckRNSurfaceController class]]) {
     return;
   }
-  if ([controller.surfaceView isKindOfClass:[RCTSurfaceHostingProxyRootView class]]) {
-    ((RCTSurfaceHostingProxyRootView *)controller.surfaceView).appProperties = properties ?: @{};
+  FightDeckRNSurfaceController *surfaceController = (FightDeckRNSurfaceController *)controller;
+  if ([surfaceController.surfaceView isKindOfClass:[RCTSurfaceHostingProxyRootView class]]) {
+    [((RCTSurfaceHostingProxyRootView *)surfaceController.surfaceView).surface stop];
   }
+  [[self shared]->_controllers removeObject:surfaceController];
 }
 
 + (void)onHostResume
 {
   FightDeckRNHost *host = [self shared];
   host->_hostPaused = NO;
-  for (FightDeckRNSurfaceController *controller in host->_controllers.allValues) {
+  for (FightDeckRNSurfaceController *controller in host->_controllers) {
     FightDeckRNSetSurfaceDisplayMode(controller.surfaceView, DisplayMode::Visible);
   }
 }
@@ -170,7 +173,7 @@ static void FightDeckRNSetSurfaceDisplayMode(UIView *surfaceView, DisplayMode mo
 {
   FightDeckRNHost *host = [self shared];
   host->_hostPaused = YES;
-  for (FightDeckRNSurfaceController *controller in host->_controllers.allValues) {
+  for (FightDeckRNSurfaceController *controller in host->_controllers) {
     FightDeckRNSetSurfaceDisplayMode(controller.surfaceView, DisplayMode::Suspended);
   }
 }

@@ -8,9 +8,9 @@ open class FeatureAdapter<Params: Equatable> {
     private let moduleName: String
     private let properties: (Params) -> [String: Any]
     private var lastPushed: Params?
-    /// The runtime keeps one surface per module, so a screen shown again would still hold the
-    /// state of the last showing; React keys the screen on this number and starts it afresh.
-    private var presentation = 0
+    /// The surface on screen now. Each showing gets its own, so the last one made is the one a
+    /// parameter update is for.
+    private weak var controller: UIViewController?
 
     public init(moduleName: String, properties: @escaping (Params) -> [String: Any]) {
         self.moduleName = moduleName
@@ -19,18 +19,15 @@ open class FeatureAdapter<Params: Equatable> {
 
     public func makeViewController(params: Params) -> UIViewController {
         lastPushed = params
-        presentation += 1
-        return FightDeckRuntime.shared.makeViewController(moduleName: moduleName, properties: pushed(params))
+        let controller = FightDeckRuntime.shared.makeViewController(moduleName: moduleName, properties: properties(params))
+        self.controller = controller
+        return controller
     }
 
     /// Only a change reaches React: new properties re-render the surface from its root.
     public func update(params: Params) {
-        guard params != lastPushed else { return }
+        guard params != lastPushed, let controller else { return }
         lastPushed = params
-        FightDeckRuntime.shared.updateProperties(moduleName: moduleName, properties: pushed(params))
-    }
-
-    private func pushed(_ params: Params) -> [String: Any] {
-        properties(params).merging(["presentation": presentation]) { _, token in token }
+        FightDeckRuntime.shared.updateProperties(properties(params), for: controller)
     }
 }

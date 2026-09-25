@@ -146,14 +146,6 @@ pub struct CashOutOfferRecord {
     pub reason: Option<String>,
 }
 
-#[derive(uniffi::Record, Clone, Debug)]
-pub struct BoutIndexRecord {
-    pub id: String,
-    pub red_fighter_id: String,
-    pub blue_fighter_id: String,
-    pub winner_id: String,
-}
-
 // MARK: - Conversions
 
 impl From<BetModeRecord> for BetMode {
@@ -346,17 +338,6 @@ impl From<CashOutOffer> for CashOutOfferRecord {
     }
 }
 
-impl From<BoutIndexRecord> for BoutIndex {
-    fn from(value: BoutIndexRecord) -> Self {
-        BoutIndex {
-            id: value.id,
-            red_fighter_id: value.red_fighter_id,
-            blue_fighter_id: value.blue_fighter_id,
-            winner_id: value.winner_id,
-        }
-    }
-}
-
 // MARK: - Stateless handle
 
 #[derive(uniffi::Object)]
@@ -367,8 +348,7 @@ pub struct SlipHandle {
 #[uniffi::export]
 impl SlipHandle {
     #[uniffi::constructor]
-    pub fn new(bouts: Vec<BoutIndexRecord>) -> Arc<Self> {
-        let bouts = bouts.into_iter().map(Into::into).collect();
+    pub fn new(bouts: Vec<BoutIndex>) -> Arc<Self> {
         Arc::new(Self { engine: Arc::new(SlipEngine::new(bouts)) })
     }
 

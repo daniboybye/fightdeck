@@ -49,7 +49,7 @@ final class AppState {
         // An unreadable dataset shows as empty lists rather than stopping the app at launch.
         self.catalog = (try? EventCatalog.load(datasetRoot: DatasetLocator.datasetRoot().path))
             ?? EventCatalog.empty()
-        let handle = SlipHandle(bouts: catalog.boutIndex().map(BoutIndexRecord.init))
+        let handle = SlipHandle(bouts: catalog.boutIndex())
         let store = try! BetSlipStore(handle: handle, balance: "500.00")
         self.slipStore = ObservableBetSlipStore(store: store)
     }
@@ -129,19 +129,6 @@ final class AppState {
 
     func fighter(_ id: String) -> FighterSummary? {
         try? catalog.fighter(id: id)
-    }
-}
-
-private extension BoutIndexRecord {
-    /// FightEvents produces the index, FightSlip consumes it. Independent SDKs mean
-    /// independent types, and the app pays four lines for that independence.
-    init(_ entry: BoutIndexEntry) {
-        self.init(
-            id: entry.id,
-            redFighterId: entry.redFighterId,
-            blueFighterId: entry.blueFighterId,
-            winnerId: entry.winnerId
-        )
     }
 }
 

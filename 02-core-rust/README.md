@@ -10,7 +10,7 @@ Same UFC betting product as [`00-native/`](../00-native/): event list, bout deta
 | Feature one | `fightslip` | `fightslip` | `FightSlip.xcframework` | `fightdeck.aar` | Bet slip store, validation, settlement, cash-out, place-bet |
 | Feature two | `fightevents` | `fightevents` | `FightEvents.xcframework` | `fightdeck.aar` | Dataset loading (catalogue, news, media), bout index, card ordering, tale of the tape, search, the localhost image server |
 
-Both feature crates depend on `fightcore` as an ordinary Rust dependency and **neither depends on the other**. `fightevents` produces the bout index, `fightslip` consumes it, and the app is the only place the two meet — four lines of mapping in each host. This remains a source and API boundary, but Android is now one native release unit: changing any crate creates a new common `.so`.
+Both feature crates depend on `fightcore` as an ordinary Rust dependency and **neither depends on the other**. `fightevents` produces the bout index, `fightslip` consumes it, and the app is the only place the two meet. The record they exchange, `BoutIndex`, is declared in `fightcore`, which both already depend on, so the app hands one SDK's output straight to the other with no mapping. This remains a source and API boundary, but Android is now one native release unit: changing any crate creates a new common `.so`.
 
 ```
 sdks/
@@ -35,7 +35,9 @@ resolve those paths.
 
 The xcframework carries the Rust staticlib and nothing else. UniFFI's C header goes into a
 C target and the generated Swift into a Swift target, both inside the package, so the host
-gets a plain `import FightCore` with no header search paths or module-map flags. Publishing
+gets a plain `import FightCore` with no header search paths or module-map flags. `FightSlip` and
+`FightEvents` depend on the `FightCore` package for their Swift bindings only, because those use
+its records. Publishing
 and remote checksum resolution are deliberately out of scope for this demo repository.
 
 Android publishes one `fightdeck.aar`. Its `libfightdeck.so` contains the three namespaces,
@@ -132,7 +134,7 @@ per-struct annotation; individual exceptions can be listed under `mutable_record
 ## What UniFFI does **not** give you for free
 
 - **Reactive UI bindings** — no `@Observable`, no `StateFlow`; you write the listener bridge (~50 lines per platform here).
-- **Cross-SDK types** — `fightevents::BoutIndexEntry` and `fightslip::BoutIndexRecord` are separate types with identical shapes, because independent namespaces cannot share records without coupling their build. The host maps between them.
+- **Cross-SDK types in Swift** — two feature namespaces can share a record without depending on each other when it lives in the kernel they both use: `fightcore::BoutIndex` is an ordinary UniFFI record that `fightevents` returns and `fightslip` accepts. Kotlin in library mode handles that on its own; the generated `fightslip.kt` imports `uniffi.fightcore.BoutIndex` and its converter. The Swift generator calls `FfiConverterTypeBoutIndex` and `uniffiEnsureFightcoreInitialized()` by name but never imports the module that declares them, so `build-xcframework.sh` adds `import FightCore` to the feature bindings and the feature packages depend on `FightCore`. Two feature SDKs still cannot share a type with each other directly: that would couple their builds.
 - **A single modulemap** — three xcframeworks each want to install `include/module.modulemap`, and Xcode copies them into one `include/`, where they collide. The xcframework ships libraries only; each package carries its header in a SwiftPM C target that gets its own include directory. UniFFI's own modulemap is discarded too, because it `use`s Darwin submodules SwiftPM does not put on the path.
 - **Swift 6 concurrency** — the generated bindings do not survive strict checking, so the bindings target compiles in Swift 5 language mode. Confining that to one SwiftPM target is what lets the app itself build with `SWIFT_STRICT_CONCURRENCY: complete`, like every other approach here.
 - **Simulator fat slices** — `cargo` builds one architecture at a time; the script `lipo`s `aarch64-apple-ios-sim` and `x86_64-apple-ios` together, or Release builds fail to link on x86_64.

@@ -4,7 +4,7 @@ use crate::catalog::{Catalog, CatalogError};
 use crate::dataset::{Bout, Event, Fighter, MediaFile, MediaItem, NewsFile, NewsItem};
 use crate::display;
 use crate::tape;
-use fightcore::{money, odds};
+use fightcore::{money, odds, BoutIndex};
 use serde::de::DeserializeOwned;
 use std::fs;
 use std::path::Path;
@@ -109,14 +109,6 @@ pub struct TapeRowRecord {
 pub struct TaleOfTheTape {
     pub rows: Vec<TapeRowRecord>,
     pub edge_summary: Option<String>,
-}
-
-#[derive(uniffi::Record, Clone, Debug)]
-pub struct BoutIndexEntry {
-    pub id: String,
-    pub red_fighter_id: String,
-    pub blue_fighter_id: String,
-    pub winner_id: String,
 }
 
 /// Everything the slip row needs about one leg. This replaced two nested lookups that the
@@ -321,11 +313,11 @@ impl EventCatalog {
         })
     }
 
-    pub fn bout_index(&self) -> Vec<BoutIndexEntry> {
+    pub fn bout_index(&self) -> Vec<BoutIndex> {
         self.catalog
             .bout_index()
             .into_iter()
-            .map(|(id, red, blue, winner)| BoutIndexEntry {
+            .map(|(id, red, blue, winner)| BoutIndex {
                 id: id.to_string(),
                 red_fighter_id: red.to_string(),
                 blue_fighter_id: blue.to_string(),

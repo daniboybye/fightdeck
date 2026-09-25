@@ -3,6 +3,7 @@
 // FightDeckTests
 //
 
+import FightCore
 import FightSlip
 import Testing
 @testable import FightDeck
@@ -12,7 +13,7 @@ import Testing
 struct ObservableBetSlipStoreTests {
     private func makeStore() throws -> ObservableBetSlipStore {
         let handle = SlipHandle(bouts: [
-            BoutIndexRecord(id: "b1", redFighterId: "r1", blueFighterId: "u1", winnerId: "r1"),
+            BoutIndex(id: "b1", redFighterId: "r1", blueFighterId: "u1", winnerId: "r1"),
         ])
         return ObservableBetSlipStore(store: try BetSlipStore(handle: handle, balance: "500.00"))
     }

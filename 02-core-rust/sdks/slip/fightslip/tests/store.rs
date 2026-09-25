@@ -1,17 +1,18 @@
+use fightcore::BoutIndex;
 use fightslip::{
-    BetSlipStore, BoutIndexRecord, SlipHandle, SlipSnapshot, SlipSnapshotListener,
+    BetSlipStore, SlipHandle, SlipSnapshot, SlipSnapshotListener,
 };
 use std::sync::{Arc, Mutex, Weak};
 
 fn store() -> Arc<BetSlipStore> {
     let handle = SlipHandle::new(vec![
-        BoutIndexRecord {
+        BoutIndex {
             id: "b1".into(),
             red_fighter_id: "r1".into(),
             blue_fighter_id: "u1".into(),
             winner_id: "r1".into(),
         },
-        BoutIndexRecord {
+        BoutIndex {
             id: "b2".into(),
             red_fighter_id: "r2".into(),
             blue_fighter_id: "u2".into(),

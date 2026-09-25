@@ -20,7 +20,6 @@ import uniffi.fightevents.MediaItem
 import uniffi.fightevents.NewsItem
 import uniffi.fightevents.assetUrl
 import uniffi.fightevents.startAssetServer
-import uniffi.fightslip.BoutIndexRecord
 import uniffi.fightslip.SlipHandle
 import uniffi.fightslip.SlipSnapshot
 
@@ -173,11 +172,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             Log.i(TAG, "EventCatalog ready")
 
             onStep("Starting bet slip…")
-            val slip = SlipHandle(
-                catalog.boutIndex().map {
-                    BoutIndexRecord(it.id, it.redFighterId, it.blueFighterId, it.winnerId)
-                },
-            )
+            val slip = SlipHandle(catalog.boutIndex())
             val slipStore = StateFlowBetSlipStore(uniffi.fightslip.BetSlipStore(slip, "500.00"))
             Log.i(TAG, "BetSlipStore ready")
 

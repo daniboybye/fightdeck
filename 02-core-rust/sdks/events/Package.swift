@@ -12,6 +12,10 @@ let package = Package(
     products: [
         .library(name: "FightEvents", targets: ["FightEvents"]),
     ],
+    // For the Swift bindings only: they use FightCore's records (BoutIndex) and converters.
+    dependencies: [
+        .package(path: "../core"),
+    ],
     targets: [
         rustLibrary,
         .target(
@@ -20,7 +24,7 @@ let package = Package(
         ),
         .target(
             name: "FightEvents",
-            dependencies: ["fighteventsFFI"],
+            dependencies: ["fighteventsFFI", .product(name: "FightCore", package: "core")],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
     ]

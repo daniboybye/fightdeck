@@ -116,14 +116,7 @@ private func fixtureSlipHandle() -> SlipHandle {
         .deletingLastPathComponent()
         .appendingPathComponent("dataset")
     let catalog = try! EventCatalog.load(datasetRoot: datasetRoot.path)
-    return SlipHandle(bouts: catalog.boutIndex().map {
-        BoutIndexRecord(
-            id: $0.id,
-            redFighterId: $0.redFighterId,
-            blueFighterId: $0.blueFighterId,
-            winnerId: $0.winnerId
-        )
-    })
+    return SlipHandle(bouts: catalog.boutIndex())
 }
 
 private func settlementStatusCode(_ status: SettlementStatusRecord) -> String {

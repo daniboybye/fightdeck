@@ -11,10 +11,7 @@ pub mod types;
 
 mod ffi;
 
-pub use money::{
-    format, format_currency, format_exact_odds, format_implied_probability, money,
-    parse_exact as parse, round, try_parse, ParseError,
-};
+pub use money::{format, format_exact_odds, parse_exact as parse};
 pub use odds::{decimal_to_fractional, fractional_to_decimal, implied_probability};
 pub use types::*;
 

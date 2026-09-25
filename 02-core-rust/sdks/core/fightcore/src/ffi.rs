@@ -10,12 +10,8 @@ use rust_decimal::Decimal;
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
 pub enum FightCoreError {
-    #[error("network")]
-    Network { retryable: bool },
     #[error("decoding")]
     Decoding { field: String },
-    #[error("validation")]
-    Validation { codes: Vec<String> },
 }
 
 impl FightCoreError {

@@ -94,8 +94,8 @@ Hand-written glue shrank accordingly:
 
 | File | Before | After |
 | --- | ---: | ---: |
-| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | **78** |
-| `android/.../core/FightCoreGlue.kt` | 115 | **72** |
+| `ios/FightDeck/Core/FightCoreGlue.swift` | 125 | **75** |
+| `android/.../core/FightCoreGlue.kt` | 115 | **68** |
 
 What is left in those files is the part UniFFI genuinely cannot generate: a listener bridge republished as `@Observable` on iOS and `StateFlow` on Android. No betting rule survives in either.
 

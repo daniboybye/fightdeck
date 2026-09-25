@@ -166,7 +166,7 @@ fn cash_out_fixtures() {
 // MARK: - Fixture models
 
 fn format_implied(decimal: rust_decimal::Decimal) -> String {
-    fightcore::format_implied_probability(implied_probability(decimal))
+    fightcore::money::format_implied_probability(implied_probability(decimal))
 }
 
 #[derive(Deserialize)]

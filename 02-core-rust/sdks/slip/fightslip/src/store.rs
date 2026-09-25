@@ -3,8 +3,7 @@
 
 use crate::engine::SlipEngine;
 use crate::ffi::{
-    parse_amount, BetSlipRecord, BetModeRecord, PlaceBetOutcome, SlipError, SlipHandle,
-    SlipStateRecord,
+    parse_amount, BetSlipRecord, PlaceBetOutcome, SlipError, SlipHandle, SlipStateRecord,
 };
 use fightcore::money;
 use fightcore::types::{BetSlip, Selection};
@@ -70,10 +69,6 @@ impl BetSlipStore {
         money::format(lock(&self.inner).balance)
     }
 
-    pub fn mode(&self) -> BetModeRecord {
-        lock(&self.inner).slip.mode.into()
-    }
-
     pub fn set_stake(&self, stake: String) {
         {
             let mut inner = lock(&self.inner);
@@ -121,15 +116,6 @@ impl BetSlipStore {
         self.notify();
     }
 
-    pub fn clear(&self) {
-        {
-            let mut inner = lock(&self.inner);
-            inner.slip.selections.clear();
-            Self::sync_mode(&mut inner);
-        }
-        self.notify();
-    }
-
     pub fn is_selected(&self, bout_id: String, fighter_id: String) -> bool {
         lock(&self.inner)
             .slip
@@ -157,9 +143,6 @@ impl BetSlipStore {
             let state = inner.engine.slip_state(&inner.slip, inner.balance);
             if !state.errors.is_empty() {
                 PlaceBetOutcome {
-                    placed: false,
-                    stake_taken: money::format(Decimal::ZERO),
-                    new_balance: money::format(inner.balance),
                     potential_return: money::format(state.potential_return),
                     message: None,
                     errors: state.errors.into_iter().map(Into::into).collect(),
@@ -169,9 +152,6 @@ impl BetSlipStore {
                 inner.slip.selections.clear();
                 Self::sync_mode(&mut inner);
                 PlaceBetOutcome {
-                    placed: true,
-                    stake_taken: money::format(state.total_stake),
-                    new_balance: money::format(inner.balance),
                     potential_return: money::format(state.potential_return),
                     message: Some(format!(
                         "{} returns if it lands",

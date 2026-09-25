@@ -14,8 +14,6 @@ use std::sync::Arc;
 pub enum SlipError {
     #[error("decoding")]
     Decoding { field: String },
-    #[error("validation")]
-    Validation { codes: Vec<String> },
 }
 
 impl SlipError {
@@ -68,7 +66,6 @@ pub enum ValidationErrorRecord {
 #[derive(uniffi::Record, Clone, Debug)]
 pub struct SlipStateRecord {
     pub mode: BetModeRecord,
-    pub selection_count: u32,
     pub combined_odds_exact: Option<String>,
     pub combined_odds_display: Option<String>,
     pub total_stake: String,
@@ -113,7 +110,6 @@ pub struct SettlementRecord {
     pub returned: String,
     pub profit: String,
     pub status: SettlementStatusRecord,
-    pub status_headline: String,
 }
 
 #[derive(uniffi::Record, Clone, Debug)]
@@ -121,7 +117,6 @@ pub struct CashOutOfferRecord {
     pub available: bool,
     pub amount: String,
     pub reason: Option<String>,
-    pub headline: String,
 }
 
 #[derive(uniffi::Record, Clone, Debug)]
@@ -135,9 +130,6 @@ pub struct BoutIndexRecord {
 /// What `place_bet` did, so neither host has to work out the balance or the message.
 #[derive(uniffi::Record, Clone, Debug)]
 pub struct PlaceBetOutcome {
-    pub placed: bool,
-    pub stake_taken: String,
-    pub new_balance: String,
     pub potential_return: String,
     pub message: Option<String>,
     pub errors: Vec<ValidationErrorRecord>,
@@ -241,8 +233,8 @@ impl From<ValidationErrorRecord> for ValidationError {
 }
 
 impl SlipStateRecord {
-    /// The only way to build one. `mode` and `selection_count` are read off the slip the state
-    /// was computed from, so a record cannot be handed out disagreeing with it.
+    /// The only way to build one. `mode` is read off the slip the state was computed from, so a
+    /// record cannot be handed out disagreeing with it.
     pub(crate) fn new(state: SlipState, slip: &BetSlip) -> Self {
         let mut summary_rows = vec![SummaryRow {
             label: "Total stake".into(),
@@ -265,7 +257,6 @@ impl SlipStateRecord {
 
         SlipStateRecord {
             mode: slip.mode.into(),
-            selection_count: slip.selections.len() as u32,
             combined_odds_exact: state.combined_odds_exact.map(money::format_exact_odds),
             combined_odds_display: state.combined_odds_display.map(money::format),
             total_stake: money::format(state.total_stake),
@@ -300,16 +291,6 @@ impl From<SettlementStatus> for SettlementStatusRecord {
 
 impl From<Settlement> for SettlementRecord {
     fn from(value: Settlement) -> Self {
-        let headline = match value.status {
-            SettlementStatus::Won => format!("Won {}", money::format_currency(value.returned)),
-            SettlementStatus::Lost => "Lost".to_string(),
-            SettlementStatus::Void => {
-                format!("Void — {} returned", money::format_currency(value.returned))
-            }
-            SettlementStatus::PartiallyWon => {
-                format!("Partially won {}", money::format_currency(value.returned))
-            }
-        };
         SettlementRecord {
             legs: value
                 .legs
@@ -323,28 +304,16 @@ impl From<Settlement> for SettlementRecord {
             returned: money::format(value.returned),
             profit: money::format(value.profit),
             status: value.status.into(),
-            status_headline: headline,
         }
     }
 }
 
 impl From<CashOutOffer> for CashOutOfferRecord {
     fn from(value: CashOutOffer) -> Self {
-        let headline = if value.available {
-            format!("Cash out for {}", money::format_currency(value.amount))
-        } else {
-            match value.reason.as_deref() {
-                Some("not_an_accumulator") => "Cash out is accumulators only".to_string(),
-                Some("bet_already_lost") => "This bet has already lost".to_string(),
-                Some("bet_already_settled") => "Every leg has settled".to_string(),
-                _ => "Cash out unavailable".to_string(),
-            }
-        };
         CashOutOfferRecord {
             available: value.available,
             amount: money::format(value.amount),
             reason: value.reason,
-            headline,
         }
     }
 }

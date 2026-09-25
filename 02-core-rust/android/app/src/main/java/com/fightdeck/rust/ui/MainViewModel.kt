@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.fightdeck.rust.core.FightCoreDisplay
 import com.fightdeck.rust.core.StateFlowBetSlipStore
 import com.fightdeck.rust.services.DatasetLocator
 import kotlinx.coroutines.Dispatchers
@@ -53,7 +52,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val bootstrapState: StateFlow<BootstrapState> = _bootstrapState.asStateFlow()
 
     private val _engine = MutableStateFlow<RustEngine?>(null)
-    val engine: StateFlow<RustEngine?> = _engine.asStateFlow()
 
     private val _events = MutableStateFlow<LoadState<List<EventSummary>>>(LoadState.Loading)
     val events: StateFlow<LoadState<List<EventSummary>>> = _events.asStateFlow()
@@ -148,9 +146,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _betPlacedMessage.value = null
     }
 
-    fun isSelected(boutId: String, fighterId: String): Boolean =
-        requireSlipStore().isSelected(boutId, fighterId)
-
     fun updateStake(stake: String) {
         requireSlipStore().setStake(stake)
     }
@@ -167,9 +162,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deposit(amount: String) {
         requireSlipStore().deposit(amount)
     }
-
-    fun formatOdds(odds: String) = FightCoreDisplay.formatOdds(odds)
-    fun formatCurrency(amount: String) = FightCoreDisplay.formatCurrencyAmount(amount)
 
     override fun onCleared() {
         _engine.value?.slipStore?.close()

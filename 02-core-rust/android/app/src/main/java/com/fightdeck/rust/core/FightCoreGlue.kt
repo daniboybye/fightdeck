@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import uniffi.fightcore.formatCurrency
 import uniffi.fightcore.formatMoney
-import uniffi.fightcore.impliedProbability
 import uniffi.fightslip.BetSlipRecord
 import uniffi.fightslip.BetSlipStore
 import uniffi.fightslip.PlaceBetOutcome
@@ -58,9 +57,6 @@ class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
     fun removeSelection(boutId: String, fighterId: String) =
         store.removeSelection(boutId, fighterId)
 
-    fun isSelected(boutId: String, fighterId: String): Boolean =
-        store.isSelected(boutId, fighterId)
-
     fun deposit(amount: String) {
         store.deposit(amount)
     }
@@ -85,5 +81,4 @@ class StateFlowBetSlipStore(private val store: BetSlipStore) : AutoCloseable {
 object FightCoreDisplay {
     fun formatOdds(odds: String): String = formatMoney(odds)
     fun formatCurrencyAmount(amount: String): String = formatCurrency(amount)
-    fun formatImpliedProbability(odds: String): String = impliedProbability(odds)
 }

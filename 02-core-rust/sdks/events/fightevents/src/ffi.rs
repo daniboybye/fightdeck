@@ -34,21 +34,15 @@ pub struct EventSummary {
     pub id: String,
     pub name: String,
     pub date: String,
-    pub venue: String,
-    pub city: String,
     /// `Etihad Arena · Abu Dhabi` — assembled once, not in two layout files.
     pub location_line: String,
     pub bout_count: u32,
-    pub title_fight_count: u32,
     pub poster_path: String,
 }
 
 #[derive(uniffi::Record, Clone, Debug)]
 pub struct BoutSummary {
     pub id: String,
-    pub event_id: String,
-    pub segment: String,
-    pub order: u32,
     pub headline: String,
     pub weight_class_display: String,
     pub title_fight: bool,
@@ -92,7 +86,6 @@ pub struct FighterSummary {
     pub record_display: String,
     pub wins: u32,
     pub losses: u32,
-    pub draws: u32,
     pub no_contests: u32,
     pub portrait_path: String,
 }
@@ -131,8 +124,6 @@ pub struct BoutIndexEntry {
 #[derive(uniffi::Record, Clone, Debug)]
 pub struct LegContext {
     pub fighter_name: String,
-    pub opponent_name: String,
-    pub event_name: String,
     pub subtitle: String,
 }
 
@@ -160,12 +151,9 @@ fn corner_summary(
     }
 }
 
-fn bout_summary(catalog: &Catalog, event_id: &str, bout: &Bout) -> BoutSummary {
+fn bout_summary(catalog: &Catalog, bout: &Bout) -> BoutSummary {
     BoutSummary {
         id: bout.id.clone(),
-        event_id: event_id.to_string(),
-        segment: bout.segment.clone(),
-        order: bout.order,
         headline: display::bout_headline(&bout.weight_class, bout.title_fight, bout.scheduled_rounds),
         weight_class_display: display::weight_class(&bout.weight_class),
         title_fight: bout.title_fight,
@@ -191,11 +179,8 @@ fn event_summary(event: &Event) -> EventSummary {
         id: event.id.clone(),
         name: event.name.clone(),
         date: event.date.clone(),
-        venue: event.venue.clone(),
-        city: event.city.clone(),
         location_line: format!("{} · {}", event.venue, event.city),
         bout_count: event.bouts.len() as u32,
-        title_fight_count: event.bouts.iter().filter(|b| b.title_fight).count() as u32,
         poster_path: format!("assets/events/{}.jpg", event.id),
     }
 }
@@ -217,7 +202,6 @@ fn fighter_summary(fighter: &Fighter) -> FighterSummary {
         ),
         wins: fighter.record.wins,
         losses: fighter.record.losses,
-        draws: fighter.record.draws,
         no_contests: fighter.record.no_contests,
         portrait_path: fighter.portrait.clone(),
     }
@@ -289,36 +273,21 @@ impl EventCatalog {
         self.catalog.events().iter().map(event_summary).collect()
     }
 
-    pub fn event(&self, id: String) -> Result<EventSummary, EventsError> {
-        self.catalog
-            .event(&id)
-            .map(event_summary)
-            .ok_or(EventsError::NotFound { id })
-    }
-
     pub fn card_sections(&self, event_id: String) -> Vec<CardSection> {
         self.catalog
             .card_sections(&event_id)
             .into_iter()
             .map(|(title, bouts)| CardSection {
                 title,
-                bouts: bouts
-                    .into_iter()
-                    .map(|bout| bout_summary(&self.catalog, &event_id, bout))
-                    .collect(),
+                bouts: bouts.into_iter().map(|bout| bout_summary(&self.catalog, bout)).collect(),
             })
             .collect()
     }
 
     pub fn bout(&self, id: String) -> Result<BoutSummary, EventsError> {
-        let event_id = self
-            .catalog
-            .event_of_bout(&id)
-            .map(|e| e.id.clone())
-            .unwrap_or_default();
         self.catalog
             .bout(&id)
-            .map(|bout| bout_summary(&self.catalog, &event_id, bout))
+            .map(|bout| bout_summary(&self.catalog, bout))
             .ok_or(EventsError::NotFound { id })
     }
 
@@ -376,12 +345,7 @@ impl EventCatalog {
             .catalog
             .event_of_bout(&bout_id)
             .map_or_else(|| "—".to_string(), |e| e.name.clone());
-        LegContext {
-            fighter_name,
-            opponent_name: opponent_name.clone(),
-            event_name: event_name.clone(),
-            subtitle: format!("vs {opponent_name} · {event_name}"),
-        }
+        LegContext { fighter_name, subtitle: format!("vs {opponent_name} · {event_name}") }
     }
 
 }
@@ -396,10 +360,5 @@ pub fn format_duration(total_seconds: u32) -> String {
 #[uniffi::export]
 pub fn humanise_code(raw: String) -> String {
     display::humanise(&raw)
-}
-
-#[uniffi::export]
-pub fn segment_title(segment: String) -> String {
-    display::segment_title(&segment)
 }
 

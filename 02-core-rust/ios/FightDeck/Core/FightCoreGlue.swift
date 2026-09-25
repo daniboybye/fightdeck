@@ -87,8 +87,4 @@ enum FightCoreDisplay {
     static func formatCurrencyAmount(_ amount: String) -> String {
         (try? formatCurrency(amount: amount)) ?? amount
     }
-
-    static func formatImpliedProbability(_ odds: String) -> String {
-        (try? impliedProbability(decimalOdds: odds)) ?? odds
-    }
 }

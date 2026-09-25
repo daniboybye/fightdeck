@@ -23,10 +23,6 @@ pub struct Event {
     pub date: String,
     pub venue: String,
     pub city: String,
-    #[serde(default)]
-    pub country: Option<String>,
-    #[serde(default)]
-    pub attendance: Option<u32>,
     pub bouts: Vec<Bout>,
 }
 

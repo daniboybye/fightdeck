@@ -23,7 +23,7 @@ struct FightCoreFixtureTests {
         let root = try JSONDecoder().decode(OddsConversionRoot.self, from: data)
         for testCase in root.cases {
             let fractional = try decimalToFractional(decimalOdds: testCase.decimal)
-            let implied = FightCoreDisplay.formatImpliedProbability(testCase.decimal)
+            let implied = try impliedProbability(decimalOdds: testCase.decimal)
             #expect(fractional == testCase.fractional, "Case \(testCase.id): fractional")
             #expect(implied == testCase.impliedProbability, "Case \(testCase.id): implied")
             let roundTrip = try fractionalToDecimal(fractional: testCase.fractional)

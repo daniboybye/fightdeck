@@ -341,7 +341,10 @@ formatters are POSIX with grouping off and a fixed number of fraction digits, wh
 arithmetic rather than internationalisation. `MoneyDigits.swift` is that arithmetic: about
 90 lines, HALF_UP as the contract requires, verified against the same 72 contract fixtures
 on the device. `NSDecimalNumber`, `String(format:)` and `replacingOccurrences` went the same
-way, for a few lines each, and 20 files carry a five-line conditional import.
+way, for a few lines each, and 21 files carry a five-line conditional import. The localhost
+image server both hosts start, `AssetServer` in FightEvents, is POSIX sockets and threads
+for the same reason: Foundation's networking is on the ICU side of the line, and Dispatch
+would have added its 185 KB Swift overlay to the runtime.
 
 So the honest pair of numbers for a Swift core on Android is **19.1 MB if you watch what you
 import, 65.2 MB if you do not** — and the second is the default, because `import Foundation`
@@ -424,7 +427,8 @@ None blocking. One observation:
 │   ├── slip/                       SwiftPM package FightSlip
 │   │   └── Sources/FightSlip/      SlipEngine, SlipSession, BetSlipStore, SlipDisplay
 │   ├── events/                     SwiftPM package FightEvents
-│   │   └── Sources/FightEvents/    Catalog.load, presentation models, news and media, tape
+│   │   └── Sources/FightEvents/    Catalog.load, presentation models, news and media, tape,
+│   │                               the localhost image server both hosts start
 │   └── android/                    Android only: all three → libfightdeck.so
 │       └── Sources/FightDeckJava/  the three facades jextract reads
 ├── ios/                            SwiftUI host (scheme FightDeck)

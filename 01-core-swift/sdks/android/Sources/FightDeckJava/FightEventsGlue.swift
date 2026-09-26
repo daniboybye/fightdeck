@@ -24,6 +24,12 @@ struct NotFound: Error {
     let id: String
 }
 
+/// Starts `AssetServer` once and returns the address an image path is appended to, so Kotlin
+/// can build every image URL without calling back across the boundary.
+public func startAssetServer(datasetRoot: String) throws -> String {
+    try AssetServer.start(datasetRoot: datasetRoot)
+}
+
 /// Android-facing handle over `Catalog`. The host finds the dataset directory; reading and
 /// parsing it happens on this side.
 public final class EventCatalogBridge {

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0694C0054D1E2960174E2156 /* DatasetLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 072C0B77630BA46C802A220E /* DatasetLocator.swift */; };
 		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
 		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
@@ -26,13 +27,13 @@
 		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
 		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
-		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = D7285AEB9A4CAF9CCC5C0247 /* FightCore */; };
 		F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D0326034EA5B85604BFA1F /* DepositFlowView.swift */; };
 		F502F17CC36E3303471CFBD6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		072C0B77630BA46C802A220E /* DatasetLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetLocator.swift; sourceTree = "<group>"; };
 		082B9B33D487907D6F872D68 /* slip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = slip; path = ../sdks/slip; sourceTree = SOURCE_ROOT; };
 		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
 		2085E9D24DAD8A41FD78BA17 /* events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = events; path = ../sdks/events; sourceTree = SOURCE_ROOT; };
@@ -44,7 +45,6 @@
 		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
 		5CCE11576590506A00252D6D /* DisplayFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatting.swift; sourceTree = "<group>"; };
 		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
 		75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositSheetView.swift; sourceTree = "<group>"; };
 		813BD28F72479374E713963B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
@@ -211,7 +211,7 @@
 		FE9EE388C310ED4AB6AE0712 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */,
+				072C0B77630BA46C802A220E /* DatasetLocator.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -300,6 +300,7 @@
 				8CC540AE2FD450B9960879BA /* AppState.swift in Sources */,
 				4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */,
 				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
+				0694C0054D1E2960174E2156 /* DatasetLocator.swift in Sources */,
 				6F762FE5E19155F1C7F4C06C /* DepositContract.swift in Sources */,
 				F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */,
 				4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */,
@@ -308,7 +309,6 @@
 				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
 				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
 				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
-				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
 				1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */,
 				B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */,
 				DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */,

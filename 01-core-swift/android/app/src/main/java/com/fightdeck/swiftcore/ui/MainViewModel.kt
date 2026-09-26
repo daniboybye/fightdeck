@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fightdeck.sdk.EventCatalogBridge
+import com.fightdeck.sdk.FightDeckJava
 import com.fightdeck.sdk.SlipEngine
 import com.fightdeck.swiftcore.bridge.SwiftCoreBridge
 import com.fightdeck.swiftcore.catalog.BoutCard
@@ -25,7 +26,6 @@ import com.fightdeck.swiftcore.catalog.tapeRows
 import com.fightdeck.swiftcore.core.SlipSnapshot
 import com.fightdeck.swiftcore.core.readSnapshot
 import com.fightdeck.swiftcore.services.DatasetLocator
-import com.fightdeck.swiftcore.services.LocalAssetServer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +48,10 @@ sealed interface BootstrapState {
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var catalog: EventCatalogBridge? = null
+
+    /** `http://127.0.0.1:<port>/`, once the core's image server is up. */
+    @Volatile
+    private var assetBase: String? = null
 
     private val _bootstrapState = MutableStateFlow<BootstrapState>(
         BootstrapState.Loading("Loading fight core…"),
@@ -115,7 +119,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun bootstrapEngine(application: Application): EventCatalogBridge {
         val root = DatasetLocator.datasetRoot(application)
-        LocalAssetServer.start(root)
+        assetBase = FightDeckJava.startAssetServer(root.path)
         // jextract exposes Swift initialisers as a static `init`, which Kotlin reads as a
         // keyword and needs escaped.
         return EventCatalogBridge.`init`(root.path)
@@ -154,8 +158,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             onFailure = { LoadState.Error(error) },
         )
 
-    fun imageUrl(path: String): String? =
-        LocalAssetServer.port.takeIf { it > 0 }?.let { "http://127.0.0.1:$it/$path" }
+    fun imageUrl(path: String): String? = assetBase?.let { it + path }
 
     // Amounts and odds go over as the text they arrived in; the core parses them.
     fun toggleSelection(boutID: String, fighterId: String, odds: String) =

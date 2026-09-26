@@ -72,4 +72,22 @@ struct FightEventsTests {
         let fighter = try #require(catalog.fighterSummary(id: "ilia-topuria"))
         #expect(fighter.physicalRows.map(\.value) == ["170 cm", "69 in", "Orthodox", "Spain"])
     }
+
+    @Test("the asset server answers with the file, refuses what is not there, and starts once")
+    func assetServer() async throws {
+        let base = try AssetServer.start(datasetRoot: Self.dataset.path)
+        #expect(try AssetServer.start(datasetRoot: Self.dataset.path) == base)
+
+        let path = "assets/fighters/ilia-topuria.jpg"
+        let url = try #require(AssetServer.url(for: path).flatMap(URL.init(string:)))
+        let (body, response) = try await URLSession.shared.data(from: url)
+        let http = try #require(response as? HTTPURLResponse)
+        #expect(http.statusCode == 200)
+        #expect(http.value(forHTTPHeaderField: "Content-Type") == "image/jpeg")
+        #expect(body == (try Data(contentsOf: Self.dataset.appendingPathComponent(path))))
+
+        let missing = try #require(URL(string: base + "assets/nothing.jpg"))
+        let (_, notFound) = try await URLSession.shared.data(from: missing)
+        #expect((notFound as? HTTPURLResponse)?.statusCode == 404)
+    }
 }

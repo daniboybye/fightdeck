@@ -4,19 +4,27 @@
 // colours, preset chips) that deposit and betslip would otherwise each carry a copy of.
 import PackageDescription
 
-let buildFromSource = Context.environment["FIGHTDECK_BUILDING_SDK"] == "1"
+let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
+let buildFromSource = buildMode == "1" || buildMode == "ios"
+// `ios` builds the iOS framework from source without Skip. No source here imports a Skip
+// module: the screens are SwiftUI, and on iOS Skip's libraries are their Android half compiled
+// out. Linked anyway, each framework carried its own static copy of SkipUI. `1` keeps Skip and
+// its transpiler for the Android export and the fixture tests.
+let transpile = buildMode == "1"
+
+let skipProducts: [Target.Dependency] = transpile
+    ? [
+        .product(name: "SkipFoundation", package: "skip-foundation"),
+        .product(name: "SkipUI", package: "skip-ui"),
+    ]
+    : []
 
 let coreBinary: Target = buildFromSource
     ? .target(
         name: "FightDeckCoreBinary",
-        dependencies: [
-            .product(name: "SkipFoundation", package: "skip-foundation"),
-            .product(name: "SkipUI", package: "skip-ui"),
-        ],
+        dependencies: skipProducts,
         path: "Sources/FightDeckCore",
-        plugins: [
-            .plugin(name: "skipstone", package: "skip"),
-        ]
+        plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
     )
     : .binaryTarget(
         name: "FightDeckCoreBinary",
@@ -30,12 +38,12 @@ let coreLibrary: Product = buildFromSource
     ? .library(name: "FightDeckCore", type: .dynamic, targets: ["FightDeckCore"])
     : .library(name: "FightDeckCore", targets: ["FightDeckCore"])
 
-// The Skip packages are the transpiler's own toolchain. They are used by the source target
-// and its `skipstone` plugin, and by nothing at all on the binary path — the xcframework
+// The Skip packages are the transpiler's own toolchain. They are used by the transpiling
+// source build and its `skipstone` plugin, and by nothing at all otherwise — the xcframework
 // carries the compiled result. Declared unconditionally they made Xcode warn "dependency is
 // not used by any target" nine times over a demo-app build, and clone roughly 10 MB of Skip
 // sources the app never compiles.
-let skipDependencies: [Package.Dependency] = buildFromSource
+let skipDependencies: [Package.Dependency] = transpile
     ? [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.11"),
         .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.6"),

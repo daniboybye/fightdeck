@@ -5,19 +5,25 @@
 // the loading and formatting the two hosts used to hand-write once per platform.
 import PackageDescription
 
-let buildFromSource = Context.environment["FIGHTDECK_BUILDING_SDK"] == "1"
+let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
+let buildFromSource = buildMode == "1" || buildMode == "ios"
+// `ios` builds the iOS framework without Skip; see core/Package.swift.
+let transpile = buildMode == "1"
+
+let skipProducts: [Target.Dependency] = transpile
+    ? [
+        .product(name: "SkipFoundation", package: "skip-foundation"),
+    ]
+    : []
 
 let eventsBinary: Target = buildFromSource
     ? .target(
         name: "FightDeckEventsBinary",
         dependencies: [
             .product(name: "FightDeckCore", package: "FightDeckCore"),
-            .product(name: "SkipFoundation", package: "skip-foundation"),
-        ],
+        ] + skipProducts,
         path: "Sources/FightDeckEvents",
-        plugins: [
-            .plugin(name: "skipstone", package: "skip"),
-        ]
+        plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
     )
     : .binaryTarget(
         name: "FightDeckEventsBinary",
@@ -33,7 +39,7 @@ let fightDeckEventsLibrary: Product = buildFromSource
 
 // Only the source path needs the transpiler's own packages; the binary path links a
 // compiled xcframework. No skip-ui here — this module draws nothing. See core/Package.swift.
-let skipDependencies: [Package.Dependency] = buildFromSource
+let skipDependencies: [Package.Dependency] = transpile
     ? [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.11"),
         .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.6"),

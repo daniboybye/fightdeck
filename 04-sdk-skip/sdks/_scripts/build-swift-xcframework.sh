@@ -11,7 +11,17 @@ build_swift_xcframework() {
     local configuration="${FIGHTDECK_SDK_CONFIGURATION:-release}"
     local staging="$out/frameworks"
 
-    export FIGHTDECK_BUILDING_SDK=1
+    # From source, without Skip: see core/Package.swift. The Android AARs are exported with it.
+    export FIGHTDECK_BUILDING_SDK=ios
+    # With no Skip there is nothing remote to resolve, and SwiftPM deletes a Package.resolved it
+    # has no use for. The file pins Skip for the Android export, so it goes back afterwards.
+    local resolved="$root/Package.resolved"
+    local resolved_backup
+    resolved_backup="$(mktemp)"
+    cp "$resolved" "$resolved_backup"
+    # EXIT rather than RETURN: a failed build leaves through `exit`, and each module packages in
+    # its own process.
+    trap 'cp "'"$resolved_backup"'" "'"$resolved"'"; rm -f "'"$resolved_backup"'"' EXIT
 
     rm -rf "$out"/*.xcframework "$out"/*.xcframework.zip "$out"/ios-* "$staging"
     mkdir -p "$out"
@@ -46,6 +56,12 @@ build_swift_xcframework() {
                 "@rpath/libFightDeckCore.dylib" \
                 "@rpath/FightDeckCoreBinary.framework/FightDeckCoreBinary" \
                 "$framework/$binary_module"
+        fi
+        # Local symbols only; the exported ones are the framework's interface. Xcode strips the
+        # app's own executable when it archives, but embeds a prebuilt framework as it finds it,
+        # and the symbol table was two thirds of each one.
+        if [[ "$configuration" == "release" ]]; then
+            strip -x "$framework/$binary_module"
         fi
 
         for extension in swiftmodule swiftdoc swiftsourceinfo abi.json swiftinterface private.swiftinterface; do

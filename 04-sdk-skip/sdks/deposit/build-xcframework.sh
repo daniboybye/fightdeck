@@ -6,4 +6,4 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=../_scripts/build-swift-xcframework.sh
 source "$ROOT/../_scripts/build-swift-xcframework.sh"
 
-build_swift_xcframework "$ROOT" FightDeckDeposit FightDeckDepositBinary 500000
+build_swift_xcframework "$ROOT" FightDeckDeposit FightDeckDepositBinary 20000

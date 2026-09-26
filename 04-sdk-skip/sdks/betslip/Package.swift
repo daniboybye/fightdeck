@@ -1,20 +1,26 @@
 // swift-tools-version: 6.1
 import PackageDescription
 
-let buildFromSource = Context.environment["FIGHTDECK_BUILDING_SDK"] == "1"
+let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
+let buildFromSource = buildMode == "1" || buildMode == "ios"
+// `ios` builds the iOS framework without Skip; see core/Package.swift.
+let transpile = buildMode == "1"
+
+let skipProducts: [Target.Dependency] = transpile
+    ? [
+        .product(name: "SkipFoundation", package: "skip-foundation"),
+        .product(name: "SkipUI", package: "skip-ui"),
+    ]
+    : []
 
 let betslipBinary: Target = buildFromSource
     ? .target(
         name: "FightDeckBetslipBinary",
         dependencies: [
             .product(name: "FightDeckCore", package: "FightDeckCore"),
-            .product(name: "SkipFoundation", package: "skip-foundation"),
-            .product(name: "SkipUI", package: "skip-ui"),
-        ],
+        ] + skipProducts,
         path: "Sources/FightDeckBetslip",
-        plugins: [
-            .plugin(name: "skipstone", package: "skip"),
-        ]
+        plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
     )
     : .binaryTarget(
         name: "FightDeckBetslipBinary",
@@ -30,7 +36,7 @@ let fightDeckBetslipLibrary: Product = buildFromSource
 
 // Only the source path needs the transpiler's own packages; the binary path links a
 // compiled xcframework. See the note in core/Package.swift.
-let skipDependencies: [Package.Dependency] = buildFromSource
+let skipDependencies: [Package.Dependency] = transpile
     ? [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.11"),
         .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.6"),

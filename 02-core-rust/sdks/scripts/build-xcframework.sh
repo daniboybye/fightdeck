@@ -25,9 +25,22 @@ DEVICE=aarch64-apple-ios
 SIM_ARM=aarch64-apple-ios-sim
 SIM_X86=x86_64-apple-ios
 
-for target in "$DEVICE" "$SIM_ARM" "$SIM_X86"; do
+# FIGHTDECK_SDK_CONFIGURATION=debug builds Cargo's dev profile; FIGHTDECK_SDK_ARCHS=arm64 builds
+# the device slice alone, for a host built for a phone. The defaults are what ships.
+PROFILE=release
+PROFILE_FLAG=(--release)
+if [[ "${FIGHTDECK_SDK_CONFIGURATION:-release}" == "debug" ]]; then
+  PROFILE=debug
+  PROFILE_FLAG=()
+fi
+TARGETS=("$DEVICE")
+if [[ "${FIGHTDECK_SDK_ARCHS:-all}" != "arm64" ]]; then
+  TARGETS+=("$SIM_ARM" "$SIM_X86")
+fi
+
+for target in "${TARGETS[@]}"; do
   rustup target add "$target" >/dev/null 2>&1 || true
-  cargo build --release -p "$CRATE" --target "$target"
+  cargo build ${PROFILE_FLAG[@]+"${PROFILE_FLAG[@]}"} -p "$CRATE" --target "$target"
 done
 
 OUT="$PKG/out"
@@ -43,7 +56,7 @@ SCRATCH="$(mktemp -d)"
 trap 'rm -rf "$SCRATCH"' EXIT
 cargo run --release -p fightcore --bin uniffi-bindgen --features uniffi-bindgen -- \
   generate \
-  --library "$SDKS/target/$DEVICE/release/lib${CRATE}.a" \
+  --library "$SDKS/target/$DEVICE/$PROFILE/lib${CRATE}.a" \
   --language swift \
   --out-dir "$SCRATCH"
 
@@ -72,18 +85,21 @@ EOF
 
 # One simulator slice covering both architectures, or a Release build that is not restricted
 # to the active arch fails to link on the x86_64 simulator.
-FAT_SIM="$SCRATCH/lib${CRATE}-sim.a"
-lipo -create \
-  "$SDKS/target/$SIM_ARM/release/lib${CRATE}.a" \
-  "$SDKS/target/$SIM_X86/release/lib${CRATE}.a" \
-  -output "$FAT_SIM"
+LIBRARIES=(-library "$SDKS/target/$DEVICE/$PROFILE/lib${CRATE}.a")
+if [[ " ${TARGETS[*]} " == *" $SIM_ARM "* ]]; then
+  FAT_SIM="$SCRATCH/lib${CRATE}-sim.a"
+  lipo -create \
+    "$SDKS/target/$SIM_ARM/$PROFILE/lib${CRATE}.a" \
+    "$SDKS/target/$SIM_X86/$PROFILE/lib${CRATE}.a" \
+    -output "$FAT_SIM"
+  LIBRARIES+=(-library "$FAT_SIM")
+fi
 
 # No `-headers`: the C header ships as a SwiftPM target above, where each package gets its own
 # include directory. Folding it into the xcframework would make Xcode copy all three module maps
 # into one include/, and they collide on the filename.
 xcodebuild -create-xcframework \
-  -library "$SDKS/target/$DEVICE/release/lib${CRATE}.a" \
-  -library "$FAT_SIM" \
+  "${LIBRARIES[@]}" \
   -output "$OUT/$FRAMEWORK.xcframework" >/dev/null
 
 # A binary target's zip has to hold the xcframework and nothing else.

@@ -20,9 +20,14 @@ mkdir -p "$JNI"
 # `uniffi_reexport_scaffolding!` in the aggregate crate keeps all three namespaces'
 # exported symbols and metadata in this one cdylib. arm64-v8a alone: every phone this demo runs
 # on, and the emulator on Apple silicon. x86_64 was there for an emulator on an Intel machine,
-# which nothing here uses.
+# which nothing here uses. FIGHTDECK_SDK_CONFIGURATION=debug builds Cargo's dev profile; release
+# is what ships.
+PROFILE_FLAG=(--release)
+if [[ "${FIGHTDECK_SDK_CONFIGURATION:-release}" == "debug" ]]; then
+  PROFILE_FLAG=()
+fi
 cargo ndk -t arm64-v8a -o "$JNI" \
-  build --release -p fightdeck-android
+  build ${PROFILE_FLAG[@]+"${PROFILE_FLAG[@]}"} -p fightdeck-android
 
 SCRATCH="$(mktemp -d)"
 trap 'rm -rf "$SCRATCH"' EXIT

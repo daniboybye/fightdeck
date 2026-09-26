@@ -54,21 +54,23 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.fightdeck.fightcore.FightCoreJava
+import com.fightdeck.sdk.FightDeckJava
+import com.fightdeck.swiftcore.core.depositMethods
+import com.fightdeck.swiftcore.core.depositQuote
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, onClose: () -> Unit) {
-    val methods = remember { FightCoreJava.depositMethods().toList() }
+internal fun DepositScreen(balance: String, onDone: (String) -> Unit, onClose: () -> Unit) {
+    val methods = remember { depositMethods() }
+    val presets = remember { FightDeckJava.depositPresets().toList() }
     var amountText by remember { mutableStateOf("") }
     var method by remember { mutableStateOf(methods.first()) }
     var didSucceed by remember { mutableStateOf(false) }
     var amountFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-    val quote = FightCoreJava.depositQuote(amountText, method.id, balance.toPlainString())
-    val validationMessage = quote.validationMessage.ifEmpty { null }
+    val quote = remember(amountText, method.id, balance) { depositQuote(amountText, method.id, balance) }
+    val validationMessage = quote.validationMessage
 
     Scaffold(
         containerColor = Tokens.background,
@@ -104,7 +106,7 @@ internal fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, on
                         PrimaryActionButton(
                             title = "Confirm deposit",
                             onClick = { didSucceed = true },
-                            enabled = quote.isConfirmable,
+                            enabled = quote.canConfirm,
                             modifier = Modifier.weight(1f),
                         )
                         AnimatedVisibility(visible = amountFocused) {
@@ -146,7 +148,7 @@ internal fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, on
                     )
                     SecondaryActionButton(
                         title = "Done",
-                        onClick = { onDone(BigDecimal(quote.amount)) },
+                        onClick = { onDone(quote.amount) },
                     )
                 }
             }
@@ -186,7 +188,7 @@ internal fun DepositScreen(balance: BigDecimal, onDone: (BigDecimal) -> Unit, on
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.spacingSm)) {
-                    FightCoreJava.depositPresets().forEach { chip ->
+                    presets.forEach { chip ->
                         PresetChipButton(
                             title = "€$chip",
                             onClick = { amountText = chip },

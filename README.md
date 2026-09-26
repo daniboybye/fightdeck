@@ -102,17 +102,18 @@ its original build column was dominated by Rust packaging rather than by the app
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `00-native` baseline | 1,904 | 2,604 | — | — | — | — | **4,508** | — | — | **4,508** | — | 229 |
 | `02-core-rust` | 1,208 | 2,058 | 1,548 | — | — | −27% | **4,814** | 37 | 27 | **4,878** | 8,473 | 601 |
-| `01-core-swift` | 1,429 | 2,284 | 770 | — | — | −18% | **4,483** | 50 | 567 | **5,100** | 3,017 | 617 |
+| `01-core-swift` | 1,199 | 2,052 | 923 | — | — | −28% | **4,174** | 59 | 510 | **4,743** | 1,152 | 522 |
 | `03-sdk-rn` | 1,405 | 1,960 | 1,409 | — | — | −25% | **4,774** | 420 | 313 | **5,507** | 282 | 1,183 |
 | `04-sdk-skip` | 861 | 1,590 | 1,615 | 123 | 136 | −46% | **4,325** | 66 | 150 | **4,541** | 2,785 | 739 |
 
 **Measured at `1e29d5c`** by `python3 tools/count-significant-lines.py`, except the
 `03-sdk-rn` row, re-measured at `532d99c` after its host and SDK simplification, and the
 `02-core-rust` row, re-measured at `52b1d66` after its slip snapshot and shared-record
-changes, and the
+changes, the `01-core-swift` row, re-measured at `afa28c7` after its presentation models,
+tuple glue, single Android library and shared image server, and the
 `04-sdk-skip` row, re-measured at `4be3552` after the Skip simplification — which includes
-moving the image server into the events SDK, as `02-core-rust` did in `7632bbb`; the other
-approaches keep it in the host. To refresh it, read the commits since that hash rather than the whole tree;
+moving the image server into the events SDK, as `02-core-rust` did in `7632bbb` and
+`01-core-swift` in `afa28c7`; `00-native` and `03-sdk-rn` keep it in the host. To refresh it, read the commits since that hash rather than the whole tree;
 `--audit` prints every file and the column it landed in, and `--tsv` prints the table ready
 to paste into a slide.
 

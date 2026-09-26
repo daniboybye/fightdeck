@@ -94,13 +94,13 @@ cd "$REPO/02-core-rust/sdks"
 
 ### 3b. Swift core for Android (`01-core-swift`)
 
-The Compose host has no Kotlin fallback — it links the cross-compiled Swift core, and
-`app/build.gradle.kts` fails the configuration phase if `sdks/core/out/fightcore.aar` is
+The Compose host has no Kotlin fallback — it links the cross-compiled Swift SDKs, and
+`app/build.gradle.kts` fails the configuration phase if `sdks/android/out/fightdeck.aar` is
 missing. The AAR is build output, not committed. Package once:
 
 ```bash
-cd "$REPO/01-core-swift/sdks/core"
-swiftly run ./build-aar.sh +6.3.3    # ~12 min: both ABIs, jextract, SwiftKitCore jar
+cd "$REPO/01-core-swift/sdks"
+swiftly run ./build-aars.sh +6.3.3   # both ABIs, jextract, SwiftKitCore jar
 ```
 
 `swiftly run … +6.3.3` is not optional. Xcode's Swift cannot read the Android SDK's
@@ -420,9 +420,9 @@ cd "$REPO/03-sdk-rn/android"
 | Regenerated art, images still old | Coil / Kingfisher cache by URL | `adb shell pm clear <applicationId>`; iOS: `xcrun simctl uninstall booted <bundleId>` then reinstall |
 | `03-sdk-rn` / `04-sdk-skip` Gradle: missing AARs | Local SDK binaries were not built | Run `03-sdk-rn/sdks/build-android.sh` or `04-sdk-skip/sdks/build-aars.sh` |
 | CocoaPods: local RN vendor missing | Local RN Apple SDKs were not built | Run `03-sdk-rn/sdks/build-apple.sh` |
-| `01-core-swift` Gradle: missing `fightcore.aar` | The Android app has no Kotlin fallback; it needs the cross-compiled core | `cd 01-core-swift/sdks/core && swiftly run ./build-aar.sh +6.3.3` |
+| `01-core-swift` Gradle: missing `fightdeck.aar` | The Android app has no Kotlin fallback; it needs the cross-compiled SDKs | `cd 01-core-swift/sdks && swiftly run ./build-aars.sh +6.3.3` |
 | `01-core-swift` Android: `compiled module was created by an older version of the compiler` | Xcode's Swift cannot read the Android SDK's Foundation | Prefix with `swiftly run … +6.3.3` so the open-source toolchain builds it |
-| `01-core-swift` Android: `dlopen failed: library "libc++_shared.so" not found` | AAR packaged without the NDK's C++ runtime | Rebuild with the current `build-aar.sh`, which copies it out of the NDK sysroot |
+| `01-core-swift` Android: `dlopen failed: library "libc++_shared.so" not found` | AAR packaged without the NDK's C++ runtime | Rebuild with the current `build-aars.sh`, which copies it out of the NDK sysroot |
 | Gradle / AGP JDK errors | Wrong Java version | `export JAVA_HOME="$(/usr/libexec/java_home -v 17)"` |
 | `am start` → `Error type 3 … does not exist` | `applicationId` differs from the Kotlin package | Use the full component from the table above, or `adb shell monkey -p <applicationId> -c android.intent.category.LAUNCHER 1` |
 | `03-sdk-rn` harness: `Undefined symbols: std::terminate` | A Swift-only target links the ObjC++ runtime pod, and nothing on that link line pulls in libc++ | Add `OTHER_LDFLAGS: $(inherited) -lc++` to the target in `ios/project.yml`, then `xcodegen generate` |

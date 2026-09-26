@@ -34,15 +34,15 @@ struct BetSlipView: View {
         Group {
             if !state.slip.selections.isEmpty {
                 slipContent
-            } else if let message = state.betPlacedMessage {
+            } else if let message = state.confirmation {
                 placedState(message)
             } else {
                 emptyState
             }
         }
         .animation(.smooth(duration: 0.35), value: state.slip.selections.count)
-        .animation(.smooth(duration: 0.35), value: state.betPlacedMessage)
-        .sensoryFeedback(.success, trigger: state.betPlacedMessage) { _, new in new != nil }
+        .animation(.smooth(duration: 0.35), value: state.confirmation)
+        .sensoryFeedback(.success, trigger: state.confirmation) { _, new in new != nil }
     }
 
     private var emptyState: some View {
@@ -75,7 +75,7 @@ struct BetSlipView: View {
 
     private var slipContent: some View {
         List {
-            Section(betTypeTitle) {
+            Section(SlipDisplay.modeTitle(state.slip.mode)) {
                 ForEach(state.slip.selections) { selection in
                     selectionRow(selection)
                 }
@@ -88,14 +88,14 @@ struct BetSlipView: View {
                 stakeChips
             }
             Section {
-                ForEach(Array(SlipDisplay.slipSummary(state: state.slipState).enumerated()), id: \.offset) { _, row in
+                ForEach(SlipDisplay.slipSummary(state: state.slipState), id: \.label) { row in
                     LabeledContent(row.label, value: row.value)
                 }
             }
             if !state.slipState.errors.isEmpty {
                 Section {
                     ForEach(state.slipState.errors, id: \.self) { error in
-                        Label(Display.humanise(error.rawValue), systemImage: "exclamationmark.triangle.fill")
+                        Label(error.message, systemImage: "exclamationmark.triangle.fill")
                             .font(.callout)
                             .foregroundStyle(DesignTokens.ColorToken.negative)
                     }
@@ -123,19 +123,14 @@ struct BetSlipView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
-    /// One leg is a single, two or more is an accumulator. The user never picks — the slip
-    /// just says which one it currently is.
-    private var betTypeTitle: String {
-        state.slip.mode == .accumulator ? "Accumulator" : "Single"
-    }
-
     /// An `HStack` rather than `LabeledContent`: the two-line label pushes that layout into
     /// its stacked form, which drops the odds under the fighter instead of out to the edge.
     private func selectionRow(_ selection: Selection) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
+        let context = state.legContext(boutID: selection.boutID, fighterID: selection.fighterID)
+        return HStack(alignment: .firstTextBaseline, spacing: DesignTokens.Spacing.md) {
             VStack(alignment: .leading) {
-                Text(state.fighter(selection.fighterID)?.name ?? selection.fighterID)
-                Text(state.legContext(boutID: selection.boutID, fighterID: selection.fighterID).subtitle)
+                Text(context.fighterName)
+                Text(context.subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

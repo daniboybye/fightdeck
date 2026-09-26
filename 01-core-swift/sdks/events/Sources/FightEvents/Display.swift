@@ -6,6 +6,7 @@
 // Copyright © 2026 Daniel Urumov. All rights reserved.
 //
 
+import FightCore
 #if os(Android)
 import FoundationEssentials
 #else
@@ -23,9 +24,7 @@ public enum Display {
     ]
 
     public static func humanise(_ raw: String) -> String {
-        let spaced = underscoresToSpaces(raw)
-        guard let first = spaced.first else { return "" }
-        return String(first).uppercased() + spaced.dropFirst()
+        Humanise.code(raw)
     }
 
     public static func duration(totalSeconds: Int) -> String {
@@ -39,22 +38,12 @@ public enum Display {
         #endif
     }
 
-    /// `replacingOccurrences(of:with:)` comes from Foundation's NSString bridge, which is on
-    /// the far side of the ICU line on Android. One character for another is a map.
-    private static func underscoresToSpaces(_ raw: String) -> String {
-        #if os(Android)
-        return String(raw.map { $0 == "_" ? " " : $0 })
-        #else
-        return raw.replacingOccurrences(of: "_", with: " ")
-        #endif
-    }
-
     public static func weightClass(_ raw: String) -> String {
         humanise(raw)
     }
 
     public static func boutHeadline(weightClassRaw: String, titleFight: Bool, scheduledRounds: Int) -> String {
-        let base = underscoresToSpaces(weightClassRaw).uppercased()
+        let base = Humanise.spaced(weightClassRaw).uppercased()
         let title = titleFight ? " · TITLE" : ""
         return "\(base)\(title) · \(scheduledRounds) RNDS"
     }

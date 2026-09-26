@@ -25,17 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fightdeck.swiftcore.catalog.FighterCard
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 @Composable
 internal fun FighterProfileScreen(
     fighter: FighterCard,
     viewModel: MainViewModel,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     onBack: () -> Unit,
 ) {
-    DetailScaffold(title = fighter.name, onBack = onBack, balance = balance, onDeposit = onDeposit) { padding ->
+    DetailScaffold(title = fighter.name, onBack = onBack, balanceLabel = balanceLabel, onDeposit = onDeposit) { padding ->
         LazyColumn(
             contentPadding = PaddingValues(
                 top = padding.calculateTopPadding(),
@@ -63,15 +62,15 @@ internal fun FighterProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(Tokens.spacingXs),
                     ) {
                         Text(fighter.name, style = MaterialTheme.typography.headlineLarge)
-                        if (fighter.nickname.isNotEmpty()) {
+                        fighter.nickname?.let { nickname ->
                             Text(
-                                "\u201C${fighter.nickname}\u201D",
+                                "\u201C$nickname\u201D",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         Text(
-                            fighter.recordDisplay,
+                            fighter.record,
                             style = MaterialTheme.typography.titleSmall,
                             color = Tokens.accent,
                         )
@@ -81,36 +80,15 @@ internal fun FighterProfileScreen(
             item {
                 Column(Modifier.padding(Tokens.spacingLg)) {
                     SectionHeader("Profile")
-                    DetailCard(fighter.profileRows())
-                    val physicals = fighter.physicalRows()
-                    if (physicals.isNotEmpty()) {
+                    DetailCard(fighter.profileRows)
+                    if (fighter.physicalRows.isNotEmpty()) {
                         SectionHeader("Physicals")
-                        DetailCard(physicals)
+                        DetailCard(fighter.physicalRows)
                     }
                 }
             }
         }
     }
-}
-
-/**
- * Both sections are label/value pairs whose length depends on what the dataset carries, so
- * both are built as data and rendered once — the same shape `FighterProfileView` uses on iOS.
- * The core hands the optional measurements over already formatted, with an empty string for
- * absent, because jextract carries no optionals.
- */
-private fun FighterCard.profileRows(): List<Pair<String, String>> = buildList {
-    add("Record" to recordDisplay)
-    add("Wins" to "$wins")
-    add("Losses" to "$losses")
-    if (noContests > 0) add("No contests" to "$noContests")
-}
-
-private fun FighterCard.physicalRows(): List<Pair<String, String>> = buildList {
-    if (heightDisplay.isNotEmpty()) add("Height" to heightDisplay)
-    if (reachDisplay.isNotEmpty()) add("Reach" to reachDisplay)
-    if (stanceDisplay.isNotEmpty()) add("Stance" to stanceDisplay)
-    if (country.isNotEmpty()) add("Country" to country)
 }
 
 @Composable

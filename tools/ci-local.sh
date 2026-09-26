@@ -229,7 +229,10 @@ ensure_cargo_ndk() {
 run_contract_swift() {
     guard_file 01-core-swift/sdks/core/Package.swift "Swift core not written yet" \
         || return 0
-    (cd 01-core-swift/sdks/core && swift test --parallel)
+    local package
+    for package in core slip events; do
+        (cd "01-core-swift/sdks/$package" && swift test --parallel) || return 1
+    done
 }
 
 run_contract_rust() {
@@ -312,9 +315,9 @@ run_sdk_core_swift_android() {
     pinned="$(./tools/versions.py apple.swift)"
     ndk="$(./tools/versions.py android.ndk)"
     (
-        cd 01-core-swift/sdks/core
+        cd 01-core-swift/sdks
         ANDROID_NDK_HOME="$(android_sdk_home)/ndk/${ndk}" \
-            swiftly run ./build-aar.sh "+${pinned}"
+            swiftly run ./build-aars.sh "+${pinned}"
     )
 }
 

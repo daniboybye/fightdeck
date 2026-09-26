@@ -32,6 +32,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,9 +49,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.fightdeck.swiftcore.core.Money
 import com.fightdeck.swiftcore.design.Tokens
-import java.math.BigDecimal
 
 /**
  * Both event tabs render the same two events. The mode decides which half of the data is
@@ -165,9 +164,9 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
             FightDeckMain(viewModel, onDeposit = { nav.navigate("deposit") })
         }
         composable("deposit") {
-            val balance by viewModel.balance.collectAsStateWithLifecycle()
+            val slip = viewModel.slip.collectAsStateWithLifecycle().value ?: return@composable
             DepositScreen(
-                balance = balance,
+                balance = slip.balance,
                 onDone = {
                     viewModel.deposit(it)
                     nav.popBackStack()
@@ -181,8 +180,7 @@ private fun FightDeckNavHost(viewModel: MainViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
-        val slip by viewModel.slip.collectAsStateWithLifecycle()
-        val balance by viewModel.balance.collectAsStateWithLifecycle()
+        val slip = viewModel.slip.collectAsStateWithLifecycle().value ?: return
 
         // Saveable, not plain remember: pushing the deposit destination takes the tab host out
         // of composition, and a plain remember would hand the user back the first tab instead
@@ -193,7 +191,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
         val slipNav = rememberNavController()
         // The bar is a shortcut into the slip on every tab while selections exist — matching
         // iOS tabViewBottomAccessory.
-        val showsSlipToolbar = slip.selections.isNotEmpty()
+        val showsSlipToolbar = slip.legs.isNotEmpty()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -207,8 +205,8 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         // insets so it never covers the last row.
                         if (showsSlipToolbar) {
                             BetSlipToolbar(
-                                legCount = slip.selections.size,
-                                potentialReturn = Money.formatCurrency(viewModel.slipState.potentialReturn),
+                                legCount = slip.legs.size,
+                                potentialReturn = slip.returnDisplay,
                                 onClick = { selectedTab = SLIP_TAB },
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
@@ -257,7 +255,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         nav = upcomingNav,
                         mode = EventMode.Upcoming,
                         viewModel = viewModel,
-                        balance = balance,
+                        balanceLabel = slip.balanceDisplay,
                         onDeposit = onDeposit,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -266,7 +264,7 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                         nav = pastNav,
                         mode = EventMode.Past,
                         viewModel = viewModel,
-                        balance = balance,
+                        balanceLabel = slip.balanceDisplay,
                         onDeposit = onDeposit,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -274,7 +272,6 @@ private fun FightDeckMain(viewModel: MainViewModel, onDeposit: () -> Unit) {
                     else -> SlipNavHost(
                         slipNav = slipNav,
                         viewModel = viewModel,
-                        balance = balance,
                         onDeposit = onDeposit,
                         onBrowseEvents = { selectedTab = UPCOMING_TAB },
                         modifier = Modifier.fillMaxSize(),
@@ -327,16 +324,16 @@ private fun EventsNavHost(
     nav: NavHostController,
     mode: EventMode,
     viewModel: MainViewModel,
-    balance: BigDecimal,
+    balanceLabel: String,
     onDeposit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val events by viewModel.events.collectAsStateWithLifecycle()
     val news by viewModel.news.collectAsStateWithLifecycle()
     val media by viewModel.media.collectAsStateWithLifecycle()
-    // Collected here, not read through viewModel.isSelected(): a plain getter is invisible to
+    // Collected here, not read through a view-model getter: a plain getter is invisible to
     // Compose, so an odds tap only showed up once something else forced a recomposition.
-    val slip by viewModel.slip.collectAsStateWithLifecycle()
+    val slip = viewModel.slip.collectAsStateWithLifecycle().value ?: return
     val loadedEvents = (events as? LoadState.Loaded)?.value.orEmpty()
 
     NavHost(navController = nav, startDestination = "events", modifier = modifier) {
@@ -347,7 +344,7 @@ private fun EventsNavHost(
                 media = media,
                 mode = mode,
                 viewModel = viewModel,
-                balance = balance,
+                balanceLabel = balanceLabel,
                 onDeposit = onDeposit,
                 onRetry = viewModel::refreshEvents,
                 onEventClick = { nav.navigate("event/${it.id}") },
@@ -367,7 +364,7 @@ private fun EventsNavHost(
                     slip = slip,
                     viewModel = viewModel,
                     media = media,
-                    balance = balance,
+                    balanceLabel = balanceLabel,
                     onDeposit = onDeposit,
                     onBoutClick = { nav.navigate("bout/${event.id}/$it") },
                     onVideoClick = { nav.navigate("video/${it.id}") },
@@ -385,11 +382,11 @@ private fun EventsNavHost(
             val boutId = entry.arguments?.getString("boutId")
             if (boutId != null) {
                 BoutDetailScreen(
-                    bout = viewModel.bout(boutId),
+                    bout = remember(boutId) { viewModel.bout(boutId) },
                     mode = mode,
                     slip = slip,
                     viewModel = viewModel,
-                    balance = balance,
+                    balanceLabel = balanceLabel,
                     onDeposit = onDeposit,
                     onFighterClick = { nav.navigate("fighter/$it") },
                     onBack = { nav.popBackStack() },
@@ -401,12 +398,12 @@ private fun EventsNavHost(
             arguments = listOf(navArgument("fighterId") { type = NavType.StringType }),
         ) { entry ->
             val fighterId = entry.arguments?.getString("fighterId")
-            val fighter = fighterId?.let { viewModel.fighter(it) }
+            val fighter = remember(fighterId) { fighterId?.let { viewModel.fighter(it) } }
             if (fighter != null) {
                 FighterProfileScreen(
                     fighter,
                     viewModel,
-                    balance = balance,
+                    balanceLabel = balanceLabel,
                     onDeposit = onDeposit,
                     onBack = { nav.popBackStack() },
                 )
@@ -423,7 +420,7 @@ private fun EventsNavHost(
                     item = article,
                     media = media,
                     viewModel = viewModel,
-                    balance = balance,
+                    balanceLabel = balanceLabel,
                     onDeposit = onDeposit,
                     onVideoClick = { nav.navigate("video/${it.id}") },
                     onBack = { nav.popBackStack() },
@@ -437,7 +434,7 @@ private fun EventsNavHost(
             val clip = (media as? LoadState.Loaded)?.value
                 ?.firstOrNull { it.id == entry.arguments?.getString("videoId") }
             if (clip != null) {
-                VideoScreen(clip, balance = balance, onDeposit = onDeposit, onBack = { nav.popBackStack() })
+                VideoScreen(clip, balanceLabel = balanceLabel, onDeposit = onDeposit, onBack = { nav.popBackStack() })
             }
         }
     }
@@ -447,23 +444,19 @@ private fun EventsNavHost(
 private fun SlipNavHost(
     slipNav: NavHostController,
     viewModel: MainViewModel,
-    balance: BigDecimal,
     onDeposit: () -> Unit,
     onBrowseEvents: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val slip by viewModel.slip.collectAsStateWithLifecycle()
+    val slip = viewModel.slip.collectAsStateWithLifecycle().value ?: return
     val events by viewModel.events.collectAsStateWithLifecycle()
-    val placedMessage by viewModel.betPlacedMessage.collectAsStateWithLifecycle()
 
     NavHost(navController = slipNav, startDestination = "slip", modifier = modifier) {
         composable("slip") {
             BetSlipScreen(
                 viewModel = viewModel,
                 slip = slip,
-                balance = balance,
                 events = (events as? LoadState.Loaded)?.value.orEmpty(),
-                placedMessage = placedMessage,
                 onBrowseEvents = onBrowseEvents,
                 onDeposit = onDeposit,
             )

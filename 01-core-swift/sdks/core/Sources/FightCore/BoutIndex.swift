@@ -12,9 +12,10 @@ import FoundationEssentials
 import Foundation
 #endif
 
-/// Codable because on Android the catalogue and the slip are separate libraries, each with its
-/// own copy of this type, so the index crosses from one to the other as JSON.
-public struct BoutIndex: Codable, Sendable {
+/// What the slip needs to know about a bout: who is in it and who won. FightEvents builds the
+/// index from the dataset and FightSlip validates and settles against it; both depend on the
+/// kernel, which is why the type lives here.
+public struct BoutIndex: Sendable {
     public let id: String
     public let redFighterID: String
     public let blueFighterID: String

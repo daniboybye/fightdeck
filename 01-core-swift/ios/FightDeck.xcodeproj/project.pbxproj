@@ -7,12 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0FE2600B8D971FE1ED1E412B /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = 78720776C9C05B178D7B6255 /* FightCore */; };
+		0694C0054D1E2960174E2156 /* DatasetLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 072C0B77630BA46C802A220E /* DatasetLocator.swift */; };
 		121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C795D634FBE423DA73379AD /* FightDeckApp.swift */; };
 		1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB442BB8215C16DC9340B4D /* BoutDetailView.swift */; };
 		1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC75FA0405673FE2D33D98A /* NavigationTypes.swift */; };
-		3541578715FFE9CEC805A044 /* FixtureLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F09AEF29810752187509740 /* FixtureLoader.swift */; };
-		4C5FF29EC91AFACA71BA6224 /* FightEvents in Frameworks */ = {isa = PBXBuildFile; productRef = 4A3B9251D60ABA4CD4FB54AE /* FightEvents */; };
 		4E611D55600DAA37CC51E58B /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F35181339B0E2720AE567AEE /* SharedViews.swift */; };
 		4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EDC3F92ADF1DE2D2A81B3DD /* BalanceToolbar.swift */; };
 		4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */; };
@@ -29,25 +27,13 @@
 		CB8E928A5EE956E1044A1854 /* SlipViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD1EF6FAE0DB9EE14EB7981D /* SlipViews.swift */; };
 		D88514F3E77C7745F5A44E07 /* VideoScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */; };
 		DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813BD28F72479374E713963B /* RootView.swift */; };
-		DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */; };
-		EC46CD279D0EE48925A18279 /* FightSlip in Frameworks */ = {isa = PBXBuildFile; productRef = 0E46BC8018B687513AC57860 /* FightSlip */; };
-		F1060FA2A462524D25A47296 /* FightCoreFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D66837804C3536582216021 /* FightCoreFixtureTests.swift */; };
 		F2145FE5DA42059AA6E8A9DD /* FightCore in Frameworks */ = {isa = PBXBuildFile; productRef = D7285AEB9A4CAF9CCC5C0247 /* FightCore */; };
 		F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D0326034EA5B85604BFA1F /* DepositFlowView.swift */; };
 		F502F17CC36E3303471CFBD6 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EB24ADA9E5AFC5BCC1D7199B /* Kingfisher */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		56797601E5423B32A4392475 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9F0D4232E4AEFDB2469578BB /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A14FF0BBB1A87FBC2C0E6EB7;
-			remoteInfo = FightDeck;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
+		072C0B77630BA46C802A220E /* DatasetLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatasetLocator.swift; sourceTree = "<group>"; };
 		082B9B33D487907D6F872D68 /* slip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = slip; path = ../sdks/slip; sourceTree = SOURCE_ROOT; };
 		12D762AB5E58D883BC6C7987 /* FighterProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FighterProfileView.swift; sourceTree = "<group>"; };
 		2085E9D24DAD8A41FD78BA17 /* events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = events; path = ../sdks/events; sourceTree = SOURCE_ROOT; };
@@ -58,13 +44,10 @@
 		4A5C66B1CE93502EF9451749 /* NewsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViews.swift; sourceTree = "<group>"; };
 		4C795D634FBE423DA73379AD /* FightDeckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightDeckApp.swift; sourceTree = "<group>"; };
 		5CCE11576590506A00252D6D /* DisplayFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayFormatting.swift; sourceTree = "<group>"; };
-		5D66837804C3536582216021 /* FightCoreFixtureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FightCoreFixtureTests.swift; sourceTree = "<group>"; };
 		667CCDA71CC013177D5B28C2 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
 		75C2A72B63B08F70F23F0D50 /* DepositSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositSheetView.swift; sourceTree = "<group>"; };
 		813BD28F72479374E713963B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		82B9CFB4C74FF65DFE48BE85 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
-		8F09AEF29810752187509740 /* FixtureLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureLoader.swift; sourceTree = "<group>"; };
 		98D0326034EA5B85604BFA1F /* DepositFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositFlowView.swift; sourceTree = "<group>"; };
 		992440A70F2E2DCD051FFF1F /* FightDeck.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FightDeck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA676CB1E6AB45112C26A625 /* VideoScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoScreenView.swift; sourceTree = "<group>"; };
@@ -74,20 +57,9 @@
 		DAF3347F556E995F73653E0C /* EventsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventsViews.swift; sourceTree = "<group>"; };
 		EABF49CC023575873495AFCA /* DepositContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepositContract.swift; sourceTree = "<group>"; };
 		F35181339B0E2720AE567AEE /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
-		FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FightDeckTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		33C50239AE2251F8FA5CE1F1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0FE2600B8D971FE1ED1E412B /* FightCore in Frameworks */,
-				EC46CD279D0EE48925A18279 /* FightSlip in Frameworks */,
-				4C5FF29EC91AFACA71BA6224 /* FightEvents in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		8FB1D06474B2D730B4A262FC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -102,15 +74,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0AF51DEFCBAE2066E68C8B5A /* FightDeckTests */ = {
-			isa = PBXGroup;
-			children = (
-				5D66837804C3536582216021 /* FightCoreFixtureTests.swift */,
-				8F09AEF29810752187509740 /* FixtureLoader.swift */,
-			);
-			path = FightDeckTests;
-			sourceTree = "<group>";
-		};
 		0FEDBDDAC1739C981E1110C6 /* Fighter */ = {
 			isa = PBXGroup;
 			children = (
@@ -172,7 +135,6 @@
 			isa = PBXGroup;
 			children = (
 				1A992D0B696BC9CBBD148621 /* FightDeck */,
-				0AF51DEFCBAE2066E68C8B5A /* FightDeckTests */,
 				C9BD2751AFE81497FA442198 /* Packages */,
 				A1088A6E4DD381B5E286242F /* Products */,
 			);
@@ -182,7 +144,6 @@
 			isa = PBXGroup;
 			children = (
 				992440A70F2E2DCD051FFF1F /* FightDeck.app */,
-				FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -250,7 +211,7 @@
 		FE9EE388C310ED4AB6AE0712 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				6D34EEDECC04717530EBD821 /* LocalAssetServer.swift */,
+				072C0B77630BA46C802A220E /* DatasetLocator.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -281,28 +242,6 @@
 			productReference = 992440A70F2E2DCD051FFF1F /* FightDeck.app */;
 			productType = "com.apple.product-type.application";
 		};
-		FAC8A24A8EB552C6AB2A0082 /* FightDeckTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 319B674106FBB6C9F22CA2FC /* Build configuration list for PBXNativeTarget "FightDeckTests" */;
-			buildPhases = (
-				7803833338AE1A336F01B2A3 /* Sources */,
-				33C50239AE2251F8FA5CE1F1 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				13CF3E8661E32E1A754460FF /* PBXTargetDependency */,
-			);
-			name = FightDeckTests;
-			packageProductDependencies = (
-				78720776C9C05B178D7B6255 /* FightCore */,
-				0E46BC8018B687513AC57860 /* FightSlip */,
-				4A3B9251D60ABA4CD4FB54AE /* FightEvents */,
-			);
-			productName = FightDeckTests;
-			productReference = FBD7A4403486B6739A2A7833 /* FightDeckTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -313,9 +252,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					A14FF0BBB1A87FBC2C0E6EB7 = {
-						DevelopmentTeam = "";
-					};
-					FAC8A24A8EB552C6AB2A0082 = {
 						DevelopmentTeam = "";
 					};
 				};
@@ -341,7 +277,6 @@
 			projectRoot = "";
 			targets = (
 				A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */,
-				FAC8A24A8EB552C6AB2A0082 /* FightDeckTests */,
 			);
 		};
 /* End PBXProject section */
@@ -365,6 +300,7 @@
 				8CC540AE2FD450B9960879BA /* AppState.swift in Sources */,
 				4EB5AD674C29B3702A72F9C1 /* BalanceToolbar.swift in Sources */,
 				1C84F198CEB8A156310C9CB1 /* BoutDetailView.swift in Sources */,
+				0694C0054D1E2960174E2156 /* DatasetLocator.swift in Sources */,
 				6F762FE5E19155F1C7F4C06C /* DepositContract.swift in Sources */,
 				F4D8D5E8109E0BF84F503C79 /* DepositFlowView.swift in Sources */,
 				4F89F75A213A30B11EED4201 /* DepositSheetView.swift in Sources */,
@@ -373,7 +309,6 @@
 				ABA9D7356B66A20625AFC74B /* EventsViews.swift in Sources */,
 				121DAF6A9B96CD9E90E14CB1 /* FightDeckApp.swift in Sources */,
 				B603524C507D3C50B68CB0A5 /* FighterProfileView.swift in Sources */,
-				DFA4D23F3110353C6DEE4934 /* LocalAssetServer.swift in Sources */,
 				1E9B7F54B619FE2CC2F389E5 /* NavigationTypes.swift in Sources */,
 				B359B610F51E3205EEAA29EF /* NewsViews.swift in Sources */,
 				DDFF1D921ADB8162551A7F6E /* RootView.swift in Sources */,
@@ -383,43 +318,9 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7803833338AE1A336F01B2A3 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				F1060FA2A462524D25A47296 /* FightCoreFixtureTests.swift in Sources */,
-				3541578715FFE9CEC805A044 /* FixtureLoader.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		13CF3E8661E32E1A754460FF /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A14FF0BBB1A87FBC2C0E6EB7 /* FightDeck */;
-			targetProxy = 56797601E5423B32A4392475 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		27FEBE321CFC6FC39A4B766C /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.coreswift.tests;
-				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FightDeck.app/FightDeck";
-			};
-			name = Release;
-		};
 		2F178065AA8DE8889944FEA8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -498,23 +399,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.coreswift;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		934AD1C2A7A914B671AA2192 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.fightdeck.coreswift.tests;
-				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FightDeck.app/FightDeck";
 			};
 			name = Debug;
 		};
@@ -609,15 +493,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		319B674106FBB6C9F22CA2FC /* Build configuration list for PBXNativeTarget "FightDeckTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				934AD1C2A7A914B671AA2192 /* Debug */,
-				27FEBE321CFC6FC39A4B766C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
 		5F353E26F03D0AC9A44F47B2 /* Build configuration list for PBXProject "FightDeck" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -665,18 +540,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		0E46BC8018B687513AC57860 /* FightSlip */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = FightSlip;
-		};
-		4A3B9251D60ABA4CD4FB54AE /* FightEvents */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = FightEvents;
-		};
-		78720776C9C05B178D7B6255 /* FightCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = FightCore;
-		};
 		7D8400068086060F932DA052 /* FightSlip */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FightSlip;

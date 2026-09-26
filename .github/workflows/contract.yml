@@ -39,10 +39,15 @@ jobs:
         with:
           key: core-swift
           build-path: 01-core-swift/sdks/core/.build
+      # Each package owns the fixtures for its own logic: odds in core, slip maths,
+      # validation, settlement and cash-out in slip. Core alone is 40 of the 72.
       - name: Run fixtures
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 01-core-swift/sdks/core
-        run: swift test --parallel
+        working-directory: 01-core-swift/sdks
+        run: |
+          for package in core slip events; do
+            (cd "$package" && swift test --parallel)
+          done
 
   rust:
     name: Rust core

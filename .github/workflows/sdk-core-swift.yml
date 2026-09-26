@@ -162,35 +162,33 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           key: core-swift-android
-          build-path: 01-core-swift/sdks/core/.build
+          build-path: 01-core-swift/sdks/android/.build
 
+      # sdks/android links core, slip and events into the one libfightdeck.so the app loads,
+      # so building it cross-compiles all three packages and their jextract facades.
       - name: Cross-compile for aarch64-unknown-linux-android
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 01-core-swift/sdks/core
-        env:
-          # Same configuration build-aar.sh uses, so this step warms the cache the packaging
-          # step reads instead of a bridge-less variant of it.
-          FIGHTCORE_JAVA_BRIDGE: "1"
+        working-directory: 01-core-swift/sdks/android
         run: |
           swift build \
             --swift-sdk "aarch64-unknown-linux-android${PINNED_MIN_SDK}" \
-            --product FightCoreShared \
+            --product FightDeckShared \
             --disable-sandbox \
             -c release
 
       - name: Package AAR (swift-java jextract --mode=jni)
         if: steps.guard.outputs.exists == 'true'
-        working-directory: 01-core-swift/sdks/core
+        working-directory: 01-core-swift/sdks
         run: |
           # --mode=ffm needs JDK 22+ and java.lang.foreign, neither of which exists on
           # Android: ART is not a JVM and has no Panama. JNI mode is the only option here.
           # The script also builds swift-java's SwiftKitCore jar from the resolved checkout,
           # which needs the pinned JDK 17 set up above.
-          ./build-aar.sh
+          ./build-aars.sh
 
       - uses: actions/upload-artifact@v7
         if: steps.guard.outputs.exists == 'true'
         with:
           name: swift-core-aar
-          path: 01-core-swift/sdks/core/out/*.aar
+          path: 01-core-swift/sdks/android/out/*.aar
           if-no-files-found: warn

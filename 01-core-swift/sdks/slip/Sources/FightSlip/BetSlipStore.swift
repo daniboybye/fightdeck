@@ -28,9 +28,11 @@ public final class BetSlipStore {
 
     public var balance: Decimal { session.balance }
 
+    public var confirmation: String? { session.confirmation }
+
     public init(
         slipEngine: SlipEngine,
-        slip: BetSlip = BetSlip(mode: .accumulator, selections: [], stake: Decimal(string: "10.00")!),
+        slip: BetSlip = SlipSession.emptySlip,
         balance: Decimal = Decimal(string: "500.00")!
     ) {
         session = SlipSession(slipEngine: slipEngine, slip: slip, balance: balance)
@@ -51,6 +53,7 @@ public final class BetSlipStore {
     }
 
     /// Validates, deducts stake, clears selections. Returns the pre-clear slip state when successful.
+    @discardableResult
     public func placeBet() -> SlipState? {
         session.placeBet()
     }

@@ -13,16 +13,26 @@ import FoundationEssentials
 import Foundation
 #endif
 
+public struct SummaryRow: Sendable, Hashable {
+    public let label: String
+    public let value: String
+}
+
 public enum SlipDisplay {
-    public static func slipSummary(state: SlipState) -> [(label: String, value: String)] {
-        var rows: [(String, String)] = [
-            ("Total stake", Money.formatCurrency(state.totalStake)),
-        ]
+    /// The label above the legs. The user never picks a mode; the slip says which one it is.
+    public static func modeTitle(_ mode: BetMode) -> String {
+        mode == .accumulator ? "Accumulator" : "Single"
+    }
+
+    /// The summary block under the stake, labels and order included, so neither host decides
+    /// which rows a single slip leaves out.
+    public static func slipSummary(state: SlipState) -> [SummaryRow] {
+        var rows = [SummaryRow(label: "Total stake", value: Money.formatCurrency(state.totalStake))]
         if let display = state.combinedOddsDisplay {
-            rows.append(("Combined odds", Money.format(display)))
+            rows.append(SummaryRow(label: "Combined odds", value: Money.format(display)))
         }
-        rows.append(("Potential return", Money.formatCurrency(state.potentialReturn)))
-        rows.append(("Potential profit", Money.formatCurrency(state.potentialProfit)))
+        rows.append(SummaryRow(label: "Potential return", value: Money.formatCurrency(state.potentialReturn)))
+        rows.append(SummaryRow(label: "Potential profit", value: Money.formatCurrency(state.potentialProfit)))
         return rows
     }
 }

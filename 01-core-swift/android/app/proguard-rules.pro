@@ -1,6 +1,6 @@
 # R8 rules — 01-core-swift
 #
-# The three Swift AARs already ship their own `-keep class com.fightdeck.fight*.** { *; }`, so
+# The Swift AAR already ships its own `-keep class com.fightdeck.sdk.** { *; }`, so
 # the jextract bindings survive without anything here. What they do not cover is the SwiftKit
 # runtime bundled beside them as a plain jar: the native side reaches back into it by name for
 # memory-session and allocation callbacks, and a renamed class there fails only at runtime.

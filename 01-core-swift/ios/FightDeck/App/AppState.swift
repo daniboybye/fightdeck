@@ -29,12 +29,11 @@ enum LoadState<Value>: Sendable where Value: Sendable {
 @Observable
 @MainActor
 final class AppState {
-    var eventsState: LoadState<[Event]> = .loading
+    var eventsState: LoadState<[EventSummary]> = .loading
     var newsState: LoadState<[NewsItem]> = .loading
     var mediaState: LoadState<[MediaItem]> = .loading
 
     var bootstrapState: AppBootstrapState = .loading
-    var betPlacedMessage: String?
 
     /// Deposit opens from the balance toolbar on every screen. The flag lives here so those
     /// toolbars depend on observable state rather than on a closure handed down through the
@@ -47,11 +46,7 @@ final class AppState {
     init() {
         // An unreadable dataset shows as empty lists rather than stopping the app at launch.
         self.catalog = (try? Catalog.load(datasetRoot: DatasetLocator.datasetRoot())) ?? .empty
-        let slipEngine = SlipEngine(bouts: catalog.boutIndex())
-        self.slipStore = BetSlipStore(
-            slipEngine: slipEngine,
-            slip: BetSlip(mode: .single, selections: [], stake: Decimal(string: "10.00")!)
-        )
+        self.slipStore = BetSlipStore(slipEngine: SlipEngine(bouts: catalog.boutIndex()))
     }
 
     var slip: BetSlip {
@@ -61,13 +56,14 @@ final class AppState {
 
     var balance: Decimal { slipStore.balance }
 
+    var confirmation: String? { slipStore.confirmation }
+
     var slipState: SlipState { slipStore.slipState }
 
     func bootstrap() async {
         bootstrapState = .loading
-        let datasetRoot = DatasetLocator.datasetRoot()
         do {
-            try await LocalAssetServer.shared.start(assetsRoot: datasetRoot)
+            try AssetServer.start(datasetRoot: DatasetLocator.datasetRoot().path)
             bootstrapState = .ready
             await refreshAll()
         } catch {
@@ -83,7 +79,7 @@ final class AppState {
 
     func loadEvents() {
         eventsState = .loading
-        let events = catalog.allEvents()
+        let events = catalog.eventSummaries()
         eventsState = events.isEmpty ? .empty : .loaded(events)
     }
 
@@ -103,13 +99,12 @@ final class AppState {
         mediaState = media.isEmpty ? .empty : .loaded(media)
     }
 
-    func toggleSelection(bout: Bout, fighterID: String, odds: String) {
+    func toggleSelection(boutID: String, fighterID: String, odds: String) {
         slipStore.toggleSelection(
-            boutID: bout.id,
+            boutID: boutID,
             fighterID: fighterID,
             odds: Money.parse(odds)
         )
-        betPlacedMessage = nil
     }
 
     func isSelected(boutID: String, fighterID: String) -> Bool {
@@ -118,20 +113,18 @@ final class AppState {
 
     func removeSelection(id: String) {
         slipStore.removeSelection(id: id)
-        betPlacedMessage = nil
     }
 
     func placeBet() {
-        guard let state = slipStore.placeBet() else { return }
-        betPlacedMessage = "\(Money.formatCurrency(state.potentialReturn)) returns if it lands"
+        slipStore.placeBet()
     }
 
-    func fighter(_ id: String) -> Fighter? {
-        catalog.fighter(id: id)
+    func fighter(_ id: String) -> FighterSummary? {
+        catalog.fighterSummary(id: id)
     }
 
-    func record(for id: String) -> String {
-        fighter(id)?.recordDisplay ?? "—"
+    func bout(_ id: String) -> BoutSummary? {
+        catalog.boutSummary(id: id)
     }
 
     func cardSections(for eventID: String) -> [CardSection] {
@@ -155,7 +148,6 @@ final class AppState {
     }
 
     func imageURL(_ path: String) -> URL? {
-        guard LocalAssetServer.port > 0 else { return nil }
-        return URL(string: "http://127.0.0.1:\(LocalAssetServer.port)/\(path)")
+        AssetServer.url(for: path).flatMap(URL.init(string:))
     }
 }

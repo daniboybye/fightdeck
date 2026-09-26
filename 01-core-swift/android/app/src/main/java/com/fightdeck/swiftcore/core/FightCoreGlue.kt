@@ -1,81 +1,61 @@
 package com.fightdeck.swiftcore.core
 
-import com.fightdeck.fightcore.FightCoreJava
-import com.fightdeck.fightslip.SlipEngine
-import java.math.BigDecimal
+import com.fightdeck.sdk.FightDeckJava
+import com.fightdeck.sdk.SlipEngine
 
-object Money {
-    fun parse(string: String): BigDecimal =
-        runCatching { BigDecimal(string.trim()) }.getOrDefault(BigDecimal.ZERO)
-
-    fun format(value: BigDecimal): String = FightCoreJava.formatMoney(value.toPlainString())
-
-    fun formatCurrency(value: BigDecimal): String =
-        FightCoreJava.formatCurrency(value.toPlainString())
+/**
+ * The whole slip in one JNI call. `snapshot()` returns a tuple of plain Java values, so there
+ * is no Swift object behind it to keep alive or free; this only turns its parallel arrays back
+ * into lists of rows.
+ */
+fun SlipEngine.readSnapshot(): SlipSnapshot {
+    val snapshot = snapshot()
+    val boutIds = snapshot.legBoutIDs()
+    val fighterIds = snapshot.legFighterIDs()
+    val odds = snapshot.legOdds()
+    return SlipSnapshot(
+        modeTitle = snapshot.modeTitle(),
+        legs = boutIds.indices.map { SlipLeg(boutIds[it], fighterIds[it], odds[it]) },
+        stake = snapshot.stake(),
+        balance = snapshot.balance(),
+        balanceDisplay = snapshot.balanceDisplay(),
+        returnDisplay = snapshot.returnDisplay(),
+        summaryRows = snapshot.summaryLabels().zip(snapshot.summaryValues()),
+        errors = snapshot.errors().toList(),
+        confirmation = snapshot.confirmation().orElse(null),
+    )
 }
 
-/** [boutIndexJSON] is `EventCatalogBridge.boutIndexJSON`, handed over untouched. */
-class SwiftSlipStore(boutIndexJSON: String) {
-    private val engine = SlipEngine.init(boutIndexJSON)
+data class DepositMethodOption(val id: String, val title: String, val feeNote: String)
 
-    var slip: BetSlip = BetSlip(BetMode.single, emptyList(), BigDecimal("10.00"))
-        private set
+data class DepositQuote(
+    /** Two places, ready for `SlipEngine.deposit`. */
+    val amount: String,
+    val amountDisplay: String,
+    val feeDisplay: String,
+    val totalDisplay: String,
+    val newBalanceDisplay: String,
+    val validationMessage: String?,
+    val canConfirm: Boolean,
+)
 
-    var balance: BigDecimal = BigDecimal("500.00")
-        private set
-
-    var slipState: SlipState =
-        SlipState(null, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, emptyList())
-        private set
-
-    init {
-        readBack()
+fun depositMethods(): List<DepositMethodOption> {
+    val methods = FightDeckJava.depositMethods()
+    return methods.ids().indices.map {
+        DepositMethodOption(methods.ids()[it], methods.titles()[it], methods.feeNotes()[it])
     }
+}
 
-    fun toggleSelection(boutId: String, fighterId: String, odds: BigDecimal) {
-        engine.toggleSelection(boutId, fighterId, odds.toPlainString())
-        readBack()
-    }
-
-    fun removeSelection(boutId: String, fighterId: String) {
-        engine.removeSelection(boutId, fighterId)
-        readBack()
-    }
-
-    fun updateStake(stake: BigDecimal) {
-        engine.updateStake(stake.toPlainString())
-        readBack()
-    }
-
-    fun deposit(amount: BigDecimal) {
-        engine.deposit(amount.toPlainString())
-        readBack()
-    }
-
-    fun placeBet(): SlipState? {
-        val placed = slipState
-        if (!engine.placeBet()) return null
-        readBack()
-        return placed
-    }
-
-    private fun readBack() {
-        slip = BetSlip(
-            mode = if (engine.isAccumulator()) BetMode.accumulator else BetMode.single,
-            selections = engine.selections.map {
-                Selection(it.boutID, it.fighterID, BigDecimal(it.oddsText))
-            },
-            stake = BigDecimal(engine.stakeText),
-        )
-        balance = BigDecimal(engine.balanceText)
-        slipState = SlipState(
-            combinedOddsDisplay = engine.combinedOddsText.toBigDecimalOrNull(),
-            totalStake = BigDecimal(engine.totalStakeText),
-            potentialReturn = BigDecimal(engine.potentialReturnText),
-            potentialProfit = BigDecimal(engine.potentialProfitText),
-            errors = engine.errorCodes.toList(),
-        )
-    }
-
-    private fun String.toBigDecimalOrNull(): BigDecimal? = if (isEmpty()) null else BigDecimal(this)
+/** One JNI call per keystroke, answered in plain values. */
+fun depositQuote(amountText: String, methodId: String, balance: String): DepositQuote {
+    val quote = FightDeckJava.depositQuote(amountText, methodId, balance)
+    return DepositQuote(
+        amount = quote.amount(),
+        amountDisplay = quote.amountDisplay(),
+        feeDisplay = quote.feeDisplay(),
+        totalDisplay = quote.totalDisplay(),
+        newBalanceDisplay = quote.newBalanceDisplay(),
+        validationMessage = quote.validationMessage().orElse(null),
+        canConfirm = quote.canConfirm(),
+    )
 }

@@ -64,18 +64,6 @@ jobs:
         working-directory: 01-core-swift/sdks/core
         run: swift test
 
-      - name: Package XCFramework
-        if: steps.guard.outputs.exists == 'true'
-        working-directory: 01-core-swift/sdks/core
-        run: ./build-xcframework.sh
-
-      - uses: actions/upload-artifact@v7
-        if: steps.guard.outputs.exists == 'true'
-        with:
-          name: swift-core-xcframework
-          path: 01-core-swift/sdks/core/out/*.xcframework.zip
-          if-no-files-found: warn
-
   android:
     name: Android (Swift SDK)
     if: inputs.job != 'apple'

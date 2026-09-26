@@ -267,7 +267,6 @@ run_sdk_core_swift_apple() {
     guard_file 01-core-swift/sdks/core/Package.swift || return 0
     pin_xcode
     (cd 01-core-swift/sdks/core && swift test)
-    (cd 01-core-swift/sdks/core && ./build-xcframework.sh)
 }
 
 # Xcode's Swift cannot use a cross-compilation Swift SDK: the bundle's Foundation was built

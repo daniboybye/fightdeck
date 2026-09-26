@@ -20,7 +20,6 @@ cd 01-core-swift/sdks/core && swift test      # odds-conversion fixtures
 cd ../slip && swift test                      # slip-math, validation, settlement, cash-out
 cd ../events && swift test                    # catalog, display, tape
 cd .. && ./build-aars.sh                      # the one Android AAR (see Android section)
-cd core && ./build-xcframework.sh             # → out/FightCore.xcframework.zip
 ```
 
 ### iOS host
@@ -93,18 +92,6 @@ Starting 6 tests on Medium_Phone_API_36.1(AVD) - 16
 Finished 6 tests on Medium_Phone_API_36.1(AVD) - 16
 BUILD SUCCESSFUL
 ```
-
----
-
-## Apple artifacts
-
-| Artifact | Size |
-| --- | --- |
-| `out/FightCore.xcframework.zip` | **725 KB** |
-| `out/FightCore.xcframework/` (uncompressed) | **2.4 MB** |
-| Per-slice static libs (`libFightCore.a`) | ~770–783 KB each |
-
-Built with Apple Swift 6.3.3 / Xcode 26.6 for `arm64-apple-ios`, `arm64-apple-ios-simulator`, and `x86_64-apple-ios-simulator` (lipo-merged into one simulator slice).
 
 ---
 
@@ -399,11 +386,10 @@ As of Swift SDK 6.3.3 + swift-java 0.6.0, treat native Swift on Android as
 2. **NDK version drift** — Spec pins r27d, which builds both ABIs cleanly; r29 compatibility unconfirmed.
 3. **swift-java pre-1.0 moves fast** — the `0.4.2` this repo pinned in June was two minor versions stale by September; 0.5.0, 0.5.1 and 0.6.0 shipped in ten weeks, most of the changes in the JNI generator this approach depends on.
 4. **`@Observable` does not cross** — the Compose side re-reads the whole slip after every mutation, in one call.
-5. **XCFramework from SPM** — No linked `.dylib` from `swift build` alone; script uses `libtool -static` on `.o` files, then `xcodebuild -create-xcframework`.
-6. **Android Gradle OOM** — First `./gradlew` failed on dex merge; fixed by copying `gradle.properties` heap settings from `00-native`.
-7. **A stale output directory can ship the wrong closure** — the `NEEDED` walk skipped libraries it had already copied, so a library carried over from an earlier run never had its own dependencies read. `build-aar-lib.sh` now clears `out/android-libs` first and tracks visited names separately from copied files.
-8. **A tuple's Java class is named after every label in it** — `LabeledTuple_snapshot_modeTitle_legBoutIDs_…` — and the `.class` file carries that name, so eighteen labels ran past the 255-byte file-name limit and `javac` failed with *File name too long*. The slip's contract figures moved to a second call.
-9. **Two tuple shapes jextract 0.6.0 does not handle** — an array of tuples is skipped without a warning, and a tuple nested in a tuple generates Swift thunks that do not compile (`invalid redeclaration of 'tupleResult$'`). Lists cross as parallel arrays instead.
+5. **Android Gradle OOM** — First `./gradlew` failed on dex merge; fixed by copying `gradle.properties` heap settings from `00-native`.
+6. **A stale output directory can ship the wrong closure** — the `NEEDED` walk skipped libraries it had already copied, so a library carried over from an earlier run never had its own dependencies read. `build-aar-lib.sh` now clears `out/android-libs` first and tracks visited names separately from copied files.
+7. **A tuple's Java class is named after every label in it** — `LabeledTuple_snapshot_modeTitle_legBoutIDs_…` — and the `.class` file carries that name, so eighteen labels ran past the 255-byte file-name limit and `javac` failed with *File name too long*. The slip's contract figures moved to a second call.
+8. **Two tuple shapes jextract 0.6.0 does not handle** — an array of tuples is skipped without a warning, and a tuple nested in a tuple generates Swift thunks that do not compile (`invalid redeclaration of 'tupleResult$'`). Lists cross as parallel arrays instead.
 
 ---
 

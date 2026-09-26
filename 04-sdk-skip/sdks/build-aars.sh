@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 "$ROOT/core/build-aar.sh"
 
-export FIGHTDECK_CORE_AAR="$ROOT/core/out/FightDeckCore-release.aar"
+export FIGHTDECK_CORE_AAR="$ROOT/core/out/FightDeckCore-${FIGHTDECK_SDK_CONFIGURATION:-release}.aar"
 for module in events deposit betslip fighter; do
     "$ROOT/$module/build-aar.sh"
 done

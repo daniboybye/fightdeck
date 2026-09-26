@@ -6,6 +6,9 @@ build_swift_xcframework() {
     local binary_module="$3"
     local minimum_zip_size="$4"
     local out="$root/out"
+    # FIGHTDECK_SDK_CONFIGURATION=debug builds the Swift in debug; FIGHTDECK_SDK_ARCHS=arm64 builds
+    # the device slice alone, for a host built for a phone. The defaults are what ships.
+    local configuration="${FIGHTDECK_SDK_CONFIGURATION:-release}"
     local staging="$out/frameworks"
 
     export FIGHTDECK_BUILDING_SDK=1
@@ -24,7 +27,7 @@ build_swift_xcframework() {
 
         swift build \
             --package-path "$root" \
-            -c release \
+            -c "$configuration" \
             --triple "$triple" \
             --sdk "$sdk_path" \
             -Xswiftc -enable-library-evolution \
@@ -32,7 +35,7 @@ build_swift_xcframework() {
             >/dev/null
 
         mkdir -p "$module_dir"
-        cp "$root/.build/$triple/release/lib${product}.dylib" \
+        cp "$root/.build/$triple/$configuration/lib${product}.dylib" \
             "$framework/$binary_module"
         install_name_tool -id \
             "@rpath/${binary_module}.framework/${binary_module}" \
@@ -46,7 +49,7 @@ build_swift_xcframework() {
         fi
 
         for extension in swiftmodule swiftdoc swiftsourceinfo abi.json swiftinterface private.swiftinterface; do
-            local source="$root/.build/$triple/release/Modules/${binary_module}.${extension}"
+            local source="$root/.build/$triple/$configuration/Modules/${binary_module}.${extension}"
             if [[ -f "$source" ]]; then
                 cp "$source" "$module_dir/${triple}.${extension}"
             fi
@@ -83,11 +86,14 @@ EOF
     # consumes it — this machine is Apple Silicon and so is the macos-26 runner CI uses. A
     # real SDK vendor would still ship it; put the triple back beside this line, with the
     # `lipo -create` that merged the two into one binary, the day an Intel Mac has to run it.
-    sim_framework="$(build_framework iphonesimulator arm64-apple-ios-simulator ios-simulator)"
+    local frameworks=(-framework "$ios_framework")
+    if [[ "${FIGHTDECK_SDK_ARCHS:-all}" != "arm64" ]]; then
+        sim_framework="$(build_framework iphonesimulator arm64-apple-ios-simulator ios-simulator)"
+        frameworks+=(-framework "$sim_framework")
+    fi
 
     xcodebuild -create-xcframework \
-        -framework "$ios_framework" \
-        -framework "$sim_framework" \
+        "${frameworks[@]}" \
         -allow-internal-distribution \
         -output "$out/${product}.xcframework"
 

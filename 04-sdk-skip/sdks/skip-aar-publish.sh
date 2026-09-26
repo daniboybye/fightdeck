@@ -3,6 +3,18 @@
 # Sourced by sdks/{core,deposit,betslip}/build-aar.sh — not executed directly.
 set -euo pipefail
 
+# FIGHTDECK_SDK_CONFIGURATION=debug exports, assembles and publishes the debug variant alone;
+# unset or =release, the release variant alone. Skip's Gradle publishes every variant by default,
+# which built each module, SkipUI included, twice on every run for a host that links one of them.
+SKIP_VARIANT="${FIGHTDECK_SDK_CONFIGURATION:-release}"
+case "$SKIP_VARIANT" in
+    debug) SKIP_VARIANT_TASK=Debug ;;
+    release) SKIP_VARIANT_TASK=Release ;;
+    *) echo "error: FIGHTDECK_SDK_CONFIGURATION must be debug or release, not $SKIP_VARIANT" >&2; exit 1 ;;
+esac
+SKIP_EXPORT_FLAG="--$SKIP_VARIANT"
+SKIP_PUBLISHED_VARIANTS="includeBuildTypeValues(\"$SKIP_VARIANT\")"
+
 patch_skip_ui_reflect() {
     local skipstone="$1"
     local gradle_file
@@ -61,6 +73,10 @@ version=0.1.0-local
 EOF
     fi
     while IFS= read -r gradle_file; do
+        if grep -qE 'allVariants\(\)|includeBuildTypeValues\(' "$gradle_file"; then
+            chmod u+w "$gradle_file" 2>/dev/null || true
+            sed -i '' -E "s/allVariants\(\)|includeBuildTypeValues\(\"[a-z]+\"\)/${SKIP_PUBLISHED_VARIANTS}/" "$gradle_file"
+        fi
         if grep -q 'id("maven-publish")' "$gradle_file" && ! grep -q 'name = "fightdeck"' "$gradle_file"; then
             chmod u+w "$gradle_file" 2>/dev/null || true
             sed -i '' "/^publishing {/a\\

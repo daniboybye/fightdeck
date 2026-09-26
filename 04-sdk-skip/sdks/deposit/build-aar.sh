@@ -10,7 +10,7 @@ REPO_ROOT="$(cd "$ROOT/../../.." && pwd)"
 # shellcheck source=../skip-aar-publish.sh
 source "$ROOT/../skip-aar-publish.sh"
 
-CORE_AAR="${FIGHTDECK_CORE_AAR:-$REPO_ROOT/04-sdk-skip/sdks/core/out/FightDeckCore-release.aar}"
+CORE_AAR="${FIGHTDECK_CORE_AAR:-$REPO_ROOT/04-sdk-skip/sdks/core/out/FightDeckCore-${SKIP_VARIANT}.aar}"
 SKIPSTONE="$ROOT/.build/plugins/outputs/deposit/FightDeckDepositBinary/destination/skipstone"
 BINARY_MODULE="FightDeckDepositBinary"
 MAVEN_REPO="$REPO_ROOT/04-sdk-skip/sdks/out/maven"
@@ -23,7 +23,7 @@ if [[ ! -f "$CORE_AAR" ]]; then
     exit 1
 fi
 
-skip export --module "$BINARY_MODULE" --release -d "$OUT" --project "$ROOT" \
+skip export --module "$BINARY_MODULE" "$SKIP_EXPORT_FLAG" -d "$OUT" --project "$ROOT" \
     || [[ -d "$SKIPSTONE" ]]
 
 if [[ ! -d "$SKIPSTONE" ]]; then
@@ -49,32 +49,32 @@ configure_skipstone_maven_repo "$SKIPSTONE" "$MAVEN_REPO"
 
 (
     cd "$SKIPSTONE"
-    gradle ":${BINARY_MODULE}:assembleRelease" --console=plain
+    gradle ":${BINARY_MODULE}:assemble${SKIP_VARIANT_TASK}" --console=plain
 )
 
-BUILT="$SKIPSTONE/${BINARY_MODULE}/build/outputs/aar/${BINARY_MODULE}-release.aar"
+BUILT="$SKIPSTONE/${BINARY_MODULE}/build/outputs/aar/${BINARY_MODULE}-${SKIP_VARIANT}.aar"
 if [[ ! -f "$BUILT" ]]; then
     echo "error: gradle did not produce $BUILT" >&2
     exit 1
 fi
 
-cp "$BUILT" "$OUT/FightDeckDeposit-release.aar"
+cp "$BUILT" "$OUT/FightDeckDeposit-${SKIP_VARIANT}.aar"
 
 publish_skipstone_maven "$SKIPSTONE" \
     SkipFoundation SkipLib SkipModel SkipUI SkipUnit "$BINARY_MODULE"
 
-rm -f "$OUT/${BINARY_MODULE}-release.aar" "$OUT"/FightDeckCore*-release.aar
+rm -f "$OUT/${BINARY_MODULE}-${SKIP_VARIANT}.aar" "$OUT"/FightDeckCore*-${SKIP_VARIANT}.aar
 
 for name in SkipFoundation SkipLib SkipModel SkipUI SkipUnit; do
-    src=$(find "$SKIPSTONE" -path "*/${name}/build/outputs/aar/${name}-release.aar" 2>/dev/null | head -1)
+    src=$(find "$SKIPSTONE" -path "*/${name}/build/outputs/aar/${name}-${SKIP_VARIANT}.aar" 2>/dev/null | head -1)
     if [[ -n "$src" ]]; then
-        cp "$src" "$OUT/${name}-release.aar"
+        cp "$src" "$OUT/${name}-${SKIP_VARIANT}.aar"
     fi
 done
 
 for aar in "$OUT"/*.aar; do
     bytes="$(stat -f%z "$aar" 2>/dev/null || stat -c%s "$aar")"
-    if [[ "$(basename "$aar")" == FightDeckDeposit-release.aar ]] && (( bytes < 1024 )); then
+    if [[ "$(basename "$aar")" == FightDeckDeposit-${SKIP_VARIANT}.aar ]] && (( bytes < 1024 )); then
         echo "error: stub-sized AAR ($bytes B): $aar" >&2
         exit 1
     fi

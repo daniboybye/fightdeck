@@ -93,18 +93,6 @@ android {
     }
 }
 
-val demoAssetsDir = layout.projectDirectory.dir("src/main/assets")
-
-val syncDemoAssets = tasks.register<Copy>("syncDemoAssets") {
-    from(rootProject.file("../../dataset"))
-    from(rootProject.file("../../shared-ui-spec/tokens.json"))
-    into(demoAssetsDir)
-}
-
-tasks.named("preBuild") {
-    dependsOn(syncDemoAssets)
-}
-
 dependencies {
     listOf("runtime", "deposit", "both", "all").forEach { flavor ->
         "${flavor}Implementation"("fightdeck.skip:FightDeckCoreBinary:$skipSdkVersion")

@@ -106,7 +106,7 @@ The cross-compile works, and which Swift runs it decides whether it works at all
 | Install `swift-6.3.3-RELEASE_android` SDK | ✅ `swift sdk install` with the published checksum, then `setup-android-sdk.sh` against NDK r27d |
 | `swift build --swift-sdk aarch64-unknown-linux-android28` | ✅ On an **open-source** toolchain — ❌ on Xcode's |
 | jextract generates Java + JNI thunks | ✅ 3 Java classes, 31 exported `Java_com_fightdeck_*` symbols, no hand-written JNI |
-| Cross-compile the thunks for both ABIs | ✅ `libfightdeck.so`, arm64-v8a and x86_64 |
+| Cross-compile the thunks for Android | ✅ `libfightdeck.so`, arm64-v8a |
 | `./build-aars.sh` | ✅ one AAR, `fightdeck.aar`, carrying all three SDKs |
 | Kotlin calls the Swift SDKs | ✅ Compose app runs them; 72/72 contract fixtures pass on device |
 | Swift calling **back** into Kotlin | ❌ Not wired — see [what is still missing](#what-is-still-missing) |
@@ -383,7 +383,7 @@ As of Swift SDK 6.3.3 + swift-java 0.6.0, treat native Swift on Android as
 ## Rough edges hit
 
 1. **Two Swifts with the same version number** — Apple Xcode 6.3.3 ≠ open-source 6.3.3-RELEASE for Android SDK module compatibility.
-2. **NDK version drift** — Spec pins r27d, which builds both ABIs cleanly; r29 compatibility unconfirmed.
+2. **NDK version drift** — Spec pins r27d, which builds arm64-v8a cleanly; r29 compatibility unconfirmed.
 3. **swift-java pre-1.0 moves fast** — the `0.4.2` this repo pinned in June was two minor versions stale by September; 0.5.0, 0.5.1 and 0.6.0 shipped in ten weeks, most of the changes in the JNI generator this approach depends on.
 4. **`@Observable` does not cross** — the Compose side re-reads the whole slip after every mutation, in one call.
 5. **Android Gradle OOM** — First `./gradlew` failed on dex merge; fixed by copying `gradle.properties` heap settings from `00-native`.

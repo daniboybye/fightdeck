@@ -108,7 +108,7 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           toolchain: ${{ env.PINNED_RUST }}
-          targets: aarch64-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android
 
       - uses: ./.github/actions/cargo-cache
         if: steps.guard.outputs.exists == 'true'

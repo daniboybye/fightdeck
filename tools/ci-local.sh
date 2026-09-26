@@ -357,7 +357,7 @@ run_sdk_core_rust_apple() {
 run_sdk_core_rust_android() {
     guard_file 02-core-rust/sdks/Cargo.toml || return 0
     ensure_rust
-    rustup target add aarch64-linux-android x86_64-linux-android 2>/dev/null || true
+    rustup target add aarch64-linux-android 2>/dev/null || true
     ensure_cargo_ndk
     (cd 02-core-rust/sdks && ./build-android.sh)
 }
@@ -566,7 +566,7 @@ run_android_app() {
 
     if [[ "$approach" == "02-core-rust" ]]; then
         ensure_rust
-        rustup target add aarch64-linux-android x86_64-linux-android 2>/dev/null || true
+        rustup target add aarch64-linux-android 2>/dev/null || true
         ensure_cargo_ndk
         (cd 02-core-rust/sdks && ./build-android.sh)
     fi

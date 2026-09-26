@@ -97,7 +97,6 @@ boltffi = "0.29.3"                     # crux migrated off UniFFI onto BoltFFI i
 [rust.targets]
 android = [
   "aarch64-linux-android",
-  "x86_64-linux-android",
 ]
 apple = [
   "aarch64-apple-ios",

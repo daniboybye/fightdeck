@@ -16,10 +16,10 @@ source "$(cd "$(dirname "$0")" && pwd)/setup-android-sdk.sh"
 
 OUT="$PKG_ROOT/out"
 MIN_SDK="${MIN_SDK:-28}"
-ABIS=(
-    "aarch64-unknown-linux-android${MIN_SDK}"
-    "x86_64-unknown-linux-android${MIN_SDK}"
-)
+# arm64-v8a alone: it is every phone this demo runs on and the emulator on Apple silicon.
+# x86_64 was there for an emulator on an Intel machine, which nothing here uses, and it doubled
+# the cross-compile.
+ABIS=("aarch64-unknown-linux-android${MIN_SDK}")
 
 JAVA_PACKAGE_DIR="${JAVA_PACKAGE//.//}"
 
@@ -106,7 +106,6 @@ for triple in "${ABIS[@]}"; do
     fi
     case "$triple" in
         aarch64-*) abi="arm64-v8a" ;;
-        x86_64-*) abi="x86_64" ;;
         *) echo "ERROR: no Android ABI known for $triple" >&2; exit 1 ;;
     esac
     mkdir -p "$OUT/android-libs/$abi"

@@ -23,10 +23,10 @@ fi
 
 (
     cd "$ANDROID_HOST"
-    ./gradlew :fightdeck-rn-runtime:assembleRelease --quiet
+    ./gradlew :fightdeck-rn-runtime:assemble${SDK_VARIANT_TASK} --quiet
 )
 
-GRADLE_AAR="$ROOT/android/runtime/build/outputs/aar/fightdeck-rn-runtime-release.aar"
+GRADLE_AAR="$ROOT/android/runtime/build/outputs/aar/fightdeck-rn-runtime-${SDK_VARIANT}.aar"
 pack_rn_runtime_aars "$OUT" "$GRADLE_AAR"
 
 echo "Wrote runtime AARs in $OUT:"

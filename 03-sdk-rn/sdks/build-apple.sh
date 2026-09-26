@@ -9,6 +9,18 @@ BUILD="$ROOT/.build/apple-pods"
 VENDOR="$ROOT/out/ios-vendor"
 MODULES=(FightDeckRNRuntime DepositSDK BetslipSDK FighterSDK)
 
+# FIGHTDECK_SDK_CONFIGURATION=debug builds the pods in Debug; FIGHTDECK_SDK_ARCHS=arm64 builds the
+# device slice alone, for a host built for a phone. The defaults are what ships. The JavaScript
+# is bundled and compiled to Hermes bytecode either way, as the host has no Metro to ask.
+CONFIGURATION=Release
+if [[ "${FIGHTDECK_SDK_CONFIGURATION:-release}" == "debug" ]]; then
+  CONFIGURATION=Debug
+fi
+WITH_SIMULATOR=1
+if [[ "${FIGHTDECK_SDK_ARCHS:-all}" == "arm64" ]]; then
+  WITH_SIMULATOR=0
+fi
+
 # shellcheck source=_scripts/ios-rn-bundle.sh
 source "$ROOT/_scripts/ios-rn-bundle.sh"
 
@@ -54,7 +66,7 @@ build_slice() {
     -jobs 1 \
     -project "$PODS/Pods.xcodeproj" \
     -scheme Pods-FightDeckHosts-FightDeck \
-    -configuration Release \
+    -configuration "$CONFIGURATION" \
     -sdk "$sdk" \
     -destination "$destination" \
     ONLY_ACTIVE_ARCH=YES \
@@ -66,8 +78,10 @@ build_slice() {
 }
 
 build_slice ios-arm64 iphoneos 'generic/platform=iOS' arm64
-build_slice sim-arm64 iphonesimulator 'generic/platform=iOS Simulator' arm64
-build_slice sim-x86_64 iphonesimulator 'generic/platform=iOS Simulator' x86_64
+if [[ "$WITH_SIMULATOR" == 1 ]]; then
+  build_slice sim-arm64 iphonesimulator 'generic/platform=iOS Simulator' arm64
+  build_slice sim-x86_64 iphonesimulator 'generic/platform=iOS Simulator' x86_64
+fi
 
 write_framework_info() {
   local framework="$1"
@@ -115,9 +129,9 @@ package_module() {
   module_root="${module_root/FighterSDK/fighter}"
   local out="$module_root/out"
   local frameworks="$BUILD/frameworks/$module"
-  local ios_product="$BUILD/ios-arm64/Release-iphoneos/$module"
-  local sim_arm_product="$BUILD/sim-arm64/Release-iphonesimulator/$module"
-  local sim_x64_product="$BUILD/sim-x86_64/Release-iphonesimulator/$module"
+  local ios_product="$BUILD/ios-arm64/${CONFIGURATION}-iphoneos/$module"
+  local sim_arm_product="$BUILD/sim-arm64/${CONFIGURATION}-iphonesimulator/$module"
+  local sim_x64_product="$BUILD/sim-x86_64/${CONFIGURATION}-iphonesimulator/$module"
   local ios_library="$ios_product/lib${module}.a"
   local sim_arm_library="$sim_arm_product/lib${module}.a"
   local sim_x64_library="$sim_x64_product/lib${module}.a"
@@ -130,34 +144,40 @@ package_module() {
   if [[ "$module" == "FightDeckRNRuntime" ]]; then
     libtool -static -o "$frameworks/lib${module}-ios.a" \
       "$ios_library" \
-      "$BUILD/ios-arm64/Release-iphoneos/ReactAppDependencyProvider/libReactAppDependencyProvider.a" \
-      "$BUILD/ios-arm64/Release-iphoneos/ReactCodegen/libReactCodegen.a"
-    libtool -static -o "$frameworks/lib${module}-sim-arm64.a" \
-      "$sim_arm_library" \
-      "$BUILD/sim-arm64/Release-iphonesimulator/ReactAppDependencyProvider/libReactAppDependencyProvider.a" \
-      "$BUILD/sim-arm64/Release-iphonesimulator/ReactCodegen/libReactCodegen.a"
-    libtool -static -o "$frameworks/lib${module}-sim-x86_64.a" \
-      "$sim_x64_library" \
-      "$BUILD/sim-x86_64/Release-iphonesimulator/ReactAppDependencyProvider/libReactAppDependencyProvider.a" \
-      "$BUILD/sim-x86_64/Release-iphonesimulator/ReactCodegen/libReactCodegen.a"
+      "$BUILD/ios-arm64/${CONFIGURATION}-iphoneos/ReactAppDependencyProvider/libReactAppDependencyProvider.a" \
+      "$BUILD/ios-arm64/${CONFIGURATION}-iphoneos/ReactCodegen/libReactCodegen.a"
+    if [[ "$WITH_SIMULATOR" == 1 ]]; then
+      libtool -static -o "$frameworks/lib${module}-sim-arm64.a" \
+        "$sim_arm_library" \
+        "$BUILD/sim-arm64/${CONFIGURATION}-iphonesimulator/ReactAppDependencyProvider/libReactAppDependencyProvider.a" \
+        "$BUILD/sim-arm64/${CONFIGURATION}-iphonesimulator/ReactCodegen/libReactCodegen.a"
+      libtool -static -o "$frameworks/lib${module}-sim-x86_64.a" \
+        "$sim_x64_library" \
+        "$BUILD/sim-x86_64/${CONFIGURATION}-iphonesimulator/ReactAppDependencyProvider/libReactAppDependencyProvider.a" \
+        "$BUILD/sim-x86_64/${CONFIGURATION}-iphonesimulator/ReactCodegen/libReactCodegen.a"
+    fi
     ios_library="$frameworks/lib${module}-ios.a"
     sim_arm_library="$frameworks/lib${module}-sim-arm64.a"
     sim_x64_library="$frameworks/lib${module}-sim-x86_64.a"
   fi
-  lipo -create \
-    "$sim_arm_library" \
-    "$sim_x64_library" \
-    -output "$frameworks/lib${module}-simulator.a"
-
   make_framework "$frameworks/ios/${module}.framework" "$module" \
     "$ios_library" \
     "$ios_product/${module}.swiftmodule"
-  make_framework "$frameworks/simulator/${module}.framework" "$module" \
-    "$frameworks/lib${module}-simulator.a" \
-    "$sim_arm_product/${module}.swiftmodule" \
-    "$sim_x64_product/${module}.swiftmodule"
+  local slices=("$frameworks/ios/${module}.framework")
+  if [[ "$WITH_SIMULATOR" == 1 ]]; then
+    lipo -create \
+      "$sim_arm_library" \
+      "$sim_x64_library" \
+      -output "$frameworks/lib${module}-simulator.a"
+    make_framework "$frameworks/simulator/${module}.framework" "$module" \
+      "$frameworks/lib${module}-simulator.a" \
+      "$sim_arm_product/${module}.swiftmodule" \
+      "$sim_x64_product/${module}.swiftmodule"
+    slices+=("$frameworks/simulator/${module}.framework")
+  fi
 
-  for framework in "$frameworks/ios/${module}.framework" "$frameworks/simulator/${module}.framework"; do
+  local framework_args=()
+  for framework in "${slices[@]}"; do
     mkdir -p "$framework/Headers"
     cp "$PODS/Target Support Files/$module/${module}-umbrella.h" "$framework/Headers/"
     sed 's/^module /framework module /' \
@@ -166,12 +186,12 @@ package_module() {
     if [[ "$module" == "FightDeckRNRuntime" ]]; then
       cp "$ROOT/core/ios/Pod/"*.h "$framework/Headers/"
     fi
+    framework_args+=(-framework "$framework")
   done
 
   xcodebuild -create-xcframework \
     -allow-internal-distribution \
-    -framework "$frameworks/ios/${module}.framework" \
-    -framework "$frameworks/simulator/${module}.framework" \
+    "${framework_args[@]}" \
     -output "$out/${module}.xcframework"
 
   (cd "$out" && zip -rq "${module}.xcframework.zip" "${module}.xcframework")

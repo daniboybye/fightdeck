@@ -11,11 +11,11 @@ source "$SCRIPTS/android-aar-pack.sh"
 
 (
     cd "$ANDROID_HOST"
-    ./gradlew :betslip-sdk:assembleRelease --quiet
+    ./gradlew :betslip-sdk:assemble${SDK_VARIANT_TASK} --quiet
 )
 
 pack_feature_aar "$OUT" \
-    "$ROOT/android/build/outputs/aar/betslip-sdk-release.aar" \
+    "$ROOT/android/build/outputs/aar/betslip-sdk-${SDK_VARIANT}.aar" \
     "BetslipSDK"
 
 ls -lh "$OUT/BetslipSDK.aar"

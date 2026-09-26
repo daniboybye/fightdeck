@@ -16,6 +16,8 @@ source "$(cd "$(dirname "$0")" && pwd)/setup-android-sdk.sh"
 
 OUT="$PKG_ROOT/out"
 MIN_SDK="${MIN_SDK:-28}"
+# FIGHTDECK_SDK_CONFIGURATION=debug builds the library in debug; release is what ships.
+CONFIGURATION="${FIGHTDECK_SDK_CONFIGURATION:-release}"
 # arm64-v8a alone: it is every phone this demo runs on and the emulator on Apple silicon.
 # x86_64 was there for an emulator on an Intel machine, which nothing here uses, and it doubled
 # the cross-compile.
@@ -88,12 +90,12 @@ for triple in "${ABIS[@]}"; do
         --swift-sdk "$triple" \
         --product "$SHARED_PRODUCT" \
         --disable-sandbox \
-        -c release \
+        -c "$CONFIGURATION" \
         2>&1 | grep -v -E '^\[(info|debug)\]' || {
             echo "ERROR: swift build failed for $triple" >&2
             exit 1
         }
-    build_dir="$PKG_ROOT/.build/$triple/release"
+    build_dir="$PKG_ROOT/.build/$triple/$CONFIGURATION"
     lib_src="$build_dir/lib${SHARED_PRODUCT}.so"
     if [[ ! -f "$lib_src" ]]; then
         lib_src="$(find "$PKG_ROOT/.build" -name "lib${SHARED_PRODUCT}.so" \

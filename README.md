@@ -65,13 +65,13 @@ come from a local `tools/ci-local.sh --skip-tests measure` run on Apple silicon,
 
 ### What it costs to ship
 
-| Approach | iOS `.app` | Android arm64 | Total overhead | Clean build (iOS / Android) |
-| --- | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 1.96 MB | 12.53 MB | — | 0m16s / 0m24s |
-| `01-core-swift` † | 1.98 MB | 36.18 MB | +23.67 MB | 0m16s / 12m28s |
-| `02-core-rust` ‡ | 2.89 MB | 13.70 MB | +2.10 MB | 3m34s / 2m00s |
-| `04-sdk-skip` | 3.11 MB | 22.52 MB | +11.14 MB | 0m29s / 4m18s |
-| `03-sdk-rn` | 21.21 MB | 24.78 MB | +31.50 MB | 0m57s / 1m16s |
+| Approach | iOS `.app` | Android arm64 | Total overhead |
+| --- | ---: | ---: | ---: |
+| `00-native` baseline | 1.96 MB | 12.53 MB | — |
+| `01-core-swift` † | 1.98 MB | 36.18 MB | +23.67 MB |
+| `02-core-rust` ‡ | 2.89 MB | 13.70 MB | +2.10 MB |
+| `04-sdk-skip` | 3.11 MB | 22.52 MB | +11.14 MB |
+| `03-sdk-rn` | 21.21 MB | 24.78 MB | +31.50 MB |
 
 *Total overhead* is the iOS and Android growth added together, against the baseline that
 shares nothing. Android figures are per-ABI download size for `arm64-v8a` from the app
@@ -86,15 +86,10 @@ logic across three SDKs, pulling 19.1 MB of Swift runtime behind it. **This row 
 ICU removal and must be re-measured** — it was taken when the runtime was 65.2 MB per ABI,
 three fifths of it `lib_FoundationICU.so`, which arrived because the sources said
 `import Foundation`. They now say `FoundationEssentials` on Android and format the digits
-themselves; `01-core-swift/README.md` has the before and after. Its
-Android build time is the cross-compile of both ABIs plus jextract binding generation, and
-is not comparable to the Gradle-only figures in the other rows — jextract reruns on every
-build and cascades a recompile, so this is also the per-change cost, not just the first
-one.
+themselves; `01-core-swift/README.md` has the before and after.
 
 ‡ `02-core-rust` keeps three separate Apple binaries but now ships one aggregate Android
-`libfightdeck.so`. This row predates that Android packaging change and must be re-measured;
-its original build column was dominated by Rust packaging rather than by the app.
+`libfightdeck.so`. This row predates that Android packaging change and must be re-measured.
 
 ### What it costs to write
 
@@ -406,14 +401,9 @@ SwiftKit's thread-safety markers, `java.awt` in JNA's desktop bridge.
 Measurements come from simulator and emulator rather than physical devices. Android release
 builds now run R8 with resource shrinking, which they did not when the tables above were
 filled in, so every Android figure in this file is stale and too large — see [what the
-shrinker changes](#what-the-shrinker-changes). Build times are clean builds
-with dependencies already fetched — they include each approach's own SDK step, which is why
-Rust pays on iOS (three-target `xcframework`) and Skip pays on Android (transpilation), but
-they exclude package downloads, which measure the network rather than the approach. CI now
-caches those downloads, which brings it closer to this methodology, but it still publishes
-only sizes: nothing in the receipt is a duration, so the cache cannot flatter a build time.
-Gradle's task-output cache stays off for the same reason — a size on a slide has to come
-from a build that actually happened.
+shrinker changes](#what-the-shrinker-changes). CI caches package downloads but not build
+output: Gradle's task-output cache stays off, because a size on a slide has to come from a
+build that actually happened.
 
 **Swift-on-Android needs a second Swift** — `01-core-swift` cross-compiles only on an
 open-source toolchain installed beside Xcode's, and its Kotlin calls the result through

@@ -101,8 +101,6 @@ run_step() {
     shift
     echo ""
     echo "======== $label ========"
-    # Timed because the build-time column in README.md is sourced from these numbers, and a
-    # figure nobody can reproduce is a figure nobody should trust.
     local started=$SECONDS
     # Not `if "$@"; then`: bash ignores `set -e` inside anything run as an `if` condition, so a
     # failing SDK build in the middle of a step let the step carry on and report PASS. In

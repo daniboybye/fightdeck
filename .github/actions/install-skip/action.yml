@@ -39,4 +39,5 @@ runs:
         chmod +x "$RUNNER_TEMP/skip.artifactbundle/bin/skip" \
                  "$RUNNER_TEMP/skip.artifactbundle/macos/skip"
         echo "$RUNNER_TEMP/skip.artifactbundle/bin" >> "$GITHUB_PATH"
-        skip version
+        # GITHUB_PATH only reaches later steps, so this one calls the binary by its path.
+        "$RUNNER_TEMP/skip.artifactbundle/bin/skip" version

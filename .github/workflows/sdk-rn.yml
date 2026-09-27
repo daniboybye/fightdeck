@@ -90,8 +90,6 @@ jobs:
           java-version: ${{ env.PINNED_JDK }}
 
       - uses: gradle/actions/setup-gradle@v6
-        with:
-          build-root-directory: 03-sdk-rn/android
 
       - name: Build local binary SDKs
         run: |

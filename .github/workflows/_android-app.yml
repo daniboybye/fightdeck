@@ -75,8 +75,6 @@ jobs:
       # every entry that actually pays for itself.
       - uses: gradle/actions/setup-gradle@v6
         if: steps.guard.outputs.exists == 'true'
-        with:
-          build-root-directory: ${{ inputs.project-dir }}
 
       # bundletool is a fixed, version-stamped 32 MB jar that measure-android.sh fetches
       # into tools/out, and every one of the five approaches fetches the same one.

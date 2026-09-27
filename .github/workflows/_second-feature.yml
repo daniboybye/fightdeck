@@ -65,8 +65,6 @@ jobs:
       # anywhere else in the repository.
       - uses: gradle/actions/setup-gradle@v6
         if: inputs.platform == 'android'
-        with:
-          build-root-directory: ${{ inputs.approach }}/android
 
       - uses: actions/cache@v6
         if: inputs.platform == 'android'

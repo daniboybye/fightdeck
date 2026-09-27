@@ -90,6 +90,22 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$PINNED_NDK" \
             || echo "::warning::NDK $PINNED_NDK unavailable on this runner; falling back to preinstalled"
 
+      # The 01 host links fightdeck.aar, which only a cross-compile produces; Gradle refuses
+      # to configure without it.
+      - uses: ./.github/actions/install-swift-android
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '01-core-swift'
+
+      - uses: ./.github/actions/swiftpm-cache
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '01-core-swift'
+        with:
+          key: core-swift-android
+          build-path: 01-core-swift/sdks/android/.build
+
+      - name: Package the Swift SDKs
+        if: steps.guard.outputs.exists == 'true' && inputs.approach == '01-core-swift'
+        working-directory: 01-core-swift/sdks
+        run: ./build-aars.sh
+
       # The React Native host reads its Gradle plugin and its autolinked modules out of
       # node_modules, so Gradle cannot even configure the build without an install.
       - uses: actions/setup-node@v7

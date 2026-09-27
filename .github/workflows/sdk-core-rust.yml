@@ -69,6 +69,7 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           name: rust-sdk-xcframeworks
+          retention-days: 7
           path: 02-core-rust/sdks/*/out/*.xcframework.zip
           if-no-files-found: warn
 
@@ -140,5 +141,6 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           name: rust-sdk-aars
+          retention-days: 7
           path: 02-core-rust/sdks/android/fightdeck/out/android/fightdeck.aar
           if-no-files-found: warn

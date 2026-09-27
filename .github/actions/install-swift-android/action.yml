@@ -1,0 +1,63 @@
+# Put the pinned open-source Swift and its Swift SDK for Android on a Linux runner.
+#
+# sdk-core-swift.yml builds 01-core-swift's AAR, and _android-app.yml needs the same AAR
+# before the 01 host can configure; both install the toolchain the same way. Xcode's Swift
+# cannot stand in for it, even at the same version number, which is why this is a Linux job.
+
+name: Install Swift for Android
+description: Install the pinned Swift toolchain with swiftly and the pinned Swift SDK for Android.
+
+runs:
+  using: composite
+  steps:
+    - name: Read pinned versions
+      shell: bash
+      run: |
+        ./tools/versions.py apple.swift --github-env PINNED_SWIFT
+        ./tools/versions.py apple.swift_sdks.android --github-env PINNED_SWIFT_ANDROID_SDK
+        ./tools/versions.py apple.swift_sdks.android_checksum --github-env PINNED_SWIFT_ANDROID_SDK_SHA
+        ./tools/versions.py android.ndk --github-env PINNED_NDK
+        ./tools/versions.py android.min_sdk --github-env PINNED_MIN_SDK
+
+    # swiftly rather than a marketplace action: the toolchain version this repository
+    # pins is newer than any action's hard-coded table, and swiftly is what swift.org
+    # documents. It also keeps the job off a Node 20 action.
+    - name: Install Swift ${{ env.PINNED_SWIFT }}
+      shell: bash
+      run: |
+        curl -fsSLO "https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz"
+        tar zxf "swiftly-$(uname -m).tar.gz"
+        ./swiftly init --assume-yes --quiet-shell-followup --skip-install
+        # shellcheck source=/dev/null
+        . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+        # The runner image is missing a couple of the toolchain's shared libraries. Left
+        # to itself swiftly reports that as a failed install; asking for the commands and
+        # running them turns it into the two apt lines it actually is.
+        POST_INSTALL="$RUNNER_TEMP/swift-post-install.sh"
+        swiftly install "$PINNED_SWIFT" --use --assume-yes --post-install-file "$POST_INSTALL"
+        if [[ -s "$POST_INSTALL" ]]; then
+          sudo apt-get update -qq
+          sudo bash "$POST_INSTALL"
+        fi
+        echo "${SWIFTLY_BIN_DIR:-$HOME/.local/share/swiftly/bin}" >> "$GITHUB_PATH"
+        swift --version
+
+    # Deliberately not cached: toolchain and bundle run to gigabytes, and the repository's
+    # 10 GB cache is worth more to the Gradle and Cargo entries.
+    - name: Install the Swift SDK for Android
+      shell: bash
+      run: |
+        # The bundle name is pinned so a silently newer nightly cannot change the numbers.
+        swift sdk install \
+          "https://download.swift.org/swift-${PINNED_SWIFT}-release/android-sdk/swift-${PINNED_SWIFT}-RELEASE/${PINNED_SWIFT_ANDROID_SDK}.artifactbundle.tar.gz" \
+          --checksum "$PINNED_SWIFT_ANDROID_SDK_SHA"
+
+        # The bundle ships a sysroot with no NDK in it; until this script has pointed it
+        # at one, every cross-compile fails at link time. The bundle's location differs
+        # between SwiftPM versions, so find it rather than guess.
+        BUNDLE="$(find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
+          -maxdepth 1 -name '*_android.artifactbundle' 2>/dev/null | head -1)"
+        ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$PINNED_NDK" \
+          "$BUNDLE/swift-android/scripts/setup-android-sdk.sh"
+
+        swift sdk list

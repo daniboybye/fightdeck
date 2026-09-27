@@ -137,5 +137,6 @@ jobs:
         if: steps.guard.outputs.exists == 'true'
         with:
           name: skip-aars
+          retention-days: 7
           path: 04-sdk-skip/sdks/*/out/*.aar
           if-no-files-found: warn

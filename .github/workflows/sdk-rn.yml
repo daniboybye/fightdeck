@@ -62,6 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: rn-xcframeworks
+          retention-days: 7
           path: 03-sdk-rn/sdks/*/out/*.xcframework.zip
           if-no-files-found: error
 
@@ -99,5 +100,6 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: rn-aars
+          retention-days: 7
           path: 03-sdk-rn/sdks/*/out/*.aar
           if-no-files-found: error

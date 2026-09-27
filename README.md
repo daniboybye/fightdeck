@@ -2,450 +2,142 @@
 
 Companion repository for the talk **"Share Code, Keep Your Native iOS & Android UI"**.
 
-Five pairs of iOS and Android apps. Same product, same data, same screens. What differs is
-one thing only: **the mechanism used to share code between the two platforms.** Everything
-is measured against a baseline that shares nothing at all.
+Five pairs of iOS and Android apps. Same product, same data, same screens; the only thing that
+differs is **how code is shared between the two platforms**. Everything is measured against a
+baseline that shares nothing.
 
-The product is a UFC betting app built on two real, already-finished events, so every odd,
-every result and every settlement in the golden fixtures is a fact rather than an invention.
+The product is a UFC betting app built on two real, finished events, so every odd, result and
+settlement in the golden fixtures is a fact rather than an invention.
 
-## The question this repo answers
+## The question
 
-When an app grows, the product starts asking for platform-specific flows and the framework
-starts getting in the way. The stable end state is usually neither "everything cross-platform"
-nor "everything written twice": the app stays native, platform-specific code stays native,
-and individual features arrive as shared SDKs.
-
-That leaves two questions, and this repo exists to answer them with numbers:
-
-1. Which technology goes behind those SDKs so they do not look like a piece of somebody
-   else's app?
-2. What is the price of each choice?
+As an app grows, the stable end state is rarely "everything cross-platform" or "everything
+written twice". The app stays native, platform-specific code stays native, and individual
+features arrive as shared SDKs. That leaves two questions this repo answers with numbers:
+which technology goes behind those SDKs, and what does each choice cost?
 
 ## Layout
 
 | Path | What it is |
 | --- | --- |
-| `contract/` | The `FightCore` API and golden fixtures. Frozen before any app was built. |
-| `dataset/` | UFC event data, JSON schema, locally hosted assets. |
-| `shared-ui-spec/` | Screen-by-screen spec so all five pairs look identical. |
-| `00-native/` | Baseline. Zero shared code. SwiftUI and Compose, written twice. |
-| `01-core-swift/` | Headless Swift core, cross-compiled for Android via the Swift SDK. |
-| `02-core-rust/` | Headless Rust via UniFFI: three namespaces, shipped as three Apple binaries and one aggregate Android `.so`. |
-| `03-sdk-rn/` | UI-bearing SDK: React Native, one Hermes runtime, three feature surfaces. |
-| `04-sdk-skip/` | UI-bearing SDK: Skip, Swift that becomes real Jetpack Compose. |
-| `tools/` | Size, size-breakdown, source-count and build-step measurement scripts. |
+| [`contract/`](contract/) | The `FightCore` API and the golden fixtures every implementation passes. |
+| [`dataset/`](dataset/) | UFC event data, JSON schema, locally hosted art. |
+| [`shared-ui-spec/`](shared-ui-spec/) | Screen-by-screen spec, so all five pairs look the same. |
+| [`00-native/`](00-native/) | Baseline. Nothing shared: SwiftUI and Compose, written twice. |
+| [`01-core-swift/`](01-core-swift/) | Headless Swift core. Source on iOS; cross-compiled for Android and called through `swift-java`. |
+| [`02-core-rust/`](02-core-rust/) | Headless Rust core behind UniFFI: three Apple xcframeworks, one Android `.so`. |
+| [`03-sdk-rn/`](03-sdk-rn/) | UI-bearing SDKs on React Native: one Hermes runtime, three feature screens. |
+| [`04-sdk-skip/`](04-sdk-skip/) | UI-bearing SDKs on Skip: Swift source on iOS, transpiled to Kotlin and Compose on Android. |
+| [`tools/`](tools/) | Size, size-breakdown and line-count scripts, and a local mirror of CI. |
 
-Each approach folder holds `ios/`, `android/` and (where relevant) `sdks/`. The
-`03-sdk-rn` and `04-sdk-skip` approaches split their `sdks/` into `core/`, `deposit/`,
-`betslip/` and `fighter/` on purpose: **more than one feature over one runtime is the only
-way to measure what the next screen actually costs**, which is the question everyone asks
-and nobody answers. Three features rather than two because the first one is not
-representative — it absorbs runtime that nothing had touched yet.
+The two UI-bearing approaches split their SDKs into `core` plus `deposit`, `betslip` and
+`fighter` on purpose: more than one feature over one runtime is the only way to measure what
+the *next* screen costs.
 
-## Two ground rules
+**Separate host apps, never a switcher.** Binary size cannot be measured honestly in one app
+that swaps implementations at runtime.
 
-**Separate host apps, never a switcher.** No single app with a dropdown to swap
-implementations. You cannot honestly measure binary size or cold start that way.
+## What it costs to ship
 
-**SDK hosts use built artifacts, not a source fallback.** Rust, React Native and Skip hosts
-resolve one local `.xcframework` / AAR path. A clean checkout builds those SDK artifacts
-before the app; there is no second remote-release configuration to drift.
+Release builds, arm64, measured at `d3be422` by `tools/ci-local.sh all`.
 
-## The receipt
-
-The full table with methodology is written to `tools/out/receipt.md` by the `measure`
-workflow. It is deliberately not committed, so a stale local run can never be mistaken for
-a fresh one.
-
-The three tables below are the headline: what each approach costs to ship, what it costs to
-write, and what the *next* feature costs once the first one has paid for the runtime. They
-come from a local `tools/ci-local.sh --skip-tests measure` run on Apple silicon, and the
-`measure` workflow re-derives every one of them on a clean runner.
-
-### What it costs to ship
-
-| Approach | iOS `.app` | Android arm64 | Total overhead |
+| Approach | iOS `.app` | Android download | Android install |
 | --- | ---: | ---: | ---: |
-| `00-native` baseline | 1.96 MB | 12.53 MB | — |
-| `01-core-swift` † | 1.98 MB | 36.18 MB | +23.67 MB |
-| `02-core-rust` ‡ | 2.89 MB | 13.70 MB | +2.10 MB |
-| `04-sdk-skip` | 3.11 MB | 22.52 MB | +11.14 MB |
-| `03-sdk-rn` | 21.21 MB | 24.78 MB | +31.50 MB |
+| `00-native` baseline | 1.96 MB | 1.47 MB | 2.88 MB |
+| `01-core-swift` | 1.97 MB | 7.76 MB | 21.75 MB |
+| `02-core-rust` | 2.83 MB | 2.17 MB | 4.62 MB |
+| `03-sdk-rn` | 23.32 MB | 6.70 MB | 17.00 MB |
+| `04-sdk-skip` | 2.07 MB | 4.83 MB | 13.54 MB |
 
-*Total overhead* is the iOS and Android growth added together, against the baseline that
-shares nothing. Android figures are per-ABI download size for `arm64-v8a` from the app
-bundle, which is what a phone actually pulls — the universal APK is three to four times
-larger and nobody downloads it.
+*iOS* is the archived `.app` on disk. *Android download* is what the Play Store sends an arm64
+phone (bundletool's split APKs, compressed); *install* is the same files unpacked on the
+device. Download is the number users feel; install is what sits in storage.
 
-> **The Android column predates R8.** Release builds are minified now; these rows are not.
-> Re-measure before quoting them.
+Most of that is paid once. What an approach adds to the baseline splits into a fixed runtime
+and a price per feature:
 
-† `01-core-swift`'s Android figure is what a Swift core actually costs on Android: 590 KB of
-logic across three SDKs, pulling 19.1 MB of Swift runtime behind it. **This row predates the
-ICU removal and must be re-measured** — it was taken when the runtime was 65.2 MB per ABI,
-three fifths of it `lib_FoundationICU.so`, which arrived because the sources said
-`import Foundation`. They now say `FoundationEssentials` on Android and format the digits
-themselves; `01-core-swift/README.md` has the before and after.
+| | Fixed runtime (iOS / Android) | Each further feature (iOS / Android) |
+| --- | --- | --- |
+| Swift | 0 / ~6.2 MB | ~0 / ~50 KB |
+| Rust | ~0.55 / ~0.4 MB | ~100 / ~100 KB |
+| React Native | ~21.2 / ~5.2 MB | 8–84 / 2–41 KB |
+| Skip | 0 / ~3.3 MB | 36–80 / 8–32 KB |
 
-‡ `02-core-rust` keeps three separate Apple binaries but now ships one aggregate Android
-`libfightdeck.so`. This row predates that Android packaging change and must be re-measured.
+Android is download size. For React Native and Skip a feature is a screen, measured by
+`tools/measure-second-feature.sh`: it builds a host with only the runtime, then adds the
+deposit, bet slip and fighter screens one at a time. The range runs from the first screen,
+which also pays for runtime nothing had touched yet, to the last and simplest. For Swift and
+Rust a feature is a logic SDK, and the figures are estimates from `tools/size-breakdown.py`:
+runtime libraries on one side, the SDKs' own code on the other.
 
-### What it costs to write
+Swift and Skip cost nothing fixed on iOS because the Swift runtime ships with the OS and both
+compile their SDKs into the app from source. On Android, Swift brings its own runtime and
+Foundation, Skip brings SkipUI and SkipFoundation as Kotlin, and React Native brings Hermes
+and React on both platforms.
 
-| Approach | iOS host | Android host | Shared | iOS specific | Android specific | Decrease hosts | Total | iOS adapters | Android adapters | Total + adapters | Generated | Config |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `00-native` baseline | 1,904 | 2,604 | — | — | — | — | **4,508** | — | — | **4,508** | — | 229 |
-| `02-core-rust` | 1,208 | 2,058 | 1,548 | — | — | −27% | **4,814** | 37 | 27 | **4,878** | 8,473 | 601 |
-| `01-core-swift` | 1,199 | 2,052 | 923 | — | — | −28% | **4,174** | 59 | 510 | **4,743** | 1,152 | 522 |
-| `03-sdk-rn` | 1,405 | 1,960 | 1,409 | — | — | −25% | **4,774** | 420 | 313 | **5,507** | 282 | 1,183 |
-| `04-sdk-skip` | 861 | 1,590 | 1,615 | 123 | 136 | −46% | **4,325** | 66 | 150 | **4,541** | 2,785 | 739 |
+## What it costs to write
 
-**Measured at `1e29d5c`** by `python3 tools/count-significant-lines.py`, except the
-`03-sdk-rn` row, re-measured at `532d99c` after its host and SDK simplification, and the
-`02-core-rust` row, re-measured at `52b1d66` after its slip snapshot and shared-record
-changes, the `01-core-swift` row, re-measured at `afa28c7` after its presentation models,
-tuple glue, single Android library and shared image server, and the
-`04-sdk-skip` row, re-measured at `4be3552` after the Skip simplification — which includes
-moving the image server into the events SDK, as `02-core-rust` did in `7632bbb` and
-`01-core-swift` in `afa28c7`; `00-native` and `03-sdk-rn` keep it in the host. To refresh it, read the commits since that hash rather than the whole tree;
-`--audit` prints every file and the column it landed in, and `--tsv` prints the table ready
-to paste into a slide.
+Significant hand-written lines, measured at `d3be422` by `tools/count-significant-lines.py`:
 
-A line counts when something executes or declares. Blank lines, `//` and `/* */` comments
-and lines made only of punctuation are dropped — that is about a third of a Swift file, and
-it is the third nobody writes twice. Also excluded, because keeping them would compare
-different things: tests, manifests (`Package.swift`, `*.gradle.kts`, `Podfile`), the
-measurement harnesses on both platforms — `ios/Harness/**` and the `both`/`deposit`/
-`runtime` Android flavours, which are cut-down bridges that exist so the size harness can
-weigh one feature at a time. Byte-identical files are counted once.
+| Approach | iOS host | Android host | Shared | Platform specific | Adapters | Total | Hosts vs baseline | Generated | Config |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `00-native` baseline | 1,903 | 2,589 | — | — | — | **4,492** | — | — | 229 |
+| `01-core-swift` | 1,199 | 2,052 | 923 | — | 569 | **4,743** | −28% | 1,152 | 500 |
+| `02-core-rust` | 1,208 | 2,058 | 1,548 | — | 64 | **4,878** | −27% | 8,473 | 620 |
+| `03-sdk-rn` | 1,405 | 1,960 | 1,433 | — | 733 | **5,531** | −25% | 282 | 1,212 |
+| `04-sdk-skip` | 861 | 1,574 | 1,614 | 259 | 216 | **4,524** | −46% | 2,785 | 675 |
 
-Code that runs on one platform only is never *Shared*, wherever the file sits. It splits
-two ways.
+A line counts when it executes or declares; blanks, comments and punctuation-only lines are
+dropped, and so are tests, manifests and the size-measurement harnesses. *Shared* is code
+both platforms run. *Specific* is real code for one platform that lives in shared files;
+*adapters* are wrappers that translate a type, theme or runtime handle across the boundary.
+*Total* adds all of those up. *Generated* (UniFFI, jextract, skipstone) and *config* (build
+scripts and settings) are outside it.
 
-*Adapter* is a wrapper with no UI of its own: it translates a type, a theme or a runtime
-handle the other side has no representation for. `Money`'s `Decimal`-versus-`BigDecimal`
-branches, `MaterialScheme` mapping `ThemeTokens` into a Compose `ColorScheme`, the
-`*Hosting` Compose entry points, `FoundationEssentials` standing in for `Foundation`, Swift's
-`*Java` targets, the `*Umbrella` SPM shim.
+- **Only Skip shares UI, so only Skip empties the hosts** — by 46%. Once adapters are added
+  back it is level with writing both apps natively (4,524 against 4,492).
+- **Logic shares well, UI less so.** `tools/feature-lines.py` compares the baseline's two
+  copies of each feature with Skip's one: the betting core is 32% smaller and the three
+  screens 5–45% smaller, but the shared components and design tokens grow, because each
+  carries a Liquid Glass branch and a Material one.
+- **Rust pays in generated code, React Native in glue.** UniFFI writes 8,473 lines so the
+  Rust hosts need only 64 of adapter; React Native needs 733 lines of adapter and the most
+  configuration of any approach.
 
-*Platform specific* is real code for one platform: a different icon because the SF Symbol
-has no Material mapping, a hand-written layout because the modifier is missing, a different
-font API, Liquid Glass on one side and a capsule on the other.
+## Caveats
 
-Only `04-sdk-skip` has anything in those columns, and the reason is structural rather than
-a fault: it is the only approach whose *shared module contains UI*. A headless core has no
-UI to make platform-specific, so every branch in it is translation — which is why Swift's
-567 Android lines are all adapter. *Generated* is build output — jextract's Java and
-Swift, UniFFI's bindings, skipstone's Kotlin. Nobody maintains a line of it, and no line of
-it is in the totals.
-
-*Config* is build scripts, manifests and settings. It is outside the totals too, because it
-ships no behaviour, but it gets a column rather than being dropped: the baseline needs no
-build script at all and the SDK approaches need between 174 and 537 lines of them, which is
-a real cost of choosing one. Lockfiles are excluded — `package-lock.json` alone would charge
-React Native 9,300 lines nobody typed.
-
-Three things to read off it. First, **the columns tell three different stories about Skip,
-and all three are true.** Counting host code and genuinely shared code, Skip is **10% below**
-writing both apps natively (4,066 against 4,508) — the number you would expect from sharing
-three screens and a betting core. Add the platform-specific branches that live inside the
-shared files and it is **4% below** (4,325). Add the adapters that let shared code run at all
-and it is **level** (4,541). Everything interesting about these approaches lives in the
-distance between those three figures.
-
-Second, **the adapter columns say where each technology puts its platform code, and the
-answer differs more than the totals do.** Rust barely has adapters (109) because UniFFI
-generates the bindings — it pays 8,304 generated lines instead. Swift has 50 on iOS, the
-Apple half of the `#if os(Android)` branches (35 of them in `Money`), and 567 on Android:
-300 lines of `*Java` facade that jextract needs, 200 of Kotlin turning what crosses back into
-types, and 46 of decimal formatting written by hand because `FoundationEssentials` has no
-`NumberFormatter`. Skip has 216 adapter lines — host bridges, the Material palette mapping
-and the two sockets under the shared image server — plus 259 platform-specific ones: 113 in
-the two screens with the most UI, bet slip and deposit, and 111 in the core's action controls
-they are built from. React Native has 1,920, hand-written
-code to embed, size and feed a surface; 233 of those are the dead sources described above.
-
-Third, **every approach takes work out of the hosts, but only Skip takes out a lot.** Skip's
-two hosts hold 2,451 lines against the baseline's 4,508 (−46%); Swift's and Rust's 3,713 and
-3,694 (−18%); React Native's 4,001 (−11%), and it then adds 1,920 lines of adapter back, so
-its hosts end up carrying more than writing both apps natively.
-
-#### Where the gap between the two totals comes from
-
-Skip is the interesting row, because it is both the best and the worst answer depending on
-which total you read. Comparing the same features — what the baseline writes across both
-platforms, against what Skip writes once:
-
-| | `00-native`, both platforms | `04-sdk-skip`, shared | |
-| --- | ---: | ---: | --- |
-| Betting core | 584 | 396 | **−32%** |
-| Dataset and models | 204 | 294 | +44% |
-| Bet slip screen | 405 | 261 | **−36%** |
-| Deposit screen | 346 | 192 | **−45%** |
-| Fighter screen | 147 | 140 | −5% |
-| Shared components (preset chips, labelled row, action buttons) | 146 | 369 | +153% |
-| Image server | 167 | 113 | −32% |
-| Design tokens | 62 | 245 | +295% |
-
-Produced by `python3 tools/feature-lines.py`, which counts with the same rules as the table
-above and refuses to print if a file in Skip's shared SDKs has not been assigned to a row.
-Where the baseline keeps a component inside a larger file — the preset chip in `CommonUi.kt`
-and `SharedViews.swift` — only that declaration is counted. Skip's three `*Hosting` files
-(47 lines) have no native counterpart and are in no row. Neither is `CatalogModel` (67), the
-catalogue's load states: the baseline has the same code, but inside `AppState` and
-`MainViewModel`, where it cannot be cut out to line up against.
-
-**Logic shares almost perfectly and UI shares about two thirds.** Splitting the shared files
-by `#if`, the three SDK screens are 74% genuinely shared — 389 common lines against 78 inside
-`#if SKIP` and 61 inside `#if !SKIP`. That is after the platform branches they had in common
-moved into the core's `ActionControls`; counted together with it, the screens are 67% shared
-— 516 common lines against 131 and 119, still near-perfectly balanced, because each
-platform's controls are written separately inside one file. The logic files are 99% shared. That is not a Skip
-limitation; it is the house rule that an SDK screen must be 1:1 with iOS native and as close
-as it can get to Android native. Two native looks means two implementations, wherever they
-are stored.
-
-The rest is overhead that does not shrink with the app. The palette is written down once, in
-`Palette`, but still mapped three times — into `ThemeTokens` to cross the boundary and into
-each host's own token file, because the hosts' screens need it too. The shared components
-cost two and a half times their native counterparts, since each carries Liquid Glass on one
-side and a Material capsule on the other. Types are re-declared to cross the boundary, and every module
-carries a hosting seam.
-
-So the break-even is arithmetic. Skip ends **33 lines above** writing both apps natively
-(`Total + adapters`, 4,541 against 4,508), and that is *after* the betting core has saved
-188. If further logic shares the way the betting core does — about a third saved — it takes
-roughly another 100 lines of it before Skip drops below native: **around 700 lines of logic
-written across both platforms**, against the 584 this demo has. Adding more *screens* helps
-less than logic under the current rule, because a screen still arrives as two sets of
-platform branches in one file; adding more *logic* — cash-out, settlement, limits, free bets, odds movement — is
-what would, and that is the kind of code a real betting app has far more of than this one.
-The catalogue row is the warning: shared logic can also cost *more* when it shares types and
-formatting the native apps never had to write at all.
-
-The arguments that survive at this size are in the next two sections: what a change costs
-once it only has to be made once, and what it costs to ship.
-
-The sharpest number in this section is not in the table. `count-lines.py` also counts how
-many times each approach implements the same betting contract:
-
-| Approach | Times the contract is implemented |
-| --- | --- |
-| `00-native` baseline | twice — 444 lines of Swift, 297 of Kotlin |
-| `01-core-swift` | twice — 411 shared, 138 more in Kotlin |
-| `02-core-rust` | three times — 240 shared, 78 in Swift, 72 in Kotlin |
-| `03-sdk-rn` | three times — 378 in TypeScript, plus both hosts in full (265 Swift, 297 Kotlin) |
-| `04-sdk-skip` | **once** — 591 lines, and nothing else |
-
-These are raw lines from `count-lines.py`, comments included, so they do not add up against
-the significant-line table above; compare the rows with each other, not with that table.
-
-Only Skip gets to one, and the reason is narrow enough to be worth saying plainly: its
-shared artefact is source in each host's own language, so a host can consume the SDK's own
-types. Rust ships a `.so` behind FFI and React Native ships JavaScript, so in both the host
-can call shared *behaviour* but cannot hold a shared *type*.
-
-Where that costs you differs, and the adapter columns above say so more precisely than an
-earlier version of this section did. React Native pays it in hand-written adapter — 1,920
-lines, split between the two hosts and the SDK's own runtime. `02-core-rust` pays almost none
-in adapter (109 lines), because UniFFI generates the bindings; it pays 8,304 lines of
-generated code instead, and pays again in what the shared code is allowed to be, since every
-type that crosses has to be expressible in the FFI.
-
-Holding a shared type is also what lets Skip share the layer above the contract. `04-sdk-skip`
-is the only approach where the fight catalogue — reading the dataset, indexing it, and
-formatting a result line, an event date or a clip length — exists once, in `sdks/events`.
-Every other approach either hand-writes it twice (`00-native`, `03-sdk-rn`) or shares the
-parsing but re-declares the types to get them across the boundary (`01-core-swift` pays 254
-lines for exactly this — 154 of Swift facade for jextract and 100 of Kotlin turning it back
-into types — and `02-core-rust` 272 lines of UniFFI FFI).
-
-That last row was not free, and it is not an argument that Skip wins. Sharing types means
-the host's Kotlin now handles transpiled Swift: `skip.lib.Array` instead of `List`, Swift
-`ID` casing, no generated `copy()`, and a core whose formatting reaches for Android's ICU
-and so no longer runs in a plain JVM test. Shared code is also written against a narrower
-Swift than an iOS-only module would be — a generic `decode<T>` does not transpile, because
-Kotlin needs a reified type parameter, and dates have to go through `DateFormatter` rather
-than `.formatted(date:time:)`, because Skip's `FormatStyle` covers numbers only.
-
-What it buys is that divergence stops being invisible. A bug in the shared core is a bug in
-both apps at once — see `04-sdk-skip/README.md`, where deduplicating the core is what finally
-surfaced odds maths that had been wrong on Android all along. Sharing the catalogue did the
-same for presentation: the two apps had been title-casing `split_decision` differently, and
-the iOS news list showed a relative date the Android one never rendered at all.
-
-### The cost of the next feature
-
-> **Stale — re-measure before quoting.** These rows predate the fighter-profile split, so
-> they are missing the third feature entirely; they predate R8, so every Android figure is
-> too large; and the Skip Android row disagrees with the most recent measurement on disk by
-> more than a factor of two (47.09 MB of runtime, not 22.42 MB). Run
-> `./tools/measure-second-feature.sh`, then `./tools/render-receipt.py`.
-
-| Approach | Runtime alone | + deposit | + bet slip | Second feature |
-| --- | ---: | ---: | ---: | ---: |
-| `03-sdk-rn` iOS | 19.26 MB | 19.34 MB | 19.36 MB | 20.0 KB |
-| `03-sdk-rn` Android | 24.72 MB | 24.76 MB | 24.78 MB | 21.6 KB |
-| `04-sdk-skip` iOS | 0.15 MB | 1.37 MB | 1.38 MB | 12.0 KB |
-| `04-sdk-skip` Android | 22.42 MB | 22.47 MB | 22.52 MB | 46.5 KB |
-
-Produced by `./tools/measure-second-feature.sh`, which builds four hosts — one that only
-starts the runtime, then one each as the deposit screen, the bet slip and the fighter
-profile are added — and subtracts. Only the two UI-bearing SDKs appear: the headless cores
-ship no UI, so a second feature there is ordinary application code.
-
-The first feature is the least useful of the three, because it pays for whatever the runtime
-only pulls in once a real screen uses it. The fighter profile is the most useful: it is pure
-presentation, so what it adds is about as close as this repository gets to the floor price
-of one more screen.
-
-On iOS those four hosts are a dedicated measurement harness (`ios/Harness/`), not the demo
-app with features switched off. That distinction is the whole reason the demo apps contain
-no conditional compilation: a host that has to compile both with and without a feature SDK
-needs `#if` around every import and every call site, and placeholder views to stand in for
-the screens that are missing. Measuring a separate host instead means the app reads as an
-app. It also changes what the numbers mean: none of the four iOS rows is the shipping app,
-so the "+ bet slip" column does not match the `.app` sizes in the table above and is not
-supposed to. Read the deltas, not the absolute sizes. Android needs none
-of this: Kotlin has no preprocessor, so the flavours swap whole source directories, and the
-demo app itself is what gets measured.
-
-`02-core-rust` still splits source and APIs along the same axis below the UI — a `fightcore`
-kernel plus `fightslip` and `fightevents` feature SDKs. The Android numbers below document
-the previous three-`.so` experiment; current Android releases aggregate all three into one
-`libfightdeck.so`, so they no longer expose a per-feature shipping delta:
-
-| `02-core-rust` | Kernel alone | + `fightslip` | + `fightevents` | Second feature |
-| --- | ---: | ---: | ---: | ---: |
-| iOS (static, linker-deduped) | 0.60 MB | 0.89 MB | 1.30 MB | 410 KB |
-| Android (historical: three `.so`) | 437 KB | 1,119 KB | 2,139 KB | 1,020 KB |
-
-Different measurement, so read it on its own: the iOS row links against every exported
-entrypoint with `-dead_strip`; the historical Android row measured the three stripped
-`lib/arm64-v8a/` payloads. On iOS the linker keeps one copy of overlapping Rust code. The
-old Android layout could not deduplicate across independently loaded libraries, which is why
-it motivated the aggregate crate. The current arm64 `libfightdeck.so` is 2.08 MB, about 4%
-smaller than the old three-file total; the more important trade is that Android updates are
-now released as one native unit.
-
-This is the point of the whole repository. React Native's iOS host is 19.26 MB before a
-single feature screen exists, and the two screens together add 100 KB — the runtime is
-roughly two hundred times the code it carries. Android tells the same story with different
-digits: 24.72 MB standing still, 59 KB for both screens.
-
-Skip splits the bill differently. A host that mounts no feature screen is 0.15 MB, because
-it links no SkipUI at all: the transpiled UI layer arrives with the first feature and costs
-1.22 MB. The second then costs 12 KB. Same shape as React Native — pay once, then nearly
-nothing — but a Skip host carrying one feature is fourteen times smaller than the React
-Native equivalent, and it pays nothing at all until a feature needs a UI.
-
-React Native's two platforms now agree on what the second feature costs — 20.0 KB on iOS
-against 21.6 KB on Android. Skip does not: 12 KB on iOS against 46.5 KB on Android, where
-the feature's Kotlin is transpiled rather than compiled from the same Swift the iOS side
-links.
-
-Do not read the iOS kilobyte figures too closely. Every iOS number is the archived `.app`
-measured with `du`, so all of them are multiples of 4 KB — a 12 KB delta is three disk
-blocks, not a byte count. The Android figures are APK download sizes and are exact.
-
-### What the shrinker changes
-
-Every Android release build runs R8 with resource shrinking. It did not always, and turning
-it on moved the numbers more than the approaches do. Universal APKs from one machine, so
-read the ratios rather than the digits — a per-ABI download compresses its dex and drops
-three of the four ABIs, so the download saving is smaller than the column below:
-
-| Approach | APK unminified | APK minified | dex unminified | dex minified |
-| --- | ---: | ---: | ---: | ---: |
-| `00-native` | 46.32 MB | 3.02 MB | 45.65 MB | 2.71 MB |
-| `01-core-swift` § | 178.01 MB | 134.76 MB | 45.68 MB | 2.77 MB |
-| `02-core-rust` | 52.06 MB | 8.70 MB | 46.08 MB | 3.06 MB |
-| `03-sdk-rn` | 105.29 MB | 54.90 MB | 53.03 MB | 3.73 MB |
-| `04-sdk-skip` | 67.72 MB | 17.78 MB | 62.23 MB | 12.82 MB |
-
-Four of the five hosts were carrying about 45 MB of dex they never ran — Compose, AndroidX,
-Coil, OkHttp, all linked whole. That constant is the same in every column, so it was adding
-noise to precisely the comparison this repository exists to make, and drowning the native
-payload that actually distinguishes the approaches: before the aggregate `.so` change,
-`02-core-rust` shipped 5.23 MB of Rust and was reporting a 52 MB APK. The current
-`libfightdeck.so` layout must be re-measured before quoting this row.
-
-§ `01-core-swift`'s two APK columns also predate the ICU removal. The minified universal APK
-measures **44.40 MB** now, against the 134.76 MB below, because 46 MB per ABI of Foundation
-internationalisation left the build; the dex columns are unaffected, since none of it was
-dex. The arm64 download is 7.86 MB.
-
-The one row that does not collapse to about 3 MB of dex is Skip's, and that is the finding.
-Transpiled Swift needs 12.82 MB kept, four times any other host, because `Codable` transpiles
-into reflection: `container.decode(String::class, forKey: CodingKeys.boutID)` names its type
-and its key at runtime, so R8 sees nothing referencing the property being filled. SkipUI
-resolves part of the SwiftUI shape reflectively too, which is why its AAR needs
-`kotlin-reflect` at all. The approach that shares the most source is the one a shrinker can
-see through the least, and it pays about 10 MB for it.
-
-That price was checked rather than assumed. Keeping members but letting R8 delete classes
-nothing statically references saves 1.70 MB and leaves an app that loads no data at all: the
-events screen shows *Something went wrong* and logcat is empty, because the failed decode
-arrives as an ordinary caught error rather than a crash. On this approach a shrinker
-misconfiguration is invisible to the build and nearly invisible at runtime.
-
-Nothing else needed persuading. The Rust host keeps the UniFFI bindings and JNA intact —
-that FFI is name-based in both directions, so R8 can shrink around it but never through it —
-and the Swift host is covered by the `proguard.txt` its own AARs ship. Both also had to name
-a class their libraries reference and Android does not have: `jdk.jfr` annotations on
-SwiftKit's thread-safety markers, `java.awt` in JNA's desktop bridge.
-
-### Caveats that belong next to every number
-
-Measurements come from simulator and emulator rather than physical devices. Android release
-builds now run R8 with resource shrinking, which they did not when the tables above were
-filled in, so every Android figure in this file is stale and too large — see [what the
-shrinker changes](#what-the-shrinker-changes). CI caches package downloads but not build
-output: Gradle's task-output cache stays off, because a size on a slide has to come from a
-build that actually happened.
-
-**Swift-on-Android needs a second Swift** — `01-core-swift` cross-compiles only on an
-open-source toolchain installed beside Xcode's, and its Kotlin calls the result through
-JNI bindings generated by `swift-java jextract --mode=jni`. All ten implementations pass
-all five golden fixture suites, but not all in the same place: that approach's Android run
-is an instrumented test on a device, because a JVM on macOS cannot load an Android `.so`,
-so CI's contract workflow gates the cores rather than every host.
+- Sizes come from simulator and emulator builds on one Apple silicon Mac; `measure.yml`
+  re-derives them on clean runners.
+- `01-core-swift`'s Android contract tests are instrumented tests on a device, because a JVM
+  on macOS cannot load an Android `.so`.
+- Each approach's README goes further: where the bytes go, what crosses the boundary, and
+  the rough edges hit along the way.
 
 ## Getting started
 
-**Full bootstrap (all ten apps on one simulator + one emulator):** follow [`RUNBOOK.md`](RUNBOOK.md).
+[`RUNBOOK.md`](RUNBOOK.md) takes a clean machine to all ten apps on one simulator and one
+emulator. Toolchain versions are pinned in [`versions.lock.toml`](versions.lock.toml), which
+every workflow reads.
 
-Binary SDK outputs are gitignored. Build them once after cloning, then build the hosts:
-
-```bash
-cd 02-core-rust/sdks && ./build-apple.sh && ./build-android.sh
-cd 03-sdk-rn && npm ci --prefix sdks/core && ./sdks/build-apple.sh && ./sdks/build-android.sh
-cd 04-sdk-skip/sdks && ./build-aars.sh
-```
-
-`01-core-swift` also needs its three Android AARs; its iOS host intentionally remains the
-direct SwiftPM source comparison:
+SDK binaries are not committed. Build them once after cloning:
 
 ```bash
-cd 01-core-swift/sdks && swiftly run ./build-aars.sh +6.3.3
+(cd 01-core-swift/sdks && swiftly run ./build-aars.sh +6.3.3)
+(cd 02-core-rust/sdks && ./build-apple.sh && ./build-android.sh)
+(cd 03-sdk-rn && npm ci --prefix sdks/core && ./sdks/build-apple.sh && ./sdks/build-android.sh)
+(cd 04-sdk-skip/sdks && ./build-aars.sh)
 ```
 
-The `swiftly run … +6.3.3` prefix is load-bearing: Xcode's Swift cannot cross-compile
-against the Android SDK even at a matching version number.
-
-Every toolchain version is pinned in [`versions.lock.toml`](versions.lock.toml) and every
-CI workflow reads from it. Workflows run the same SDK-build scripts before their host build.
+The `swiftly run … +6.3.3` prefix matters: Xcode's Swift cannot cross-compile against the
+Swift SDK for Android, even at the same version number.
 
 ## CI
 
-Every workflow is `workflow_dispatch` only. Nothing runs on push.
-
-`measure.yml` is the important one: it invokes the others, collects the numbers, and emits
-the comparison table as a markdown artifact. Every figure quoted anywhere comes from that
-artifact rather than from anybody's memory.
+Every workflow is `workflow_dispatch` only; nothing runs on push. `measure.yml` builds all ten
+apps, runs the contract suite and renders the comparison table as an artifact.
+`tools/ci-local.sh` runs the same jobs on a Mac without spending Actions minutes.
 
 ## License
 
-Code is MIT. UFC event names, dates, results and fighter statistics are matters of public
-record. No UFC-owned media is redistributed here.
+Code is MIT, see [`LICENSE`](LICENSE). UFC event names, dates, results and fighter statistics
+are public record. No UFC-owned media is redistributed here.

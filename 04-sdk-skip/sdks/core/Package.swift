@@ -5,11 +5,12 @@
 import PackageDescription
 
 let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
-let buildFromSource = buildMode == "1" || buildMode == "ios"
-// `ios` builds the iOS framework from source without Skip. No source here imports a Skip
-// module: the screens are SwiftUI, and on iOS Skip's libraries are their Android half compiled
-// out. Linked anyway, each framework carried its own static copy of SkipUI. `1` keeps Skip and
-// its transpiler for the Android export and the fixture tests.
+let packaged = buildMode == "1" || buildMode == "ios"
+// Unset, the iOS app compiles these sources itself and links them statically, as
+// 01-core-swift's host does: no Skip, no framework of its own. `ios` packages the same sources
+// as a dynamic xcframework, and `1` adds Skip and its transpiler for the Android export and the
+// fixture tests. No source here imports a Skip module — the screens are SwiftUI, and on iOS
+// Skip's libraries are their Android half compiled out — so only `1` needs them.
 let transpile = buildMode == "1"
 
 let skipProducts: [Target.Dependency] = transpile
@@ -19,22 +20,16 @@ let skipProducts: [Target.Dependency] = transpile
     ]
     : []
 
-let coreBinary: Target = buildFromSource
-    ? .target(
-        name: "FightDeckCoreBinary",
-        dependencies: skipProducts,
-        path: "Sources/FightDeckCore",
-        plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
-    )
-    : .binaryTarget(
-        name: "FightDeckCoreBinary",
-        path: "out/FightDeckCore.xcframework"
-    )
+let coreBinary: Target = .target(
+    name: "FightDeckCoreBinary",
+    dependencies: skipProducts,
+    path: "Sources/FightDeckCore",
+    plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
+)
 
-// The xcframework this package is distributed as contains a dylib, and SwiftPM only
-// links one for a dynamic product. The source-only packaging build therefore uses a
-// dynamic product; normal host builds consume the local xcframework.
-let coreLibrary: Product = buildFromSource
+// Statically linked into the app. Only a packaged build is dynamic: the xcframework holds a
+// dylib, and SwiftPM only produces one for a dynamic product.
+let coreLibrary: Product = packaged
     ? .library(name: "FightDeckCore", type: .dynamic, targets: ["FightDeckCore"])
     : .library(name: "FightDeckCore", targets: ["FightDeckCore"])
 

@@ -6,8 +6,8 @@
 import PackageDescription
 
 let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
-let buildFromSource = buildMode == "1" || buildMode == "ios"
-// `ios` builds the iOS framework without Skip; see core/Package.swift.
+let packaged = buildMode == "1" || buildMode == "ios"
+// Unset: compiled into the iOS app from source. See core/Package.swift for the modes.
 let transpile = buildMode == "1"
 
 let skipProducts: [Target.Dependency] = transpile
@@ -16,24 +16,18 @@ let skipProducts: [Target.Dependency] = transpile
     ]
     : []
 
-let eventsBinary: Target = buildFromSource
-    ? .target(
-        name: "FightDeckEventsBinary",
-        dependencies: [
-            .product(name: "FightDeckCore", package: "FightDeckCore"),
-        ] + skipProducts,
-        path: "Sources/FightDeckEvents",
-        plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
-    )
-    : .binaryTarget(
-        name: "FightDeckEventsBinary",
-        path: "out/FightDeckEvents.xcframework"
-    )
+let eventsBinary: Target = .target(
+    name: "FightDeckEventsBinary",
+    dependencies: [
+        .product(name: "FightDeckCore", package: "FightDeckCore"),
+    ] + skipProducts,
+    path: "Sources/FightDeckEvents",
+    plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
+)
 
-// The xcframework this package is distributed as contains a dylib, and SwiftPM only
-// links one for a dynamic product. The source-only packaging build therefore uses a
-// dynamic product; normal host builds consume the local xcframework.
-let fightDeckEventsLibrary: Product = buildFromSource
+// Statically linked into the app. Only a packaged build is dynamic: the xcframework holds a
+// dylib, and SwiftPM only produces one for a dynamic product.
+let fightDeckEventsLibrary: Product = packaged
     ? .library(name: "FightDeckEvents", type: .dynamic, targets: ["FightDeckEvents"])
     : .library(name: "FightDeckEvents", targets: ["FightDeckEvents"])
 

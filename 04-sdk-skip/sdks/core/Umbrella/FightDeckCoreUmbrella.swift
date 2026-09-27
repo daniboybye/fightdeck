@@ -1,3 +1,3 @@
-// SPM binary targets cannot declare dependencies on other packages. The thin source
-// target above re-exports the binary so consumers write `import FightDeckCore`.
+// The sources are the FightDeckCoreBinary module, the name the Android export and its Maven
+// coordinates carry. This thin target re-exports it so consumers write `import FightDeckCore`.
 @_exported import FightDeckCoreBinary

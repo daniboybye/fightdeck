@@ -17,7 +17,7 @@
   "devDependencies": {
     "@babel/core": "^7.26.9",
     "@babel/preset-env": "^7.26.9",
-    "@react-native-community/cli": "20.0.0",
+    "@react-native-community/cli": "20.2.0",
     "@react-native/babel-preset": "0.87.0",
     "@react-native/metro-config": "0.87.0",
     "@react-native/typescript-config": "0.87.0",

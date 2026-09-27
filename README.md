@@ -431,7 +431,7 @@ Binary SDK outputs are gitignored. Build them once after cloning, then build the
 ```bash
 cd 02-core-rust/sdks && ./build-apple.sh && ./build-android.sh
 cd 03-sdk-rn && npm ci --prefix sdks/core && ./sdks/build-apple.sh && ./sdks/build-android.sh
-cd 04-sdk-skip/sdks && ./build-apple.sh && ./build-aars.sh
+cd 04-sdk-skip/sdks && ./build-aars.sh
 ```
 
 `01-core-swift` also needs its three Android AARs; its iOS host intentionally remains the

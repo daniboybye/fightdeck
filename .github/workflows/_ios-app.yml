@@ -100,10 +100,6 @@ jobs:
           pod --version || sudo gem install cocoapods --no-document
           ./03-sdk-rn/sdks/build-apple.sh
 
-      - name: Build the Skip binary SDKs
-        if: steps.guard.outputs.exists == 'true' && inputs.approach == '04-sdk-skip'
-        run: ./04-sdk-skip/sdks/build-apple.sh
-
       # UniFFI bindings and xcframeworks are build output, so package them before the host.
       - name: Read pinned Rust toolchain
         if: steps.guard.outputs.exists == 'true' && inputs.approach == '02-core-rust'

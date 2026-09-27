@@ -419,7 +419,6 @@ run_sdk_skip_apple() {
         -scheme FightDeckCore \
         -destination "$(sim_destination)" \
         -skipPackagePluginValidation)
-    ./04-sdk-skip/sdks/build-apple.sh
 }
 
 run_sdk_skip_android() {
@@ -472,10 +471,6 @@ run_ios_app() {
     if [[ "$approach" == "03-sdk-rn" ]]; then
         install_rn_deps
         ./03-sdk-rn/sdks/build-apple.sh
-    fi
-
-    if [[ "$approach" == "04-sdk-skip" ]]; then
-        ./04-sdk-skip/sdks/build-apple.sh
     fi
 
     if [[ "$approach" == "02-core-rust" ]]; then

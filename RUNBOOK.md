@@ -176,7 +176,6 @@ mkdir -p "$DD"
 # SDK hosts: build local binaries first.
 (cd "$REPO/02-core-rust/sdks" && ./build-apple.sh)
 (cd "$REPO/03-sdk-rn/sdks" && ./build-apple.sh)
-(cd "$REPO/04-sdk-skip/sdks" && ./build-apple.sh)
 
 build_ios() {
   local approach="$1"

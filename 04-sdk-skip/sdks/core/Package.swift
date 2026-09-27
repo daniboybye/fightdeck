@@ -5,10 +5,8 @@
 import PackageDescription
 
 let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
-let packaged = buildMode == "1" || buildMode == "ios"
 // Unset, the iOS app compiles these sources itself and links them statically, as
-// 01-core-swift's host does: no Skip, no framework of its own. `ios` packages the same sources
-// as a dynamic xcframework, and `1` adds Skip and its transpiler for the Android export and the
+// 01-core-swift's host does. `1` adds Skip and its transpiler, for the Android export and the
 // fixture tests. No source here imports a Skip module — the screens are SwiftUI, and on iOS
 // Skip's libraries are their Android half compiled out — so only `1` needs them.
 let transpile = buildMode == "1"
@@ -27,17 +25,12 @@ let coreBinary: Target = .target(
     plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
 )
 
-// Statically linked into the app. Only a packaged build is dynamic: the xcframework holds a
-// dylib, and SwiftPM only produces one for a dynamic product.
-let coreLibrary: Product = packaged
-    ? .library(name: "FightDeckCore", type: .dynamic, targets: ["FightDeckCore"])
-    : .library(name: "FightDeckCore", targets: ["FightDeckCore"])
+let coreLibrary: Product = .library(name: "FightDeckCore", targets: ["FightDeckCore"])
 
 // The Skip packages are the transpiler's own toolchain. They are used by the transpiling
-// source build and its `skipstone` plugin, and by nothing at all otherwise — the xcframework
-// carries the compiled result. Declared unconditionally they made Xcode warn "dependency is
-// not used by any target" nine times over a demo-app build, and clone roughly 10 MB of Skip
-// sources the app never compiles.
+// build and its `skipstone` plugin, and by nothing the iOS app builds. Declared
+// unconditionally they made Xcode warn "dependency is not used by any target" nine times over
+// a demo-app build, and clone roughly 10 MB of Skip sources the app never compiles.
 let skipDependencies: [Package.Dependency] = transpile
     ? [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.11"),

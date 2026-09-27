@@ -2,8 +2,7 @@
 import PackageDescription
 
 let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
-let packaged = buildMode == "1" || buildMode == "ios"
-// Unset: compiled into the iOS app from source. See core/Package.swift for the modes.
+// Unset: compiled into the iOS app from source. See core/Package.swift.
 let transpile = buildMode == "1"
 
 let skipProducts: [Target.Dependency] = transpile
@@ -22,14 +21,9 @@ let depositBinary: Target = .target(
     plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
 )
 
-// Statically linked into the app. Only a packaged build is dynamic: the xcframework holds a
-// dylib, and SwiftPM only produces one for a dynamic product.
-let fightDeckDepositLibrary: Product = packaged
-    ? .library(name: "FightDeckDeposit", type: .dynamic, targets: ["FightDeckDeposit"])
-    : .library(name: "FightDeckDeposit", targets: ["FightDeckDeposit"])
+let fightDeckDepositLibrary: Product = .library(name: "FightDeckDeposit", targets: ["FightDeckDeposit"])
 
-// Only the source path needs the transpiler's own packages; the binary path links a
-// compiled xcframework. See the note in core/Package.swift.
+// Only the transpiling build needs Skip's own packages. See the note in core/Package.swift.
 let skipDependencies: [Package.Dependency] = transpile
     ? [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.11"),

@@ -112,3 +112,4 @@ tools/.commons-cache.json
 
 # JVM heap dumps from Gradle OOMs
 *.hprof
+__pycache__/

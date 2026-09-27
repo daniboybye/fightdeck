@@ -17,10 +17,10 @@ MAVEN_REPO="$REPO_ROOT/04-sdk-skip/sdks/out/maven"
 mkdir -p "$OUT"
 rm -f "$OUT"/*.aar
 
-skip export --module "$BINARY_MODULE" --release -d "$OUT" --project "$ROOT"
+skip export --module "$BINARY_MODULE" "$SKIP_EXPORT_FLAG" -d "$OUT" --project "$ROOT"
 
-if [[ -f "$OUT/${BINARY_MODULE}-release.aar" ]]; then
-    mv "$OUT/${BINARY_MODULE}-release.aar" "$OUT/FightDeckCore-release.aar"
+if [[ -f "$OUT/${BINARY_MODULE}-${SKIP_VARIANT}.aar" ]]; then
+    mv "$OUT/${BINARY_MODULE}-${SKIP_VARIANT}.aar" "$OUT/FightDeckCore-${SKIP_VARIANT}.aar"
 fi
 
 if [[ -d "$SKIPSTONE" ]]; then

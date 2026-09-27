@@ -24,7 +24,7 @@ Install the pinned toolchain, then run the **Verify** column before continuing.
 | **Swift SDK for Android** | `[apple.swift_sdks] android` | `swiftly run swift +6.3.3 sdk install <url> --checksum <sha>` | `swiftly run swift +6.3.3 sdk list` |
 | **Rust** | `[rust] toolchain = 1.97.1` | `rustup toolchain install 1.97.1` | `rustc --version` |
 | **Rust Apple targets** | `[rust.targets] apple` | `rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios` | `rustup target list --installed \| grep apple` |
-| **Rust Android targets** | `[rust.targets] android` | `rustup target add aarch64-linux-android x86_64-linux-android` | `rustup target list --installed \| grep android` |
+| **Rust Android targets** | `[rust.targets] android` | `rustup target add aarch64-linux-android` | `rustup target list --installed \| grep android` |
 | **cargo-ndk** | `[rust] cargo_ndk = 4.1.2` | `cargo install cargo-ndk --version 4.1.2 --locked` | `cargo ndk --version` |
 | **Node.js** | `[react_native] node = 24.19.0` | `nvm install 24.19.0` / `mise install` | `node --version` |
 | **Skip (skipstone)** | `[skip] skipstone = 1.9.8` | `brew install skiptools/skip/skip` | `skip version` |
@@ -100,7 +100,7 @@ missing. The AAR is build output, not committed. Package once:
 
 ```bash
 cd "$REPO/01-core-swift/sdks"
-swiftly run ./build-aars.sh +6.3.3   # both ABIs, jextract, SwiftKitCore jar
+swiftly run ./build-aars.sh +6.3.3   # arm64-v8a, jextract, SwiftKitCore jar
 ```
 
 `swiftly run … +6.3.3` is not optional. Xcode's Swift cannot read the Android SDK's
@@ -176,7 +176,6 @@ mkdir -p "$DD"
 # SDK hosts: build local binaries first.
 (cd "$REPO/02-core-rust/sdks" && ./build-apple.sh)
 (cd "$REPO/03-sdk-rn/sdks" && ./build-apple.sh)
-(cd "$REPO/04-sdk-skip/sdks" && ./build-apple.sh)
 
 build_ios() {
   local approach="$1"

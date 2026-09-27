@@ -5,35 +5,29 @@
 // the loading and formatting the two hosts used to hand-write once per platform.
 import PackageDescription
 
-let buildFromSource = Context.environment["FIGHTDECK_BUILDING_SDK"] == "1"
+let buildMode = Context.environment["FIGHTDECK_BUILDING_SDK"]
+// Unset: compiled into the iOS app from source. See core/Package.swift.
+let transpile = buildMode == "1"
 
-let eventsBinary: Target = buildFromSource
-    ? .target(
-        name: "FightDeckEventsBinary",
-        dependencies: [
-            .product(name: "FightDeckCore", package: "FightDeckCore"),
-            .product(name: "SkipFoundation", package: "skip-foundation"),
-        ],
-        path: "Sources/FightDeckEvents",
-        plugins: [
-            .plugin(name: "skipstone", package: "skip"),
-        ]
-    )
-    : .binaryTarget(
-        name: "FightDeckEventsBinary",
-        path: "out/FightDeckEvents.xcframework"
-    )
+let skipProducts: [Target.Dependency] = transpile
+    ? [
+        .product(name: "SkipFoundation", package: "skip-foundation"),
+    ]
+    : []
 
-// The xcframework this package is distributed as contains a dylib, and SwiftPM only
-// links one for a dynamic product. The source-only packaging build therefore uses a
-// dynamic product; normal host builds consume the local xcframework.
-let fightDeckEventsLibrary: Product = buildFromSource
-    ? .library(name: "FightDeckEvents", type: .dynamic, targets: ["FightDeckEvents"])
-    : .library(name: "FightDeckEvents", targets: ["FightDeckEvents"])
+let eventsBinary: Target = .target(
+    name: "FightDeckEventsBinary",
+    dependencies: [
+        .product(name: "FightDeckCore", package: "FightDeckCore"),
+    ] + skipProducts,
+    path: "Sources/FightDeckEvents",
+    plugins: transpile ? [.plugin(name: "skipstone", package: "skip")] : []
+)
 
-// Only the source path needs the transpiler's own packages; the binary path links a
-// compiled xcframework. No skip-ui here — this module draws nothing. See core/Package.swift.
-let skipDependencies: [Package.Dependency] = buildFromSource
+let fightDeckEventsLibrary: Product = .library(name: "FightDeckEvents", targets: ["FightDeckEvents"])
+
+// Only the transpiling build needs Skip's own packages. No skip-ui here — this module draws nothing. See core/Package.swift.
+let skipDependencies: [Package.Dependency] = transpile
     ? [
         .package(url: "https://github.com/skiptools/skip.git", exact: "1.9.11"),
         .package(url: "https://github.com/skiptools/skip-foundation.git", exact: "1.4.6"),

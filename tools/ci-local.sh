@@ -101,8 +101,6 @@ run_step() {
     shift
     echo ""
     echo "======== $label ========"
-    # Timed because the build-time column in README.md is sourced from these numbers, and a
-    # figure nobody can reproduce is a figure nobody should trust.
     local started=$SECONDS
     # Not `if "$@"; then`: bash ignores `set -e` inside anything run as an `if` condition, so a
     # failing SDK build in the middle of a step let the step carry on and report PASS. In
@@ -267,7 +265,6 @@ run_sdk_core_swift_apple() {
     guard_file 01-core-swift/sdks/core/Package.swift || return 0
     pin_xcode
     (cd 01-core-swift/sdks/core && swift test)
-    (cd 01-core-swift/sdks/core && ./build-xcframework.sh)
 }
 
 # Xcode's Swift cannot use a cross-compilation Swift SDK: the bundle's Foundation was built
@@ -358,7 +355,7 @@ run_sdk_core_rust_apple() {
 run_sdk_core_rust_android() {
     guard_file 02-core-rust/sdks/Cargo.toml || return 0
     ensure_rust
-    rustup target add aarch64-linux-android x86_64-linux-android 2>/dev/null || true
+    rustup target add aarch64-linux-android 2>/dev/null || true
     ensure_cargo_ndk
     (cd 02-core-rust/sdks && ./build-android.sh)
 }
@@ -420,7 +417,6 @@ run_sdk_skip_apple() {
         -scheme FightDeckCore \
         -destination "$(sim_destination)" \
         -skipPackagePluginValidation)
-    ./04-sdk-skip/sdks/build-apple.sh
 }
 
 run_sdk_skip_android() {
@@ -473,10 +469,6 @@ run_ios_app() {
     if [[ "$approach" == "03-sdk-rn" ]]; then
         install_rn_deps
         ./03-sdk-rn/sdks/build-apple.sh
-    fi
-
-    if [[ "$approach" == "04-sdk-skip" ]]; then
-        ./04-sdk-skip/sdks/build-apple.sh
     fi
 
     if [[ "$approach" == "02-core-rust" ]]; then
@@ -567,7 +559,7 @@ run_android_app() {
 
     if [[ "$approach" == "02-core-rust" ]]; then
         ensure_rust
-        rustup target add aarch64-linux-android x86_64-linux-android 2>/dev/null || true
+        rustup target add aarch64-linux-android 2>/dev/null || true
         ensure_cargo_ndk
         (cd 02-core-rust/sdks && ./build-android.sh)
     fi

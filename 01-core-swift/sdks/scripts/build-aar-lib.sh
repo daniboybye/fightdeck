@@ -16,10 +16,12 @@ source "$(cd "$(dirname "$0")" && pwd)/setup-android-sdk.sh"
 
 OUT="$PKG_ROOT/out"
 MIN_SDK="${MIN_SDK:-28}"
-ABIS=(
-    "aarch64-unknown-linux-android${MIN_SDK}"
-    "x86_64-unknown-linux-android${MIN_SDK}"
-)
+# FIGHTDECK_SDK_CONFIGURATION=debug builds the library in debug; release is what ships.
+CONFIGURATION="${FIGHTDECK_SDK_CONFIGURATION:-release}"
+# arm64-v8a alone: it is every phone this demo runs on and the emulator on Apple silicon.
+# x86_64 was there for an emulator on an Intel machine, which nothing here uses, and it doubled
+# the cross-compile.
+ABIS=("aarch64-unknown-linux-android${MIN_SDK}")
 
 JAVA_PACKAGE_DIR="${JAVA_PACKAGE//.//}"
 
@@ -88,12 +90,12 @@ for triple in "${ABIS[@]}"; do
         --swift-sdk "$triple" \
         --product "$SHARED_PRODUCT" \
         --disable-sandbox \
-        -c release \
+        -c "$CONFIGURATION" \
         2>&1 | grep -v -E '^\[(info|debug)\]' || {
             echo "ERROR: swift build failed for $triple" >&2
             exit 1
         }
-    build_dir="$PKG_ROOT/.build/$triple/release"
+    build_dir="$PKG_ROOT/.build/$triple/$CONFIGURATION"
     lib_src="$build_dir/lib${SHARED_PRODUCT}.so"
     if [[ ! -f "$lib_src" ]]; then
         lib_src="$(find "$PKG_ROOT/.build" -name "lib${SHARED_PRODUCT}.so" \
@@ -106,7 +108,6 @@ for triple in "${ABIS[@]}"; do
     fi
     case "$triple" in
         aarch64-*) abi="arm64-v8a" ;;
-        x86_64-*) abi="x86_64" ;;
         *) echo "ERROR: no Android ABI known for $triple" >&2; exit 1 ;;
     esac
     mkdir -p "$OUT/android-libs/$abi"

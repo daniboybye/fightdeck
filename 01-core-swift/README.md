@@ -20,7 +20,6 @@ cd 01-core-swift/sdks/core && swift test      # odds-conversion fixtures
 cd ../slip && swift test                      # slip-math, validation, settlement, cash-out
 cd ../events && swift test                    # catalog, display, tape
 cd .. && ./build-aars.sh                      # the one Android AAR (see Android section)
-cd core && ./build-xcframework.sh             # → out/FightCore.xcframework.zip
 ```
 
 ### iOS host
@@ -96,18 +95,6 @@ BUILD SUCCESSFUL
 
 ---
 
-## Apple artifacts
-
-| Artifact | Size |
-| --- | --- |
-| `out/FightCore.xcframework.zip` | **725 KB** |
-| `out/FightCore.xcframework/` (uncompressed) | **2.4 MB** |
-| Per-slice static libs (`libFightCore.a`) | ~770–783 KB each |
-
-Built with Apple Swift 6.3.3 / Xcode 26.6 for `arm64-apple-ios`, `arm64-apple-ios-simulator`, and `x86_64-apple-ios-simulator` (lipo-merged into one simulator slice).
-
----
-
 ## Android: how the Swift gets called
 
 ### Bare Swift SDK + `swift-java jextract --mode=jni`
@@ -119,7 +106,7 @@ The cross-compile works, and which Swift runs it decides whether it works at all
 | Install `swift-6.3.3-RELEASE_android` SDK | ✅ `swift sdk install` with the published checksum, then `setup-android-sdk.sh` against NDK r27d |
 | `swift build --swift-sdk aarch64-unknown-linux-android28` | ✅ On an **open-source** toolchain — ❌ on Xcode's |
 | jextract generates Java + JNI thunks | ✅ 3 Java classes, 31 exported `Java_com_fightdeck_*` symbols, no hand-written JNI |
-| Cross-compile the thunks for both ABIs | ✅ `libfightdeck.so`, arm64-v8a and x86_64 |
+| Cross-compile the thunks for Android | ✅ `libfightdeck.so`, arm64-v8a |
 | `./build-aars.sh` | ✅ one AAR, `fightdeck.aar`, carrying all three SDKs |
 | Kotlin calls the Swift SDKs | ✅ Compose app runs them; 72/72 contract fixtures pass on device |
 | Swift calling **back** into Kotlin | ❌ Not wired — see [what is still missing](#what-is-still-missing) |
@@ -279,14 +266,8 @@ takes the catalogue itself, `SlipEngine.init(catalog)`, and `BoutIndex` stopped 
 | --- | ---: | ---: |
 | The SDKs' own libraries, stripped | 643,080 B | 403,520 B |
 | arm64 download (bundletool) | 8,215,204 B | 8,126,416 B |
-| `build-aars.sh`, both ABIs | 2,268 s | 797 s |
 
-The build time is the larger change. Each package compiled FightCore, swift-java and the
-SwiftSyntax-based jextract tool in its own `.build`, and jextract's rewrite cascaded a
-recompile of each — the three-library run above started from warm `.build` directories and
-still took six builds of about 375 s; the one-library run started cold. Measured on an Apple
-silicon Mac with other work running, so read the ratio, not the seconds. The sizes come from
-`tools/measure-android.sh` and `unzip -l` on the release APK.
+The sizes come from `tools/measure-android.sh` and `unzip -l` on the release APK.
 
 The trade is release granularity, as in `02-core-rust`: iOS still links three independent
 packages, but an Android update to any one of them ships a new common library, and the three
@@ -354,16 +335,6 @@ The bindings themselves stay cheap either way: unstripped, `libfightcore.so` gre
 **615 KB to 923 KB** when the thunks and the facade moved in. Android App Bundle splits per
 ABI, so a device downloads one column rather than both.
 
-### Iteration cost
-
-Every `swift build` re-runs jextract, which rewrites the generated sources and cascades a
-recompile of everything downstream of them. In practice a one-line change to the facade
-costs **~6 minutes per ABI**, so ~12 minutes before an emulator sees it. That used to be
-per package, and a change to FightCore rebuilt all three; with one Android library it is one
-build of about that length per ABI, whichever package changed. Compare the
-Kotlin side of the same change: 25 seconds. This is the number that decides whether a team
-would actually work this way day to day.
-
 ---
 
 ## Debugging experience
@@ -371,7 +342,7 @@ would actually work this way day to day.
 | Platform | Swift breakpoints? | Notes |
 | --- | --- | --- |
 | iOS (SPM / Xcode) | ✅ Yes | Standard LLDB on `BetSlipStore`, `SlipEngine`, `Catalog`, host views |
-| Android (cross-compiled Swift) | ❌ **No** | No LLDB/studio integration for Swift inside a `.so` on ART. Debugging is `adb logcat`, `printf`, and rebuilding the `.so` — at ~6 minutes per rebuild. |
+| Android (cross-compiled Swift) | ❌ **No** | No LLDB/studio integration for Swift inside a `.so` on ART. Debugging is `adb logcat`, `printf`, and rebuilding the `.so`. |
 | Android (Kotlin adapter) | ✅ Yes | Studio debugs up to the `native` method and no further |
 
 Generation errors are the pleasant exception: unsupported declarations are skipped with a
@@ -396,14 +367,13 @@ As of Swift SDK 6.3.3 + swift-java 0.6.0, treat native Swift on Android as
 ## Rough edges hit
 
 1. **Two Swifts with the same version number** — Apple Xcode 6.3.3 ≠ open-source 6.3.3-RELEASE for Android SDK module compatibility.
-2. **NDK version drift** — Spec pins r27d, which builds both ABIs cleanly; r29 compatibility unconfirmed.
+2. **NDK version drift** — Spec pins r27d, which builds arm64-v8a cleanly; r29 compatibility unconfirmed.
 3. **swift-java pre-1.0 moves fast** — the `0.4.2` this repo pinned in June was two minor versions stale by September; 0.5.0, 0.5.1 and 0.6.0 shipped in ten weeks, most of the changes in the JNI generator this approach depends on.
 4. **`@Observable` does not cross** — the Compose side re-reads the whole slip after every mutation, in one call.
-5. **XCFramework from SPM** — No linked `.dylib` from `swift build` alone; script uses `libtool -static` on `.o` files, then `xcodebuild -create-xcframework`.
-6. **Android Gradle OOM** — First `./gradlew` failed on dex merge; fixed by copying `gradle.properties` heap settings from `00-native`.
-7. **A stale output directory can ship the wrong closure** — the `NEEDED` walk skipped libraries it had already copied, so a library carried over from an earlier run never had its own dependencies read. `build-aar-lib.sh` now clears `out/android-libs` first and tracks visited names separately from copied files.
-8. **A tuple's Java class is named after every label in it** — `LabeledTuple_snapshot_modeTitle_legBoutIDs_…` — and the `.class` file carries that name, so eighteen labels ran past the 255-byte file-name limit and `javac` failed with *File name too long*. The slip's contract figures moved to a second call.
-9. **Two tuple shapes jextract 0.6.0 does not handle** — an array of tuples is skipped without a warning, and a tuple nested in a tuple generates Swift thunks that do not compile (`invalid redeclaration of 'tupleResult$'`). Lists cross as parallel arrays instead.
+5. **Android Gradle OOM** — First `./gradlew` failed on dex merge; fixed by copying `gradle.properties` heap settings from `00-native`.
+6. **A stale output directory can ship the wrong closure** — the `NEEDED` walk skipped libraries it had already copied, so a library carried over from an earlier run never had its own dependencies read. `build-aar-lib.sh` now clears `out/android-libs` first and tracks visited names separately from copied files.
+7. **A tuple's Java class is named after every label in it** — `LabeledTuple_snapshot_modeTitle_legBoutIDs_…` — and the `.class` file carries that name, so eighteen labels ran past the 255-byte file-name limit and `javac` failed with *File name too long*. The slip's contract figures moved to a second call.
+8. **Two tuple shapes jextract 0.6.0 does not handle** — an array of tuples is skipped without a warning, and a tuple nested in a tuple generates Swift thunks that do not compile (`invalid redeclaration of 'tupleResult$'`). Lists cross as parallel arrays instead.
 
 ---
 
@@ -443,7 +413,7 @@ None blocking. One observation:
 
 The three SDK packages are plain Swift with no dependency beyond each other; only
 `sdks/android` depends on swift-java, and no Apple build resolves it. That is deliberate:
-jextract runs SwiftSyntax over the sources and costs minutes, and JNI means nothing on iOS.
+jextract runs SwiftSyntax over the sources, and JNI means nothing on iOS.
 
 ## What we could not do, and what we did instead
 
@@ -458,5 +428,5 @@ jextract runs SwiftSyntax over the sources and costs minutes, and JNI means noth
 
 The talk can now show two phones with identical €361.11 where both are running the same
 Swift, and still be honest about the price: a facade module because the boundary has no
-`Decimal`, a manual read-back because it has no Observation, 68 MB of runtime for 273 KB
-of logic, six minutes per rebuild, and no debugger.
+`Decimal`, a manual read-back because it has no Observation, 18.9 MB of runtime for 394 KB
+of logic, and no debugger.

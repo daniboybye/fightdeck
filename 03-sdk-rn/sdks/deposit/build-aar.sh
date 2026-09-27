@@ -11,11 +11,11 @@ source "$SCRIPTS/android-aar-pack.sh"
 
 (
     cd "$ANDROID_HOST"
-    ./gradlew :deposit-sdk:assembleRelease --quiet
+    ./gradlew :deposit-sdk:assemble${SDK_VARIANT_TASK} --quiet
 )
 
 pack_feature_aar "$OUT" \
-    "$ROOT/android/build/outputs/aar/deposit-sdk-release.aar" \
+    "$ROOT/android/build/outputs/aar/deposit-sdk-${SDK_VARIANT}.aar" \
     "DepositSDK"
 
 ls -lh "$OUT/DepositSDK.aar"

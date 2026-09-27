@@ -12,10 +12,7 @@ import Observation
 
 /// Where one list of the catalogue stands. Every screen has all four (spec rule 5), and both
 /// hosts used to declare this type for themselves — a Swift enum and a Kotlin sealed interface
-/// with the same four cases. `@frozen` because the xcframework is built for library evolution,
-/// and the four states are the whole set: without it every host `switch` needs an
-/// `@unknown default`.
-@frozen
+/// with the same four cases.
 public enum CatalogLoad<Value> {
     case loading
     case loaded(Value)

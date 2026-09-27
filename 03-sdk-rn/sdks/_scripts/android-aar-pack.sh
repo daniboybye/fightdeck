@@ -5,6 +5,16 @@ set -euo pipefail
 RN_VERSION="${RN_VERSION:-0.87.0}"
 HERMES_COORD="${HERMES_COORD:-com.facebook.hermes:hermes-android:250829098.0.16}"
 
+# FIGHTDECK_SDK_CONFIGURATION=debug assembles each library's debug variant instead of the
+# release one that ships. The file names in out/ stay the same: the host links them by path.
+if [[ "${FIGHTDECK_SDK_CONFIGURATION:-release}" == "debug" ]]; then
+    SDK_VARIANT=debug
+    SDK_VARIANT_TASK=Debug
+else
+    SDK_VARIANT=release
+    SDK_VARIANT_TASK=Release
+fi
+
 find_gradle_aar() {
     local pattern="$1"
     local found

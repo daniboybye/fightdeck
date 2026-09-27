@@ -27,29 +27,25 @@ on:
 
 jobs:
   apple:
-    name: XCFramework (${{ matrix.module }})
+    name: Core tests
     if: inputs.job != 'android'
     runs-on: macos-26
     timeout-minutes: 45
-    # SDK packaging and source tests need the source targets; normal host builds use the
-    # local xcframework binary targets.
+    # Nothing to package on Apple: the iOS app compiles the SDKs from source. What is left is
+    # the core's fixture suite, against the transpiling source build.
     env:
       FIGHTDECK_BUILDING_SDK: "1"
-    strategy:
-      fail-fast: false
-      matrix:
-        module: [core, events, deposit, betslip, fighter]
     steps:
       - uses: actions/checkout@v7
 
       - name: Guard
         id: guard
         run: |
-          if [[ -f 04-sdk-skip/sdks/${{ matrix.module }}/Package.swift ]]; then
+          if [[ -f 04-sdk-skip/sdks/core/Package.swift ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skip ${{ matrix.module }} not written yet"
+            echo "::notice::Skip core not written yet"
           fi
 
       - name: Pin Xcode
@@ -62,31 +58,18 @@ jobs:
       - uses: ./.github/actions/swiftpm-cache
         if: steps.guard.outputs.exists == 'true'
         with:
-          key: sdk-skip-${{ matrix.module }}
-          build-path: 04-sdk-skip/sdks/${{ matrix.module }}/.build
+          key: sdk-skip-core
+          build-path: 04-sdk-skip/sdks/core/.build
 
-      # Only the headless module. `swift test` builds for the host, and the two feature
-      # modules are SwiftUI over UIKit, which does not exist on macOS; their behaviour is
-      # covered by the host app's own suite against the framework this job produces.
+      # Only the headless module. `swift test` builds for the host, and the feature modules are
+      # SwiftUI over UIKit, which does not exist on macOS; the host app's own suite covers them.
       - name: Test
-        if: steps.guard.outputs.exists == 'true' && matrix.module == 'core'
+        if: steps.guard.outputs.exists == 'true'
         working-directory: 04-sdk-skip/sdks/core
         run: swift test
 
-      - name: Package XCFramework
-        if: steps.guard.outputs.exists == 'true'
-        working-directory: 04-sdk-skip/sdks/${{ matrix.module }}
-        run: ./build-xcframework.sh
-
-      - uses: actions/upload-artifact@v7
-        if: steps.guard.outputs.exists == 'true'
-        with:
-          name: skip-${{ matrix.module }}-xcframework
-          path: 04-sdk-skip/sdks/${{ matrix.module }}/out/*.xcframework.zip
-          if-no-files-found: warn
-
-  # One job for all AARs, unlike the Apple side: the feature modules link against
-  # core's AAR instead of re-transpiling it, so they cannot be built in parallel with it.
+  # One job for all AARs: the feature modules link against core's AAR instead of
+  # re-transpiling it, so they cannot be built in parallel with it.
   android:
     name: AARs
     if: inputs.job != 'apple'

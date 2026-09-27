@@ -102,7 +102,8 @@ for approach in "${APPROACHES[@]}"; do
         [[ "$PLATFORM" == "android" ]] || ./03-sdk-rn/sdks/build-apple.sh
         [[ "$PLATFORM" == "ios" ]] || ./03-sdk-rn/sdks/build-android.sh
     elif [[ "$approach" == "04-sdk-skip" ]]; then
-        [[ "$PLATFORM" == "android" ]] || ./04-sdk-skip/sdks/build-apple.sh
+        # iOS compiles the Skip SDKs into each harness from source; only Android has an SDK
+        # to build first.
         [[ "$PLATFORM" == "ios" ]] || ./04-sdk-skip/sdks/build-aars.sh
     fi
 

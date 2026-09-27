@@ -43,9 +43,8 @@ android/        — Compose host (Events native; Slip/Deposit/Fighter SDK seam)
 cd sdks/core
 FIGHTDECK_FIXTURES_ROOT=../../../contract/fixtures swift test
 
-# 2. Local binary SDK artifacts
+# 2. Android SDK artifacts (iOS compiles the SDKs from source)
 cd sdks
-./build-apple.sh
 ./build-aars.sh
 
 # 3. iOS host
@@ -60,21 +59,12 @@ xcodebuild build -scheme FightDeck \
 cd android && ./gradlew :app:assembleDebug
 ```
 
-The package manifests expose source targets only while an SDK build script runs with
-`FIGHTDECK_BUILDING_SDK=1`. Normal host builds always resolve the local xcframeworks and
-the local Maven repository; there is no source/remote consumption switch.
+The iOS host compiles the SDK packages from source and links them statically, as
+`01-core-swift`'s host does; no source imports a Skip module, so that build needs no Skip at
+all. `FIGHTDECK_BUILDING_SDK=1` adds Skip and its transpiler, for the Android export and the
+fixture tests. Android consumes the local Maven repository the export publishes.
 
 ## Artifact sizes (real binaries — measured 20 Aug 2026)
-
-### iOS — `.xcframework.zip`
-
-| Stack | Zip size |
-| --- | --- |
-| **Runtime / core alone** | **294 KB** (301,134 B) |
-| **+ Deposit** | **2.15 MB** (2,253,282 B) |
-| **+ Betslip** | **2.17 MB** (2,271,963 B) |
-
-**Second-feature zip delta:** **+18 KB** (2,271,963 − 2,253,282 B).
 
 ### Android — `.aar` (deduped local Maven set, re-measured 12 Sep 2026 on Skip 1.9.8)
 
@@ -183,9 +173,10 @@ Install: `brew install skiptools/skip/skip`
 1. **Skip Lite Swift subset** — `#if SKIP` workarounds throughout core (`Money`, `OddsEngine`, `FightCoreDisplay`) and UI (`ThemeColor.fromHex` string filtering, `Typography`, no `Color` extensions, `Money.parse` instead of decimal literals, string stake binding). Not all SwiftUI sugar transpiles.
 2. **Transpilation fixes applied (20 Aug 2026)** — `ThemeTokens`/`BetslipTheme` hex parsing (`filtered += String(character)` not `append(Char)`); `BetSlipStore`/`DepositFlowView`/`BetSlipRootView` use `Money.parse` not float-derived `Decimal` literals or int fallbacks.
 3. **Xcode + skipstone** — Host build needs `-skipPackagePluginValidation` until the Skip plugin is trusted in Xcode 26.
-4. **SPM local binary iOS** — SDK build scripts use dynamic source products to create the
-   xcframeworks; normal host builds consume those local binary targets through the umbrella
-   packages.
+4. **No binary SDK on iOS** — the SDKs used to reach the iOS host as five dynamic
+   xcframeworks, each linking its own copy of SkipUI and none stripped: 12.94 MB of frameworks
+   around a few kilobytes of screens. Compiled from source instead, the app is 2.07 MB against
+   the native baseline's 1.96 MB.
 5. **Android Maven consumption** — `./sdks/{core,events,deposit,betslip,fighter}/build-aar.sh` publishes to `sdks/out/maven` with transitive POM metadata (`kotlin-reflect`, `commonmark`, Compose Material via SkipUI). Hosts point at that repo in `android/settings.gradle.kts`; do not re-declare those runtime deps. Verify with `sdks/consumer-verify/android` (`../../android/gradlew :app:assembleAllDebug` after building fighter AARs).
 6. **`skip checkup` Kotlin test** — Robolectric / compileSdk 37 mismatch in Skip hello-world harness (environment issue, not FightDeck-specific).
 7. **Division does not transpile the way you would assume** — Kotlin lowers `BigDecimal /` to

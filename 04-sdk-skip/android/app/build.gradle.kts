@@ -54,6 +54,12 @@ android {
     }
 
     buildTypes {
+        // The SDKs publish one variant, release unless built with FIGHTDECK_SDK_CONFIGURATION=debug,
+        // so a debug host takes the release SDK when that is all there is — as the other hosts,
+        // which link an AAR by path, always do.
+        debug {
+            matchingFallbacks += "release"
+        }
         release {
             // R8 is on by default: release is the variant that gets measured and the one that
             // would ship. `-PfightdeckMinify=false` turns it off so the shrinker's own
@@ -85,18 +91,6 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
-}
-
-val demoAssetsDir = layout.projectDirectory.dir("src/main/assets")
-
-val syncDemoAssets = tasks.register<Copy>("syncDemoAssets") {
-    from(rootProject.file("../../dataset"))
-    from(rootProject.file("../../shared-ui-spec/tokens.json"))
-    into(demoAssetsDir)
-}
-
-tasks.named("preBuild") {
-    dependsOn(syncDemoAssets)
 }
 
 dependencies {

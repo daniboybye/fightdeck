@@ -103,10 +103,6 @@ release-staging/
 # Wikimedia Commons API cache for tools/fetch-real-art.py (regenerated locally).
 tools/.commons-cache.json
 
-# Copied from dataset/ by the syncDemoAssets Gradle task before every build, so the APK can
-# run without an adb push. Committing it would be a second copy of the dataset, free to drift.
-04-sdk-skip/android/app/src/main/assets/
-
 # Records which feature set the last SDK build bundled, so the Podfile can catch a mismatch.
 03-sdk-rn/sdks/core/ios/.fightdeck-features
 
@@ -116,3 +112,4 @@ tools/.commons-cache.json
 
 # JVM heap dumps from Gradle OOMs
 *.hprof
+__pycache__/

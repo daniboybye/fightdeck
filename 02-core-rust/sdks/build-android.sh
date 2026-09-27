@@ -6,7 +6,7 @@ SDKS="$(cd "$(dirname "$0")" && pwd)"
 cd "$SDKS"
 export PATH="${HOME}/.cargo/bin:${PATH}"
 
-rustup target add aarch64-linux-android x86_64-linux-android >/dev/null 2>&1 || true
+rustup target add aarch64-linux-android >/dev/null 2>&1 || true
 if ! command -v cargo-ndk >/dev/null 2>&1; then
   CARGO_NDK_VERSION="$("$SDKS/../../tools/versions.py" rust.cargo_ndk)"
   cargo install cargo-ndk --version "$CARGO_NDK_VERSION" --locked
@@ -18,9 +18,16 @@ rm -rf "$OUT"
 mkdir -p "$JNI"
 
 # `uniffi_reexport_scaffolding!` in the aggregate crate keeps all three namespaces'
-# exported symbols and metadata in this one cdylib.
-cargo ndk -t arm64-v8a -t x86_64 -o "$JNI" \
-  build --release -p fightdeck-android
+# exported symbols and metadata in this one cdylib. arm64-v8a alone: every phone this demo runs
+# on, and the emulator on Apple silicon. x86_64 was there for an emulator on an Intel machine,
+# which nothing here uses. FIGHTDECK_SDK_CONFIGURATION=debug builds Cargo's dev profile; release
+# is what ships.
+PROFILE_FLAG=(--release)
+if [[ "${FIGHTDECK_SDK_CONFIGURATION:-release}" == "debug" ]]; then
+  PROFILE_FLAG=()
+fi
+cargo ndk -t arm64-v8a -o "$JNI" \
+  build ${PROFILE_FLAG[@]+"${PROFILE_FLAG[@]}"} -p fightdeck-android
 
 SCRATCH="$(mktemp -d)"
 trap 'rm -rf "$SCRATCH"' EXIT
@@ -43,10 +50,8 @@ done
 STAGING="$OUT/aar-staging"
 mkdir -p \
   "$STAGING/jni/arm64-v8a" \
-  "$STAGING/jni/x86_64" \
   "$STAGING/uniffi"
 cp "$JNI/arm64-v8a/libfightdeck.so" "$STAGING/jni/arm64-v8a/"
-cp "$JNI/x86_64/libfightdeck.so" "$STAGING/jni/x86_64/"
 for namespace in "${NAMESPACES[@]}"; do
   mkdir -p "$STAGING/uniffi/$namespace"
   cp "$SCRATCH/uniffi/$namespace/$namespace.kt" "$STAGING/uniffi/$namespace/"
@@ -78,9 +83,8 @@ for namespace in "${NAMESPACES[@]}"; do
 done
 
 rm -rf "$ANDROID/jniLibs"
-mkdir -p "$ANDROID/jniLibs/arm64-v8a" "$ANDROID/jniLibs/x86_64"
+mkdir -p "$ANDROID/jniLibs/arm64-v8a"
 cp "$JNI/arm64-v8a/libfightdeck.so" "$ANDROID/jniLibs/arm64-v8a/"
-cp "$JNI/x86_64/libfightdeck.so" "$ANDROID/jniLibs/x86_64/"
 
 # Do not leave stale per-SDK Android artifacts around: release scripts must see one AAR.
 rm -rf \

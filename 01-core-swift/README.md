@@ -266,14 +266,8 @@ takes the catalogue itself, `SlipEngine.init(catalog)`, and `BoutIndex` stopped 
 | --- | ---: | ---: |
 | The SDKs' own libraries, stripped | 643,080 B | 403,520 B |
 | arm64 download (bundletool) | 8,215,204 B | 8,126,416 B |
-| `build-aars.sh`, both ABIs | 2,268 s | 797 s |
 
-The build time is the larger change. Each package compiled FightCore, swift-java and the
-SwiftSyntax-based jextract tool in its own `.build`, and jextract's rewrite cascaded a
-recompile of each — the three-library run above started from warm `.build` directories and
-still took six builds of about 375 s; the one-library run started cold. Measured on an Apple
-silicon Mac with other work running, so read the ratio, not the seconds. The sizes come from
-`tools/measure-android.sh` and `unzip -l` on the release APK.
+The sizes come from `tools/measure-android.sh` and `unzip -l` on the release APK.
 
 The trade is release granularity, as in `02-core-rust`: iOS still links three independent
 packages, but an Android update to any one of them ships a new common library, and the three
@@ -341,16 +335,6 @@ The bindings themselves stay cheap either way: unstripped, `libfightcore.so` gre
 **615 KB to 923 KB** when the thunks and the facade moved in. Android App Bundle splits per
 ABI, so a device downloads one column rather than both.
 
-### Iteration cost
-
-Every `swift build` re-runs jextract, which rewrites the generated sources and cascades a
-recompile of everything downstream of them. In practice a one-line change to the facade
-costs **~6 minutes per ABI**, so ~12 minutes before an emulator sees it. That used to be
-per package, and a change to FightCore rebuilt all three; with one Android library it is one
-build of about that length per ABI, whichever package changed. Compare the
-Kotlin side of the same change: 25 seconds. This is the number that decides whether a team
-would actually work this way day to day.
-
 ---
 
 ## Debugging experience
@@ -358,7 +342,7 @@ would actually work this way day to day.
 | Platform | Swift breakpoints? | Notes |
 | --- | --- | --- |
 | iOS (SPM / Xcode) | ✅ Yes | Standard LLDB on `BetSlipStore`, `SlipEngine`, `Catalog`, host views |
-| Android (cross-compiled Swift) | ❌ **No** | No LLDB/studio integration for Swift inside a `.so` on ART. Debugging is `adb logcat`, `printf`, and rebuilding the `.so` — at ~6 minutes per rebuild. |
+| Android (cross-compiled Swift) | ❌ **No** | No LLDB/studio integration for Swift inside a `.so` on ART. Debugging is `adb logcat`, `printf`, and rebuilding the `.so`. |
 | Android (Kotlin adapter) | ✅ Yes | Studio debugs up to the `native` method and no further |
 
 Generation errors are the pleasant exception: unsupported declarations are skipped with a
@@ -429,7 +413,7 @@ None blocking. One observation:
 
 The three SDK packages are plain Swift with no dependency beyond each other; only
 `sdks/android` depends on swift-java, and no Apple build resolves it. That is deliberate:
-jextract runs SwiftSyntax over the sources and costs minutes, and JNI means nothing on iOS.
+jextract runs SwiftSyntax over the sources, and JNI means nothing on iOS.
 
 ## What we could not do, and what we did instead
 
@@ -444,5 +428,5 @@ jextract runs SwiftSyntax over the sources and costs minutes, and JNI means noth
 
 The talk can now show two phones with identical €361.11 where both are running the same
 Swift, and still be honest about the price: a facade module because the boundary has no
-`Decimal`, a manual read-back because it has no Observation, 68 MB of runtime for 273 KB
-of logic, six minutes per rebuild, and no debugger.
+`Decimal`, a manual read-back because it has no Observation, 18.9 MB of runtime for 394 KB
+of logic, and no debugger.

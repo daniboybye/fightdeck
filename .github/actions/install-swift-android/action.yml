@@ -54,9 +54,10 @@ runs:
 
         # The bundle ships a sysroot with no NDK in it; until this script has pointed it
         # at one, every cross-compile fails at link time. The bundle's location differs
-        # between SwiftPM versions, so find it rather than guess.
-        BUNDLE="$(find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
-          -maxdepth 1 -name '*_android.artifactbundle' 2>/dev/null | head -1)"
+        # between SwiftPM versions, so find it rather than guess. `|| true` because one of
+        # the two directories is always missing, and a composite step runs with pipefail.
+        BUNDLE="$({ find "$HOME/.swiftpm/swift-sdks" "$HOME/.config/swiftpm/swift-sdks" \
+          -maxdepth 1 -name '*_android.artifactbundle' 2>/dev/null || true; } | head -1)"
         ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$PINNED_NDK" \
           "$BUNDLE/swift-android/scripts/setup-android-sdk.sh"
 

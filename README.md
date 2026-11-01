@@ -16,6 +16,10 @@ written twice". The app stays native, platform-specific code stays native, and i
 features arrive as shared SDKs. That leaves two questions this repo answers with numbers:
 which technology goes behind those SDKs, and what does each choice cost?
 
+**Short on time?** [`FINDINGS.md`](FINDINGS.md) has the conclusions of the talk: the four
+constraints, what each technology was expected to do and what it actually did, and what the
+numbers below mean together.
+
 ## Layout
 
 | Path | What it is |
